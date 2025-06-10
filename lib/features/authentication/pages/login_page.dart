@@ -1,7 +1,8 @@
 // features/authentication/pages/login_page.dart
 import 'package:flutter/material.dart';
-import '../../../shared/widgets/common/loading_widget.dart';
-import '../../../core/utils/validator.dart';
+import 'package:journeyq/shared/widgets/common/loading_widget.dart';
+import 'package:journeyq/core/utils/validator.dart';
+import 'package:journeyq/core/services/notification_service.dart';
 import 'signup_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -49,6 +50,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     ));
     
     _animationController.forward();
+    
+    // Show welcome notification after page loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showWelcomeNotification();
+    });
   }
 
   @override
@@ -57,6 +63,16 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _showWelcomeNotification() async {
+    // Add a small delay to ensure the page is fully loaded
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    NotificationService.showNotification(
+      title: "Welcome to JourneyQ!",
+      body: "Ready to explore the world? Login to continue your adventure!",
+    );
   }
 
   Future<void> _handleLogin() async {
@@ -68,7 +84,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       // Simulate API call
       await Future.delayed(const Duration(seconds: 2));
       
-      // TODO: Implement actual login logic
+      // Show success notification
+      NotificationService.showNotification(
+        title: "Login Successful! 🎉",
+        body: "Welcome back! Your journey continues...",
+      );
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -78,6 +99,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         );
       }
     } catch (e) {
+      // Show error notification
+      NotificationService.showNotification(
+        title: "Login Failed",
+        body: "Please check your credentials and try again.",
+      );
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -97,40 +124,50 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FBFF), // Very light white blue
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Container(
-            height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFF8FBFF),
-                  Color(0xFFEEF7FF),
-                ],
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 60),
-                      _buildHeader(),
-                      const SizedBox(height: 50),
-                      _buildLoginForm(),
-                      const SizedBox(height: 30),
-                      _buildLoginButton(),
-                      const SizedBox(height: 20),
-                      _buildForgotPassword(),
-                      const Spacer(),
-                      _buildSignUpLink(),
-                      const SizedBox(height: 30),
-                    ],
+      resizeToAvoidBottomInset: true, // Important: allows screen to resize when keyboard opens
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFF8FBFF),
+              Color(0xFFEEF7FF),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: SlideTransition(
+                position: _slideAnimation,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: MediaQuery.of(context).size.height - 
+                              MediaQuery.of(context).padding.top - 
+                              MediaQuery.of(context).padding.bottom - 40,
+                  ),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 40),
+                        _buildHeader(),
+                        const SizedBox(height: 40),
+                        _buildLoginForm(),
+                        const SizedBox(height: 30),
+                        _buildLoginButton(),
+                        const SizedBox(height: 20),
+                        _buildForgotPassword(),
+                        const SizedBox(height: 20),
+                        _buildTestNotificationButton(),
+                        const Spacer(),
+                        _buildSignUpLink(),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -301,12 +338,39 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     return TextButton(
       onPressed: () {
         // TODO: Navigate to forgot password page
+        NotificationService.showNotification(
+          title: "Forgot Password",
+          body: "Password reset link will be sent to your email!",
+        );
       },
       child: const Text(
         'Forgot Password?',
         style: TextStyle(
           color: Color(0xFF0088cc),
           fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  // Test notification button for debugging
+  Widget _buildTestNotificationButton() {
+    return OutlinedButton.icon(
+      onPressed: () {
+        NotificationService.showNotification(
+          title: "Test Notification 🔔",
+          body: "Glass effect on Android, standard on iOS!",
+        );
+      },
+      icon: const Icon(Icons.notifications_outlined, color: Color(0xFF0088cc)),
+      label: const Text(
+        'Test Notification',
+        style: TextStyle(color: Color(0xFF0088cc)),
+      ),
+      style: OutlinedButton.styleFrom(
+        side: const BorderSide(color: Color(0xFF0088cc)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
         ),
       ),
     );

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "764245104845",
+    "project_id": "journeyq-bfbbd",
+    "storage_bucket": "journeyq-bfbbd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:764245104845:android:c7a35ab270f5c6404df184",
+        "android_client_info": {
+          "package_name": "com.example.journeyq"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBy82-kU32CkHKIPtRJTw_QFUYxBdYW84g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
