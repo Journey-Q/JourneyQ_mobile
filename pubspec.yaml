@@ -29,6 +29,7 @@ dependencies:
   wechat_assets_picker: ^9.0.0  # More advanced gallery picker
   image: ^4.1.3
   permission_handler: ^11.0.1
+  font_awesome_flutter: ^10.6.0
 
 dev_dependencies:
   flutter_test:
@@ -94,7 +95,8 @@ flutter:
 
   assets:
     - assets/images/app_icon.png          # For splash screen
-    - assets/images/logo.png      # For app launcher icon
+    - assets/images/logo.png 
+    - assets/images/     # For app launcher icon
     # - assets/images/logo_dark.png  # Uncomment if you have a dark mode app_icon
 
   # To add assets to your application, add an assets section, like this:

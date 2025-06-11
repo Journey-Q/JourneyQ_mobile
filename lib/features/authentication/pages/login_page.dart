@@ -1,10 +1,9 @@
-// features/authentication/pages/login_page.dart
 import 'package:flutter/material.dart';
-import 'package:journeyq/shared/widgets/common/loading_widget.dart';
+import 'package:go_router/go_router.dart';
 import 'package:journeyq/core/utils/validator.dart';
 import 'package:journeyq/core/services/notification_service.dart';
 import 'package:journeyq/shared/widgets/dialog/show_dialog.dart';
-import 'signup_page.dart';
+import 'package:journeyq/features/authentication/pages/widget.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -13,63 +12,19 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
+class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
   bool _obscurePassword = true;
-  bool _rememberMe = false;
-
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
-
-    _slideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _animationController,
-            curve: Curves.easeOutBack,
-          ),
-        );
-
-    _animationController.forward();
-
-    // Show welcome notification after page loads
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showWelcomeNotification();
-    });
-  }
 
   @override
   void dispose() {
-    _animationController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  void _showWelcomeNotification() async {
-    // Add a small delay to ensure the page is fully loaded
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    NotificationService.showNotification(
-      title: "Welcome to JourneyQ!",
-      body: "Ready to explore the world? Login to continue your adventure!",
-    );
   }
 
   Future<void> _handleLogin() async {
@@ -78,20 +33,18 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     setState(() => _isLoading = true);
 
     try {
-      // Simulate API call
       await Future.delayed(const Duration(seconds: 2));
 
-      // Show success notification
       NotificationService.showNotification(
         title: "Login Successful! 🎉",
         body: "Welcome back! Your journey continues...",
       );
 
       if (mounted) {
-        
+        // Navigate to home page using GoRouter
+        context.go('/home');
       }
     } catch (e) {
-      // Show error notification
       NotificationService.showNotification(
         title: "Login Failed",
         body: "Please check your credentials and try again.",
@@ -101,7 +54,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Login failed: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.red[400],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
@@ -112,282 +69,228 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     }
   }
 
+  Future<void> _handleGoogleSignIn() async {
+    try {
+      // Simulate Google Sign In
+      await Future.delayed(const Duration(seconds: 1));
+      NotificationService.showNotification(
+        title: "Google Sign In",
+        body: "Signing in with Google...",
+      );
+      
+      if (mounted) {
+        // Navigate to home after successful Google sign in
+        context.go('/home');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Google Sign In failed: ${e.toString()}'),
+          backgroundColor: Colors.red[400],
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleAppleSignIn() async {
+    try {
+      // Simulate Apple Sign In
+      await Future.delayed(const Duration(seconds: 1));
+      NotificationService.showNotification(
+        title: "Apple Sign In",
+        body: "Signing in with Apple...",
+      );
+      
+      if (mounted) {
+        // Navigate to home after successful Apple sign in
+        context.go('/home');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Apple Sign In failed: ${e.toString()}'),
+          backgroundColor: Colors.red[400],
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleFacebookSignIn() async {
+    try {
+      // Simulate Facebook Sign In
+      await Future.delayed(const Duration(seconds: 1));
+      NotificationService.showNotification(
+        title: "Facebook Sign In",
+        body: "Signing in with Facebook...",
+      );
+      
+      if (mounted) {
+        // Navigate to home after successful Facebook sign in
+        context.go('/home');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Facebook Sign In failed: ${e.toString()}'),
+          backgroundColor: Colors.red[400],
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FBFF), // Very light white blue
-      resizeToAvoidBottomInset:
-          true, // Important: allows screen to resize when keyboard opens
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFF8FBFF), Color(0xFFEEF7FF)],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24.0,
-              vertical: 20.0,
-            ),
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight:
-                        MediaQuery.of(context).size.height -
-                        MediaQuery.of(context).padding.top -
-                        MediaQuery.of(context).padding.bottom -
-                        40,
-                  ),
-                  child: IntrinsicHeight(
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 40),
-                        _buildHeader(),
-                        const SizedBox(height: 40),
-                        _buildLoginForm(),
-                        const SizedBox(height: 30),
-                        _buildLoginButton(),
-                        const SizedBox(height: 20),
-                        _buildForgotPassword(),
-                        const SizedBox(height: 20),
-                        _buildTestNotificationButton(),
-                        const Spacer(),
-                        _buildSignUpLink(),
-                        const SizedBox(height: 20),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Column(
-      children: [
-        Container(
-          width: 120,
-          height: 120,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              colors: [Color(0xFF0088cc), Color(0xFF33a3dd)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF0088cc),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
+      backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: true,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 32),
+              buildHeader(),
+              const SizedBox(height: 32),
+              buildLoginForm(),
+              const SizedBox(height: 32),
+              buildLoginButton(),
+              const SizedBox(height: 24),
+              buildDivider(),
+              const SizedBox(height: 24),
+              buildSocialButtons(),
+              const SizedBox(height: 24),
+              buildSignUpLink(),
+              const SizedBox(height: 24),
             ],
           ),
-          child: const Icon(
-            Icons.travel_explore,
-            size: 60,
-            color: Colors.white,
-          ),
         ),
-        const SizedBox(height: 24),
-        const Text(
-          'Welcome Back',
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF0088cc),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Sign in to continue your journey',
-          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLoginForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          _buildEmailField(),
-          const SizedBox(height: 16),
-          _buildPasswordField(),
-          const SizedBox(height: 16),
-          _buildRememberMeRow(),
-        ],
       ),
     );
   }
 
-  Widget _buildEmailField() {
-    return TextFormField(
+  Widget buildLoginForm() {
+    return Container(
+      padding: const EdgeInsets.all(5),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            buildEmailField(),
+            const SizedBox(height: 20),
+            buildPasswordField(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Usage for Email Field
+  Widget buildEmailField() {
+    return buildCommonTextField(
       controller: _emailController,
-      keyboardType: TextInputType.emailAddress,
+      labelText: 'Email Address',
+      hintText: 'Enter your email',
+      prefixIcon: Icons.email_outlined,
       validator: Validator.validateEmail,
-      decoration: InputDecoration(
-        labelText: 'Email',
-        prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF0088cc)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF0088cc), width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        labelStyle: const TextStyle(color: Color(0xFF0088cc)),
-      ),
+      keyboardType: TextInputType.emailAddress,
     );
   }
 
-  Widget _buildPasswordField() {
-    return TextFormField(
+  // Usage for Password Field
+  Widget buildPasswordField() {
+    return buildCommonTextField(
       controller: _passwordController,
-      obscureText: _obscurePassword,
+      labelText: 'Password',
+      hintText: 'Enter your password',
+      prefixIcon: Icons.lock_outline,
       validator: Validator.validatePassword,
-      decoration: InputDecoration(
-        labelText: 'Password',
-        prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF0088cc)),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscurePassword ? Icons.visibility : Icons.visibility_off,
-            color: const Color(0xFF0088cc),
+      obscureText: _obscurePassword,
+      suffixIcon: IconButton(
+        icon: Container(
+          margin: const EdgeInsets.all(12),
+          child: Icon(
+            _obscurePassword
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
+            color: Colors.black,
+            size: 20,
           ),
-          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF0088cc), width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        labelStyle: const TextStyle(color: Color(0xFF0088cc)),
+        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
       ),
     );
   }
 
-  Widget _buildRememberMeRow() {
+  Widget buildLoginButton() {
+    return buildPrimaryGradientButton(
+      text: 'Sign In',
+      onPressed: _handleLogin,
+      isLoading: _isLoading,
+    );
+  }
+
+  Widget buildSocialButtons() {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        Checkbox(
-          value: _rememberMe,
-          onChanged: (value) => setState(() => _rememberMe = value ?? false),
-          activeColor: const Color(0xFF0088cc),
+        buildSocialButton(
+          icon: Image.asset(
+            'assets/images/google.png', // Your Google PNG file
+            width: 28,
+            height: 28,
+          ),
+          label: 'Google',
+          onPressed: _handleGoogleSignIn,
+          backgroundColor: Colors.white,
+          textColor: Colors.grey[800]!,
+          borderColor: Colors.grey[300]!,
         ),
-        const Text('Remember me'),
+        buildSocialButton(
+          icon: Icons.apple,
+          label: 'Apple',
+          onPressed: _handleAppleSignIn,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          borderColor: Colors.black,
+        ),
+        buildSocialButton(
+          icon: Icons.facebook,
+          label: 'Facebook',
+          onPressed: _handleFacebookSignIn,
+          backgroundColor: const Color(0xFF1877F2),
+          textColor: Colors.white,
+          borderColor: const Color(0xFF1877F2),
+        ),
       ],
     );
   }
 
-  Widget _buildLoginButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _handleLogin,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF0088cc),
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 3,
-        ),
-        child: _isLoading
-            ? const LoadingWidget(color: Colors.white)
-            : const Text(
-                'Login',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-      ),
-    );
-  }
-
-  Widget _buildForgotPassword() {
-    return TextButton(
-      onPressed: () {
-        // TODO: Navigate to forgot password page
-        NotificationService.showNotification(
-          title: "Forgot Password",
-          body: "Password reset link will be sent to your email!",
-        );
-      },
-      child: const Text(
-        'Forgot Password?',
-        style: TextStyle(color: Color(0xFF0088cc), fontWeight: FontWeight.w500),
-      ),
-    );
-  }
-
-  // Test notification button for debugging
-  Widget _buildTestNotificationButton() {
-    return OutlinedButton.icon(
-      onPressed: () {
-        TopSnackBarService.show(
-          context,
-          message: 'Login successful!',
-          isSuccess: true,
-          actionLabel: 'Tap',
-          onActionPressed: () {
-            NotificationService.showNotification(
-              title: "Test Notification",
-              body: "This is a test notification for debugging purposes.",
-            );
-          },
-        );
-      },
-      icon: const Icon(Icons.notifications_outlined, color: Color(0xFF0088cc)),
-      label: const Text(
-        'Test Notification',
-        style: TextStyle(color: Color(0xFF0088cc)),
-      ),
-      style: OutlinedButton.styleFrom(
-        side: const BorderSide(color: Color(0xFF0088cc)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
-
-  Widget _buildSignUpLink() {
+  Widget buildSignUpLink() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
           'Don\'t have an account? ',
-          style: TextStyle(color: Colors.grey[600]),
+          style: TextStyle(color: Colors.grey[600], fontSize: 16),
         ),
         TextButton(
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const SignUpPage()),
-            );
+            // Use GoRouter push instead of custom animation
+            context.push('/signup');
           },
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          ),
           child: const Text(
             'Sign Up',
             style: TextStyle(
               color: Color(0xFF0088cc),
-              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),

@@ -5,12 +5,13 @@ class AppTheme {
   static const Color primaryBlue = Color(0xFF0088cc);
   static const Color lightBlueBackground = Color(0xFFF8FAFC);
   
-  // Gradient colors
+  // Gradient colors - updated to match your JourneyQ logo
   static const List<Color> gradientBlue = [
-    Color(0xFF0088cc),
-    Color(0xFF33a3dd),
+    Color(0xFF1E3A8A), // Dark blue from your logo
+    Color(0xFF3B82F6), // Medium blue
+    Color(0xFF06B6D4), // Cyan from your logo
   ];
-  
+
   // Light Theme
   static ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
@@ -41,7 +42,7 @@ class AppTheme {
       onSurface: Colors.black,
     ),
   );
-  
+
   // Dark Theme
   static ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
@@ -72,8 +73,8 @@ class AppTheme {
       onSurface: Colors.white,
     ),
   );
-  
-  // Gradient shader callback for your gradient blue
+
+  // Gradient shader callback - updated to match your logo colors
   static ShaderCallback get gradientShader => (bounds) => LinearGradient(
     colors: gradientBlue,
     begin: Alignment.topLeft,

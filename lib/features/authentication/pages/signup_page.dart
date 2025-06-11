@@ -1,7 +1,9 @@
-// features/authentication/pages/signup_page.dart
 import 'package:flutter/material.dart';
-import '../../../shared/widgets/common/loading_widget.dart';
-import '../../../core/utils/validator.dart';
+import 'package:go_router/go_router.dart';
+import 'package:journeyq/core/utils/validator.dart';
+import 'package:journeyq/core/services/notification_service.dart';
+import 'package:journeyq/shared/widgets/dialog/show_dialog.dart';
+import 'package:journeyq/features/authentication/pages/widget.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({Key? key}) : super(key: key);
@@ -10,58 +12,21 @@ class SignUpPage extends StatefulWidget {
   State<SignUpPage> createState() => _SignUpPageState();
 }
 
-class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
+class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  bool _acceptTerms = false;
-  
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-    
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-    
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutBack,
-    ));
-    
-    _animationController.forward();
-  }
 
   @override
   void dispose() {
-    _animationController.dispose();
-    _firstNameController.dispose();
-    _lastNameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -69,39 +34,36 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
 
   Future<void> _handleSignUp() async {
     if (!_formKey.currentState!.validate()) return;
-    
-    if (!_acceptTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please accept the terms and conditions'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
-      // Simulate API call
       await Future.delayed(const Duration(seconds: 2));
-      
-      // TODO: Implement actual signup logic
+
+      NotificationService.showNotification(
+        title: "Account Created! 🎉",
+        body: "Welcome to JourneyQ! Your adventure begins now...",
+      );
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Account created successfully!'),
-            backgroundColor: Color(0xFF0088cc),
-          ),
-        );
-        Navigator.pop(context);
+        // Navigate to home page using GoRouter
+        context.go('/home');
       }
     } catch (e) {
+      NotificationService.showNotification(
+        title: "Sign Up Failed",
+        body: "Please check your information and try again.",
+      );
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Sign up failed: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.red[400],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
@@ -112,366 +74,258 @@ class _SignUpPageState extends State<SignUpPage> with TickerProviderStateMixin {
     }
   }
 
+  Future<void> _handleGoogleSignIn() async {
+    try {
+      // Simulate Google Sign In
+      await Future.delayed(const Duration(seconds: 1));
+      NotificationService.showNotification(
+        title: "Google Sign In",
+        body: "Signing in with Google...",
+      );
+      
+      if (mounted) {
+        // Navigate to home after successful Google sign in
+        context.go('/home');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Google Sign In failed: ${e.toString()}'),
+          backgroundColor: Colors.red[400],
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleAppleSignIn() async {
+    try {
+      // Simulate Apple Sign In
+      await Future.delayed(const Duration(seconds: 1));
+      NotificationService.showNotification(
+        title: "Apple Sign In",
+        body: "Signing in with Apple...",
+      );
+      
+      if (mounted) {
+        // Navigate to home after successful Apple sign in
+        context.go('/home');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Apple Sign In failed: ${e.toString()}'),
+          backgroundColor: Colors.red[400],
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleFacebookSignIn() async {
+    try {
+      // Simulate Facebook Sign In
+      await Future.delayed(const Duration(seconds: 1));
+      NotificationService.showNotification(
+        title: "Facebook Sign In",
+        body: "Signing in with Facebook...",
+      );
+      
+      if (mounted) {
+        // Navigate to home after successful Facebook sign in
+        context.go('/home');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Facebook Sign In failed: ${e.toString()}'),
+          backgroundColor: Colors.red[400],
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FBFF), // Very light white blue
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF0088cc)),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
+      backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFFF8FBFF),
-                  Color(0xFFEEF7FF),
-                ],
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      _buildHeader(),
-                      const SizedBox(height: 40),
-                      _buildSignUpForm(),
-                      const SizedBox(height: 20),
-                      _buildTermsCheckbox(),
-                      const SizedBox(height: 30),
-                      _buildSignUpButton(),
-                      const SizedBox(height: 20),
-                      _buildLoginLink(),
-                      const SizedBox(height: 30),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Column(
-      children: [
-        Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              colors: [Color(0xFF0088cc), Color(0xFF33a3dd)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF0088cc).withOpacity(0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: const Icon(
-            Icons.person_add,
-            size: 50,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 20),
-        const Text(
-          'Create Account',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF0088cc),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Join us and start your journey',
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.grey[600],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSignUpForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          Row(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Expanded(child: _buildFirstNameField()),
-              const SizedBox(width: 12),
-              Expanded(child: _buildLastNameField()),
+              buildHeader(),
+              const SizedBox(height: 12),
+              buildSignUpForm(),
+              const SizedBox(height: 12),
+              buildSignUpButton(),
+              const SizedBox(height: 12),
+              buildDivider(),
+              const SizedBox(height: 12),
+              buildSocialButtons(),
+              const SizedBox(height: 12),
+              buildSignInLink(),
             ],
           ),
-          const SizedBox(height: 16),
-          _buildEmailField(),
-          const SizedBox(height: 16),
-          _buildPhoneField(),
-          const SizedBox(height: 16),
-          _buildPasswordField(),
-          const SizedBox(height: 16),
-          _buildConfirmPasswordField(),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildFirstNameField() {
-    return TextFormField(
-      controller: _firstNameController,
-      validator: Validator.validateName,
-      decoration: InputDecoration(
-        labelText: 'First Name',
-        prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF0088cc)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+  Widget buildSignUpForm() {
+    return Container(
+      padding: const EdgeInsets.all(5),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            buildUsernameField(),
+            const SizedBox(height: 20),
+            buildEmailField(),
+            const SizedBox(height: 20),
+            buildPasswordField(),
+            const SizedBox(height: 20),
+          ],
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF0088cc), width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        labelStyle: const TextStyle(color: Color(0xFF0088cc)),
       ),
     );
   }
 
-  Widget _buildLastNameField() {
-    return TextFormField(
-      controller: _lastNameController,
-      validator: Validator.validateName,
-      decoration: InputDecoration(
-        labelText: 'Last Name',
-        prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF0088cc)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF0088cc), width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        labelStyle: const TextStyle(color: Color(0xFF0088cc)),
-      ),
+  // Usage for Username Field
+  Widget buildUsernameField() {
+    return buildCommonTextField(
+      controller: _usernameController,
+      labelText: 'Username',
+      hintText: 'Enter your username',
+      prefixIcon: Icons.person_outline,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter a username';
+        }
+        if (value.length < 3) {
+          return 'Username must be at least 3 characters';
+        }
+        if (value.length > 20) {
+          return 'Username must be less than 20 characters';
+        }
+        if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
+          return 'Username can only contain letters, numbers, and underscores';
+        }
+        return null;
+      },
+      keyboardType: TextInputType.text,
     );
   }
 
-  Widget _buildEmailField() {
-    return TextFormField(
+  // Usage for Email Field
+  Widget buildEmailField() {
+    return buildCommonTextField(
       controller: _emailController,
-      keyboardType: TextInputType.emailAddress,
+      labelText: 'Email Address',
+      hintText: 'Enter your email',
+      prefixIcon: Icons.email_outlined,
       validator: Validator.validateEmail,
-      decoration: InputDecoration(
-        labelText: 'Email',
-        prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF0088cc)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF0088cc), width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        labelStyle: const TextStyle(color: Color(0xFF0088cc)),
-      ),
+      keyboardType: TextInputType.emailAddress,
     );
   }
 
-  Widget _buildPhoneField() {
-    return TextFormField(
-      controller: _phoneController,
-      keyboardType: TextInputType.phone,
-      validator: Validator.validatePhone,
-      decoration: InputDecoration(
-        labelText: 'Phone Number',
-        prefixIcon: const Icon(Icons.phone_outlined, color: Color(0xFF0088cc)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF0088cc), width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        labelStyle: const TextStyle(color: Color(0xFF0088cc)),
-      ),
-    );
-  }
-
-  Widget _buildPasswordField() {
-    return TextFormField(
+  // Usage for Password Field
+  Widget buildPasswordField() {
+    return buildCommonTextField(
       controller: _passwordController,
-      obscureText: _obscurePassword,
+      labelText: 'Password',
+      hintText: 'Enter your password',
+      prefixIcon: Icons.lock_outline,
       validator: Validator.validatePassword,
-      decoration: InputDecoration(
-        labelText: 'Password',
-        prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF0088cc)),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscurePassword ? Icons.visibility : Icons.visibility_off,
-            color: const Color(0xFF0088cc),
+      obscureText: _obscurePassword,
+      suffixIcon: IconButton(
+        icon: Container(
+          margin: const EdgeInsets.all(12),
+          child: Icon(
+            _obscurePassword
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
+            color: Colors.black,
+            size: 20,
           ),
-          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF0088cc), width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        labelStyle: const TextStyle(color: Color(0xFF0088cc)),
+        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
       ),
     );
   }
 
-  Widget _buildConfirmPasswordField() {
-    return TextFormField(
-      controller: _confirmPasswordController,
-      obscureText: _obscureConfirmPassword,
-      validator: (value) => Validator.validateConfirmPassword(value, _passwordController.text),
-      decoration: InputDecoration(
-        labelText: 'Confirm Password',
-        prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF0088cc)),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
-            color: const Color(0xFF0088cc),
-          ),
-          onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF0088cc), width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        labelStyle: const TextStyle(color: Color(0xFF0088cc)),
-      ),
+  // Usage for Confirm Password Field
+  
+
+  Widget buildSignUpButton() {
+    return buildPrimaryGradientButton(
+      text: 'Sign Up',
+      onPressed: _handleSignUp,
+      isLoading: _isLoading,
     );
   }
 
-  Widget _buildTermsCheckbox() {
+  Widget buildSocialButtons() {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        Checkbox(
-          value: _acceptTerms,
-          onChanged: (value) => setState(() => _acceptTerms = value ?? false),
-          activeColor: const Color(0xFF0088cc),
-        ),
-        Expanded(
-          child: GestureDetector(
-            onTap: () => setState(() => _acceptTerms = !_acceptTerms),
-            child: RichText(
-              text: const TextSpan(
-                style: TextStyle(color: Colors.black87),
-                children: [
-                  TextSpan(text: 'I agree to the '),
-                  TextSpan(
-                    text: 'Terms and Conditions',
-                    style: TextStyle(
-                      color: Color(0xFF0088cc),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  TextSpan(text: ' and '),
-                  TextSpan(
-                    text: 'Privacy Policy',
-                    style: TextStyle(
-                      color: Color(0xFF0088cc),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+        buildSocialButton(
+          icon: Image.asset(
+            'assets/images/google.png', // Your Google PNG file
+            width: 28,
+            height: 28,
           ),
+          label: 'Google',
+          onPressed: _handleGoogleSignIn,
+          backgroundColor: Colors.white,
+          textColor: Colors.grey[800]!,
+          borderColor: Colors.grey[300]!,
+        ),
+        buildSocialButton(
+          icon: Icons.apple,
+          label: 'Apple',
+          onPressed: _handleAppleSignIn,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          borderColor: Colors.black,
+        ),
+        buildSocialButton(
+          icon: Icons.facebook,
+          label: 'Facebook',
+          onPressed: _handleFacebookSignIn,
+          backgroundColor: const Color(0xFF1877F2),
+          textColor: Colors.white,
+          borderColor: const Color(0xFF1877F2),
         ),
       ],
     );
   }
 
-  Widget _buildSignUpButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _handleSignUp,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF0088cc),
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 3,
-        ),
-        child: _isLoading
-            ? const LoadingWidget(color: Colors.white)
-            : const Text(
-                'Create Account',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-      ),
-    );
-  }
-
-  Widget _buildLoginLink() {
+  Widget buildSignInLink() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
           'Already have an account? ',
-          style: TextStyle(color: Colors.grey[600]),
+          style: TextStyle(color: Colors.grey[600], fontSize: 16),
         ),
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            // Use GoRouter pop to go back to login
+            context.pop();
+          },
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          ),
           child: const Text(
-            'Login',
+            'Sign In',
             style: TextStyle(
               color: Color(0xFF0088cc),
-              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
