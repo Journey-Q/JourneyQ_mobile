@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:journeyq/shared/widgets/common/loading_widget.dart';
 import 'package:journeyq/core/utils/validator.dart';
 import 'package:journeyq/core/services/notification_service.dart';
+import 'package:journeyq/shared/widgets/dialog/show_dialog.dart';
 import 'signup_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -16,11 +17,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  
+
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _rememberMe = false;
-  
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -32,25 +33,21 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-    
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutBack,
-    ));
-    
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutBack,
+          ),
+        );
+
     _animationController.forward();
-    
+
     // Show welcome notification after page loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _showWelcomeNotification();
@@ -68,7 +65,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   void _showWelcomeNotification() async {
     // Add a small delay to ensure the page is fully loaded
     await Future.delayed(const Duration(milliseconds: 500));
-    
+
     NotificationService.showNotification(
       title: "Welcome to JourneyQ!",
       body: "Ready to explore the world? Login to continue your adventure!",
@@ -77,26 +74,21 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       // Simulate API call
       await Future.delayed(const Duration(seconds: 2));
-      
+
       // Show success notification
       NotificationService.showNotification(
         title: "Login Successful! 🎉",
         body: "Welcome back! Your journey continues...",
       );
-      
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login successful!'),
-            backgroundColor: Color(0xFF0088cc),
-          ),
-        );
+        
       }
     } catch (e) {
       // Show error notification
@@ -104,7 +96,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         title: "Login Failed",
         body: "Please check your credentials and try again.",
       );
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -124,31 +116,34 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FBFF), // Very light white blue
-      resizeToAvoidBottomInset: true, // Important: allows screen to resize when keyboard opens
+      resizeToAvoidBottomInset:
+          true, // Important: allows screen to resize when keyboard opens
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFF8FBFF),
-              Color(0xFFEEF7FF),
-            ],
+            colors: [Color(0xFFF8FBFF), Color(0xFFEEF7FF)],
           ),
         ),
         child: SafeArea(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 20.0,
+            ),
             child: FadeTransition(
               opacity: _fadeAnimation,
               child: SlideTransition(
                 position: _slideAnimation,
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(context).size.height - 
-                              MediaQuery.of(context).padding.top - 
-                              MediaQuery.of(context).padding.bottom - 40,
+                    minHeight:
+                        MediaQuery.of(context).size.height -
+                        MediaQuery.of(context).padding.top -
+                        MediaQuery.of(context).padding.bottom -
+                        40,
                   ),
                   child: IntrinsicHeight(
                     child: Column(
@@ -193,7 +188,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF0088cc).withOpacity(0.3),
+                color: const Color(0xFF0088cc),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -217,10 +212,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         const SizedBox(height: 8),
         Text(
           'Sign in to continue your journey',
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.grey[600],
-          ),
+          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
         ),
       ],
     );
@@ -325,10 +317,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             ? const LoadingWidget(color: Colors.white)
             : const Text(
                 'Login',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
       ),
     );
@@ -345,10 +334,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       },
       child: const Text(
         'Forgot Password?',
-        style: TextStyle(
-          color: Color(0xFF0088cc),
-          fontWeight: FontWeight.w500,
-        ),
+        style: TextStyle(color: Color(0xFF0088cc), fontWeight: FontWeight.w500),
       ),
     );
   }
@@ -357,9 +343,17 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   Widget _buildTestNotificationButton() {
     return OutlinedButton.icon(
       onPressed: () {
-        NotificationService.showNotification(
-          title: "Test Notification 🔔",
-          body: "Glass effect on Android, standard on iOS!",
+        TopSnackBarService.show(
+          context,
+          message: 'Login successful!',
+          isSuccess: true,
+          actionLabel: 'Tap',
+          onActionPressed: () {
+            NotificationService.showNotification(
+              title: "Test Notification",
+              body: "This is a test notification for debugging purposes.",
+            );
+          },
         );
       },
       icon: const Icon(Icons.notifications_outlined, color: Color(0xFF0088cc)),
@@ -369,9 +363,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       ),
       style: OutlinedButton.styleFrom(
         side: const BorderSide(color: Color(0xFF0088cc)),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
