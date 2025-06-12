@@ -4,9 +4,7 @@ class User {
   final String name;
   final String? username;
   final String? avatar;
-  final String? bio;
-  final bool isEmailVerified;
-  final List<String>? roles;
+  final String? role;
   final DateTime createdAt;
 
   User({
@@ -15,9 +13,7 @@ class User {
     required this.name,
     this.username,
     this.avatar,
-    this.bio,
-    this.isEmailVerified = false,
-    this.roles,
+    this.role,
     required this.createdAt,
   });
 
@@ -28,9 +24,7 @@ class User {
       name: json['name'],
       username: json['username'],
       avatar: json['avatar'],
-      bio: json['bio'],
-      isEmailVerified: json['is_email_verified'] ?? false,
-      roles: json['roles'] != null ? List<String>.from(json['roles']) : null,
+      role: json['role'],
       createdAt: DateTime.parse(json['created_at']),
     );
   }
@@ -42,19 +36,9 @@ class User {
       'name': name,
       'username': username,
       'avatar': avatar,
-      'bio': bio,
-      'is_email_verified': isEmailVerified,
-      'roles': roles,
+      'role': role,
       'created_at': createdAt.toIso8601String(),
     };
   }
 
-  bool hasRole(String role) {
-    return roles?.contains(role) ?? false;
-  }
-
-  bool hasAnyRole(List<String> requiredRoles) {
-    if (roles == null) return false;
-    return requiredRoles.any((role) => roles!.contains(role));
-  }
 }

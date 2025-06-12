@@ -115,6 +115,12 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setUser(User newUser) {
+    user = newUser;
+    status = AuthStatus.authenticated;
+    notifyListeners();
+  }
+
   void setError(String message) {
     errorMessage = message;
     status = AuthStatus.error;

@@ -44,6 +44,24 @@ android {
 dependencies {
     // Core library desugaring dependency - required for flutter_local_notifications
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    
+    // Firebase dependencies
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-analytics-ktx")
+    
+    // Google Sign-In dependencies
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    implementation("com.google.android.gms:play-services-base:18.2.0")
+    
+    // Facebook SDK dependencies
+    implementation("com.facebook.android:facebook-login:16.3.0")
+    implementation("com.facebook.android:facebook-core:16.3.0")
+    
+    // Additional Android dependencies that might be needed
+    implementation("androidx.browser:browser:1.7.0")
+    implementation("androidx.activity:activity-ktx:1.8.2")
+    implementation("androidx.fragment:fragment-ktx:1.6.2")
 }
 
 flutter {

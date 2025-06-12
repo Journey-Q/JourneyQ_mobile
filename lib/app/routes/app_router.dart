@@ -3,9 +3,8 @@ import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:journeyq/features/authentication/pages/signup_page.dart';
 import 'package:journeyq/features/splash_page.dart';
 import 'package:journeyq/features/authentication/pages/login_page.dart';
+import 'package:journeyq/features/home/home_page.dart';
 import 'route_transistion.dart';
-
-
 
 class AppRouter {
   static GoRouter createRouter(AuthProvider authProvider) {
@@ -43,18 +42,24 @@ class AppRouter {
         ),
 
         // Login route with up-down animation
-        
         TransitionGoRoute(
           path: '/signup',
           builder: (context, state) => const SignUpPage(),
           transitionType: PageTransitionType.upDown,
         ),
-        
+
         TransitionGoRoute(
           path: '/login',
           builder: (context, state) => const LoginPage(),
           transitionType: PageTransitionType.upDown,
         ),
+
+        TransitionGoRoute(
+          path: '/home',
+          builder: (context, state) =>  HomePage(),
+          transitionType: PageTransitionType.slide,
+        ),
+
         // Example of protected routes with different animations
         /*
         TransitionGoRoute(

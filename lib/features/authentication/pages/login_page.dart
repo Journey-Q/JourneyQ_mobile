@@ -4,10 +4,11 @@ import 'package:journeyq/core/utils/validator.dart';
 import 'package:journeyq/core/services/notification_service.dart';
 import 'package:journeyq/shared/widgets/dialog/show_dialog.dart';
 import 'package:journeyq/features/authentication/pages/widget.dart';
+import 'package:journeyq/data/repositories/auth_repositories/social_auth.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
-
+  
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
@@ -16,6 +17,8 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final SocialAuthService _socialAuthService = SocialAuthService();
+
 
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -69,29 +72,115 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _handleGoogleSignIn() async {
-    try {
-      // Simulate Google Sign In
-      await Future.delayed(const Duration(seconds: 1));
+  // Updated LoginPage methods
+Future<void> _handleGoogleSignIn() async {
+  setState(() => _isLoading = true);
+  
+  try {
+    final userCredential = await _socialAuthService.signInWithGoogle();
+    
+    if (userCredential != null) {
+      // Success
+      final user = userCredential.user;
       NotificationService.showNotification(
-        title: "Google Sign In",
-        body: "Signing in with Google...",
+        title: "Google Sign In Successful! 🎉",
+        body: "Welcome, ${user?.displayName ?? 'User'}!",
       );
       
       if (mounted) {
-        // Navigate to home after successful Google sign in
         context.go('/home');
       }
-    } catch (e) {
+    } else {
+      // User cancelled the sign-in
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Google Sign In was cancelled'),
+            backgroundColor: Colors.orange[400],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    }
+  } catch (e) {
+    print('Google Sign In Error: $e');
+    
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Google Sign In failed: ${e.toString()}'),
           backgroundColor: Colors.red[400],
           behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
     }
+  } finally {
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
+}
+
+Future<void> _handleFacebookSignIn() async {
+  setState(() => _isLoading = true);
+  
+  try {
+    final userCredential = await _socialAuthService.signInWithFacebook();
+    
+    if (userCredential != null) {
+      // Success
+      final user = userCredential.user;
+      NotificationService.showNotification(
+        title: "Facebook Sign In Successful! 🎉",
+        body: "Welcome, ${user?.displayName ?? 'User'}!",
+      );
+      
+      if (mounted) {
+        context.go('/home');
+      }
+    } else {
+      // User cancelled the sign-in
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Facebook Sign In was cancelled'),
+            backgroundColor: Colors.orange[400],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    }
+  } catch (e) {
+    print('Facebook Sign In Error: $e');
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Facebook Sign In failed: ${e.toString()}'),
+          backgroundColor: Colors.red[400],
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
+  } finally {
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
+}
+
 
   Future<void> _handleAppleSignIn() async {
     try {
@@ -101,7 +190,7 @@ class _LoginPageState extends State<LoginPage> {
         title: "Apple Sign In",
         body: "Signing in with Apple...",
       );
-      
+
       if (mounted) {
         // Navigate to home after successful Apple sign in
         context.go('/home');
@@ -117,29 +206,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _handleFacebookSignIn() async {
-    try {
-      // Simulate Facebook Sign In
-      await Future.delayed(const Duration(seconds: 1));
-      NotificationService.showNotification(
-        title: "Facebook Sign In",
-        body: "Signing in with Facebook...",
-      );
-      
-      if (mounted) {
-        // Navigate to home after successful Facebook sign in
-        context.go('/home');
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Facebook Sign In failed: ${e.toString()}'),
-          backgroundColor: Colors.red[400],
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
