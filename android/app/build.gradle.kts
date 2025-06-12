@@ -2,68 +2,95 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("com.google.gms.google-services")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 android {
     namespace = "com.example.journeyq"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"  // Updated to fix NDK version conflict
+    compileSdk = 35  // Updated to 35 as required by plugins
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
-        isCoreLibraryDesugaringEnabled = true  // Enable desugaring for flutter_local_notifications
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = "11"
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.journeyq"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        minSdk = 23
+        targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        multiDexEnabled = true
+        
+        // Add this to handle the PigeonUserDetails issue
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+        }
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+    
+    // Add packaging options to avoid conflicts
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
 }
 
 dependencies {
-    // Core library desugaring dependency - required for flutter_local_notifications
+    // Core library desugaring
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
     
-    // Firebase dependencies
-    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
-    implementation("com.google.firebase:firebase-auth-ktx")
-    implementation("com.google.firebase:firebase-analytics-ktx")
+    // Firebase BOM (Bill of Materials) - ensures compatible versions
+    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))  // Latest version
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-analytics")
     
-    // Google Sign-In dependencies
-    implementation("com.google.android.gms:play-services-auth:20.7.0")
-    implementation("com.google.android.gms:play-services-base:18.2.0")
+    // Google Sign-In - Updated versions
+    implementation("com.google.android.gms:play-services-auth:21.2.0")  // Updated
+    implementation("com.google.android.gms:play-services-base:18.5.0")  // Updated
     
-    // Facebook SDK dependencies
-    implementation("com.facebook.android:facebook-login:16.3.0")
-    implementation("com.facebook.android:facebook-core:16.3.0")
+    // Facebook SDK - Updated versions
+    implementation("com.facebook.android:facebook-login:17.0.1")  // Updated
+    implementation("com.facebook.android:facebook-core:17.0.1")  // Updated
     
-    // Additional Android dependencies that might be needed
-    implementation("androidx.browser:browser:1.7.0")
-    implementation("androidx.activity:activity-ktx:1.8.2")
-    implementation("androidx.fragment:fragment-ktx:1.6.2")
+    // Additional dependencies
+    implementation("androidx.browser:browser:1.8.0")  // Updated
+    implementation("androidx.activity:activity-ktx:1.9.0")  // Updated
+    implementation("androidx.fragment:fragment-ktx:1.8.0")  // Updated
+    implementation("androidx.multidex:multidex:2.0.1")
 }
 
 flutter {
     source = "../.."
+}
+
+// Suppress Java 8 obsolete warnings and other compiler warnings
+tasks.withType<JavaCompile> {
+    options.compilerArgs.addAll(listOf(
+        "-Xlint:-options",
+        "-Xlint:-deprecation",
+        "-Xlint:-unchecked"
+    ))
+}
+
+// Also suppress Kotlin warnings if needed
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs = freeCompilerArgs + listOf(
+            "-Xlint:-options",
+            "-opt-in=kotlin.RequiresOptIn"
+        )
+    }
 }

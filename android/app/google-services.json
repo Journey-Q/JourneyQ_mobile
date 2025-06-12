@@ -12,7 +12,20 @@
           "package_name": "com.example.journeyq"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "764245104845-djve939fa9ke35pvsjscn9cjvve06082.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.journeyq",
+            "certificate_hash": "c04788bcaf05615e86cdf7ea31cbb975cd547d26"
+          }
+        },
+        {
+          "client_id": "764245104845-7jkh48okvf2r86el0gcvg9sv252eljk6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBy82-kU32CkHKIPtRJTw_QFUYxBdYW84g"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "764245104845-7jkh48okvf2r86el0gcvg9sv252eljk6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

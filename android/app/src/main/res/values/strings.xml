@@ -3,4 +3,5 @@
     <string name="app_name">JourneyQ</string>
     <string name="facebook_app_id">1224836515790840</string>
     <string name="fb_login_protocol_scheme">fb1224836515790840</string>
+    <string name="facebook_client_token">6b2713429e32ec6e969d1a704a2df205</string>
 </resources>
