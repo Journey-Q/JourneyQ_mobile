@@ -1,6 +1,6 @@
 abstract class AppException implements Exception {
   final String message;
-  final String? code;
+  final int? code;
   
   AppException(this.message, {this.code});
   

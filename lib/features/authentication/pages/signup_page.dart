@@ -33,7 +33,10 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Future<void> _handleSignUp() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
 
     setState(() => _isLoading = true);
 
@@ -269,40 +272,33 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Widget buildSocialButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        buildSocialButton(
-          icon: Image.asset(
-            'assets/images/google.png', // Your Google PNG file
-            width: 28,
-            height: 28,
-          ),
-          label: 'Google',
-          onPressed: _handleGoogleSignIn,
-          backgroundColor: Colors.white,
-          textColor: Colors.grey[800]!,
-          borderColor: Colors.grey[300]!,
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      buildSocialButton(
+        icon: Image.asset(
+          'assets/images/google.png',
+          width: 28,
+          height: 28,
         ),
-        buildSocialButton(
-          icon: Icons.apple,
-          label: 'Apple',
-          onPressed: _handleAppleSignIn,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          borderColor: Colors.black,
-        ),
-        buildSocialButton(
-          icon: Icons.facebook,
-          label: 'Facebook',
-          onPressed: _handleFacebookSignIn,
-          backgroundColor: const Color(0xFF1877F2),
-          textColor: Colors.white,
-          borderColor: const Color(0xFF1877F2),
-        ),
-      ],
-    );
-  }
+        label: 'Google',
+        onPressed: _handleGoogleSignIn,
+        backgroundColor: Colors.white,
+        textColor: Colors.grey[800]!,
+        borderColor: Colors.grey[300]!,
+      ),
+      const SizedBox(width: 32),
+      buildSocialButton(
+        icon: Icons.apple,
+        label: 'Apple',
+        onPressed: _handleAppleSignIn,
+        backgroundColor: Colors.black,
+        textColor: Colors.white,
+        borderColor: Colors.black,
+      ),
+    ],
+  );
+}
 
   Widget buildSignInLink() {
     return Row(

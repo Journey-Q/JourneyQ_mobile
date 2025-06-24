@@ -1,36 +1,43 @@
+import 'package:flutter/material.dart';
 import 'package:journeyq/core/services/api_service.dart';
-import 'package:journeyq/core/errors/error_handler.dart';
+import 'package:journeyq/core/errors/exception.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class AuthRepository {
-  static final ErrorHandler errorHandler = ErrorHandler();
-
   // Login with email and password
   static Future<Map<String, dynamic>> login(
     String email,
     String password,
   ) async {
     try {
-      final response = await ApiService.post('/auth/login', data: {
-        'email': email,
-        'password': password,
-      });
+      final response = await ApiService.post(
+        '/auth/login',
+        data: {'email': email, 'password': password},
+      );
       return response.data;
+    } on AppException catch (e) {
+      rethrow;
     } catch (e) {
-      throw ErrorHandler.handleException(e as Exception);
+      rethrow;
     }
   }
 
   // Login with Google/social
-  static Future<Map<String, dynamic>> loginWithGoogle() async {
+  static Future<Map<String, dynamic>> loginWithGoogle(
+  ) async {
     try {
-      final response = await ApiService.post('/auth/google-login', data: {
-        // Google credentials would go here
-      });
+      final response = await ApiService.post(
+        '/auth/google-login',
+        data: {
+          // Google credentials would go here
+        },
+      );
       return response.data;
+    } on AppException catch (e) {
+      rethrow;
     } catch (e) {
-      throw ErrorHandler.handleException(e as Exception);
+      rethrow;
     }
   }
 
@@ -42,15 +49,20 @@ class AuthRepository {
     String confirmPassword,
   ) async {
     try {
-      final response = await ApiService.post('/auth/register', data: {
-        'name': name,
-        'email': email,
-        'password': password,
-        'password_confirmation': confirmPassword,
-      });
+      final response = await ApiService.post(
+        '/auth/register',
+        data: {
+          'name': name,
+          'email': email,
+          'password': password,
+          'password_confirmation': confirmPassword,
+        },
+      );
       return response.data;
+    } on AppException catch (e) {
+      rethrow;
     } catch (e) {
-      throw ErrorHandler.handleException(e as Exception);
+      rethrow;
     }
   }
 
@@ -58,21 +70,27 @@ class AuthRepository {
   static Future<void> logout() async {
     try {
       await ApiService.post('/auth/logout');
+    } on AppException catch (e) {
+      rethrow;
     } catch (e) {
-      // Continue with local logout even if API fails
-      throw ErrorHandler.handleException(e as Exception);
+      rethrow;
     }
   }
 
   // Refresh authentication token
-  static Future<Map<String, dynamic>> refreshToken(String refreshToken) async {
+  static Future<Map<String, dynamic>> refreshToken(
+    String refreshToken,
+  ) async {
     try {
-      final response = await ApiService.post('/auth/access', data: {
-        'refresh_token': refreshToken,
-      });
+      final response = await ApiService.post(
+        '/auth/access',
+        data: {'refresh_token': refreshToken},
+      );
       return response.data;
+    } on AppException catch (e) {
+      rethrow;
     } catch (e) {
-      throw ErrorHandler.handleException(e as Exception);
+      rethrow;
     }
   }
 
@@ -81,8 +99,10 @@ class AuthRepository {
     try {
       final response = await ApiService.get('/auth/verify');
       return response.data;
+    } on AppException catch (e) {
+      rethrow;
     } catch (e) {
-      throw ErrorHandler.handleException(e as Exception);
+      rethrow;
     }
   }
 
@@ -91,13 +111,16 @@ class AuthRepository {
     try {
       final response = await ApiService.get('/user/profile');
       return response.data;
+    } on AppException catch (e) {
+      rethrow;
     } catch (e) {
-      throw ErrorHandler.handleException(e as Exception);
+      rethrow;
     }
   }
 
   // Update user profile
-  static Future<Map<String, dynamic>> updateProfile({
+  static Future<Map<String, dynamic>> updateProfile(
+    BuildContext context, {
     String? name,
     String? email,
     String? bio,
@@ -110,19 +133,24 @@ class AuthRepository {
 
       final response = await ApiService.put('/user/profile', data: data);
       return response.data;
+    } on AppException catch (e) {
+      rethrow;
     } catch (e) {
-      throw ErrorHandler.handleException(e as Exception);
+      rethrow;
     }
   }
 
   // Token management helper methods
-  static Future<void> saveTokens(String accessToken, String refreshToken) async {
+  static Future<void> saveTokens(
+    String accessToken,
+    String refreshToken,
+  ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('access_token', accessToken);
       await prefs.setString('refresh_token', refreshToken);
     } catch (e) {
-      throw ErrorHandler.handleException(e as Exception);
+      throw Exception('Failed to save tokens: ${e.toString()}');
     }
   }
 
@@ -133,7 +161,7 @@ class AuthRepository {
       await prefs.remove('refresh_token');
       await prefs.remove('user_data');
     } catch (e) {
-      throw ErrorHandler.handleException(e as Exception);
+      throw Exception('Failed to clear tokens: ${e.toString()}');
     }
   }
 
@@ -161,7 +189,7 @@ class AuthRepository {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('user_data', jsonEncode(userData));
     } catch (e) {
-      throw ErrorHandler.handleException(e as Exception);
+      throw Exception('Failed to cache user data: ${e.toString()}');
     }
   }
 

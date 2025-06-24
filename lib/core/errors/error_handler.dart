@@ -28,6 +28,12 @@ class ErrorHandler {
     }
   }
 
+  // Handle error and show snackbar automatically
+  static void handleError(BuildContext context, Exception exception) {
+    final failure = handleException(exception);
+    showError(context, failure);
+  }
+
   // Simple error snackbar
   static void showError(BuildContext context, Failure failure) {
     final snackBar = SnackBar(
@@ -41,7 +47,7 @@ class ErrorHandler {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              _getMessage(failure),
+              failure.message, // Use the actual failure message
               style: const TextStyle(color: Colors.white),
             ),
           ),
@@ -94,25 +100,8 @@ class ErrorHandler {
     }
   }
 
-  // Get error message
-  static String _getMessage(Failure failure) {
-    switch (failure.runtimeType) {
-      case NetworkFailure _:
-        return 'Check your internet connection';
-      case AuthFailure _:
-        return 'Authentication failed';
-      case ValidationFailure _:
-        return 'Please check your input';
-      case ServerFailure _:
-        return 'Server error occurred';
-      default:
-        return failure.message;
-    }
-  }
-
   // Check if error can be retried
   static bool canRetry(Failure failure) {
     return failure is NetworkFailure || failure is ServerFailure;
   }
-
 }

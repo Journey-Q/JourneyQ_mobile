@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:journeyq/core/utils/validator.dart';
-import 'package:journeyq/core/services/notification_service.dart';
+import 'package:journeyq/core/errors/error_handler.dart';
+import 'package:journeyq/core/errors/exception.dart';
 import 'package:journeyq/shared/widgets/dialog/show_dialog.dart';
 import 'package:journeyq/features/authentication/pages/widget.dart';
+import 'package:journeyq/data/repositories/auth_repositories/auth_repository.dart';
 import 'package:journeyq/data/repositories/auth_repositories/social_auth.dart';
 import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:provider/provider.dart';
@@ -44,36 +46,26 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      await Future.delayed(const Duration(seconds: 2));
+      final result = await AuthRepository.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
 
-      NotificationService.showNotification(
-        title: "Login Successful! 🎉",
-        body: "Welcome back! Your journey continues...",
+      // Success - show success message
+      TopSnackBarService.show_message(
+        context,
+        message: "Login Successful! Welcome back!",
+        isSuccess: true
       );
 
       if (mounted) {
-        // Navigate to home page using GoRouter
         authProvider.setStatus(AuthStatus.authenticated);
         context.go('/home');
       }
+    } on AppException catch (e) {
+      ErrorHandler.handleError(context, e);
     } catch (e) {
-      NotificationService.showNotification(
-        title: "Login Failed",
-        body: "Please check your credentials and try again.",
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Login failed: ${e.toString()}'),
-            backgroundColor: Colors.red[400],
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        );
-      }
+      ErrorHandler.handleError(context, e is AppException? e :Exception());
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -81,7 +73,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // Updated LoginPage methods
   Future<void> _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
 
@@ -89,11 +80,11 @@ class _LoginPageState extends State<LoginPage> {
       final userCredential = await _socialAuthService.signInWithGoogle();
 
       if (userCredential != null) {
-        // Success
         final user = userCredential.user;
-        NotificationService.showNotification(
-          title: "Google Sign In Successful! 🎉",
-          body: "Welcome, ${user?.displayName ?? 'User'}!",
+        TopSnackBarService.show_message(
+          context,
+          message: "Login Successful! Welcome back!",
+          isSuccess: true
         );
 
         if (mounted) {
@@ -101,52 +92,33 @@ class _LoginPageState extends State<LoginPage> {
           context.go('/home');
         }
       } else {
-        // User cancelled the sign-in
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Google Sign In was cancelled'),
-              backgroundColor: Colors.black,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Google Sign In failed: ${e.toString()}'),
-            backgroundColor: Colors.black,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
+        // Handle case where sign-in was cancelled or failed
+        TopSnackBarService.show_message(
+          context,
+          message: "Google sign-in was cancelled or failed",
+          isSuccess: false
         );
       }
-    } finally {
+    } catch (e) {
+      ErrorHandler.handleError(context, e is AppException? e :Exception());
       if (mounted) {
         setState(() => _isLoading = false);
       }
     }
   }
 
-  Future<void> _handleFacebookSignIn() async {
+  
+  Future<void> _handleAppleSignIn() async {
     setState(() => _isLoading = true);
 
     try {
-      final userCredential = await _socialAuthService.signInWithFacebook();
-
+      final userCredential = await _socialAuthService.signInWithApple();
+      
       if (userCredential != null) {
-        // Success
-        final user = userCredential.user;
-        NotificationService.showNotification(
-          title: "Facebook Sign In Successful! 🎉",
-          body: "Welcome, ${user?.displayName ?? 'User'}!",
+        TopSnackBarService.show_message(
+          context,
+          message: "Apple sign-in successful! Welcome back!",
+          isSuccess: false
         );
 
         if (mounted) {
@@ -154,63 +126,19 @@ class _LoginPageState extends State<LoginPage> {
           context.go('/home');
         }
       } else {
-        // User cancelled the sign-in
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Facebook Sign In was cancelled'),
-              backgroundColor: Colors.black,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      print('Facebook Sign In Error: $e');
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Facebook Sign In failed: ${e.toString()}'),
-            backgroundColor: Colors.black,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
+        // Handle case where sign-in was cancelled or failed
+        TopSnackBarService.show_message(
+          context,
+          message: "Apple sign-in was cancelled or failed",
+          isSuccess: false
         );
       }
+    } catch (e) {
+      ErrorHandler.handleError(context, e is AppException? e :Exception());
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
-    }
-  }
-
-  Future<void> _handleAppleSignIn() async {
-    try {
-      // Simulate Apple Sign In
-      await Future.delayed(const Duration(seconds: 1));
-      NotificationService.showNotification(
-        title: "Apple Sign In",
-        body: "Signing in with Apple...",
-      );
-
-      if (mounted) {
-        // Navigate to home after successful Apple sign in
-        context.go('/home');
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Apple Sign In failed: ${e.toString()}'),
-          backgroundColor: Colors.red[400],
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
     }
   }
 
@@ -261,7 +189,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // Usage for Email Field
   Widget buildEmailField() {
     return buildCommonTextField(
       controller: _emailController,
@@ -273,7 +200,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // Usage for Password Field
   Widget buildPasswordField() {
     return buildCommonTextField(
       controller: _passwordController,
@@ -307,40 +233,33 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget buildSocialButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        buildSocialButton(
-          icon: Image.asset(
-            'assets/images/google.png', // Your Google PNG file
-            width: 28,
-            height: 28,
-          ),
-          label: 'Google',
-          onPressed: _handleGoogleSignIn,
-          backgroundColor: Colors.white,
-          textColor: Colors.grey[800]!,
-          borderColor: Colors.grey[300]!,
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      buildSocialButton(
+        icon: Image.asset(
+          'assets/images/google.png',
+          width: 28,
+          height: 28,
         ),
-        buildSocialButton(
-          icon: Icons.apple,
-          label: 'Apple',
-          onPressed: _handleAppleSignIn,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          borderColor: Colors.black,
-        ),
-        buildSocialButton(
-          icon: Icons.facebook,
-          label: 'Facebook',
-          onPressed: _handleFacebookSignIn,
-          backgroundColor: const Color(0xFF1877F2),
-          textColor: Colors.white,
-          borderColor: const Color(0xFF1877F2),
-        ),
-      ],
-    );
-  }
+        label: 'Google',
+        onPressed: _handleGoogleSignIn,
+        backgroundColor: Colors.white,
+        textColor: Colors.grey[800]!,
+        borderColor: Colors.grey[300]!,
+      ),
+      const SizedBox(width: 32),
+      buildSocialButton(
+        icon: Icons.apple,
+        label: 'Apple',
+        onPressed: _handleAppleSignIn,
+        backgroundColor: Colors.black,
+        textColor: Colors.white,
+        borderColor: Colors.black,
+      ),
+    ],
+  );
+}
 
   Widget buildSignUpLink() {
     return Row(
@@ -351,10 +270,7 @@ class _LoginPageState extends State<LoginPage> {
           style: TextStyle(color: Colors.grey[600], fontSize: 16),
         ),
         TextButton(
-          onPressed: () {
-            // Use GoRouter push instead of custom animation
-            context.push('/signup');
-          },
+          onPressed: () => context.push('/signup'),
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           ),

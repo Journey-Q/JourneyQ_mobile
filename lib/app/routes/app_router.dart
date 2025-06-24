@@ -1,7 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:journeyq/features/authentication/pages/signup_page.dart';
-import 'package:journeyq/features/splash_page.dart';
 import 'package:journeyq/features/authentication/pages/login_page.dart';
 import 'package:journeyq/features/home/home_page.dart';
 import 'route_transistion.dart';
@@ -9,38 +8,27 @@ import 'route_transistion.dart';
 class AppRouter {
   static GoRouter createRouter(AuthProvider authProvider) {
     return GoRouter(
-      initialLocation: '/splash',
+      initialLocation: '/login',
       refreshListenable: authProvider,
       redirect: (context, state) {
         final authStatus = authProvider.status;
-        final isOnSplash = state.matchedLocation == '/splash';
         final isOnLogin =
             state.matchedLocation == '/login' ||
             state.matchedLocation == '/signup';
-
-        if (authStatus == AuthStatus.initial && !isOnSplash) {
-          return '/splash';
-        }
 
         if (authStatus == AuthStatus.unauthenticated && !isOnLogin) {
           return '/login';
         }
 
         if (authStatus == AuthStatus.authenticated &&
-            (isOnLogin || isOnSplash)) {
+            (isOnLogin )) {
           return '/home';
         }
 
         return null;
       },
       routes: [
-        // Splash route with no animation
-        TransitionGoRoute(
-          path: '/splash',
-          builder: (context, state) => const SplashPage(),
-          transitionType: PageTransitionType.none,
-        ),
-
+        
         // Login route with up-down animation
         TransitionGoRoute(
           path: '/signup',

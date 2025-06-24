@@ -19,8 +19,6 @@ dependencies:
   flutter_local_notifications: ^17.2.3
   firebase_auth: ^5.3.1
   google_sign_in: ^6.2.1
-  # Use the downgraded version as suggested by pub
-  flutter_facebook_auth: ^6.2.0
   dio: ^5.2.0
   http: ^1.1.2
   equatable: ^2.0.5

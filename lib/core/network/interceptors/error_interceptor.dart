@@ -13,7 +13,7 @@ class ErrorInterceptor extends Interceptor {
       requestOptions: err.requestOptions,
       response: err.response,
       type: err.type,
-      error: appException, // Attach our custom exception
+      error: appException,
       message: appException.message,
     );
     
@@ -25,37 +25,37 @@ class ErrorInterceptor extends Interceptor {
       case DioExceptionType.connectionTimeout:
         return NetworkException(
           'Connection timeout. Please check your internet connection.',
-          code: 'CONNECTION_TIMEOUT',
+          code: 408,
         );
         
       case DioExceptionType.sendTimeout:
         return NetworkException(
           'Request timeout. Please try again.',
-          code: 'SEND_TIMEOUT',
+          code: 408,
         );
         
       case DioExceptionType.receiveTimeout:
         return NetworkException(
           'Server response timeout. Please try again.',
-          code: 'RECEIVE_TIMEOUT',
+          code: 408,
         );
         
       case DioExceptionType.connectionError:
         return NetworkException(
           'No internet connection. Please check your network settings.',
-          code: 'CONNECTION_ERROR',
+          code: 503,
         );
-        
+           
       case DioExceptionType.badCertificate:
         return NetworkException(
-          'Certificate error. Please contact support.',
-          code: 'BAD_CERTIFICATE',
+          'Security certificate error. Please try again.',
+          code: 495,
         );
         
       case DioExceptionType.cancel:
         return NetworkException(
           'Request was cancelled.',
-          code: 'REQUEST_CANCELLED',
+          code: 499,
         );
         
       case DioExceptionType.badResponse:
@@ -63,93 +63,88 @@ class ErrorInterceptor extends Interceptor {
         
       case DioExceptionType.unknown:
       default:
-        return ServerException(
+        return NetworkException(
           'An unexpected error occurred. Please try again.',
-          code: 'UNKNOWN_ERROR',
+          code: 500,
         );
     }
   }
   
   AppException _mapHttpErrorToAppException(DioException err) {
-    final statusCode = err.response?.statusCode;
-    final data = err.response?.data;
+    final statusCode = err.response?.statusCode ?? 500;
+    final responseMessage = _extractResponseMessage(err.response?.data);
+    final message = 'Status Code: $statusCode, Message: ${responseMessage ?? 'Unknown error'}';
     
     switch (statusCode) {
       case 400:
-        final message = _extractErrorMessage(data) ?? 
-            'Invalid request. Please check your input.';
-        return ValidationException(
+        return ServerException(
           message,
-          code: 'BAD_REQUEST',
-          errors: _extractValidationErrorsMap(data),
+          code: 400,
         );
         
       case 401:
         return AuthException(
-          'Session expired. Please login again.',
-          code: 'UNAUTHORIZED',
+          message,
+          code: 401,
         );
         
       case 403:
         return AuthException(
-          'Access denied. You don\'t have permission to perform this action.',
-          code: 'FORBIDDEN',
+          message,
+          code: 403,
         );
         
       case 404:
         return ServerException(
-          'Requested resource not found.',
-          code: 'NOT_FOUND',
+          message,
+          code: 404,
         );
         
       case 422:
-        final message = _extractValidationErrors(data) ?? 
-            'Validation failed. Please check your input.';
         return ValidationException(
           message,
-          code: 'VALIDATION_ERROR',
-          errors: _extractValidationErrorsMap(data),
+          code: 422,
         );
         
       case 429:
         return ServerException(
-          'Too many requests. Please wait a moment and try again.',
-          code: 'RATE_LIMIT_EXCEEDED',
+          message,
+          code: 429,
         );
         
       case 500:
         return ServerException(
-          'Internal server error. Our team has been notified.',
-          code: 'INTERNAL_SERVER_ERROR',
+          message,
+          code: 500,
         );
         
       case 502:
         return ServerException(
-          'Bad gateway. Server is temporarily unavailable.',
-          code: 'BAD_GATEWAY',
+          message,
+          code: 502,
         );
         
       case 503:
         return ServerException(
-          'Service temporarily unavailable. Please try again later.',
-          code: 'SERVICE_UNAVAILABLE',
+          message,
+          code: 503,
         );
         
       case 504:
         return ServerException(
-          'Gateway timeout. Please try again later.',
-          code: 'GATEWAY_TIMEOUT',
+          message,
+          code: 504,
         );
         
       default:
         return ServerException(
-          'Server error (${statusCode ?? 'unknown'}). Please try again.',
-          code: 'HTTP_ERROR_$statusCode',
+          message,
+          code: statusCode,
         );
     }
   }
   
-  String? _extractErrorMessage(dynamic data) {
+  String? _extractResponseMessage(dynamic data) {
     if (data is Map<String, dynamic>) {
       return data['message'] ?? 
              data['error'] ?? 
@@ -159,48 +154,6 @@ class ErrorInterceptor extends Interceptor {
     }
     if (data is String) {
       return data;
-    }
-    return null;
-  }
-  
-  String? _extractValidationErrors(dynamic data) {
-    if (data is Map<String, dynamic>) {
-      final errors = data['errors'] ?? data['validation_errors'];
-      
-      if (errors is Map<String, dynamic>) {
-        final errorMessages = <String>[];
-        errors.forEach((field, messages) {
-          if (messages is List) {
-            errorMessages.addAll(messages.map((msg) => '$field: $msg'));
-          } else if (messages is String) {
-            errorMessages.add('$field: $messages');
-          }
-        });
-        return errorMessages.join('\n');
-      } else if (errors is List) {
-        return errors.join('\n');
-      }
-      
-      return _extractErrorMessage(data);
-    }
-    return null;
-  }
-  
-  Map<String, List<String>>? _extractValidationErrorsMap(dynamic data) {
-    if (data is Map<String, dynamic>) {
-      final errors = data['errors'] ?? data['validation_errors'];
-      
-      if (errors is Map<String, dynamic>) {
-        final validationErrors = <String, List<String>>{};
-        errors.forEach((field, messages) {
-          if (messages is List) {
-            validationErrors[field] = messages.map((msg) => msg.toString()).toList();
-          } else if (messages is String) {
-            validationErrors[field] = [messages];
-          }
-        });
-        return validationErrors.isNotEmpty ? validationErrors : null;
-      }
     }
     return null;
   }
