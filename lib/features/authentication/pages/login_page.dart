@@ -52,10 +52,9 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       // Success - show success message
-      TopSnackBarService.show_message(
+      SnackBarService.showSuccess(
         context,
-        message: "Login Successful! Welcome back!",
-        isSuccess: true
+        "Login Successful! Welcome back!",
       );
 
       if (mounted) {
@@ -81,10 +80,9 @@ class _LoginPageState extends State<LoginPage> {
 
       if (userCredential != null) {
         final user = userCredential.user;
-        TopSnackBarService.show_message(
+        SnackBarService.showSuccess(
           context,
-          message: "Login Successful! Welcome back!",
-          isSuccess: true
+          "Login Successful! Welcome back!"
         );
 
         if (mounted) {
@@ -93,10 +91,9 @@ class _LoginPageState extends State<LoginPage> {
         }
       } else {
         // Handle case where sign-in was cancelled or failed
-        TopSnackBarService.show_message(
+        SnackBarService.showSuccess(
           context,
-          message: "Google sign-in was cancelled or failed",
-          isSuccess: false
+          "Login Successful! Welcome back!"
         );
       }
     } catch (e) {
@@ -115,10 +112,9 @@ class _LoginPageState extends State<LoginPage> {
       final userCredential = await _socialAuthService.signInWithApple();
       
       if (userCredential != null) {
-        TopSnackBarService.show_message(
+        SnackBarService.showSuccess(
           context,
-          message: "Apple sign-in successful! Welcome back!",
-          isSuccess: false
+          "Login Successful! Welcome back!"
         );
 
         if (mounted) {
@@ -127,10 +123,9 @@ class _LoginPageState extends State<LoginPage> {
         }
       } else {
         // Handle case where sign-in was cancelled or failed
-        TopSnackBarService.show_message(
+        SnackBarService.showSuccess(
           context,
-          message: "Apple sign-in was cancelled or failed",
-          isSuccess: false
+          "Login Successful! Welcome back!"
         );
       }
     } catch (e) {
@@ -154,7 +149,7 @@ class _LoginPageState extends State<LoginPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 32),
-              buildHeader(),
+              buildLoginHeader(),
               const SizedBox(height: 32),
               buildLoginForm(),
               const SizedBox(height: 32),

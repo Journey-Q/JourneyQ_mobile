@@ -22,7 +22,7 @@ Widget buildHeader() {
           end: Alignment.centerRight,
         ).createShader(bounds),
         child: const Text(
-          'Welcome Back',
+          'Welcome to JourneyQ',
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -34,6 +34,50 @@ Widget buildHeader() {
       const SizedBox(height: 8),
       Text(
         'Sign in to continue your journey',
+        style: TextStyle(
+          fontSize: 16,
+          color: Colors.grey[600],
+          fontWeight: FontWeight.w400,
+        ),
+      ),
+    ],
+  );
+}
+
+
+Widget buildLoginHeader() {
+  return Column(
+    children: [
+      Hero(
+        tag: 'app_logo',
+        child: Container(
+          width: 150,
+          height: 150,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Image.asset('assets/images/logo1.png', fit: BoxFit.cover),
+          ),
+        ),
+      ),
+      ShaderMask(
+        shaderCallback: (bounds) => const LinearGradient(
+          colors: [Color(0xFF0088cc), Color(0xFF00B4DB)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ).createShader(bounds),
+        child: const Text(
+          'Welcome Back',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: -0.5,
+          ),
+        ),
+      ),
+      const SizedBox(height: 8),
+      Text(
+        'Sign up to continue your journey',
         style: TextStyle(
           fontSize: 16,
           color: Colors.grey[600],

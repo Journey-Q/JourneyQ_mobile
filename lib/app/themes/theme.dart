@@ -27,16 +27,12 @@ class AppTheme {
       800: Color(0xFF003752),
       900: Color(0xFF001C29),
     }),
-    scaffoldBackgroundColor: lightBlueBackground,
-    appBarTheme: AppBarTheme(
-      backgroundColor: primaryBlue,
-      foregroundColor: Colors.white,
-      elevation: 0,
-    ),
+    scaffoldBackgroundColor: Colors.white,
+    
     colorScheme: ColorScheme.light(
       primary: primaryBlue,
       secondary: Color(0xFF33a3dd),
-      surface: lightBlueBackground,
+      surface: Colors.white,
       onPrimary: Colors.white,
       onSecondary: Colors.white,
       onSurface: Colors.black,
@@ -58,12 +54,6 @@ class AppTheme {
       800: Color(0xFF003752),
       900: Color(0xFF001C29),
     }),
-    scaffoldBackgroundColor: Color(0xFF121212),
-    appBarTheme: AppBarTheme(
-      backgroundColor: Color(0xFF1E1E1E),
-      foregroundColor: Colors.white,
-      elevation: 0,
-    ),
     colorScheme: ColorScheme.dark(
       primary: primaryBlue,
       secondary: Color(0xFF33a3dd),
