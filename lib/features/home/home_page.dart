@@ -171,7 +171,6 @@ class _HomePageState extends State<HomePage> {
               title: const Text('Report Post'),
               onTap: () {
                 Navigator.pop(context);
-                print('Report post for $userName');
               },
             ),
             ListTile(
