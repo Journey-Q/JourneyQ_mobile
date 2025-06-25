@@ -2,46 +2,49 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class CustomBottomNavigation extends StatelessWidget {
-  final String currentRoute;
+  final int currentPageIndex;
+  final Function(int)? onPageChanged; // Optional callback for page changes
 
   const CustomBottomNavigation({
     super.key,
-    required this.currentRoute,
+    required this.currentPageIndex,
+    this.onPageChanged,
   });
 
   // Define navigation items with their routes and icons
   static const List<BottomNavItem> _navItems = [
-  BottomNavItem(
-    icon: Icons.home_outlined,
-    activeIcon: Icons.home,
-    label: 'Home',
-    route: '/home',
-  ),
-  BottomNavItem(
-    icon: Icons.storefront_outlined,
-    activeIcon: Icons.storefront,
-    label: 'Marketplace',
-    route: '/marketplace',
-  ),
-  BottomNavItem(
-    icon: Icons.add_circle_outline,
-    activeIcon: Icons.add_circle,
-    label: 'Create',
-    route: '/create',
-  ),
-  BottomNavItem(
-    icon: Icons.group_add_outlined, 
-    activeIcon: Icons.group_add,    
-    label: 'Join Trip',
-    route: '/join-trip',
-  ),
-  BottomNavItem(
-    icon: Icons.person_outline,
-    activeIcon: Icons.person,
-    label: 'Profile',
-    route: '/profile',
-  ),
-];
+    BottomNavItem(
+      icon: Icons.home_outlined,
+      activeIcon: Icons.home,
+      label: 'Home',
+      route: '/home',
+    ),
+    BottomNavItem(
+      icon: Icons.store_outlined,
+      activeIcon: Icons.store, 
+      label: 'Marketplace',
+      route: '/marketplace',
+    ),
+    BottomNavItem(
+      icon: Icons.add_circle_outline,
+      activeIcon: Icons.add_circle,
+      label: 'Create',
+      route: '/create',
+    ),
+    BottomNavItem(
+      icon: Icons.group_add_outlined, 
+      activeIcon: Icons.group_add,    
+      label: 'Join Trip',
+      route: '/join_trip',
+    ),
+    BottomNavItem(
+      icon: Icons.person_outline,
+      activeIcon: Icons.person,
+      label: 'Profile',
+      route: '/profile',
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -67,13 +70,13 @@ class CustomBottomNavigation extends StatelessWidget {
             children: _navItems.asMap().entries.map((entry) {
               final index = entry.key;
               final item = entry.value;
-              final isActive = currentRoute == item.route;
+              final isActive = currentPageIndex == index;
               
               return _buildNavItem(
                 context: context,
                 item: item,
                 isActive: isActive,
-                onTap: () => _handleNavigation(context, item.route, index),
+                onTap: () => _handleNavigation(context, index),
                 theme: theme,
               );
             }).toList(),
@@ -112,8 +115,13 @@ class CustomBottomNavigation extends StatelessWidget {
     );
   }
 
-  void _handleNavigation(BuildContext context, String route, int index) {
-    // Handle special cases or add custom logic here
+  void _handleNavigation(BuildContext context, int index) {
+    // Call the callback if provided
+    if (onPageChanged != null) {
+      onPageChanged!(index);
+    }
+    
+    // Handle navigation based on index
     switch (index) {
       case 0: // Home
         context.go('/home');
@@ -131,22 +139,38 @@ class CustomBottomNavigation extends StatelessWidget {
         context.go('/profile');
         break;
       default:
-        context.go(route);
+        // Fallback to first item's route if index is out of bounds
+        if (_navItems.isNotEmpty && index < _navItems.length) {
+          context.go(_navItems[index].route);
+        } else {
+          context.go('/home');
+        }
     }
   }
 
-  // Helper method to get current index based on route
-  static int getCurrentIndex(String route) {
+  // Helper method to get route based on index
+  static String getRouteByIndex(int index) {
+    if (index >= 0 && index < _navItems.length) {
+      return _navItems[index].route;
+    }
+    return '/home'; // Default to home
+  }
+
+  // Helper method to get index based on route
+  static int getIndexByRoute(String route) {
     for (int i = 0; i < _navItems.length; i++) {
       if (_navItems[i].route == route) {
         return i;
       }
     }
-    return 0; // Default to home
+    return 0; // Default to home index
   }
+
+  // Helper method to get total number of navigation items
+  static int get itemCount => _navItems.length;
 }
 
-// Data class for navigation items
+// Data class for navigation items (unchanged)
 class BottomNavItem {
   final IconData icon;
   final IconData activeIcon;
@@ -161,16 +185,45 @@ class BottomNavItem {
   });
 }
 
-// Example usage in your pages:
+// Example usage with the updated AppWrapper:
 /*
+class _AppWrapper extends StatelessWidget {
+  final Widget? child;
+  final int currentPageIndex;
+  
+  const _AppWrapper({
+    this.child,
+    this.currentPageIndex = 0,
+  });
+
+  bool _shouldShowNavigation(int pageIndex) {
+    // All pages from 0-4 show navigation
+    return pageIndex >= 0 && pageIndex < CustomBottomNavigation.itemCount;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final showNavigation = _shouldShowNavigation(currentPageIndex);
+
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        body: child,
+        bottomNavigationBar: showNavigation
+            ? CustomBottomNavigation(currentPageIndex: currentPageIndex)
+            : null,
+      ),
+    );
+  }
+}
+
+// Usage in your pages:
 class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(child: Text('Home Page')),
-      bottomNavigationBar: CustomBottomNavigation(
-        currentRoute: '/home',
-      ),
+    return _AppWrapper(
+      currentPageIndex: 0, // Home page index
+      child: Center(child: Text('Home Page')),
     );
   }
 }
@@ -178,11 +231,9 @@ class HomePage extends StatelessWidget {
 class MarketplacePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(child: Text('Marketplace Page')),
-      bottomNavigationBar: CustomBottomNavigation(
-        currentRoute: '/marketplace',
-      ),
+    return _AppWrapper(
+      currentPageIndex: 1, // Marketplace page index
+      child: Center(child: Text('Marketplace Page')),
     );
   }
 }

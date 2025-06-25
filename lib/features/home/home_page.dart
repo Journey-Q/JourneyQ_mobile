@@ -56,8 +56,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Remove _AppWrapper from here - it will be handled in the router
     return Scaffold(
-      backgroundColor: Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF8FAFC),
       resizeToAvoidBottomInset: true,
       appBar: JourneyQAppBar(
         notificationCount: 3,
@@ -98,9 +99,9 @@ class _HomePageState extends State<HomePage> {
                     ExploreWorldCard(
                       onCreateJourney: () {
                         SnackBarService.showSuccess(
-                                       context,
-                                 "Login Successful! Welcome back!"
-        );
+                          context,
+                          "Login Successful! Welcome back!"
+                        );
                       },
                     ),
                   ]),
@@ -147,7 +148,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-      bottomNavigationBar: CustomBottomNavigation(currentRoute: '/home'),
     );
   }
 

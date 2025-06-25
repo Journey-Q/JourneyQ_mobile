@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:journeyq/app/routes/app_router.dart';
 import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:journeyq/app/themes/theme.dart';
+import 'package:journeyq/shared/components/bottom_naviagtion.dart';
 
 class TravelApp extends StatefulWidget {
   const TravelApp({super.key});
@@ -59,23 +61,70 @@ class RouterWrapper extends StatelessWidget {
       themeMode: ThemeMode.system,
       routerConfig: router,
       builder: (context, child) {
-        return _AppWrapper(child: child);
+        return AppWrapper(child: child);
       },
     );
   }
 }
 
-class _AppWrapper extends StatelessWidget {
+class AppWrapper extends StatelessWidget {
   final Widget? child;
+  final String? currentRoute; // Pass route as parameter
+  
+  const AppWrapper({
+    this.child,
+    this.currentRoute,
+  });
 
-  const _AppWrapper({this.child});
+  int _getCurrentPageIndex(String? route) {
+    if (route == null) return -1;
+    
+    switch (route) {
+      case '/home':
+        return 0;
+      case '/marketplace':
+        return 1;
+      case '/create':
+        return 2;
+      case '/join_trip':
+        return 3;
+      case '/profile':
+        return 4;
+      default:
+        return -1;
+    }
+  }
+
+  bool _shouldShowNavigation(String? route) {
+    if (route == null) return false;
+    
+    const navigationRoutes = [
+      '/home',
+      '/marketplace',
+      '/create', 
+      '/join_trip',
+      '/profile',
+    ];
+    return navigationRoutes.contains(route);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final currentPageIndex = _getCurrentPageIndex(currentRoute);
+    final showNavigation = _shouldShowNavigation(currentRoute);
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
-      child: child,
+      child: Scaffold(
+        body: child,
+        bottomNavigationBar: showNavigation
+            ? CustomBottomNavigation(currentPageIndex: currentPageIndex)
+            : null,
+      ),
     );
   }
 }
+
+
+
 
