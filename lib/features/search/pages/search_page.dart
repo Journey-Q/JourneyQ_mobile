@@ -29,13 +29,13 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
   void initState() {
     super.initState();
     _focusNode = FocusNode();
-    
+
     // Listen to controller changes to show/hide clear button
     if (widget.controller != null) {
       widget.controller!.addListener(_onTextChanged);
       _showClearButton = widget.controller!.text.isNotEmpty;
     }
-    
+
     // Auto-focus when widget is created
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -61,51 +61,60 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(28),
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black54),
-            onPressed: widget.onBack,
-          ),
-          Expanded(
-            child: TextField(
-              controller: widget.controller,
-              focusNode: _focusNode,
-              onChanged: widget.onChanged,
-              decoration: InputDecoration(
-                hintText: widget.hintText,
-                hintStyle: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 16,
+    return Row(
+      children: [
+        // Back Button OUTSIDE the search box
+        IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: widget.onBack,
+        ),
+
+        // Search box
+        Expanded(
+          child: Container(
+            height: 50,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: Row(
+              children: [
+                // Removed back button from here
+                Expanded(
+                  child: TextField(
+                    controller: widget.controller,
+                    focusNode: _focusNode,
+                    onChanged: widget.onChanged,
+                    decoration: InputDecoration(
+                      hintText: widget.hintText,
+                      hintStyle: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 16,
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 2,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
                 ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 16,
-                ),
-              ),
+
+                // Clear button
+                if (_showClearButton)
+                  IconButton(
+                    icon: Icon(Icons.clear, color: Colors.grey[600], size: 20),
+                    onPressed: () {
+                      widget.controller?.clear();
+                      widget.onChanged?.call('');
+                    },
+                  ),
+              ],
             ),
           ),
-          // Clear button when there's text
-          if (_showClearButton)
-            IconButton(
-              icon: Icon(Icons.clear, color: Colors.grey[600], size: 20),
-              onPressed: () {
-                if (widget.controller != null) {
-                  widget.controller!.clear();
-                  widget.onChanged?.call('');
-                }
-              },
-            ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -140,7 +149,7 @@ class _SearchPageState extends State<SearchPage> {
           final title = item['title']?.toString().toLowerCase() ?? '';
           final subtitle = item['subtitle']?.toString().toLowerCase() ?? '';
           final searchQuery = query.toLowerCase();
-          
+
           return title.contains(searchQuery) || subtitle.contains(searchQuery);
         }).toList();
       }
@@ -150,9 +159,9 @@ class _SearchPageState extends State<SearchPage> {
   void _onItemTap(Map<String, dynamic> item) {
     Navigator.pop(context);
     final title = item['title']?.toString() ?? 'Unknown';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Selected: $title')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Selected: $title')));
   }
 
   @override
@@ -173,9 +182,7 @@ class _SearchPageState extends State<SearchPage> {
       body: Column(
         children: [
           const SizedBox(height: 15),
-          Expanded(
-            child: _buildSearchResults(),
-          ),
+          Expanded(child: _buildSearchResults()),
         ],
       ),
     );
@@ -188,26 +195,16 @@ class _SearchPageState extends State<SearchPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.search,
-              size: 80,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.search, size: 80, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               'Start typing to search',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
             ),
             const SizedBox(height: 8),
             Text(
               'Find travellers, destinations, and trips',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
             ),
           ],
         ),
@@ -220,26 +217,16 @@ class _SearchPageState extends State<SearchPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.search_off,
-              size: 80,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.search_off, size: 80, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               'No results found',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
             ),
             const SizedBox(height: 8),
             Text(
               'Try searching for something else',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
             ),
           ],
         ),
@@ -257,7 +244,10 @@ class _SearchPageState extends State<SearchPage> {
         final imageUrl = item['image']?.toString() ?? '';
 
         return ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 8,
+          ),
           leading: Container(
             width: 50,
             height: 50,
@@ -307,7 +297,10 @@ class _SearchPageState extends State<SearchPage> {
           subtitle: subtitle.isNotEmpty ? Text(subtitle) : null,
           trailing: type.isNotEmpty
               ? Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
                     borderRadius: BorderRadius.circular(12),

@@ -140,13 +140,13 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: _isFollowed ? Colors.grey[200] : Colors.blue,
+                color:  Colors.grey[200],
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 _isFollowed ? 'Following' : 'Follow',
                 style: TextStyle(
-                  color: _isFollowed ? Colors.black87 : Colors.white,
+                  color: Colors.black87,
                   fontWeight: FontWeight.w500,
                   fontSize: 12,
                 ),
@@ -175,7 +175,7 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
         style: const TextStyle(
           color: Colors.black87,
           fontWeight: FontWeight.w600,
-          height: 0.8,
+          height: 0.75,
           fontSize: 18,
         ),
       ),

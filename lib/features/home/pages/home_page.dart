@@ -50,7 +50,7 @@ class _HomePageState extends State<HomePage> {
             slivers: [
               // Header Section
               SliverPadding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     // Search Bar
