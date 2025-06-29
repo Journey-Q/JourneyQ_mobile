@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:journeyq/features/search/data.dart';
+import 'package:go_router/go_router.dart';
 
 // Search widget for the search page
 class SearchPageWidget extends StatefulWidget {
@@ -165,13 +166,13 @@ class _SearchPageState extends State<SearchPage> {
         title: SearchPageWidget(
           controller: _searchController,
           onChanged: _onSearchChanged,
-          onBack: () => Navigator.pop(context),
+          onBack: () => context.pop(context),
           hintText: 'Search travellers, destinations, trips...',
         ),
       ),
       body: Column(
         children: [
-          Divider(height: 1, color: Colors.grey[300]),
+          const SizedBox(height: 15),
           Expanded(
             child: _buildSearchResults(),
           ),
