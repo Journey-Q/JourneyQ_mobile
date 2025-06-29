@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:journeyq/shared/components/app_bar.dart';
-import 'package:journeyq/features/home/search_wiget.dart';
-import 'package:journeyq/features/home/widget.dart';
-import 'package:journeyq/features/home/travel_post_widget.dart';
-import 'package:journeyq/shared/components/bottom_naviagtion.dart';
+import 'package:journeyq/features/home/pages/search_wiget.dart';
+import 'package:journeyq/features/home/pages/widget.dart';
+import 'package:journeyq/features/home/pages/travel_post_widget.dart';
 import 'package:journeyq/shared/widgets/dialog/show_dialog.dart';
-
+import 'package:journeyq/features/home/data.dart';
+import 'package:go_router/go_router.dart';
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -17,36 +17,7 @@ class _HomePageState extends State<HomePage> {
   final ScrollController _scrollController = ScrollController();
 
   // Sample posts data
-  final List<Map<String, String>> _posts = [
-    {
-      'userName': 'Alex Johnson',
-      'location': 'Tokyo, Japan • 2 hours ago',
-      'userImage': 'https://i.pravatar.cc/150?img=8',
-      'postImage':
-          'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-    },
-    {
-      'userName': 'Maria Rodriguez',
-      'location': 'Barcelona, Spain • 5 hours ago',
-      'userImage': 'https://i.pravatar.cc/150?img=5',
-      'postImage':
-          'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-    },
-    {
-      'userName': 'John Smith',
-      'location': 'Paris, France • 1 day ago',
-      'userImage': 'https://i.pravatar.cc/150?img=12',
-      'postImage':
-          'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-    },
-    {
-      'userName': 'Emma Wilson',
-      'location': 'New York, USA • 2 days ago',
-      'userImage': 'https://i.pravatar.cc/150?img=16',
-      'postImage':
-          'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-    },
-  ];
+  final List<Map<String, String>> _posts = post_data;
 
   @override
   void dispose() {
@@ -64,12 +35,10 @@ class _HomePageState extends State<HomePage> {
         notificationCount: 3,
         chatCount: 7,
         onNotificationTap: () {
-          // Navigate to notifications
-          print('Notifications tapped');
+         
         },
         onChatTap: () {
-          // Navigate to chat
-          print('Chat tapped');
+          
         },
       ),
       body: SafeArea(
@@ -86,10 +55,7 @@ class _HomePageState extends State<HomePage> {
                     // Search Bar
                     SearchBarWidget(
                       onTap: () {
-                        print('Search tapped');
-                      },
-                      onChanged: (value) {
-                        print('Search: $value');
+                        context.push('/search');
                       },
                     ),
 
@@ -100,7 +66,7 @@ class _HomePageState extends State<HomePage> {
                       onCreateJourney: () {
                         SnackBarService.showSuccess(
                           context,
-                          "Login Successful! Welcome back!"
+                          "Login Successful! Welcome back!",
                         );
                       },
                     ),
@@ -154,8 +120,6 @@ class _HomePageState extends State<HomePage> {
   Future<void> _handleRefresh() async {
     // Simulate refresh delay
     await Future.delayed(const Duration(seconds: 2));
-    // Add refresh logic here
-    print('Refreshed!');
   }
 
   void _showMoreOptions(BuildContext context, String userName) {
@@ -178,7 +142,6 @@ class _HomePageState extends State<HomePage> {
               title: const Text('Block User'),
               onTap: () {
                 Navigator.pop(context);
-                print('Block user $userName');
               },
             ),
             ListTile(
@@ -186,7 +149,6 @@ class _HomePageState extends State<HomePage> {
               title: const Text('Copy Link'),
               onTap: () {
                 Navigator.pop(context);
-                print('Copy link for $userName post');
               },
             ),
           ],
