@@ -1,30 +1,58 @@
-final List<Map<String, String>> post_data = [
-    {
-      'userName': 'Alex Johnson',
-      'location': 'Tokyo, Japan • 2 hours ago',
-      'userImage': 'https://i.pravatar.cc/150?img=8',
-      'postImage':
-          'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-    },
-    {
-      'userName': 'Maria Rodriguez',
-      'location': 'Barcelona, Spain • 5 hours ago',
-      'userImage': 'https://i.pravatar.cc/150?img=5',
-      'postImage':
-          'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-    },
-    {
-      'userName': 'John Smith',
-      'location': 'Paris, France • 1 day ago',
-      'userImage': 'https://i.pravatar.cc/150?img=12',
-      'postImage':
-          'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-    },
-    {
-      'userName': 'Emma Wilson',
-      'location': 'New York, USA • 2 days ago',
-      'userImage': 'https://i.pravatar.cc/150?img=16',
-      'postImage':
-          'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-    },
-  ];
+final List<Map<String, dynamic>> post_data = [
+  {
+    'userName': 'Alex Johnson',
+    'location': 'Tokyo, Japan • 2 hours ago',
+    'userImage': 'https://i.pravatar.cc/150?img=8',
+    'journeyTitle': 'Discovering Modern Tokyo',
+    'placesVisited': ['Shibuya Crossing', 'Tokyo Tower', 'Senso-ji Temple'],
+    'postImages': [
+      'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1513407030348-c983a97b98d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1542051841857-5f90071e7989?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+    ],
+    'likesCount': 124,
+    'commentsCount': 18,
+  },
+  {
+    'userName': 'Maria Rodriguez',
+    'location': 'Barcelona, Spain • 5 hours ago',
+    'userImage': 'https://i.pravatar.cc/150?img=5',
+    'journeyTitle': 'Gaudi\'s Architectural Wonders',
+    'placesVisited': ['Sagrada Familia', 'Park Güell', 'Casa Batlló'],
+    'postImages': [
+      'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+    ],
+    'likesCount': 89,
+    'commentsCount': 12,
+  },
+  {
+    'userName': 'John Smith',
+    'location': 'Paris, France • 1 day ago',
+    'userImage': 'https://i.pravatar.cc/150?img=12',
+    'journeyTitle': 'Romantic Parisian Adventure',
+    'placesVisited': ['Eiffel Tower', 'Louvre Museum', 'Notre-Dame'],
+    'postImages': [
+      'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1502602898536-47ad22581b52?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1431274172761-fca41d930114?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+    ],
+    'likesCount': 156,
+    'commentsCount': 23,
+  },
+  {
+    'userName': 'Emma Wilson',
+    'location': 'New York, USA • 2 days ago',
+    'userImage': 'https://i.pravatar.cc/150?img=16',
+    'journeyTitle': 'Big Apple City Exploration',
+    'placesVisited': ['Times Square', 'Central Park', 'Brooklyn Bridge'],
+    'postImages': [
+      'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1485871981521-5b1fd3805eee?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+      'https://images.unsplash.com/photo-1518391846015-55a9cc003b25?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+    ],
+    'likesCount': 203,
+    'commentsCount': 31,
+  },
+];

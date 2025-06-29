@@ -38,8 +38,6 @@ class JourneyQAppBar extends StatelessWidget implements PreferredSizeWidget {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent, // Remove Material 3 tinting
         foregroundColor: Colors.black87, // Set text/icon colors
-        elevation: 1,
-        shadowColor: Colors.grey.withOpacity(0.2),
         automaticallyImplyLeading: false,
         titleSpacing: 20,
         clipBehavior: Clip.none,

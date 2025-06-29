@@ -22,13 +22,14 @@ class SearchBarWidget extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.35), // Slightly increased from 0.1 to 0.15
-            spreadRadius: 4, // Slightly increased from 3 to 4
-            blurRadius: 10, // Slightly increased from 8 to 10
-            offset: const Offset(0, 3), // Slightly increased from (0, 2) to (0, 3)
-          ),
-        ],
+  BoxShadow(
+    color: Colors.grey.withOpacity(0.25), // Reduced opacity
+    spreadRadius: 1, // Reduced spread
+    blurRadius: 6, // Reduced blur
+    offset: const Offset(0, 1), // Reduced vertical offset
+  ),
+],
+
       ),
       child: Row(
         children: [
