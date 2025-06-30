@@ -32,6 +32,8 @@ dependencies:
   wechat_assets_picker: ^9.0.0
   image: ^4.1.3
   permission_handler: ^11.0.1
+  intl: ^0.18.1
+  url_launcher: ^6.2.4
 
 # Remove dependency overrides - not needed with correct versions
 # dependency_overrides:
@@ -87,5 +89,27 @@ flutter:
 
   assets:
     - assets/images/app_icon.png
-    - assets/images/logo.png 
+    - assets/images/logo.png
     - assets/images/
+    - assets/images/cultural_triangle.jpg
+    - assets/images/hill_country.jpg
+    - assets/images/southern_coast.jpg
+    - assets/images/wildlife_safari.jpg
+    - assets/images/aitken_spence.png
+    - assets/images/ceylon_roots.png
+    - assets/images/cinnamon_grand.jpg
+    - assets/images/galle_face.jpg
+    - assets/images/hilton.jpg
+    - assets/images/jetwing.png
+    - assets/images/red_dot.jpeg
+    - assets/images/shangri_la.jpg
+    - assets/images/taj_samudra.jpg
+    - assets/images/adventure.jpeg
+    - assets/images/family.jpg
+    - assets/images/galadari.jpg
+    - assets/images/kingsbury.jpg
+    - assets/images/mackinnons.jpg
+    - assets/images/marino_beach.jpg
+    - assets/images/romantic.jpg
+    - assets/images/serendib.jpg
+    - assets/images/temple_heritage.jpg
