@@ -10,6 +10,9 @@ import 'route_transistion.dart';
 import 'package:journeyq/features/profile/pages/index.dart';
 import 'package:journeyq/app/app.dart';
 import 'package:journeyq/features/search/pages/search_page.dart';
+import 'package:journeyq/features/notification/pages/notification.dart';
+import 'package:journeyq/features/chat/pages/indexpage.dart';
+import 'package:journeyq/features/chat/pages/chatpage.dart';
 
 class AppRouter {
   static GoRouter createRouter(AuthProvider authProvider) {
@@ -89,6 +92,32 @@ class AppRouter {
           builder: (context, state) => const SearchPage(),
           transitionType: PageTransitionType.slide,
         ),
+
+        TransitionGoRoute(
+          path: '/notification',
+          builder: (context, state) => const NotificationPage(),
+          transitionType: PageTransitionType.slide,
+        ),
+
+        TransitionGoRoute(
+          path: '/chat',
+          builder: (context, state) => const ChatPage(),
+          transitionType: PageTransitionType.slide,
+        ),
+
+        TransitionGoRoute(
+             path: '/chat/:chatId',
+            builder: (context, state) {
+             final chatId = state.pathParameters['chatId']!;
+    final chatData = state.extra as Map<String, dynamic>;
+    return IndividualChatPage(
+      chatId: chatId,
+      chatData: chatData,
+    );
+  },
+   transitionType: PageTransitionType.slide,
+  // Custom animation duration
+)
       ],
     );
   }

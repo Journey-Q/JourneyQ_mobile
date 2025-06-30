@@ -42,10 +42,10 @@ class _HomePageState extends State<HomePage> {
         notificationCount: 3,
         chatCount: 7,
         onNotificationTap: () {
-          // Handle notification tap
+          context.push('/notification');
         },
         onChatTap: () {
-          // Handle chat tap
+          context.push('/chat');
         },
       ),
       body: SafeArea(
