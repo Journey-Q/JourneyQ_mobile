@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class TravelPostWidget extends StatefulWidget {
   final String userName;
@@ -140,7 +141,7 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color:  Colors.grey[200],
+                color:  Colors.grey[300],
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -343,10 +344,10 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
 
           // Comment Button
           GestureDetector(
-            onTap: widget.onComment?.call,
+            onTap: widget.onComment,
             child: Row(
               children: [
-                Icon(Icons.chat_bubble_outline, color: Colors.black, size: 24),
+                Icon(LucideIcons.messageCircle, color: Colors.black, size: 24),
                 const SizedBox(width: 6),
                 Text(
                   '${widget.commentsCount}',
