@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:journeyq/features/join_trip/pages/data.dart';
 import 'package:journeyq/features/join_trip/pages/common/trip_form_widget.dart';
+import 'package:journeyq/features/join_trip/pages/common/trip_details_widget.dart';
 
 class GroupDetailsPage extends StatefulWidget {
   final String groupId;
@@ -55,10 +56,10 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
         'description': widget.description,
         'duration': groupData['duration'] ?? '7 days',
         'maxMembers': widget.members.length,
-        'difficulty': 'Moderate', // Default value
-        'budgetType': 'Per Person',
         'meetingPoint': 'TBD',
         'activities': <String>[],
+        'status': 'Active',
+        'createdDate': widget.createdDate,
       };
     }
   }
@@ -461,10 +462,10 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => TripFormWidget(
-            mode: TripFormMode.view,
-            initialData: _tripFormData,
+          builder: (context) => TripDetailsWidget(
+            tripData: _tripFormData!,
             customTitle: '${widget.groupName} - Trip Details',
+            showEditButton: false, // Don't show edit button since we have separate edit option
           ),
           fullscreenDialog: true,
         ),

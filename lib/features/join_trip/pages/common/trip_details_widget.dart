@@ -161,7 +161,6 @@ class TripDetailsWidget extends StatelessWidget {
           _buildDetailRow('End Date', tripData['endDate'] ?? 'Not specified', Icons.calendar_month),
           _buildDetailRow('Duration', tripData['duration'] ?? 'Not specified', Icons.schedule),
           _buildDetailRow('Max Members', '${tripData['maxMembers'] ?? 'Not specified'} people', Icons.people),
-          _buildDetailRow('Difficulty', tripData['difficulty'] ?? 'Not specified', Icons.trending_up),
           _buildDetailRow('Type', tripData['tripType'] ?? 'Not specified', Icons.category),
           if (tripData['status'] != null)
             _buildDetailRow('Status', tripData['status'], Icons.info),
@@ -339,7 +338,6 @@ class TripDetailsWidget extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           _buildDetailRow('Budget', tripData['budget'] ?? 'Not specified', Icons.attach_money),
-          _buildDetailRow('Budget Type', tripData['budgetType'] ?? 'Per Person', Icons.monetization_on),
           _buildDetailRow('Meeting Point', tripData['meetingPoint'] ?? 'Not specified', Icons.location_pin),
         ],
       ),

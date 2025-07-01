@@ -37,11 +37,10 @@ class _TripFormWidgetState extends State<TripFormWidget> {
   late TextEditingController _budgetController;
   late TextEditingController _durationController;
   late TextEditingController _meetingPointController;
+  late TextEditingController _customActivityController;
   
   // Form state
-  late String _selectedDifficulty;
   late String _selectedTripType;
-  late String _selectedBudgetType;
   late List<String> _selectedActivities;
   bool _isLoading = false;
   
@@ -67,24 +66,13 @@ class _TripFormWidgetState extends State<TripFormWidget> {
     _budgetController = TextEditingController(text: data['budget'] ?? '');
     _durationController = TextEditingController(text: data['duration'] ?? '');
     _meetingPointController = TextEditingController(text: data['meetingPoint'] ?? '');
+    _customActivityController = TextEditingController();
     
     // Initialize dropdown values with proper validation
-    _selectedDifficulty = _validateAndSetDropdownValue(
-      data['difficulty'], 
-      SampleData.difficulties, 
-      SampleData.difficulties.first
-    );
-    
     _selectedTripType = _validateAndSetDropdownValue(
       data['tripType'], 
       SampleData.tripTypes, 
       SampleData.tripTypes.first
-    );
-    
-    _selectedBudgetType = _validateAndSetDropdownValue(
-      data['budgetType'], 
-      SampleData.budgetTypes, 
-      SampleData.budgetTypes.first
     );
     
     _selectedActivities = List<String>.from(data['activities'] ?? []);
@@ -119,6 +107,7 @@ class _TripFormWidgetState extends State<TripFormWidget> {
     _budgetController.dispose();
     _durationController.dispose();
     _meetingPointController.dispose();
+    _customActivityController.dispose();
     super.dispose();
   }
 
@@ -191,7 +180,7 @@ class _TripFormWidgetState extends State<TripFormWidget> {
       ),
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => Container(
-          height: MediaQuery.of(context).size.height * 0.7,
+          height: MediaQuery.of(context).size.height * 0.8,
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
@@ -214,6 +203,80 @@ class _TripFormWidgetState extends State<TripFormWidget> {
                 ),
               ),
               const SizedBox(height: 20),
+              
+              // Add custom activity section
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue[100]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Add Custom Activity',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0088cc),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _customActivityController,
+                            decoration: const InputDecoration(
+                              hintText: 'Enter activity name...',
+                              border: OutlineInputBorder(),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: () {
+                            final customActivity = _customActivityController.text.trim();
+                            if (customActivity.isNotEmpty && 
+                                !_selectedActivities.contains(customActivity)) {
+                              setModalState(() {
+                                _selectedActivities.add(customActivity);
+                                _customActivityController.clear();
+                              });
+                              setState(() {});
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0088cc),
+                          ),
+                          child: const Text(
+                            'Add',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Popular Activities',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
               
               Expanded(
                 child: ListView.builder(
@@ -300,11 +363,9 @@ class _TripFormWidgetState extends State<TripFormWidget> {
         'endDate': _endDateController.text,
         'duration': _durationController.text,
         'maxMembers': int.tryParse(_maxMembersController.text) ?? 0,
-        'difficulty': _selectedDifficulty,
         'tripType': _selectedTripType,
         'description': _descriptionController.text,
         'budget': _budgetController.text,
-        'budgetType': _selectedBudgetType,
         'activities': _selectedActivities,
         'meetingPoint': _meetingPointController.text,
       };
@@ -490,42 +551,19 @@ class _TripFormWidgetState extends State<TripFormWidget> {
               _buildSectionHeader('Trip Details'),
               const SizedBox(height: 16),
 
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildDropdownField(
-                      label: 'Trip Type',
-                      value: _selectedTripType,
-                      items: SampleData.tripTypes,
-                      icon: Icons.category,
-                      enabled: !_isReadOnly,
-                      onChanged: (value) {
-                        if (!_isReadOnly && value != null) {
-                          setState(() {
-                            _selectedTripType = value;
-                          });
-                        }
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildDropdownField(
-                      label: 'Difficulty',
-                      value: _selectedDifficulty,
-                      items: SampleData.difficulties,
-                      icon: Icons.trending_up,
-                      enabled: !_isReadOnly,
-                      onChanged: (value) {
-                        if (!_isReadOnly && value != null) {
-                          setState(() {
-                            _selectedDifficulty = value;
-                          });
-                        }
-                      },
-                    ),
-                  ),
-                ],
+              _buildDropdownField(
+                label: 'Trip Type',
+                value: _selectedTripType,
+                items: SampleData.tripTypes,
+                icon: Icons.category,
+                enabled: !_isReadOnly,
+                onChanged: (value) {
+                  if (!_isReadOnly && value != null) {
+                    setState(() {
+                      _selectedTripType = value;
+                    });
+                  }
+                },
               ),
               const SizedBox(height: 16),
 
@@ -564,22 +602,6 @@ class _TripFormWidgetState extends State<TripFormWidget> {
                 hintText: 'e.g., 1500',
                 prefixIcon: Icons.attach_money,
                 keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-
-              _buildDropdownField(
-                label: 'Budget Type',
-                value: _selectedBudgetType,
-                items: SampleData.budgetTypes,
-                icon: Icons.monetization_on,
-                enabled: !_isReadOnly,
-                onChanged: (value) {
-                  if (!_isReadOnly && value != null) {
-                    setState(() {
-                      _selectedBudgetType = value;
-                    });
-                  }
-                },
               ),
               const SizedBox(height: 16),
 

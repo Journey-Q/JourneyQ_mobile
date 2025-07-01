@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:journeyq/features/join_trip/pages/data.dart';
+import 'package:journeyq/features/join_trip/pages/common/trip_details_widget.dart';
 
 class JoinRequestsTab extends StatefulWidget {
   const JoinRequestsTab({super.key});
@@ -186,7 +187,7 @@ class _JoinRequestsTabState extends State<JoinRequestsTab> {
                     ),
                     IconButton(
                       icon: Icon(Icons.info_outline, color: Colors.grey[600]),
-                      onPressed: () => _showRequestDetails(request),
+                      onPressed: () => _showTripDetails(request['trip']!),
                     ),
                   ],
                 ),
@@ -483,6 +484,40 @@ class _JoinRequestsTabState extends State<JoinRequestsTab> {
         backgroundColor: Colors.orange,
       ),
     );
+  }
+
+  void _showTripDetails(String tripName) {
+    // Find trip data by name from createdTripForms
+    Map<String, dynamic>? tripData;
+    
+    for (var trip in SampleData.createdTripForms) {
+      if (trip['title'] == tripName) {
+        tripData = trip;
+        break;
+      }
+    }
+    
+    if (tripData != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => TripDetailsWidget(
+            tripData: tripData!,
+            customTitle: 'Trip Details',
+            showEditButton: false, // Read-only for join requests
+          ),
+          fullscreenDialog: true,
+        ),
+      );
+    } else {
+      // Show a fallback if trip data not found
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Trip details not available'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
   }
 
   void _showRequestDetails(Map<String, dynamic> request) {
