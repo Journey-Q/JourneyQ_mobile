@@ -6,6 +6,7 @@ import 'package:journeyq/features/market_place/pages/index.dart';
 import 'package:journeyq/features/market_place/pages/viewall_hotels.dart';
 import 'package:journeyq/features/market_place/pages/hotel_details.dart';
 import 'package:journeyq/features/market_place/pages/viewall_tour_packages.dart';
+import 'package:journeyq/features/market_place/pages/tour_package_details.dart';
 import 'package:journeyq/features/market_place/pages/book_package_page.dart';
 import 'package:journeyq/features/market_place/pages/viewall_travelling_agency.dart';
 import 'package:journeyq/features/market_place/pages/travel_agency_details.dart';
@@ -82,10 +83,13 @@ class AppRouter {
 
         TransitionGoRoute(
           path: '/marketplace/hotels/details',
-          builder: (context, state) => AppWrapper(
-            currentRoute: '/marketplace',
-            child: const HotelDetailsPage(),
-          ),
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            return AppWrapper(
+              currentRoute: '/marketplace',
+              child: HotelDetailsPage(hotel: extra),
+            );
+          },
           transitionType: PageTransitionType.none,
         ),
 
@@ -95,6 +99,25 @@ class AppRouter {
             currentRoute: '/marketplace',
             child: const ViewAllTourPackagesPage(),
           ),
+          transitionType: PageTransitionType.none,
+        ),
+
+        TransitionGoRoute(
+          path: '/marketplace/tour_packages/details',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            if (extra == null) {
+              // If no package data provided, redirect to tour packages
+              return AppWrapper(
+                currentRoute: '/marketplace',
+                child: const ViewAllTourPackagesPage(),
+              );
+            }
+            return AppWrapper(
+              currentRoute: '/marketplace',
+              child: TourPackageDetailsPage(package: extra),
+            );
+          },
           transitionType: PageTransitionType.none,
         ),
 

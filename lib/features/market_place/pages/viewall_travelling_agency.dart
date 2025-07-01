@@ -39,33 +39,24 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
     {
       'id': 'ceylon_roots',
       'name': 'Ceylon Roots',
-      'specialty': 'Cultural Tours',
       'rating': 4.9,
       'experience': '15+ Years',
       'location': 'Colombo 03',
-      'contact': '+94 11 234 5678',
-      'email': 'info@ceylonroots.lk',
       'image': 'assets/images/ceylon_roots.png',
       'backgroundColor': const Color(0xFF8B4513),
       'description': 'Ceylon Roots is a premier cultural tour operator specializing in authentic Sri Lankan experiences. We offer immersive journeys through ancient temples, traditional villages, and historical sites.',
       'vehicles': [
         {
-          'type': 'Car (Sedan)',
+          'type': 'Car',
           'pricePerKm': 45,
-          'capacity': '1-3 passengers',
-          'features': ['AC', 'Comfortable seating', 'GPS'],
         },
         {
           'type': 'Van',
           'pricePerKm': 65,
-          'capacity': '4-8 passengers',
-          'features': ['AC', 'Spacious', 'Luggage space', 'GPS'],
         },
         {
-          'type': 'Mini Bus',
+          'type': 'Bus',
           'pricePerKm': 85,
-          'capacity': '9-15 passengers',
-          'features': ['AC', 'Reclining seats', 'Entertainment system'],
         },
       ],
       'drivers': [
@@ -87,33 +78,24 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
     {
       'id': 'jetwing_travels',
       'name': 'Jetwing Travels',
-      'specialty': 'Luxury Travel',
       'rating': 4.8,
       'experience': '20+ Years',
       'location': 'Colombo 02',
-      'contact': '+94 11 345 6789',
-      'email': 'luxury@jetwing.lk',
       'image': 'assets/images/jetwing.png',
       'backgroundColor': const Color(0xFF228B22),
       'description': 'Jetwing Travels offers premium luxury travel experiences with high-end vehicles and professional chauffeurs. We cater to discerning travelers seeking comfort and elegance.',
       'vehicles': [
         {
-          'type': 'Luxury Car',
+          'type': 'Car',
           'pricePerKm': 120,
-          'capacity': '1-3 passengers',
-          'features': ['Premium AC', 'Leather seats', 'WiFi', 'Refreshments'],
         },
         {
-          'type': 'Luxury SUV',
+          'type': 'Van',
           'pricePerKm': 150,
-          'capacity': '4-6 passengers',
-          'features': ['Premium AC', 'Captain seats', 'Entertainment', 'Bar'],
         },
         {
-          'type': 'Luxury Coach',
+          'type': 'Bus',
           'pricePerKm': 200,
-          'capacity': '12-20 passengers',
-          'features': ['Reclining seats', 'Entertainment', 'Washroom', 'WiFi'],
         },
       ],
       'drivers': [
@@ -129,27 +111,20 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
     {
       'id': 'aitken_spence',
       'name': 'Aitken Spence',
-      'specialty': 'Adventure Tours',
       'rating': 4.7,
       'experience': '25+ Years',
       'location': 'Colombo 01',
-      'contact': '+94 11 456 7890',
-      'email': 'adventure@aitkenspence.lk',
       'image': 'assets/images/aitken_spence.png',
       'backgroundColor': const Color(0xFF20B2AA),
       'description': 'Aitken Spence specializes in adventure and outdoor activities. Our rugged vehicles and experienced drivers ensure safe and exciting journeys to remote destinations.',
       'vehicles': [
         {
-          'type': '4WD Jeep',
+          'type': 'Car',
           'pricePerKm': 95,
-          'capacity': '4-5 passengers',
-          'features': ['4WD capability', 'Safety equipment', 'Off-road tires'],
         },
         {
-          'type': 'Adventure Van',
+          'type': 'Van',
           'pricePerKm': 75,
-          'capacity': '6-8 passengers',
-          'features': ['High clearance', 'Equipment storage', 'First aid kit'],
         },
       ],
       'drivers': [
@@ -165,27 +140,20 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
     {
       'id': 'walkers_tours',
       'name': 'Walkers Tours',
-      'specialty': 'Wildlife Safari',
       'rating': 4.6,
       'experience': '30+ Years',
       'location': 'Colombo 04',
-      'contact': '+94 11 567 8901',
-      'email': 'safari@walkerstours.lk',
       'image': 'assets/images/walkers.jpg',
       'backgroundColor': const Color(0xFF8FBC8F),
       'description': 'Walkers Tours is Sri Lanka\'s pioneer in wildlife tourism. Our safari vehicles and naturalist guides provide unforgettable wildlife experiences.',
       'vehicles': [
         {
-          'type': 'Safari Jeep',
+          'type': 'Car',
           'pricePerKm': 110,
-          'capacity': '6 passengers',
-          'features': ['Open roof', 'Binoculars', 'Camera mounts', 'Camouflage'],
         },
         {
-          'type': 'Tracker Vehicle',
+          'type': 'Van',
           'pricePerKm': 90,
-          'capacity': '8 passengers',
-          'features': ['Elevated seating', 'Spotlights', 'Wildlife guides'],
         },
       ],
       'drivers': [
@@ -201,27 +169,20 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
     {
       'id': 'red_dot_tours',
       'name': 'Red Dot Tours',
-      'specialty': 'Beach & Hill Country',
       'rating': 4.5,
       'experience': '12+ Years',
       'location': 'Colombo 05',
-      'contact': '+94 11 678 9012',
-      'email': 'tours@reddot.lk',
       'image': 'assets/images/red_dot.jpeg',
       'backgroundColor': const Color(0xFF9370DB),
       'description': 'Red Dot Tours specializes in scenic coastal and hill country tours. We offer comfortable transportation for leisurely exploration of Sri Lanka\'s natural beauty.',
       'vehicles': [
         {
-          'type': 'Comfortable Car',
+          'type': 'Car',
           'pricePerKm': 50,
-          'capacity': '1-4 passengers',
-          'features': ['AC', 'Music system', 'Phone charging'],
         },
         {
-          'type': 'Tourist Van',
+          'type': 'Van',
           'pricePerKm': 70,
-          'capacity': '5-12 passengers',
-          'features': ['Panoramic windows', 'AC', 'Comfortable seating'],
         },
       ],
       'drivers': [
@@ -242,10 +203,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
   }
 
   Widget _buildAgencyCard(Map<String, dynamic> agency) {
-    // Get the cheapest vehicle for display
     List<Map<String, dynamic>> vehicles = List<Map<String, dynamic>>.from(agency['vehicles']);
-    vehicles.sort((a, b) => a['pricePerKm'].compareTo(b['pricePerKm']));
-    Map<String, dynamic> cheapestVehicle = vehicles.first;
 
     return GestureDetector(
       onTap: () {
@@ -364,18 +322,9 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                       color: Colors.black87,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    agency['specialty'],
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Color(0xFF0088cc),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
                   const SizedBox(height: 12),
 
-                  // Vehicle Type and Pricing
+                  // Vehicle Types and Pricing
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -395,7 +344,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'Starting from:',
+                              'Available Vehicles:',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.blue.shade700,
@@ -404,80 +353,38 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 6),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              cheapestVehicle['type'],
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
+                        const SizedBox(height: 8),
+                        ...vehicles.map((vehicle) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                vehicle['type'],
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black87,
+                                ),
                               ),
-                            ),
-                            Text(
-                              'LKR ${cheapestVehicle['pricePerKm']}/km',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF0088cc),
+                              Text(
+                                'LKR ${vehicle['pricePerKm']}/km',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF0088cc),
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          cheapestVehicle['capacity'],
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
+                            ],
                           ),
-                        ),
+                        )).toList(),
                       ],
                     ),
                   ),
 
                   const SizedBox(height: 12),
 
-                  // Location and Contact
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on,
-                        size: 16,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        agency['location'],
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      const Icon(
-                        Icons.phone,
-                        size: 16,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          agency['contact'],
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Experience and View Details Button
+                  // Experience Badge and View Details Button
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -535,7 +442,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
         searchController: searchController,
         searchHint: 'Search travel agencies...',
         selectedLocation: selectedLocation,
-        sriLankanCities:         sriLankanCities,
+        sriLankanCities: sriLankanCities,
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -548,7 +455,8 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                 children: [
                   IconButton(
                     onPressed: () {
-                      Navigator.pop(context);
+                      // Use GoRouter to navigate back to marketplace
+                      context.go('/marketplace');
                     },
                     icon: const Icon(Icons.arrow_back),
                   ),

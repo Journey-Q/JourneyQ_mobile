@@ -162,8 +162,8 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
   Widget _buildPackageCard(Map<String, dynamic> package) {
     return GestureDetector(
       onTap: () {
-        // Navigate to book package page
-        context.push('/marketplace/book_package', extra: package);
+        // Navigate to tour package details page
+        context.push('/marketplace/tour_packages/details', extra: package);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
@@ -447,7 +447,7 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                       ),
                       ElevatedButton(
                         onPressed: () {
-                          // Navigate to book package page
+                          // Navigate to book package page - prevent event bubbling
                           context.push('/marketplace/book_package', extra: package);
                         },
                         style: ElevatedButton.styleFrom(
@@ -481,7 +481,7 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
       appBar: JourneyQAppBar(
         searchController: searchController,
         searchHint: 'Search tour packages...',
-        selectedLocation: selectedLocation,  // Add this
+        selectedLocation: selectedLocation,
         sriLankanCities: sriLankanCities,
       ),
       body: SingleChildScrollView(
@@ -495,7 +495,8 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                 children: [
                   IconButton(
                     onPressed: () {
-                      Navigator.pop(context);
+                      // Use GoRouter to navigate back to marketplace
+                      context.go('/marketplace');
                     },
                     icon: const Icon(Icons.arrow_back),
                   ),

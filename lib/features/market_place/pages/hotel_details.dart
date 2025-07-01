@@ -2,62 +2,83 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:journeyq/features/market_place/pages/viewall_hotels.dart';
 
 class HotelDetailsPage extends StatefulWidget {
-  const HotelDetailsPage({Key? key}) : super(key: key);
+  final Map<String, dynamic>? hotel;
+
+  const HotelDetailsPage({Key? key, this.hotel}) : super(key: key);
 
   @override
   State<HotelDetailsPage> createState() => _HotelDetailsPageState();
 }
 
 class _HotelDetailsPageState extends State<HotelDetailsPage> {
-  // Sample hotel data - In real app, this would come from parameters or API
-  final Map<String, dynamic> hotelData = {
-    'name': 'Shangri-La Hotel Colombo',
-    'location': 'Galle Face, Colombo',
-    'rating': 4.8,
-    'reviewCount': 1250,
-    'price': 'LKR 45,000/night',
-    'mainImage': 'assets/images/shangri_la.jpg',
-    'backgroundColor': const Color(0xFF8B4513),
-    'contact': '+94 11 254 4544',
-    'email': 'reservations@shangri-la.com',
-    'openTime': '24/7',
-    'description': 'Discover the ultimate in luxury and sophistication at Shangri-La Hotel Colombo. Located on the prestigious Galle Face Green, our hotel offers stunning ocean views and world-class amenities.',
-    'amenities': ['Pool', 'Spa', 'WiFi', 'Restaurant', 'Gym', 'Business Center', 'Concierge', 'Room Service'],
-    'isAvailable': true,
-  };
+  late Map<String, dynamic> hotelData;
 
-  final List<Map<String, dynamic>> rooms = [
-    {
-      'type': 'Deluxe Ocean View',
-      'price': 'LKR 45,000/night',
-      'size': '45 sqm',
-      'image': 'assets/images/room_deluxe.jpg',
+  @override
+  void initState() {
+    super.initState();
+    // Use passed hotel data or default data
+    hotelData = widget.hotel ?? _getDefaultHotelData();
+
+    // Enhance hotel data with additional details if needed
+    _enhanceHotelData();
+  }
+
+  Map<String, dynamic> _getDefaultHotelData() {
+    return {
+      'name': 'Shangri-La Hotel Colombo',
+      'location': 'Galle Face, Colombo',
+      'rating': 4.8,
+      'image': 'assets/images/shangri_la.jpg',
       'backgroundColor': const Color(0xFF8B4513),
-      'amenities': ['King Bed', 'Ocean View', 'WiFi', 'Minibar', 'Safe', 'Air Conditioning', 'Bathroom'],
-      'available': true,
-    },
-    {
-      'type': 'Executive Suite',
-      'price': 'LKR 65,000/night',
-      'size': '75 sqm',
-      'image': 'assets/images/room_suite.jpg',
-      'backgroundColor': const Color(0xFF20B2AA),
-      'amenities': ['Separate Living Room', 'King Bed', 'City View', 'WiFi', 'Minibar', 'Work Desk', 'Premium Bathroom'],
-      'available': true,
-    },
-    {
-      'type': 'Presidential Suite',
-      'price': 'LKR 120,000/night',
-      'size': '120 sqm',
-      'image': 'assets/images/room_presidential.jpg',
-      'backgroundColor': const Color(0xFF9370DB),
-      'amenities': ['Master Bedroom', 'Living & Dining Area', 'Panoramic View', 'Butler Service', 'Premium Amenities'],
-      'available': false,
-    },
-  ];
+    };
+  }
+
+  void _enhanceHotelData() {
+    // Add default values for missing fields
+    hotelData.putIfAbsent('reviewCount', () => 1250);
+    hotelData.putIfAbsent('price', () => 'LKR 45,000/night');
+    hotelData.putIfAbsent('contact', () => '+94 11 254 4544');
+    hotelData.putIfAbsent('email', () => 'reservations@${hotelData['name'].toLowerCase().replaceAll(' ', '').replaceAll('-', '')}.com');
+    hotelData.putIfAbsent('openTime', () => '24/7');
+    hotelData.putIfAbsent('description', () => 'Experience luxury and comfort at ${hotelData['name']}. Located in the heart of ${hotelData['location']}, our hotel offers world-class amenities and exceptional service.');
+    hotelData.putIfAbsent('amenities', () => ['Pool', 'Spa', 'WiFi', 'Restaurant', 'Gym', 'Business Center', 'Concierge', 'Room Service']);
+    hotelData.putIfAbsent('isAvailable', () => true);
+    hotelData.putIfAbsent('mainImage', () => hotelData['image']);
+  }
+
+  List<Map<String, dynamic>> _getHotelRooms() {
+    return [
+      {
+        'type': 'Deluxe Ocean View',
+        'price': 'LKR 45,000/night',
+        'size': '45 sqm',
+        'image': 'assets/images/room_deluxe.jpg',
+        'backgroundColor': hotelData['backgroundColor'],
+        'amenities': ['King Bed', 'Ocean View', 'WiFi', 'Minibar', 'Safe', 'Air Conditioning', 'Bathroom'],
+        'available': true,
+      },
+      {
+        'type': 'Executive Suite',
+        'price': 'LKR 65,000/night',
+        'size': '75 sqm',
+        'image': 'assets/images/room_suite.jpg',
+        'backgroundColor': const Color(0xFF20B2AA),
+        'amenities': ['Separate Living Room', 'King Bed', 'City View', 'WiFi', 'Minibar', 'Work Desk', 'Premium Bathroom'],
+        'available': true,
+      },
+      {
+        'type': 'Presidential Suite',
+        'price': 'LKR 120,000/night',
+        'size': '120 sqm',
+        'image': 'assets/images/room_presidential.jpg',
+        'backgroundColor': const Color(0xFF9370DB),
+        'amenities': ['Master Bedroom', 'Living & Dining Area', 'Panoramic View', 'Butler Service', 'Premium Amenities'],
+        'available': false,
+      },
+    ];
+  }
 
   Widget _buildRoomCard(Map<String, dynamic> room) {
     return Container(
@@ -217,7 +238,12 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                     ElevatedButton(
                       onPressed: room['available'] ? () {
                         // Handle booking
-                        print('Book room: ${room['type']}');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Booking ${room['type']} at ${hotelData['name']}'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
                       } : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: room['available'] ? const Color(0xFF0088cc) : Colors.grey,
@@ -240,6 +266,8 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final rooms = _getHotelRooms();
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: CustomScrollView(
@@ -256,7 +284,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: Image.asset(
-                hotelData['mainImage'],
+                hotelData['mainImage'] ?? hotelData['image'],
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(

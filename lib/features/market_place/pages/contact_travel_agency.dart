@@ -29,11 +29,27 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
   int _numberOfPeople = 1;
   bool _isSubmitting = false;
 
+  // Default services for all agencies
+  List<String> _getDefaultServices() {
+    return [
+      'Car Rental',
+      'Van Rental',
+      'Bus Rental',
+      'Day Tours',
+      'Multi-day Tours',
+      'Airport Transfers',
+      'Wedding Transportation',
+      'Corporate Travel'
+    ];
+  }
+
   @override
   void initState() {
     super.initState();
-    if (widget.agency['services'].isNotEmpty) {
-      _selectedService = widget.agency['services'][0];
+    // Use default services or existing services
+    List<String> availableServices = (widget.agency['services'] as List<dynamic>?)?.cast<String>() ?? _getDefaultServices();
+    if (availableServices.isNotEmpty) {
+      _selectedService = availableServices[0];
     }
   }
 
@@ -49,17 +65,21 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
     }
   }
 
-  Future<void> _sendEmail(String email) async {
-    final Uri launchUri = Uri(
-      scheme: 'mailto',
-      path: email,
-      query: 'subject=Travel Inquiry for ${widget.agency['name']}',
+  void _startChat() {
+    // Show chat interface or navigate to chat page
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Chat with ${widget.agency['name']}'),
+        content: const Text('Chat feature will be available soon. For now, please use the inquiry form below or call directly.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
     );
-    if (await canLaunchUrl(launchUri)) {
-      await launchUrl(launchUri);
-    } else {
-      _showSnackBar('Could not launch email client');
-    }
   }
 
   void _copyToClipboard(String text, String type) {
@@ -143,10 +163,12 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
 
   @override
   Widget build(BuildContext context) {
+    List<String> availableServices = (widget.agency['services'] as List<dynamic>?)?.cast<String>() ?? _getDefaultServices();
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text('Contact ${widget.agency['name']}'),
+        title: Text('Contact ${widget.agency['name'] ?? 'Travel Agency'}'),
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF0088cc),
         elevation: 0,
@@ -185,8 +207,8 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                             borderRadius: BorderRadius.circular(12),
                             gradient: LinearGradient(
                               colors: [
-                                widget.agency['backgroundColor'],
-                                widget.agency['backgroundColor'].withOpacity(0.8),
+                                widget.agency['backgroundColor'] ?? const Color(0xFF0088cc),
+                                (widget.agency['backgroundColor'] ?? const Color(0xFF0088cc)).withOpacity(0.8),
                               ],
                             ),
                           ),
@@ -202,26 +224,19 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                widget.agency['name'],
+                                widget.agency['name'] ?? 'Travel Agency',
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              Text(
-                                widget.agency['specialty'],
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Color(0xFF0088cc),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                              const SizedBox(height: 4),
                               Row(
                                 children: [
                                   const Icon(Icons.star, color: Colors.amber, size: 16),
                                   const SizedBox(width: 4),
                                   Text(
-                                    '${widget.agency['rating']} • ${widget.agency['experience']}',
+                                    '${widget.agency['rating'] ?? 4.5} • ${widget.agency['experience'] ?? 'Experienced'}',
                                     style: const TextStyle(
                                       fontSize: 12,
                                       color: Colors.grey,
@@ -240,7 +255,7 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                       children: [
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: () => _makePhoneCall(widget.agency['contact']),
+                            onPressed: () => _makePhoneCall(widget.agency['contact'] ?? '+94 11 000 0000'),
                             icon: const Icon(Icons.phone, size: 18),
                             label: const Text('Call'),
                             style: ElevatedButton.styleFrom(
@@ -255,9 +270,9 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: () => _sendEmail('info@${widget.agency['name'].toLowerCase().replaceAll(' ', '')}.lk'),
-                            icon: const Icon(Icons.email, size: 18),
-                            label: const Text('Email'),
+                            onPressed: _startChat,
+                            icon: const Icon(Icons.chat_bubble, size: 18),
+                            label: const Text('Chat'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF0088cc),
                               foregroundColor: Colors.white,
@@ -272,13 +287,13 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                     const SizedBox(height: 12),
                     // Contact Info
                     GestureDetector(
-                      onTap: () => _copyToClipboard(widget.agency['contact'], 'Phone number'),
+                      onTap: () => _copyToClipboard(widget.agency['contact'] ?? '+94 11 000 0000', 'Phone number'),
                       child: Row(
                         children: [
                           const Icon(Icons.phone, size: 16, color: Colors.grey),
                           const SizedBox(width: 8),
                           Text(
-                            widget.agency['contact'],
+                            widget.agency['contact'] ?? '+94 11 000 0000',
                             style: const TextStyle(fontSize: 14),
                           ),
                           const SizedBox(width: 8),
@@ -292,7 +307,7 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                         const Icon(Icons.location_on, size: 16, color: Colors.grey),
                         const SizedBox(width: 8),
                         Text(
-                          widget.agency['location'],
+                          widget.agency['location'] ?? 'Colombo, Sri Lanka',
                           style: const TextStyle(fontSize: 14),
                         ),
                       ],
@@ -391,13 +406,13 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
 
                       // Service Selection
                       DropdownButtonFormField<String>(
-                        value: _selectedService,
+                        value: _selectedService.isEmpty ? null : _selectedService,
                         decoration: const InputDecoration(
                           labelText: 'Service Interested In',
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.design_services),
                         ),
-                        items: widget.agency['services'].map<DropdownMenuItem<String>>((service) {
+                        items: availableServices.map<DropdownMenuItem<String>>((service) {
                           return DropdownMenuItem<String>(
                             value: service,
                             child: Text(service),
@@ -405,7 +420,7 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                         }).toList(),
                         onChanged: (value) {
                           setState(() {
-                            _selectedService = value!;
+                            _selectedService = value ?? '';
                           });
                         },
                       ),

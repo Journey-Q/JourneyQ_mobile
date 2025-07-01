@@ -40,24 +40,44 @@ class _MarketplacePageState extends State<MarketplacePage> {
     'Bentota'
   ];
 
-  // Updated services - only 3 services
+  // Updated services - only 3 services with proper navigation
   final List<Map<String, dynamic>> mainServices = [
     {
       'name': 'Hotels',
       'icon': Icons.hotel,
       'color': const Color(0xFF0088cc),
+      'route': 'hotels',
     },
     {
       'name': 'Vehicle Agency',
       'icon': Icons.directions_car,
       'color': const Color(0xFF0088cc),
+      'route': 'vehicle_agency',
     },
     {
       'name': 'Tour Guide',
       'icon': Icons.person_pin_circle,
       'color': const Color(0xFF0088cc),
+      'route': 'tour_guide',
     },
   ];
+
+  // Navigation method for services
+  void _navigateToService(String route) {
+    switch (route) {
+      case 'hotels':
+        context.go('/marketplace/hotels');
+        break;
+      case 'vehicle_agency':
+        context.go('/marketplace/travel_agencies');
+        break;
+      case 'tour_guide':
+        context.go('/marketplace/tour_packages');
+        break;
+      default:
+        print('Unknown route: $route');
+    }
+  }
 
   // Nearby Hotels Data
   final List<Map<String, dynamic>> nearbyHotels = [
@@ -102,7 +122,6 @@ class _MarketplacePageState extends State<MarketplacePage> {
   final List<Map<String, dynamic>> travelAgencies = [
     {
       'name': 'Ceylon Roots',
-      'specialty': 'Cultural Tours',
       'rating': 4.9,
       'experience': '15+ Years',
       'image': 'assets/images/ceylon_roots.png',
@@ -110,7 +129,6 @@ class _MarketplacePageState extends State<MarketplacePage> {
     },
     {
       'name': 'Jetwing Travels',
-      'specialty': 'Luxury Travel',
       'rating': 4.8,
       'experience': '20+ Years',
       'image': 'assets/images/jetwing.png',
@@ -118,7 +136,6 @@ class _MarketplacePageState extends State<MarketplacePage> {
     },
     {
       'name': 'Aitken Spence',
-      'specialty': 'Adventure Tours',
       'rating': 4.7,
       'experience': '25+ Years',
       'image': 'assets/images/aitken_spence.png',
@@ -126,7 +143,6 @@ class _MarketplacePageState extends State<MarketplacePage> {
     },
     {
       'name': 'Walkers Tours',
-      'specialty': 'Wildlife Safari',
       'rating': 4.6,
       'experience': '30+ Years',
       'image': 'assets/images/walkers.jpg',
@@ -134,7 +150,6 @@ class _MarketplacePageState extends State<MarketplacePage> {
     },
     {
       'name': 'Red Dot Tours',
-      'specialty': 'Beach & Hill Country',
       'rating': 4.5,
       'experience': '12+ Years',
       'image': 'assets/images/red_dot.jpeg',
@@ -198,8 +213,8 @@ class _MarketplacePageState extends State<MarketplacePage> {
   Widget _buildHotelCard(Map<String, dynamic> hotel) {
     return GestureDetector(
       onTap: () {
-        // Handle hotel tap
-        print('Hotel tapped: ${hotel['name']}');
+        // Navigate to hotel details page with hotel data
+        context.go('/marketplace/hotels/details', extra: hotel);
       },
       child: Container(
         width: 200,
@@ -331,8 +346,8 @@ class _MarketplacePageState extends State<MarketplacePage> {
   Widget _buildTravelAgencyCard(Map<String, dynamic> agency) {
     return GestureDetector(
       onTap: () {
-        // Handle agency tap
-        print('Agency tapped: ${agency['name']}');
+        // Navigate to travel agency details page with agency data
+        context.go('/marketplace/travel_agencies/details', extra: agency);
       },
       child: Container(
         width: 200,
@@ -411,17 +426,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    agency['specialty'],
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   Text(
                     agency['experience'],
                     style: const TextStyle(
@@ -461,8 +466,8 @@ class _MarketplacePageState extends State<MarketplacePage> {
   Widget _buildTourPackageCard(Map<String, dynamic> package) {
     return GestureDetector(
       onTap: () {
-        // Handle package tap
-        print('Package tapped: ${package['title']}');
+        // Navigate to tour package details page with package data
+        context.go('/marketplace/tour_packages/details', extra: package);
       },
       child: Container(
         width: 200,
@@ -642,7 +647,6 @@ class _MarketplacePageState extends State<MarketplacePage> {
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
-
                 ),
               ),
               const SizedBox(height: 16),
@@ -652,11 +656,12 @@ class _MarketplacePageState extends State<MarketplacePage> {
                   return Expanded(
                     child: GestureDetector(
                       onTap: () {
-                        print('Service tapped: ${service['name']}');
+                        _navigateToService(service['route']);
                       },
                       child: Container(
+                        height: 110, // Increased height to accommodate text wrapping
                         margin: const EdgeInsets.symmetric(horizontal: 8),
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(12), // Reduced padding slightly
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
@@ -682,17 +687,20 @@ class _MarketplacePageState extends State<MarketplacePage> {
                             Icon(
                               service['icon'],
                               color: Colors.white,
-                              size: 32,
+                              size: 28, // Slightly smaller icon
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 6), // Reduced spacing
                             Text(
                               service['name'],
                               style: const TextStyle(
-                                fontSize: 12,
+                                fontSize: 11, // Slightly smaller font
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
+                                height: 1.2, // Tighter line height
                               ),
                               textAlign: TextAlign.center,
+                              maxLines: 2, // Allow text to wrap to 2 lines if needed
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
@@ -714,23 +722,16 @@ class _MarketplacePageState extends State<MarketplacePage> {
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
-
                     ),
                   ),
                   TextButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ViewAllHotelsPage(),
-                        ),
-                      );
                       context.go('/marketplace/hotels');
                     },
                     child: const Text(
                       'View All',
                       style: TextStyle(
-                        color: Colors.black,
+                        color: Color(0xFF0088cc),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -761,22 +762,16 @@ class _MarketplacePageState extends State<MarketplacePage> {
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
-
                     ),
                   ),
                   TextButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ViewAllTravelAgenciesPage(),
-                        ),
-                      );
+                      context.go('/marketplace/travel_agencies');
                     },
                     child: const Text(
                       'View All',
                       style: TextStyle(
-                        color: Colors.black,
+                        color: Color(0xFF0088cc),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -807,23 +802,16 @@ class _MarketplacePageState extends State<MarketplacePage> {
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
-
                     ),
                   ),
                   TextButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ViewAllTourPackagesPage(),
-                        ),
-                      );
+                      context.go('/marketplace/tour_packages');
                     },
                     child: const Text(
                       'View All',
                       style: TextStyle(
-                        color: Colors.black,
-
+                        color: Color(0xFF0088cc),
                         fontWeight: FontWeight.w600,
                       ),
                     ),

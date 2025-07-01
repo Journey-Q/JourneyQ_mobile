@@ -115,7 +115,7 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
     return GestureDetector(
       onTap: () {
         // Navigate to hotel details when card is tapped
-        context.go('/marketplace/hotels/details');
+        context.go('/marketplace/hotels/details', extra: hotel);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
@@ -290,7 +290,7 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
                       ElevatedButton(
                         onPressed: () {
                           // Navigate to hotel details page
-                          context.go('/marketplace/hotels/details');
+                          context.go('/marketplace/hotels/details', extra: hotel);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF0088cc),
@@ -333,6 +333,7 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
                 children: [
                   IconButton(
                     onPressed: () {
+                      // Use GoRouter to navigate back to marketplace
                       context.go('/marketplace');
                     },
                     icon: const Icon(Icons.arrow_back),
