@@ -21,7 +21,7 @@ class CustomBottomNavigation extends StatelessWidget {
     ),
     BottomNavItem(
       icon: Icons.store_outlined,
-      activeIcon: Icons.store, 
+      activeIcon: Icons.store,
       label: 'Marketplace',
       route: '/marketplace',
     ),
@@ -32,8 +32,8 @@ class CustomBottomNavigation extends StatelessWidget {
       route: '/create',
     ),
     BottomNavItem(
-      icon: Icons.group_add_outlined, 
-      activeIcon: Icons.group_add,    
+      icon: Icons.group_add_outlined,
+      activeIcon: Icons.group_add,
       label: 'Join Trip',
       route: '/join_trip',
     ),
@@ -48,7 +48,7 @@ class CustomBottomNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -71,7 +71,7 @@ class CustomBottomNavigation extends StatelessWidget {
               final index = entry.key;
               final item = entry.value;
               final isActive = currentPageIndex == index;
-              
+
               return _buildNavItem(
                 context: context,
                 item: item,
@@ -93,10 +93,8 @@ class CustomBottomNavigation extends StatelessWidget {
     required VoidCallback onTap,
     required ThemeData theme,
   }) {
-    final color = isActive 
-        ? theme.primaryColor 
-        : Colors.black;
-    
+    final color = isActive ? Colors.black87 : Colors.black87;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -108,7 +106,7 @@ class CustomBottomNavigation extends StatelessWidget {
               isActive ? item.activeIcon : item.icon,
               color: color,
               size: 28,
-            )
+            ),
           ],
         ),
       ),
@@ -120,7 +118,7 @@ class CustomBottomNavigation extends StatelessWidget {
     if (onPageChanged != null) {
       onPageChanged!(index);
     }
-    
+
     // Handle navigation based on index
     switch (index) {
       case 0: // Home
@@ -184,57 +182,3 @@ class BottomNavItem {
     required this.route,
   });
 }
-
-// Example usage with the updated AppWrapper:
-/*
-class _AppWrapper extends StatelessWidget {
-  final Widget? child;
-  final int currentPageIndex;
-  
-  const _AppWrapper({
-    this.child,
-    this.currentPageIndex = 0,
-  });
-
-  bool _shouldShowNavigation(int pageIndex) {
-    // All pages from 0-4 show navigation
-    return pageIndex >= 0 && pageIndex < CustomBottomNavigation.itemCount;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final showNavigation = _shouldShowNavigation(currentPageIndex);
-
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        body: child,
-        bottomNavigationBar: showNavigation
-            ? CustomBottomNavigation(currentPageIndex: currentPageIndex)
-            : null,
-      ),
-    );
-  }
-}
-
-// Usage in your pages:
-class HomePage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return _AppWrapper(
-      currentPageIndex: 0, // Home page index
-      child: Center(child: Text('Home Page')),
-    );
-  }
-}
-
-class MarketplacePage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return _AppWrapper(
-      currentPageIndex: 1, // Marketplace page index
-      child: Center(child: Text('Marketplace Page')),
-    );
-  }
-}
-*/

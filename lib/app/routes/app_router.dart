@@ -13,10 +13,14 @@ import 'package:journeyq/features/market_place/pages/travel_agency_details.dart'
 import 'package:journeyq/features/market_place/pages/contact_travel_agency.dart';
 import 'package:journeyq/features/join_trip/pages/index.dart';
 import 'package:journeyq/features/create_trip/pages/index.dart';
-import 'package:journeyq/features/home/home_page.dart';
+import 'package:journeyq/features/home/pages/home_page.dart';
 import 'route_transistion.dart';
 import 'package:journeyq/features/profile/pages/index.dart';
-import 'package:journeyq/app/app.dart'; // Add this import
+import 'package:journeyq/app/app.dart';
+import 'package:journeyq/features/search/pages/search_page.dart';
+import 'package:journeyq/features/notification/pages/notification.dart';
+import 'package:journeyq/features/chat/pages/indexpage.dart';
+import 'package:journeyq/features/chat/pages/chatpage.dart';
 
 class AppRouter {
   static GoRouter createRouter(AuthProvider authProvider) {
@@ -56,10 +60,8 @@ class AppRouter {
         // Main app routes (WITH _AppWrapper - bottom navigation included)
         TransitionGoRoute(
           path: '/home',
-          builder: (context, state) => AppWrapper(
-            currentRoute: '/home',
-            child: HomePage(),
-          ),
+          builder: (context, state) =>
+              AppWrapper(currentRoute: '/home', child: HomePage()),
           transitionType: PageTransitionType.none,
         ),
 
@@ -183,34 +185,57 @@ class AppRouter {
 
         TransitionGoRoute(
           path: '/create',
-          builder: (context, state) => AppWrapper(
-            currentRoute: '/create',
-            child: CreateTripPage(),
-          ),
+          builder: (context, state) =>
+              AppWrapper(currentRoute: '/create', child: CreateTripPage()),
           transitionType: PageTransitionType.none,
         ),
 
         TransitionGoRoute(
           path: '/join_trip',
-          builder: (context, state) => AppWrapper(
-            currentRoute: '/join_trip',
-            child: JoinTripPage(),
-          ),
+          builder: (context, state) =>
+              AppWrapper(currentRoute: '/join_trip', child: JoinTripPage()),
           transitionType: PageTransitionType.none,
         ),
 
         TransitionGoRoute(
           path: '/profile',
-          builder: (context, state) => AppWrapper(
-            currentRoute: '/profile',
-            child: ProfilePage(),
-          ),
+          builder: (context, state) =>
+              AppWrapper(currentRoute: '/profile', child: ProfilePage()),
           transitionType: PageTransitionType.none,
         ),
+        
+        TransitionGoRoute(
+          path: '/search',
+          builder: (context, state) => const SearchPage(),
+          transitionType: PageTransitionType.slide,
+        ),
 
+        TransitionGoRoute(
+          path: '/notification',
+          builder: (context, state) => const NotificationPage(),
+          transitionType: PageTransitionType.slide,
+        ),
 
+        TransitionGoRoute(
+          path: '/chat',
+          builder: (context, state) => const ChatPage(),
+          transitionType: PageTransitionType.slide,
+        ),
+
+        TransitionGoRoute(
+             path: '/chat/:chatId',
+            builder: (context, state) {
+             final chatId = state.pathParameters['chatId']!;
+    final chatData = state.extra as Map<String, dynamic>;
+    return IndividualChatPage(
+      chatId: chatId,
+      chatData: chatData,
+    );
+  },
+   transitionType: PageTransitionType.slide,
+  // Custom animation duration
+)
       ],
     );
   }
 }
-
