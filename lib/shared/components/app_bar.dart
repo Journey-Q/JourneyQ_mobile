@@ -38,8 +38,6 @@ class JourneyQAppBar extends StatelessWidget implements PreferredSizeWidget {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent, // Remove Material 3 tinting
         foregroundColor: Colors.black87, // Set text/icon colors
-        elevation: 1,
-        shadowColor: Colors.grey.withOpacity(0.2),
         automaticallyImplyLeading: false,
         titleSpacing: 20,
         clipBehavior: Clip.none,
@@ -70,7 +68,7 @@ class JourneyQAppBar extends StatelessWidget implements PreferredSizeWidget {
               children: [
                 // Notification Icon with Badge
                 _buildIconWithBadge(
-                  icon: Icons.favorite_border_rounded,
+                  icon: Icons.notifications_none_outlined,
                   count: notificationCount,
                   onTap: onNotificationTap,
                   isDark: false,
@@ -123,26 +121,15 @@ class JourneyQAppBar extends StatelessWidget implements PreferredSizeWidget {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: gradientBlue,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: Colors.red,
                     borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: gradientBlue.first.withOpacity(0.4),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
                   ),
                   child: Center(
                     child: Text(
                       count > 99 ? '99+' : count.toString(),
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight: FontWeight.bold,
                         height: 1.0,
                       ),
@@ -157,5 +144,5 @@ class JourneyQAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(60);
+  Size get preferredSize => const Size.fromHeight(55);
 }

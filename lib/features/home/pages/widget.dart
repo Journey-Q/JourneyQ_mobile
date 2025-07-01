@@ -34,16 +34,16 @@ class ExploreWorldCard extends StatelessWidget {
                       'Explore the World',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 24,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 2),
                     Text(
                       'Create your journey with JourneyQ AI',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.9),
-                        fontSize: 16,
+                        fontSize: 14,
                       ),
                     ),
                   ],
@@ -51,12 +51,12 @@ class ExploreWorldCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           GestureDetector(
             onTap: onCreateJourney,
             child: Container(
               padding: const EdgeInsets.symmetric(
-                horizontal: 24,
+                horizontal: 16,
                 vertical: 12,
               ),
               decoration: BoxDecoration(
@@ -76,14 +76,14 @@ class ExploreWorldCard extends StatelessWidget {
                   Icon(
                     Icons.add_location_alt,
                     color: Color(0xFF0088cc),
-                    size: 20,
+                    size: 18,
                   ),
                   SizedBox(width: 8),
                   Text(
                     'Create Journey',
                     style: TextStyle(
                       color: Color(0xFF0088cc),
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
