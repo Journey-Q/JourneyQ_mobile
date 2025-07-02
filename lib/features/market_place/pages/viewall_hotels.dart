@@ -284,7 +284,7 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF0088cc),
+                          color: Colors.black,
                         ),
                       ),
                       ElevatedButton(

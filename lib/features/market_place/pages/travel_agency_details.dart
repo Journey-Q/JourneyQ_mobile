@@ -54,8 +54,11 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
 
         // Add AC/Non-AC pricing based on vehicle type and existing price
         int basePrice = enhanced['pricePerKm'] ?? _getBasePriceByType(enhanced['type']);
-        enhanced['acPrice'] = basePrice;
-        enhanced['nonAcPrice'] = (basePrice * 0.8).round(); // Non-AC is 20% cheaper
+        enhanced['acPricePerKm'] = basePrice;
+        enhanced['nonAcPricePerKm'] = (basePrice * 0.8).round(); // Non-AC is 20% cheaper
+
+        // Add seats based on vehicle type
+        enhanced['seats'] = _getSeatsByType(enhanced['type']);
 
         // Add type-specific features
         enhanced['features'] = _getFeaturesByType(enhanced['type']);
@@ -68,20 +71,23 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
     return [
       {
         'type': 'Car',
-        'acPrice': 50,
-        'nonAcPrice': 40,
+        'seats': 4,
+        'acPricePerKm': 50,
+        'nonAcPricePerKm': 40,
         'features': ['Air conditioning', 'Comfortable leather seats', 'GPS navigation', 'Bluetooth music system', 'Phone charging port'],
       },
       {
         'type': 'Van',
-        'acPrice': 70,
-        'nonAcPrice': 55,
+        'seats': 8,
+        'acPricePerKm': 70,
+        'nonAcPricePerKm': 55,
         'features': ['Climate control AC', 'Spacious 8-seater interior', 'Large luggage compartment', 'Panoramic windows', 'Individual reading lights'],
       },
       {
         'type': 'Bus',
-        'acPrice': 90,
-        'nonAcPrice': 75,
+        'seats': 25,
+        'acPricePerKm': 90,
+        'nonAcPricePerKm': 75,
         'features': ['Central air conditioning', 'Reclining passenger seats', 'Entertainment system with TV', 'WiFi connectivity', 'Onboard washroom'],
       },
     ];
@@ -98,6 +104,21 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
         return 90;
       default:
         return 50;
+    }
+  }
+
+  int _getSeatsByType(String? type) {
+    switch (type?.toLowerCase()) {
+      case 'car':
+        return 4;
+      case 'van':
+        return 8;
+      case 'bus':
+        return 25;
+      case 'mini bus':
+        return 15;
+      default:
+        return 4;
     }
   }
 
@@ -149,18 +170,18 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Vehicle Type and Pricing
+          // Vehicle Type and Seats
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
+              Icon(
+                Icons.directions_car,
+                color: Colors.grey.shade600,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.directions_car,
-                    color: Colors.grey.shade600,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 8),
                   Text(
                     vehicle['type'] ?? 'Vehicle',
                     style: const TextStyle(
@@ -169,43 +190,120 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                       color: Colors.black87,
                     ),
                   ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.people,
+                        size: 16,
+                        color: Colors.grey.shade600,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${vehicle['seats'] ?? _getSeatsByType(vehicle['type'])} seats',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      'AC: LKR ${_formatPrice(vehicle['acPrice'] ?? vehicle['pricePerKm'] ?? 50)}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green.shade700,
-                      ),
-                    ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Pricing Section
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green.shade200),
                   ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      'Non-AC: LKR ${_formatPrice(vehicle['nonAcPrice'] ?? ((vehicle['pricePerKm'] ?? 50) * 0.8).round())}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange.shade700,
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.ac_unit,
+                            size: 14,
+                            color: Colors.green.shade700,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'AC',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green.shade700,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'LKR ${((vehicle['acPricePerKm'] ?? vehicle['pricePerKm'] ?? 50) * 50).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} for 50km',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade700,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange.shade200),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.air,
+                            size: 14,
+                            color: Colors.orange.shade700,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Non-AC',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'LKR ${((vehicle['nonAcPricePerKm'] ?? ((vehicle['pricePerKm'] ?? 50) * 0.8).round()) * 50).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} for 50km',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange.shade700,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
@@ -241,16 +339,6 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
             ),
         ],
       ),
-    );
-  }
-
-  String _formatPrice(dynamic price) {
-    int priceValue = (price is int) ? price : int.tryParse(price.toString()) ?? 50;
-    // Convert to thousands format (multiply by 1000 for daily rate)
-    int dailyPrice = priceValue * 1000;
-    return dailyPrice.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[1]},',
     );
   }
 
