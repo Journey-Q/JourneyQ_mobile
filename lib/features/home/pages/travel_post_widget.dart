@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:go_router/go_router.dart';
 
 class TravelPostWidget extends StatefulWidget {
+  final String postId; // Add postId to map to journey details
   final String userName;
   final String location;
   final String userImage;
@@ -10,16 +12,16 @@ class TravelPostWidget extends StatefulWidget {
   final List<String> postImages;
   final int likesCount;
   final int commentsCount;
-  final VoidCallback? onViewJourney;
   final VoidCallback? onLike;
   final VoidCallback? onComment;
   final VoidCallback? onMoreOptions;
-  final bool isFollowed; // Explicitly typed as bool
-  final bool isBookmarked; // Explicitly typed as bool
-  final bool isLiked; // Explicitly typed as bool
+  final bool isFollowed;
+  final bool isBookmarked;
+  final bool isLiked;
 
   const TravelPostWidget({
     super.key,
+    required this.postId, // Add this required field
     required this.userName,
     required this.location,
     required this.userImage,
@@ -28,7 +30,6 @@ class TravelPostWidget extends StatefulWidget {
     required this.postImages,
     required this.likesCount,
     required this.commentsCount,
-    this.onViewJourney,
     this.onLike,
     this.onComment,
     this.onMoreOptions,
@@ -60,6 +61,11 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  // Handle "View Journey" button tap
+  void _onViewJourney() {
+    context.push('/journey/${widget.postId}');
   }
 
   @override
@@ -135,18 +141,18 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
           GestureDetector(
             onTap: () {
               setState(() {
-                _isFollowed = !_isFollowed; // Update state variable
+                _isFollowed = !_isFollowed;
               });
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color:  Colors.grey[300],
+                color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 _isFollowed ? 'Following' : 'Follow',
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.black87,
                   fontWeight: FontWeight.w500,
                   fontSize: 12,
@@ -211,13 +217,13 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.blue[50], // Soft blue background
+                            color: Colors.blue[50],
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             place,
                             style: TextStyle(
-                              color: Colors.blue[800], // Elegant text color
+                              color: Colors.blue[800],
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
@@ -362,9 +368,9 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
 
           const Spacer(),
 
-          // View Journey Button
+          // View Journey Button - Updated to use navigation
           GestureDetector(
-            onTap: widget.onViewJourney?.call,
+            onTap: _onViewJourney, // Use the navigation method
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(

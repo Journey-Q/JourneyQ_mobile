@@ -21,6 +21,7 @@ import 'package:journeyq/features/search/pages/search_page.dart';
 import 'package:journeyq/features/notification/pages/notification.dart';
 import 'package:journeyq/features/chat/pages/indexpage.dart';
 import 'package:journeyq/features/chat/pages/chatpage.dart';
+import 'package:journeyq/features/journey_view/pages/journey_detail.dart';
 
 class AppRouter {
   static GoRouter createRouter(AuthProvider authProvider) {
@@ -165,7 +166,6 @@ class AppRouter {
           transitionType: PageTransitionType.none,
         ),
 
-
         // Book Package Route (without AppWrapper as it's a full-screen booking flow)
         TransitionGoRoute(
           path: '/marketplace/book_package',
@@ -203,7 +203,7 @@ class AppRouter {
               AppWrapper(currentRoute: '/profile', child: ProfilePage()),
           transitionType: PageTransitionType.none,
         ),
-        
+
         TransitionGoRoute(
           path: '/search',
           builder: (context, state) => const SearchPage(),
@@ -223,18 +223,24 @@ class AppRouter {
         ),
 
         TransitionGoRoute(
-             path: '/chat/:chatId',
-            builder: (context, state) {
-             final chatId = state.pathParameters['chatId']!;
-    final chatData = state.extra as Map<String, dynamic>;
-    return IndividualChatPage(
-      chatId: chatId,
-      chatData: chatData,
-    );
-  },
-   transitionType: PageTransitionType.slide,
-  // Custom animation duration
-)
+          path: '/journey/:journeyId',
+          builder: (context, state) {
+            final journeyId = state.pathParameters['journeyId']!;
+            return JourneyDetailsPage(journeyId: journeyId);
+          },
+          transitionType: PageTransitionType.slide,
+        ),
+
+        TransitionGoRoute(
+          path: '/chat/:chatId',
+          builder: (context, state) {
+            final chatId = state.pathParameters['chatId']!;
+            final chatData = state.extra as Map<String, dynamic>;
+            return IndividualChatPage(chatId: chatId, chatData: chatData);
+          },
+          transitionType: PageTransitionType.slide,
+          // Custom animation duration
+        ),
       ],
     );
   }

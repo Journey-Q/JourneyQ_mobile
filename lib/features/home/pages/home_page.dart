@@ -78,7 +78,7 @@ class _HomePageState extends State<HomePage> {
                         );
                       },
                     ),
-                    
+
                     const SizedBox(height: 16),
                   ]),
                 ),
@@ -98,35 +98,42 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildPostsList() {
     return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          final post = _posts[index];
+      delegate: SliverChildBuilderDelegate((context, index) {
+        final post = _posts[index];
 
-          // Safely handle data conversion
-          List<String> placesVisited = _convertToStringList(post['placesVisited']);
-          List<String> postImages = _convertToStringList(post['postImages']);
+        // Safely handle data conversion
+        List<String> placesVisited = _convertToStringList(
+          post['placesVisited'],
+        );
+        List<String> postImages = _convertToStringList(post['postImages']);
 
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: TravelPostWidget(
-              userName: post['userName']?.toString() ?? 'Unknown User',
-              location: post['location']?.toString() ?? 'Unknown Location',
-              userImage: post['userImage']?.toString() ?? '',
-              journeyTitle: post['journeyTitle']?.toString() ?? 'Travel Adventure',
-              placesVisited: placesVisited,
-              postImages: postImages,
-              likesCount: _convertToInt(post['likesCount']),
-              commentsCount: _convertToInt(post['commentsCount']),
-              isLiked: post['isLiked'] ?? false,
-              onViewJourney: () => _handleViewJourney(post),
-              onLike: () => _handleLike(post, index),
-              onComment: () => _handleComment(post, index),
-              onMoreOptions: () => _showMoreOptions(context, post['userName']?.toString() ?? 'Unknown'),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: TravelPostWidget(
+            postId:
+                post['id']?.toString() ?? '1', // Add required postId parameter
+            userName: post['userName']?.toString() ?? 'Unknown User',
+            location: post['location']?.toString() ?? 'Unknown Location',
+            userImage: post['userImage']?.toString() ?? '',
+            journeyTitle:
+                post['journeyTitle']?.toString() ?? 'Travel Adventure',
+            placesVisited: placesVisited,
+            postImages: postImages,
+            likesCount: _convertToInt(post['likesCount']),
+            commentsCount: _convertToInt(post['commentsCount']),
+            isLiked: post['isLiked'] ?? false,
+            isFollowed: false, // Add default value
+            isBookmarked: false, // Add default value
+            // Remove onViewJourney - now handled internally by the widget
+            onLike: () => _handleLike(post, index),
+            onComment: () => _handleComment(post, index),
+            onMoreOptions: () => _showMoreOptions(
+              context,
+              post['userName']?.toString() ?? 'Unknown',
             ),
-          );
-        },
-        childCount: _posts.length,
-      ),
+          ),
+        );
+      }, childCount: _posts.length),
     );
   }
 
@@ -164,20 +171,24 @@ class _HomePageState extends State<HomePage> {
       // Toggle like state and update count
       bool isCurrentlyLiked = _posts[postIndex]['isLiked'] ?? false;
       _posts[postIndex]['isLiked'] = !isCurrentlyLiked;
-      
+
       if (!isCurrentlyLiked) {
-        _posts[postIndex]['likesCount'] = (_posts[postIndex]['likesCount'] ?? 0) + 1;
+        _posts[postIndex]['likesCount'] =
+            (_posts[postIndex]['likesCount'] ?? 0) + 1;
       } else {
-        _posts[postIndex]['likesCount'] = (_posts[postIndex]['likesCount'] ?? 1) - 1;
+        _posts[postIndex]['likesCount'] =
+            (_posts[postIndex]['likesCount'] ?? 1) - 1;
       }
     });
-    
-    print('Like tapped for ${post['userName']} - New count: ${_posts[postIndex]['likesCount']}');
+
+    print(
+      'Like tapped for ${post['userName']} - New count: ${_posts[postIndex]['likesCount']}',
+    );
   }
 
   void _handleComment(Map<String, dynamic> post, int postIndex) {
     print('Comment tapped for ${post['userName']}');
-    
+
     // Show comments bottom sheet using built-in method
     _showCommentsBottomSheet(
       context,
@@ -189,15 +200,18 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           // Count total comments including replies
           int totalComments = 0;
-          List<Map<String, dynamic>> comments = List<Map<String, dynamic>>.from(post['comments'] ?? []);
-          
+          List<Map<String, dynamic>> comments = List<Map<String, dynamic>>.from(
+            post['comments'] ?? [],
+          );
+
           for (var comment in comments) {
             totalComments++; // Count the main comment
             if (comment['replies'] != null) {
-              totalComments += (comment['replies'] as List).length; // Count replies
+              totalComments +=
+                  (comment['replies'] as List).length; // Count replies
             }
           }
-          
+
           _posts[postIndex]['commentsCount'] = totalComments;
         });
       },
@@ -211,7 +225,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _posts = List.from(post_data); // Reload original data
     });
-    
+
     if (mounted) {
       SnackBarService.showSuccess(context, 'Posts refreshed!');
     }
@@ -364,12 +378,10 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
         children: [
           // Header
           _buildHeader(),
-          
+
           // Comments List
-          Expanded(
-            child: _buildCommentsList(),
-          ),
-          
+          Expanded(child: _buildCommentsList()),
+
           // Comment Input
           _buildCommentInput(),
         ],
@@ -381,9 +393,7 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.grey[200]!),
-        ),
+        border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
       ),
       child: Column(
         children: [
@@ -401,10 +411,7 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
             children: [
               const Text(
                 'Comments',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
               IconButton(
                 onPressed: () => Navigator.pop(context),
@@ -424,11 +431,7 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.chat_bubble_outline,
-              size: 64,
-              color: Colors.grey,
-            ),
+            Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey),
             SizedBox(height: 16),
             Text(
               'No comments yet',
@@ -441,10 +444,7 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
             SizedBox(height: 8),
             Text(
               'Be the first to comment!',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
           ],
         ),
@@ -463,10 +463,7 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
 
   Widget _buildCommentItem(Map<String, dynamic> comment, bool isReply) {
     return Container(
-      margin: EdgeInsets.only(
-        left: isReply ? 40 : 0,
-        bottom: 16,
-      ),
+      margin: EdgeInsets.only(left: isReply ? 40 : 0, bottom: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -476,11 +473,14 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
               // User Avatar
               CircleAvatar(
                 radius: isReply ? 14 : 16,
-                backgroundImage: comment['userImage'] != null && comment['userImage'].isNotEmpty
+                backgroundImage:
+                    comment['userImage'] != null &&
+                        comment['userImage'].isNotEmpty
                     ? NetworkImage(comment['userImage'])
                     : null,
                 backgroundColor: Colors.grey[300],
-                child: comment['userImage'] == null || comment['userImage'].isEmpty
+                child:
+                    comment['userImage'] == null || comment['userImage'].isEmpty
                     ? Icon(
                         Icons.person,
                         color: Colors.grey[600],
@@ -489,7 +489,7 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
                     : null,
               ),
               const SizedBox(width: 12),
-              
+
               // Comment Content
               Expanded(
                 child: Column(
@@ -518,9 +518,9 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 8),
-                    
+
                     // Actions Row
                     Row(
                       children: [
@@ -545,7 +545,8 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
                         ],
                         if (!isReply) ...[
                           GestureDetector(
-                            onTap: () => _startReply(comment['userName'], comment['id']),
+                            onTap: () =>
+                                _startReply(comment['userName'], comment['id']),
                             child: Text(
                               'Reply',
                               style: TextStyle(
@@ -561,7 +562,7 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
                   ],
                 ),
               ),
-              
+
               // Like Button
               GestureDetector(
                 onTap: () => _toggleCommentLike(comment),
@@ -576,11 +577,15 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
               ),
             ],
           ),
-          
+
           // Replies
-          if (!isReply && comment['replies'] != null && comment['replies'].isNotEmpty) ...[
+          if (!isReply &&
+              comment['replies'] != null &&
+              comment['replies'].isNotEmpty) ...[
             const SizedBox(height: 8),
-            ...comment['replies'].map<Widget>((reply) => _buildCommentItem(reply, true)).toList(),
+            ...comment['replies']
+                .map<Widget>((reply) => _buildCommentItem(reply, true))
+                .toList(),
           ],
         ],
       ),
@@ -597,9 +602,7 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
       ),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Colors.grey[200]!),
-        ),
+        border: Border(top: BorderSide(color: Colors.grey[200]!)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -617,26 +620,19 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
                   Expanded(
                     child: Text(
                       'Replying to $_replyingTo',
-                      style: TextStyle(
-                        color: Colors.grey[700],
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: Colors.grey[700], fontSize: 12),
                     ),
                   ),
                   GestureDetector(
                     onTap: _cancelReply,
-                    child: Icon(
-                      Icons.close,
-                      size: 16,
-                      color: Colors.grey[600],
-                    ),
+                    child: Icon(Icons.close, size: 16, color: Colors.grey[600]),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 8),
           ],
-          
+
           // Input Row
           Row(
             children: [
@@ -647,14 +643,16 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
                 child: Icon(Icons.person, color: Colors.grey[600], size: 20),
               ),
               const SizedBox(width: 12),
-              
+
               // Text Input
               Expanded(
                 child: TextField(
                   controller: _commentController,
                   focusNode: _commentFocusNode,
                   decoration: InputDecoration(
-                    hintText: _replyingTo != null ? 'Reply...' : 'Add a comment...',
+                    hintText: _replyingTo != null
+                        ? 'Reply...'
+                        : 'Add a comment...',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20),
                       borderSide: BorderSide(color: Colors.grey[300]!),
@@ -674,10 +672,7 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
                     suffixIcon: _commentController.text.isNotEmpty
                         ? IconButton(
                             onPressed: _postComment,
-                            icon: const Icon(
-                              Icons.send,
-                              color: Colors.blue,
-                            ),
+                            icon: const Icon(Icons.send, color: Colors.blue),
                           )
                         : null,
                   ),
@@ -733,7 +728,9 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
     setState(() {
       if (_replyingTo != null && _replyingToCommentId != null) {
         // Add as reply
-        final commentIndex = _comments.indexWhere((c) => c['id'] == _replyingToCommentId);
+        final commentIndex = _comments.indexWhere(
+          (c) => c['id'] == _replyingToCommentId,
+        );
         if (commentIndex != -1) {
           _comments[commentIndex]['replies'].add(newComment);
         }
@@ -741,14 +738,14 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
         // Add as new comment
         _comments.insert(0, newComment);
       }
-      
+
       _commentController.clear();
       _cancelReply();
     });
 
     // Hide keyboard
     _commentFocusNode.unfocus();
-    
+
     // Notify parent of update
     widget.onCommentsUpdated?.call();
   }
