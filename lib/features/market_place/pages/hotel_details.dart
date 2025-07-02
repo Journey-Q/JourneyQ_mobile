@@ -354,34 +354,23 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                           ],
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: hotelData['isAvailable'] ? Colors.green.shade50 : Colors.red.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
+                      Column(
+                        children: [
+                          Icon(
+                            hotelData['isAvailable'] ? Icons.check_circle : Icons.cancel,
                             color: hotelData['isAvailable'] ? Colors.green : Colors.red,
-                            width: 2,
+                            size: 24,
                           ),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              hotelData['isAvailable'] ? Icons.check_circle : Icons.cancel,
+                          const SizedBox(height: 4),
+                          Text(
+                            hotelData['isAvailable'] ? 'Available' : 'Full',
+                            style: TextStyle(
                               color: hotelData['isAvailable'] ? Colors.green : Colors.red,
-                              size: 24,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              hotelData['isAvailable'] ? 'Available' : 'Full',
-                              style: TextStyle(
-                                color: hotelData['isAvailable'] ? Colors.green : Colors.red,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

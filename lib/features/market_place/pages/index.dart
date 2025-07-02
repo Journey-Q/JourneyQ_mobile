@@ -659,14 +659,14 @@ class _MarketplacePageState extends State<MarketplacePage> {
                         _navigateToService(service['route']);
                       },
                       child: Container(
-                        height: 110, // Increased height to accommodate text wrapping
-                        margin: const EdgeInsets.symmetric(horizontal: 8),
-                        padding: const EdgeInsets.all(12), // Reduced padding slightly
+                        height: 120,
+                        margin: const EdgeInsets.symmetric(horizontal: 6),
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
                               service['color'],
-                              service['color'].withOpacity(0.7),
+                              service['color'].withOpacity(0.8),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -684,22 +684,29 @@ class _MarketplacePageState extends State<MarketplacePage> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              service['icon'],
-                              color: Colors.white,
-                              size: 28, // Slightly smaller icon
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                service['icon'],
+                                color: Colors.white,
+                                size: 32,
+                              ),
                             ),
-                            const SizedBox(height: 6), // Reduced spacing
+                            const SizedBox(height: 12),
                             Text(
                               service['name'],
                               style: const TextStyle(
-                                fontSize: 11, // Slightly smaller font
+                                fontSize: 12,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
-                                height: 1.2, // Tighter line height
+                                height: 1.2,
                               ),
                               textAlign: TextAlign.center,
-                              maxLines: 2, // Allow text to wrap to 2 lines if needed
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],

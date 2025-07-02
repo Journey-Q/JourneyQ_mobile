@@ -70,6 +70,7 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         title: Text('Chat with ${widget.agency['name']}'),
         content: const Text('Chat feature will be available soon. For now, please use the inquiry form below or call directly.'),
         actions: [
@@ -92,6 +93,8 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
       SnackBar(
         content: Text(message),
         backgroundColor: const Color(0xFF0088cc),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -119,7 +122,7 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
     );
     if (picked != null) {
       setState(() {
-        _travelDateController.text = "${picked.day}/${picked.month}/${picked.year}";
+        _travelDateController.text = "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
       });
     }
   }
@@ -144,7 +147,14 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Inquiry Sent!'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green, size: 24),
+            SizedBox(width: 8),
+            Text('Inquiry Sent!'),
+          ],
+        ),
         content: Text(
           'Your inquiry has been sent to ${widget.agency['name']}. They will contact you within 24 hours.',
         ),
@@ -161,37 +171,132 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
     );
   }
 
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF2C3E50),
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFormField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+    bool readOnly = false,
+    VoidCallback? onTap,
+    String? hintText,
+    int maxLines = 1,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF34495E),
+            letterSpacing: 0.2,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          validator: validator,
+          readOnly: readOnly,
+          onTap: onTap,
+          maxLines: maxLines,
+          style: const TextStyle(
+            fontSize: 15,
+            color: Color(0xFF2C3E50),
+          ),
+          decoration: InputDecoration(
+            hintText: hintText,
+            hintStyle: TextStyle(
+              color: Colors.grey[500],
+              fontSize: 14,
+            ),
+            prefixIcon: Icon(
+              icon,
+              color: const Color(0xFF7F8C8D),
+              size: 20,
+            ),
+            filled: true,
+            fillColor: Colors.grey[50],
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFF0088cc), width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Colors.red),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Colors.red, width: 2),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     List<String> availableServices = (widget.agency['services'] as List<dynamic>?)?.cast<String>() ?? _getDefaultServices();
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         title: Text('Contact ${widget.agency['name'] ?? 'Travel Agency'}'),
         backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0088cc),
+        foregroundColor: const Color(0xFF2C3E50),
         elevation: 0,
-        centerTitle: true,
+        centerTitle: false,
+        titleTextStyle: const TextStyle(
+          color: Color(0xFF2C3E50),
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+        ),
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Agency Info Card
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      spreadRadius: 1,
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
+                      color: Colors.black.withOpacity(0.04),
+                      spreadRadius: 0,
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
@@ -201,21 +306,21 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                     Row(
                       children: [
                         Container(
-                          width: 60,
-                          height: 60,
+                          width: 64,
+                          height: 64,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
                             gradient: LinearGradient(
                               colors: [
-                                widget.agency['backgroundColor'] ?? const Color(0xFF0088cc),
-                                (widget.agency['backgroundColor'] ?? const Color(0xFF0088cc)).withOpacity(0.8),
+                                widget.agency['backgroundColor'] ?? const Color(0xFF2C3E50),
+                                (widget.agency['backgroundColor'] ?? const Color(0xFF2C3E50)).withOpacity(0.8),
                               ],
                             ),
                           ),
                           child: const Icon(
                             Icons.business,
                             color: Colors.white,
-                            size: 30,
+                            size: 28,
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -226,20 +331,22 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                               Text(
                                 widget.agency['name'] ?? 'Travel Agency',
                                 style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2C3E50),
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 6),
                               Row(
                                 children: [
                                   const Icon(Icons.star, color: Colors.amber, size: 16),
                                   const SizedBox(width: 4),
                                   Text(
                                     '${widget.agency['rating'] ?? 4.5} • ${widget.agency['experience'] ?? 'Experienced'}',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey[600],
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ],
@@ -249,7 +356,7 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     // Contact Options
                     Row(
                       children: [
@@ -257,12 +364,18 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                           child: ElevatedButton.icon(
                             onPressed: () => _makePhoneCall(widget.agency['contact'] ?? '+94 11 000 0000'),
                             icon: const Icon(Icons.phone, size: 18),
-                            label: const Text('Call'),
+                            label: const Text('Call Now'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
+                              backgroundColor: const Color(0xFF27AE60),
                               foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
+                              ),
+                              textStyle: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
                               ),
                             ),
                           ),
@@ -271,65 +384,93 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: _startChat,
-                            icon: const Icon(Icons.chat_bubble, size: 18),
-                            label: const Text('Chat'),
+                            icon: const Icon(Icons.chat_bubble_outline, size: 18),
+                            label: const Text('Start Chat'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF0088cc),
                               foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
+                              ),
+                              textStyle: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
                               ),
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 20),
                     // Contact Info
-                    GestureDetector(
-                      onTap: () => _copyToClipboard(widget.agency['contact'] ?? '+94 11 000 0000', 'Phone number'),
-                      child: Row(
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8F9FA),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
                         children: [
-                          const Icon(Icons.phone, size: 16, color: Colors.grey),
-                          const SizedBox(width: 8),
-                          Text(
-                            widget.agency['contact'] ?? '+94 11 000 0000',
-                            style: const TextStyle(fontSize: 14),
+                          GestureDetector(
+                            onTap: () => _copyToClipboard(widget.agency['contact'] ?? '+94 11 000 0000', 'Phone number'),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.phone, size: 18, color: Color(0xFF7F8C8D)),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    widget.agency['contact'] ?? '+94 11 000 0000',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFF2C3E50),
+                                    ),
+                                  ),
+                                ),
+                                const Icon(Icons.content_copy, size: 16, color: Color(0xFF7F8C8D)),
+                              ],
+                            ),
                           ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.copy, size: 14, color: Colors.grey),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              const Icon(Icons.location_on, size: 18, color: Color(0xFF7F8C8D)),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  widget.agency['location'] ?? 'Colombo, Sri Lanka',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF2C3E50),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(Icons.location_on, size: 16, color: Colors.grey),
-                        const SizedBox(width: 8),
-                        Text(
-                          widget.agency['location'] ?? 'Colombo, Sri Lanka',
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ],
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
 
               // Inquiry Form
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      spreadRadius: 1,
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
+                      color: Colors.black.withOpacity(0.04),
+                      spreadRadius: 0,
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
@@ -338,24 +479,25 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      _buildSectionTitle('Send Travel Inquiry'),
+
+                      // Personal Information Section
                       const Text(
-                        'Send Inquiry',
+                        'Personal Information',
                         style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0088cc),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF34495E),
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
 
                       // Name Field
-                      TextFormField(
+                      _buildFormField(
                         controller: _nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Full Name *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.person),
-                        ),
+                        label: 'Full Name *',
+                        icon: Icons.person_outline,
+                        hintText: 'Enter your full name',
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return 'Please enter your name';
@@ -363,167 +505,253 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
 
-                      // Email Field
-                      TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
-                          labelText: 'Email Address *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.email),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter your email';
-                          }
-                          if (!value.contains('@')) {
-                            return 'Please enter a valid email';
-                          }
-                          return null;
-                        },
+                      // Email and Phone Row
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildFormField(
+                              controller: _emailController,
+                              label: 'Email Address *',
+                              icon: Icons.email_outlined,
+                              keyboardType: TextInputType.emailAddress,
+                              hintText: 'your@email.com',
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Please enter your email';
+                                }
+                                if (!value.contains('@')) {
+                                  return 'Please enter a valid email';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildFormField(
+                              controller: _phoneController,
+                              label: 'Phone Number *',
+                              icon: Icons.phone_outlined,
+                              keyboardType: TextInputType.phone,
+                              hintText: '+94 77 123 4567',
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Please enter your phone number';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 32),
 
-                      // Phone Field
-                      TextFormField(
-                        controller: _phoneController,
-                        keyboardType: TextInputType.phone,
-                        decoration: const InputDecoration(
-                          labelText: 'Phone Number *',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.phone),
+                      // Travel Details Section
+                      const Text(
+                        'Travel Details',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF34495E),
                         ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter your phone number';
-                          }
-                          return null;
-                        },
                       ),
                       const SizedBox(height: 16),
 
                       // Service Selection
-                      DropdownButtonFormField<String>(
-                        value: _selectedService.isEmpty ? null : _selectedService,
-                        decoration: const InputDecoration(
-                          labelText: 'Service Interested In',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.design_services),
-                        ),
-                        items: availableServices.map<DropdownMenuItem<String>>((service) {
-                          return DropdownMenuItem<String>(
-                            value: service,
-                            child: Text(service),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedService = value ?? '';
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Number of People
-                      Row(
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Text(
-                              'Number of People: $_numberOfPeople',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
+                          const Text(
+                            'Service Type',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF34495E),
+                              letterSpacing: 0.2,
                             ),
                           ),
-                          Row(
-                            children: [
-                              IconButton(
-                                onPressed: _numberOfPeople > 1 ? () {
-                                  setState(() {
-                                    _numberOfPeople--;
-                                  });
-                                } : null,
-                                icon: const Icon(Icons.remove_circle_outline),
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<String>(
+                            value: _selectedService.isEmpty ? null : _selectedService,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: Color(0xFF2C3E50),
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Select a service',
+                              hintStyle: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 14,
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.grey.shade300),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  _numberOfPeople.toString(),
-                                  style: const TextStyle(fontSize: 16),
-                                ),
+                              prefixIcon: const Icon(
+                                Icons.miscellaneous_services_outlined,
+                                color: Color(0xFF7F8C8D),
+                                size: 20,
                               ),
-                              IconButton(
-                                onPressed: _numberOfPeople < 20 ? () {
-                                  setState(() {
-                                    _numberOfPeople++;
-                                  });
-                                } : null,
-                                icon: const Icon(Icons.add_circle_outline),
+                              filled: true,
+                              fillColor: Colors.grey[50],
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(color: Colors.grey[300]!),
                               ),
-                            ],
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(color: Colors.grey[300]!),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(color: Color(0xFF0088cc), width: 2),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            ),
+                            items: availableServices.map<DropdownMenuItem<String>>((service) {
+                              return DropdownMenuItem<String>(
+                                value: service,
+                                child: Text(service),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedService = value ?? '';
+                              });
+                            },
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
 
                       // Travel Date
-                      TextFormField(
+                      _buildFormField(
                         controller: _travelDateController,
+                        label: 'Travel Date',
+                        icon: Icons.calendar_today_outlined,
                         readOnly: true,
-                        decoration: const InputDecoration(
-                          labelText: 'Preferred Travel Date',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.calendar_today),
-                          suffixIcon: Icon(Icons.arrow_drop_down),
-                        ),
                         onTap: _selectDate,
+                        hintText: 'Select date',
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
+
+                      // Number of People
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Number of People',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF34495E),
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            height: 52,
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[50],
+                              border: Border.all(color: Colors.grey[300]!),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.people_outline, color: Color(0xFF7F8C8D), size: 20),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    '$_numberOfPeople ${_numberOfPeople == 1 ? 'Person' : 'People'}',
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      color: Color(0xFF2C3E50),
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: _numberOfPeople > 1 ? () {
+                                    setState(() {
+                                      _numberOfPeople--;
+                                    });
+                                  } : null,
+                                  icon: const Icon(Icons.remove_circle_outline),
+                                  color: const Color(0xFF7F8C8D),
+                                  iconSize: 20,
+                                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                  padding: EdgeInsets.zero,
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey[300]!),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    _numberOfPeople.toString(),
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF2C3E50),
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: _numberOfPeople < 20 ? () {
+                                    setState(() {
+                                      _numberOfPeople++;
+                                    });
+                                  } : null,
+                                  icon: const Icon(Icons.add_circle_outline),
+                                  color: const Color(0xFF7F8C8D),
+                                  iconSize: 20,
+                                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                  padding: EdgeInsets.zero,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
 
                       // Budget
-                      TextFormField(
+                      _buildFormField(
                         controller: _budgetController,
+                        label: 'Budget (LKR)',
+                        icon: Icons.payments_outlined,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Budget (LKR)',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.attach_money),
-                          hintText: 'e.g., 50000',
-                        ),
+                        hintText: 'e.g., 50,000',
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
 
                       // Message Field
-                      TextFormField(
+                      _buildFormField(
                         controller: _messageController,
+                        label: 'Additional Requirements',
+                        icon: Icons.message_outlined,
                         maxLines: 4,
-                        decoration: const InputDecoration(
-                          labelText: 'Additional Message',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.message),
-                          hintText: 'Tell us about your travel preferences, special requirements, etc.',
-                        ),
+                        hintText: 'Tell us about your travel preferences, special requirements, or any questions...',
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 32),
 
                       // Submit Button
                       SizedBox(
                         width: double.infinity,
-                        height: 50,
+                        height: 56,
                         child: ElevatedButton(
                           onPressed: _isSubmitting ? null : _submitInquiry,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF0088cc),
                             foregroundColor: Colors.white,
+                            elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            textStyle: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
                             ),
                           ),
                           child: _isSubmitting
@@ -539,15 +767,20 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                                 ),
                               ),
                               SizedBox(width: 12),
-                              Text('Sending...'),
+                              Text('Sending Inquiry...'),
                             ],
                           )
-                              : const Text(
-                            'Send Inquiry',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                              : const Text('Send Travel Inquiry'),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Center(
+                        child: Text(
+                          'We will respond within 24 hours',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
