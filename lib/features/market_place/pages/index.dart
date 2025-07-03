@@ -49,7 +49,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
       'route': 'hotels',
     },
     {
-      'name': 'Vehicle Agency',
+      'name': 'Travel Agency',
       'icon': Icons.directions_car,
       'color': const Color(0xFF0088cc),
       'route': 'vehicle_agency',
@@ -124,21 +124,21 @@ class _MarketplacePageState extends State<MarketplacePage> {
       'name': 'Ceylon Roots',
       'rating': 4.9,
       'experience': '15+ Years',
-      'image': 'assets/images/ceylon_roots.png',
+      'image': 'assets/images/ceylon_roots.jpg',
       'backgroundColor': const Color(0xFF8B4513),
     },
     {
       'name': 'Jetwing Travels',
       'rating': 4.8,
       'experience': '20+ Years',
-      'image': 'assets/images/jetwing.png',
+      'image': 'assets/images/jetwing.jpg',
       'backgroundColor': const Color(0xFF228B22),
     },
     {
       'name': 'Aitken Spence',
       'rating': 4.7,
       'experience': '25+ Years',
-      'image': 'assets/images/aitken_spence.png',
+      'image': 'assets/images/aitken_spence.jpg',
       'backgroundColor': const Color(0xFF20B2AA),
     },
     {
@@ -649,7 +649,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
                   color: Colors.black,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 10), // Reduced from 16 to 10
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: mainServices.map((service) {
@@ -659,50 +659,35 @@ class _MarketplacePageState extends State<MarketplacePage> {
                         _navigateToService(service['route']);
                       },
                       child: Container(
-                        height: 120,
                         margin: const EdgeInsets.symmetric(horizontal: 6),
-                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              service['color'],
-                              service['color'].withOpacity(0.8),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: service['color'].withOpacity(0.3),
-                              spreadRadius: 2,
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8), // Reduced from 20 to 12
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(12),
+                              width: 70, // Reduced from 80 to 70
+                              height: 70, // Reduced from 80 to 70
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
+                                color: Colors.blue.shade50,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Colors.blue.shade200,
+                                  width: 1,
+                                ),
                               ),
                               child: Icon(
                                 service['icon'],
-                                color: Colors.white,
-                                size: 32,
+                                color: service['color'],
+                                size: 35, // Reduced from 40 to 35
                               ),
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 8), // Reduced from 12 to 8
                             Text(
                               service['name'],
                               style: const TextStyle(
-                                fontSize: 12,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                                color: Colors.black87,
                                 height: 1.2,
                               ),
                               textAlign: TextAlign.center,
@@ -717,7 +702,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
                 }).toList(),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 20), // Reduced from 32 to 20
 
               // Nearby Hotels Section
               Row(
@@ -745,7 +730,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12), // Reduced from 16 to 12
               SizedBox(
                 height: 220,
                 child: ListView.builder(
@@ -757,7 +742,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 24), // Reduced from 32 to 24
 
               // Popular Travel Agencies Section
               Row(
@@ -785,7 +770,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12), // Reduced from 16 to 12
               SizedBox(
                 height: 240,
                 child: ListView.builder(
@@ -797,7 +782,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 24), // Reduced from 32 to 24
 
               // Popular Tour Packages Section
               Row(
@@ -825,7 +810,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12), // Reduced from 16 to 12
               SizedBox(
                 height: 240,
                 child: ListView.builder(

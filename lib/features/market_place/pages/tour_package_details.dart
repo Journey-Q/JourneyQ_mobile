@@ -37,8 +37,36 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
     enhanced.putIfAbsent('difficulty', () => 'Moderate');
     enhanced.putIfAbsent('groupSize', () => '2-15 people');
     enhanced.putIfAbsent('languages', () => ['English', 'Sinhala']);
+    enhanced.putIfAbsent('agency', () => _getAgencyByTitle(basicPackage['title']));
+    enhanced.putIfAbsent('agencyRating', () => 4.5);
+    enhanced.putIfAbsent('agencyLogo', () => 'assets/images/default_agency_logo.png');
+    enhanced.putIfAbsent('agencyEstablished', () => '2015');
+    enhanced.putIfAbsent('agencyTours', () => '500+ tours completed');
 
     return enhanced;
+  }
+
+  String _getAgencyByTitle(String? title) {
+    switch (title?.toLowerCase()) {
+      case 'cultural triangle tour':
+        return 'Heritage Tours Lanka';
+      case 'hill country adventure':
+        return 'Mountain Escape Tours';
+      case 'southern coast explorer':
+        return 'Coastal Adventures Sri Lanka';
+      case 'wildlife safari package':
+        return 'Wild Sri Lanka Safaris';
+      case 'temple & heritage tour':
+        return 'Spiritual Journey Tours';
+      case 'adventure & thrills':
+        return 'Adrenaline Rush Adventures';
+      case 'romantic getaway':
+        return 'Romance Lanka Tours';
+      case 'family fun package':
+        return 'Family Adventures Lanka';
+      default:
+        return 'Premium Tours Lanka';
+    }
   }
 
   String _getDescriptionByTitle(String? title) {
@@ -180,20 +208,6 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
   Widget _buildItineraryItem(Map<String, String> item) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -201,10 +215,10 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: enhancedPackage['backgroundColor'].withOpacity(0.1),
+              color: Colors.blue.shade50, // Light blue background
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: enhancedPackage['backgroundColor'],
+                color: Colors.blue.shade300, // Blue border
                 width: 2,
               ),
             ),
@@ -214,7 +228,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: enhancedPackage['backgroundColor'],
+                  color: Colors.blue.shade700, // Blue text color
                 ),
               ),
             ),
@@ -470,7 +484,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                                   style: const TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFF0088cc),
+                                    color: Colors.black,
                                   ),
                                 ),
                                 const Text(
@@ -498,6 +512,116 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                                   ),
                                 ),
                               ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Agency Information Card (without buttons)
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Tour Agency',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.blue.shade200),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.asset(
+                                  enhancedPackage['agencyLogo'] ?? '',
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Icon(
+                                      Icons.business,
+                                      size: 30,
+                                      color: Colors.blue.shade600,
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    enhancedPackage['agency'] ?? 'Tour Agency',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.star,
+                                        size: 16,
+                                        color: Colors.amber,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        enhancedPackage['agencyRating'].toString(),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Agency Rating',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Established ${enhancedPackage['agencyEstablished']} • ${enhancedPackage['agencyTours']}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -547,123 +671,63 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
 
                   const SizedBox(height: 20),
 
-                  // Highlights
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          spreadRadius: 1,
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                  // Highlights (without container)
+                  const Text(
+                    'Tour Highlights',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Tour Highlights',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: (enhancedPackage['highlights'] as List)
-                              .map<Widget>((highlight) => _buildHighlightChip(highlight))
-                              .toList(),
-                        ),
-                      ],
-                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: (enhancedPackage['highlights'] as List)
+                        .map<Widget>((highlight) => _buildHighlightChip(highlight))
+                        .toList(),
                   ),
 
                   const SizedBox(height: 20),
 
-                  // What's Included
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          spreadRadius: 1,
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                  // What's Included (without container)
+                  const Text(
+                    'What\'s Included',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'What\'s Included',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: (enhancedPackage['includes'] as List)
-                              .map<Widget>((include) => _buildIncludeChip(include))
-                              .toList(),
-                        ),
-                      ],
-                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: (enhancedPackage['includes'] as List)
+                        .map<Widget>((include) => _buildIncludeChip(include))
+                        .toList(),
                   ),
 
                   const SizedBox(height: 20),
 
-                  // Itinerary
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          spreadRadius: 1,
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                  // Itinerary (reduced spacing)
+                  const Text(
+                    'Tour Itinerary',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Tour Itinerary',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: (enhancedPackage['itinerary'] as List).length,
-                          itemBuilder: (context, index) {
-                            return _buildItineraryItem(enhancedPackage['itinerary'][index]);
-                          },
-                        ),
-                      ],
-                    ),
+                  ),
+                  const SizedBox(height: 8), // Reduced from 16 to 8
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: (enhancedPackage['itinerary'] as List).length,
+                    itemBuilder: (context, index) {
+                      return _buildItineraryItem(enhancedPackage['itinerary'][index]);
+                    },
                   ),
 
                   const SizedBox(height: 20),
@@ -724,83 +788,122 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
 
       // Fixed Book Now Button
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              spreadRadius: 1,
-              blurRadius: 10,
-              offset: const Offset(0, -2),
+              color: Colors.black.withOpacity(0.05),
+              spreadRadius: 0,
+              blurRadius: 20,
+              offset: const Offset(0, -5),
             ),
           ],
+          border: Border(
+            top: BorderSide(
+              color: Colors.grey.withOpacity(0.1),
+              width: 1,
+            ),
+          ),
         ),
         child: SafeArea(
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (enhancedPackage['originalPrice'] != null)
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (enhancedPackage['originalPrice'] != null)
+                        Text(
+                          enhancedPackage['originalPrice'],
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                            decoration: TextDecoration.lineThrough,
+                            decorationColor: Colors.grey[500],
+                          ),
+                        ),
                       Text(
-                        enhancedPackage['originalPrice'],
+                        enhancedPackage['price'] ?? 'Contact for Price',
                         style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                          decoration: TextDecoration.lineThrough,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0088cc),
+                          letterSpacing: -0.5,
                         ),
                       ),
-                    Text(
-                      enhancedPackage['price'] ?? 'Contact for Price',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0088cc),
-                      ),
-                    ),
-                    const Text(
-                      'per person',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: _bookPackage,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0088cc),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 2,
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.calendar_today, size: 20),
-                      SizedBox(width: 8),
                       Text(
-                        'Book Now',
+                        'per person',
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Container(
+                    height: 52,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF0088cc),
+                          Color(0xFF0066aa),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF0088cc).withOpacity(0.3),
+                          spreadRadius: 0,
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: _bookPackage,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: Colors.white,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.calendar_today_rounded,
+                            size: 20,
+                            color: Colors.white,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'Book Now',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

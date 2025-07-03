@@ -95,12 +95,12 @@ flutter:
     - assets/images/hill_country.jpg
     - assets/images/southern_coast.jpg
     - assets/images/wildlife_safari.jpg
-    - assets/images/aitken_spence.png
-    - assets/images/ceylon_roots.png
+    - assets/images/aitken_spence.jpg
+    - assets/images/ceylon_roots.jpg
     - assets/images/cinnamon_grand.jpg
     - assets/images/galle_face.jpg
     - assets/images/hilton.jpg
-    - assets/images/jetwing.png
+    - assets/images/jetwing.jpg
     - assets/images/red_dot.jpeg
     - assets/images/shangri_la.jpg
     - assets/images/taj_samudra.jpg
@@ -111,5 +111,6 @@ flutter:
     - assets/images/mackinnons.jpg
     - assets/images/marino_beach.jpg
     - assets/images/romantic.jpg
-    - assets/images/serendib.jpg
+    - assets/images/serendib.jpeg
+    - assets/images/walkers.jpg
     - assets/images/temple_heritage.jpg

@@ -51,6 +51,9 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
       'backgroundColor': const Color(0xFF8B4513),
       'includes': ['Accommodation', 'Meals', 'Transportation', 'Guide'],
       'highlights': ['Sigiriya Rock', 'Ancient Temples', 'Historical Sites'],
+      'agency': 'Heritage Tours Lanka',
+      'agencyRating': 4.9,
+      'agencyLogo': 'assets/images/heritage_tours_logo.png',
     },
     {
       'title': 'Hill Country Adventure',
@@ -66,6 +69,9 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
       'backgroundColor': const Color(0xFF228B22),
       'includes': ['Accommodation', 'Meals', 'Transportation', 'Guide'],
       'highlights': ['Tea Plantations', 'Nine Arch Bridge', 'Little Adam\'s Peak'],
+      'agency': 'Mountain Escape Tours',
+      'agencyRating': 4.7,
+      'agencyLogo': 'assets/images/mountain_escape_logo.png',
     },
     {
       'title': 'Southern Coast Explorer',
@@ -81,6 +87,9 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
       'backgroundColor': const Color(0xFF20B2AA),
       'includes': ['Beach Resort', 'Meals', 'Transportation', 'Activities'],
       'highlights': ['Galle Fort', 'Whale Watching', 'Beach Activities'],
+      'agency': 'Coastal Adventures Sri Lanka',
+      'agencyRating': 4.8,
+      'agencyLogo': 'assets/images/coastal_adventures_logo.png',
     },
     {
       'title': 'Wildlife Safari Package',
@@ -96,6 +105,9 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
       'backgroundColor': const Color(0xFF8FBC8F),
       'includes': ['Safari Lodge', 'All Meals', 'Safari Jeep', 'Guide'],
       'highlights': ['Leopard Spotting', 'Elephant Gathering', 'Bird Watching'],
+      'agency': 'Wild Sri Lanka Safaris',
+      'agencyRating': 4.6,
+      'agencyLogo': 'assets/images/wild_srilanka_logo.png',
     },
     {
       'title': 'Temple & Heritage Tour',
@@ -111,6 +123,9 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
       'backgroundColor': const Color(0xFF9370DB),
       'includes': ['Accommodation', 'Vegetarian Meals', 'Transportation', 'Guide'],
       'highlights': ['Temple of Tooth', 'Cave Temples', 'Meditation Sessions'],
+      'agency': 'Spiritual Journey Tours',
+      'agencyRating': 4.9,
+      'agencyLogo': 'assets/images/spiritual_journey_logo.png',
     },
     {
       'title': 'Adventure & Thrills',
@@ -126,6 +141,9 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
       'backgroundColor': const Color(0xFF4682B4),
       'includes': ['Adventure Lodge', 'All Meals', 'Equipment', 'Instructor'],
       'highlights': ['White Water Rafting', 'Zip Lining', 'Rock Climbing'],
+      'agency': 'Adrenaline Rush Adventures',
+      'agencyRating': 4.5,
+      'agencyLogo': 'assets/images/adrenaline_rush_logo.png',
     },
     {
       'title': 'Romantic Getaway',
@@ -141,6 +159,9 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
       'backgroundColor': const Color(0xFFFF69B4),
       'includes': ['Luxury Resort', 'Candlelight Dinners', 'Spa', 'Private Tours'],
       'highlights': ['Sunset Cruise', 'Couple Spa', 'Beach Dining'],
+      'agency': 'Romance Lanka Tours',
+      'agencyRating': 4.8,
+      'agencyLogo': 'assets/images/romance_lanka_logo.png',
     },
     {
       'title': 'Family Fun Package',
@@ -156,6 +177,9 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
       'backgroundColor': const Color(0xFF32CD32),
       'includes': ['Family Rooms', 'Kid-friendly Meals', 'Transportation', 'Activities'],
       'highlights': ['Zoo Visit', 'Beach Games', 'Cultural Shows'],
+      'agency': 'Family Adventures Lanka',
+      'agencyRating': 4.7,
+      'agencyLogo': 'assets/images/family_adventures_logo.png',
     },
   ];
 
@@ -299,6 +323,80 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
+
+                  // Agency Information
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade100,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: Image.asset(
+                              package['agencyLogo'],
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Icon(
+                                  Icons.business,
+                                  size: 16,
+                                  color: Colors.blue.shade600,
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                package['agency'] ?? 'Tour Agency',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.blue.shade700,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.star,
+                                    size: 12,
+                                    color: Colors.amber.shade600,
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    package['agencyRating'].toString(),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.blue.shade600,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
                   Text(
                     package['description'],
                     style: const TextStyle(

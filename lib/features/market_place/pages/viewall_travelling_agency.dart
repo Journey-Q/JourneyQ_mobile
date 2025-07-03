@@ -42,7 +42,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
       'rating': 4.9,
       'experience': '15+ Years',
       'location': 'Colombo 03',
-      'image': 'assets/images/ceylon_roots.png',
+      'image': 'assets/images/ceylon_roots.jpg',
       'backgroundColor': const Color(0xFF8B4513),
       'description': 'Ceylon Roots is a premier cultural tour operator specializing in authentic Sri Lankan experiences. We offer immersive journeys through ancient temples, traditional villages, and historical sites.',
       'vehicles': [
@@ -81,7 +81,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
       'rating': 4.8,
       'experience': '20+ Years',
       'location': 'Colombo 02',
-      'image': 'assets/images/jetwing.png',
+      'image': 'assets/images/jetwing.jpg',
       'backgroundColor': const Color(0xFF228B22),
       'description': 'Jetwing Travels offers premium luxury travel experiences with high-end vehicles and professional chauffeurs. We cater to discerning travelers seeking comfort and elegance.',
       'vehicles': [
@@ -114,7 +114,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
       'rating': 4.7,
       'experience': '25+ Years',
       'location': 'Colombo 01',
-      'image': 'assets/images/aitken_spence.png',
+      'image': 'assets/images/aitken_spence.jpg',
       'backgroundColor': const Color(0xFF20B2AA),
       'description': 'Aitken Spence specializes in adventure and outdoor activities. Our rugged vehicles and experienced drivers ensure safe and exciting journeys to remote destinations.',
       'vehicles': [
