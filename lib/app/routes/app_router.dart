@@ -16,6 +16,11 @@ import 'package:journeyq/features/create_trip/pages/index.dart';
 import 'package:journeyq/features/home/pages/home_page.dart';
 import 'route_transistion.dart';
 import 'package:journeyq/features/profile/pages/index.dart';
+import 'package:journeyq/features/profile/pages/SettingsPage.dart';
+import 'package:journeyq/features/profile/pages/ActivityPage.dart';
+import 'package:journeyq/features/profile/pages/EditProfilePage.dart';
+import 'package:journeyq/features/profile/pages/PostDetailPage.dart';
+import 'package:journeyq/features/profile/pages/BucketListPage.dart';
 import 'package:journeyq/app/app.dart';
 import 'package:journeyq/features/search/pages/search_page.dart';
 import 'package:journeyq/features/notification/pages/notification.dart';
@@ -197,11 +202,58 @@ class AppRouter {
           transitionType: PageTransitionType.none,
         ),
 
+
+
         TransitionGoRoute(
           path: '/profile',
           builder: (context, state) =>
               AppWrapper(currentRoute: '/profile', child: ProfilePage()),
           transitionType: PageTransitionType.none,
+        ),
+
+        // Profile-related routes (without AppWrapper for full-screen experience)
+        TransitionGoRoute(
+          path: '/profile/settings',
+          builder: (context, state) => const SettingsPage(),
+          transitionType: PageTransitionType.slide,
+        ),
+
+        TransitionGoRoute(
+          path: '/profile/activity',
+          builder: (context, state) => const ActivityPage(),
+          transitionType: PageTransitionType.slide,
+        ),
+
+        TransitionGoRoute(
+          path: '/profile/edit',
+          builder: (context, state) {
+            final userData = state.extra as Map<String, dynamic>?;
+            return EditProfilePage(userData: userData ?? {});
+          },
+          transitionType: PageTransitionType.slide,
+        ),
+
+        TransitionGoRoute(
+          path: '/profile/post/:postIndex',
+          builder: (context, state) {
+            final postIndex = int.tryParse(state.pathParameters['postIndex'] ?? '0') ?? 0;
+            final extra = state.extra as Map<String, dynamic>?;
+            final imagePath = extra?['imagePath'] ?? '';
+            final userData = extra?['userData'] ?? {};
+
+            return PostDetailPage(
+              imagePath: imagePath,
+              userData: userData,
+            );
+          },
+          transitionType: PageTransitionType.slide,
+        ),
+
+        // NEW: Bucket List Route
+        TransitionGoRoute(
+          path: '/profile/bucketlist',
+          builder: (context, state) => const BucketListPage(),
+          transitionType: PageTransitionType.slide,
         ),
 
         TransitionGoRoute(
