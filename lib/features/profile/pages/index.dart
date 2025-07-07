@@ -14,20 +14,101 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker();
 
-  // Dummy posts data
-  List<String> userPosts = [
-    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
-    'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400',
-    'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400',
-    'https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=400',
-    'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=400',
-    'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=400',
-    'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=400',
-    'https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=400',
-    'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?w=400',
+  // Enhanced posts data with individual post information
+  List<Map<String, dynamic>> userPosts = [
+    {
+      'imageUrl': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
+      'likes': 142,
+      'comments': 23,
+      'isLiked': false,
+      'isSaved': false,
+      'caption': 'Breathtaking mountain views at sunrise! Nature never fails to amaze me 🏔️',
+      'location': 'Swiss Alps',
+      'timestamp': '2 hours ago',
+    },
+    {
+      'imageUrl': 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400',
+      'likes': 89,
+      'comments': 12,
+      'isLiked': true,
+      'isSaved': false,
+      'caption': 'Lost in the beauty of this forest trail 🌲',
+      'location': 'Black Forest, Germany',
+      'timestamp': '5 hours ago',
+    },
+    {
+      'imageUrl': 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400',
+      'likes': 256,
+      'comments': 45,
+      'isLiked': false,
+      'isSaved': true,
+      'caption': 'Golden hour magic ✨ The perfect end to an incredible day',
+      'location': 'Yosemite National Park',
+      'timestamp': '1 day ago',
+    },
+    {
+      'imageUrl': 'https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=400',
+      'likes': 78,
+      'comments': 8,
+      'isLiked': false,
+      'isSaved': false,
+      'caption': 'Adventure awaits in every corner 🎒',
+      'location': 'Banff National Park',
+      'timestamp': '2 days ago',
+    },
+    {
+      'imageUrl': 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=400',
+      'likes': 167,
+      'comments': 31,
+      'isLiked': true,
+      'isSaved': false,
+      'caption': 'Ocean waves and endless horizons 🌊',
+      'location': 'Maldives',
+      'timestamp': '3 days ago',
+    },
+    {
+      'imageUrl': 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=400',
+      'likes': 134,
+      'comments': 19,
+      'isLiked': false,
+      'isSaved': true,
+      'caption': 'Camping under the stars never gets old ⭐',
+      'location': 'Joshua Tree National Park',
+      'timestamp': '4 days ago',
+    },
+    {
+      'imageUrl': 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=400',
+      'likes': 203,
+      'comments': 27,
+      'isLiked': false,
+      'isSaved': false,
+      'caption': 'Every sunset is a promise of a new dawn 🌅',
+      'location': 'Santorini, Greece',
+      'timestamp': '5 days ago',
+    },
+    {
+      'imageUrl': 'https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=400',
+      'likes': 92,
+      'comments': 15,
+      'isLiked': true,
+      'isSaved': false,
+      'caption': 'Exploring hidden gems off the beaten path 🗺️',
+      'location': 'Iceland',
+      'timestamp': '1 week ago',
+    },
+    {
+      'imageUrl': 'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?w=400',
+      'likes': 118,
+      'comments': 21,
+      'isLiked': false,
+      'isSaved': true,
+      'caption': 'The journey is the destination 🚗',
+      'location': 'Route 66, USA',
+      'timestamp': '1 week ago',
+    },
   ];
 
-  // Mock user data with dummy content
+  // Mock user data with updated post count
   final Map<String, dynamic> userData = {
     'name': 'Alex Johnson',
     'username': 'alexadventures',
@@ -79,7 +160,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.menu, color: Colors.black),
-                  onPressed: () => _showSettingsMenu(context),
+                  onPressed: () => context.push('/profile/settings'),
                 ),
               ],
             ),
@@ -128,25 +209,26 @@ class _ProfilePageState extends State<ProfilePage> {
                     )
                         : null,
                   ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: GestureDetector(
-                      onTap: _changeProfilePicture,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.blue,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.add,
-                          color: Colors.white,
-                          size: 16,
+                  if (true) // Always show profile picture edit for own profile
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: _changeProfilePicture,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.blue,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.add,
+                            color: Colors.white,
+                            size: 16,
+                          ),
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
               const SizedBox(width: 20),
@@ -156,7 +238,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildStatColumn(userData['posts'].toString(), 'Posts'),
+                    _buildStatColumn(userPosts.length.toString(), 'Posts'),
                     _buildStatColumn(userData['followers'].toString(), 'Followers'),
                     _buildStatColumn(userData['following'].toString(), 'Following'),
                   ],
@@ -293,34 +375,15 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         delegate: SliverChildBuilderDelegate(
               (context, index) {
+            final post = userPosts[index];
             return GestureDetector(
               onTap: () => _viewPost(index),
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: NetworkImage(userPosts[index]),
+                    image: NetworkImage(post['imageUrl']),
                     fit: BoxFit.cover,
                   ),
-                ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      top: 5,
-                      right: 5,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(
-                          color: Colors.black54,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.copy,
-                          color: Colors.white,
-                          size: 12,
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               ),
             );
@@ -332,6 +395,42 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   // User Interaction Methods
+  void _sendMessage() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Opening chat with ${userData['username']}...'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+    // Navigate to chat page
+    // context.push('/chat/new', extra: userData);
+  }
+
+  void _showBlockConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Block ${userData['username']}?'),
+        content: Text('They won\'t be able to find your profile and posts on JourneyQ. They won\'t be notified that you blocked them.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('${userData['username']} has been blocked')),
+              );
+            },
+            child: const Text('Block', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showPostOptions() {
     showModalBottomSheet(
       context: context,
@@ -369,7 +468,16 @@ class _ProfilePageState extends State<ProfilePage> {
     final XFile? image = await _picker.pickImage(source: source);
     if (image != null) {
       setState(() {
-        userPosts.add(image.path);
+        userPosts.add({
+          'imageUrl': image.path,
+          'likes': 0,
+          'comments': 0,
+          'isLiked': false,
+          'isSaved': false,
+          'caption': 'New adventure captured!',
+          'location': 'Unknown',
+          'timestamp': 'now',
+        });
         userData['posts'] = userPosts.length;
       });
     }
@@ -384,59 +492,6 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void _showSettingsMenu(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.settings, color: Colors.black),
-                title: const Text('Settings and activity', style: TextStyle(color: Colors.black)),
-                onTap: () {
-                  Navigator.pop(context);
-                  context.push('/profile/settings');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.history, color: Colors.black),
-                title: const Text('Your activity', style: TextStyle(color: Colors.black)),
-                onTap: () {
-                  Navigator.pop(context);
-                  context.push('/profile/activity');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.qr_code, color: Colors.black),
-                title: const Text('QR code', style: TextStyle(color: Colors.black)),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('QR code functionality')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.archive, color: Colors.black),
-                title: const Text('Archive', style: TextStyle(color: Colors.black)),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Archive functionality')),
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   // Navigation Methods
   void _editProfile() {
     context.push('/profile/edit', extra: userData);
@@ -444,8 +499,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _viewPost(int index) {
     context.push('/profile/post/$index', extra: {
-      'imagePath': userPosts[index],
+      'postData': userPosts[index],
       'userData': userData,
+      'postIndex': index,
     });
   }
 

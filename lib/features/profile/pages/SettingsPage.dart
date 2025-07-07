@@ -21,7 +21,7 @@ class _SettingsPageState extends State<SettingsPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Settings and activity',
+          'Settings',
           style: TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -32,165 +32,83 @@ class _SettingsPageState extends State<SettingsPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            _buildSection('Account', [
-              _buildSettingItem(
-                Icons.person_outline,
-                'Account Center',
-                'Manage your connected experiences and account settings across Meta technologies.',
-                onTap: () => _navigateToPage('Account Center'),
-              ),
-              _buildSettingItem(
-                Icons.star_outline,
-                'Close Friends',
-                '',
-                onTap: () => _navigateToPage('Close Friends'),
-              ),
-              _buildSettingItem(
-                Icons.bookmark_outline,
-                'Saved',
-                '',
-                onTap: () => _navigateToPage('Saved'),
-              ),
-              _buildSettingItem(
-                Icons.favorite_outline,
-                'Favorites',
-                '',
-                onTap: () => _navigateToPage('Favorites'),
-              ),
-            ]),
+            const SizedBox(height: 10),
 
-            _buildSection('How you use JourneyQ', [
-              _buildSettingItem(
-                Icons.lock_outline,
-                'Privacy and safety',
-                '',
-                onTap: () => _navigateToPage('Privacy and safety'),
-              ),
-              _buildSettingItem(
-                Icons.account_box_outlined,
-                'Supervision',
-                '',
-                onTap: () => _navigateToPage('Supervision'),
-              ),
-              _buildSettingItem(
-                Icons.notifications_outlined,
-                'Notifications',
-                '',
-                onTap: () => _navigateToPage('Notifications'),
-              ),
-              _buildSettingItem(
-                Icons.schedule_outlined,
-                'Time management',
-                '',
-                onTap: () => _navigateToPage('Time management'),
-              ),
-            ]),
+            // Account Section
+            _buildSettingItem(
+              Icons.person_outline,
+              'Account Settings',
+              'Manage your profile and personal information',
+              onTap: () => _navigateToPage('Account Settings'),
+            ),
 
-            _buildSection('For professionals', [
-              _buildSettingItem(
-                Icons.business_outlined,
-                'Creator tools and controls',
-                '',
-                onTap: () => _navigateToPage('Creator tools'),
-              ),
-              _buildSettingItem(
-                Icons.insights_outlined,
-                'Insights',
-                '',
-                onTap: () => _navigateToPage('Insights'),
-              ),
-            ]),
+            _buildSettingItem(
+              Icons.lock_outline,
+              'Privacy & Safety',
+              'Control who can see your content and interact with you',
+              onTap: () => _navigateToPage('Privacy & Safety'),
+            ),
 
-            _buildSection('Your activity', [
-              _buildSettingItem(
-                Icons.download_outlined,
-                'Download your information',
-                '',
-                onTap: () => _navigateToPage('Download info'),
-              ),
-              _buildSettingItem(
-                Icons.archive_outlined,
-                'Archive',
-                '',
-                onTap: () => _navigateToPage('Archive'),
-              ),
-              _buildSettingItem(
-                Icons.schedule_outlined,
-                'Your activity',
-                '',
-                onTap: () => _navigateToPage('Your activity'),
-              ),
-            ]),
+            _buildSettingItem(
+              Icons.notifications_outlined,
+              'Notifications',
+              'Manage your notification preferences',
+              onTap: () => _navigateToPage('Notifications'),
+            ),
 
-            _buildSection('More info and support', [
-              _buildSettingItem(
-                Icons.help_outline,
-                'Help',
-                '',
-                onTap: () => _navigateToPage('Help'),
-              ),
-              _buildSettingItem(
-                Icons.info_outline,
-                'About',
-                '',
-                onTap: () => _navigateToPage('About'),
-              ),
-              _buildSettingItem(
-                Icons.description_outlined,
-                'Privacy Policy',
-                '',
-                onTap: () => _navigateToPage('Privacy Policy'),
-              ),
-              _buildSettingItem(
-                Icons.gavel_outlined,
-                'Terms of Service',
-                '',
-                onTap: () => _navigateToPage('Terms of Service'),
-              ),
-            ]),
+            _buildSettingItem(
+              Icons.bookmark_outline,
+              'Saved Posts',
+              'View your saved content',
+              onTap: () => _navigateToPage('Saved Posts'),
+            ),
 
-            _buildSection('Logins', [
-              _buildSettingItem(
-                Icons.add_outlined,
-                'Add account',
-                '',
-                onTap: () => _navigateToPage('Add account'),
-              ),
-              _buildSettingItem(
-                Icons.logout_outlined,
-                'Log out',
-                '',
-                onTap: () => _showLogoutDialog(),
-              ),
-            ]),
+            _buildSettingItem(
+              Icons.download_outlined,
+              'Download Data',
+              'Download a copy of your information',
+              onTap: () => _navigateToPage('Download Data'),
+            ),
+
+            _buildSettingItem(
+              Icons.help_outline,
+              'Help & Support',
+              'Get help and contact support',
+              onTap: () => _navigateToPage('Help & Support'),
+            ),
+
+            _buildSettingItem(
+              Icons.info_outline,
+              'About JourneyQ',
+              'App version and legal information',
+              onTap: () => _navigateToPage('About JourneyQ'),
+            ),
 
             const SizedBox(height: 20),
+
+            // Logout Section
+            ListTile(
+              leading: const Icon(Icons.logout_outlined, color: Colors.red, size: 24),
+              title: const Text(
+                'Log Out',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              trailing: const Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.grey,
+                size: 16,
+              ),
+              onTap: () => _showLogoutDialog(),
+            ),
+
+            const SizedBox(height: 30),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildSection(String title, List<Widget> items) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (title.isNotEmpty) ...[
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              title,
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-        ...items,
-        const SizedBox(height: 20),
-      ],
     );
   }
 
@@ -200,40 +118,39 @@ class _SettingsPageState extends State<SettingsPage> {
       String subtitle, {
         required VoidCallback onTap,
       }) {
-    return Container(
-      color: Colors.white,
-      child: ListTile(
-        leading: Icon(icon, color: Colors.black),
-        title: Text(
-          title,
-          style: const TextStyle(
-            color: Colors.black,
-            fontSize: 16,
-          ),
+    return ListTile(
+      leading: Icon(icon, color: Colors.black, size: 24),
+      title: Text(
+        title,
+        style: const TextStyle(
+          color: Colors.black,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
         ),
-        subtitle: subtitle.isNotEmpty
-            ? Text(
-          subtitle,
-          style: const TextStyle(
-            color: Colors.grey,
-            fontSize: 14,
-          ),
-        )
-            : null,
-        trailing: const Icon(
-          Icons.arrow_forward_ios,
-          color: Colors.grey,
-          size: 16,
-        ),
-        onTap: onTap,
       ),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(
+          color: Colors.grey,
+          fontSize: 13,
+        ),
+      ),
+      trailing: const Icon(
+        Icons.arrow_forward_ios,
+        color: Colors.grey,
+        size: 16,
+      ),
+      onTap: onTap,
     );
   }
 
   void _navigateToPage(String pageName) {
-    // In a real app, you would navigate to the respective pages
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Navigate to $pageName')),
+      SnackBar(
+        content: Text('Opening $pageName...'),
+        backgroundColor: Colors.grey[800],
+        duration: const Duration(seconds: 1),
+      ),
     );
   }
 
@@ -242,12 +159,18 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
         title: const Text(
           'Log Out',
-          style: TextStyle(color: Colors.black),
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         content: const Text(
-          'Are you sure you want to log out?',
+          'Are you sure you want to log out of your account?',
           style: TextStyle(color: Colors.black),
         ),
         actions: [
@@ -261,14 +184,20 @@ class _SettingsPageState extends State<SettingsPage> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              // Implement logout logic here
+              Navigator.pop(context); // Go back to profile
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Logged out successfully')),
+                const SnackBar(
+                  content: Text('Logged out successfully'),
+                  backgroundColor: Colors.green,
+                ),
               );
             },
             child: const Text(
               'Log Out',
-              style: TextStyle(color: Colors.red),
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
