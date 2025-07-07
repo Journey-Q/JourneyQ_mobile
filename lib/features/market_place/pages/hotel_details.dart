@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'booking_room.dart'; // Import the booking room page
+import 'booking_room.dart'; // Import the booking page
 
 class HotelDetailsPage extends StatefulWidget {
   final Map<String, dynamic>? hotel;
@@ -237,11 +239,14 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                     ),
                     ElevatedButton(
                       onPressed: room['available'] ? () {
-                        // Handle booking
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Booking ${room['type']} at ${hotelData['name']}'),
-                            backgroundColor: Colors.green,
+                        // Navigate to booking page with hotel and room data
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BookingRoomPage(
+                              hotel: hotelData,
+                              room: room,
+                            ),
                           ),
                         );
                       } : null,
@@ -542,14 +547,13 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                       color: Colors.black,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: rooms.length,
-                    itemBuilder: (context, index) {
-                      return _buildRoomCard(rooms[index]);
-                    },
+                  const SizedBox(height: 8), // Reduced from 16 to 8
+                  Column(
+                    children: rooms.asMap().entries.map((entry) {
+                      int index = entry.key;
+                      Map<String, dynamic> room = entry.value;
+                      return _buildRoomCard(room);
+                    }).toList(),
                   ),
                 ],
               ),

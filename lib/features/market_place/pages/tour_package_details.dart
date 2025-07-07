@@ -853,20 +853,13 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                       gradient: const LinearGradient(
                         colors: [
                           Color(0xFF0088cc),
-                          Color(0xFF0066aa),
+                          Color(0xFF0088cc),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF0088cc).withOpacity(0.3),
-                          spreadRadius: 0,
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+
                     ),
                     child: ElevatedButton(
                       onPressed: _bookPackage,

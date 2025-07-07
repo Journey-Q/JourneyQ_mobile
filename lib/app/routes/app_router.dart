@@ -5,6 +5,7 @@ import 'package:journeyq/features/authentication/pages/login_page.dart';
 import 'package:journeyq/features/market_place/pages/index.dart';
 import 'package:journeyq/features/market_place/pages/viewall_hotels.dart';
 import 'package:journeyq/features/market_place/pages/hotel_details.dart';
+import 'package:journeyq/features/market_place/pages/booking_room.dart';
 import 'package:journeyq/features/market_place/pages/viewall_tour_packages.dart';
 import 'package:journeyq/features/market_place/pages/tour_package_details.dart';
 import 'package:journeyq/features/market_place/pages/book_package_page.dart';
@@ -17,7 +18,6 @@ import 'package:journeyq/features/home/pages/home_page.dart';
 import 'route_transistion.dart';
 import 'package:journeyq/features/profile/pages/index.dart';
 import 'package:journeyq/features/profile/pages/SettingsPage.dart';
-import 'package:journeyq/features/profile/pages/ActivityPage.dart';
 import 'package:journeyq/features/profile/pages/EditProfilePage.dart';
 import 'package:journeyq/features/profile/pages/PostDetailPage.dart';
 import 'package:journeyq/features/profile/pages/BucketListPage.dart';
@@ -99,6 +99,29 @@ class AppRouter {
             );
           },
           transitionType: PageTransitionType.none,
+        ),
+
+        TransitionGoRoute(
+          path: '/marketplace/hotels/booking',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            if (extra == null) {
+              // If no booking data provided, redirect to hotels
+              return AppWrapper(
+                currentRoute: '/marketplace',
+                child: const ViewAllHotelsPage(),
+              );
+            }
+
+            final hotel = extra['hotel'] as Map<String, dynamic>?;
+            final room = extra['room'] as Map<String, dynamic>?;
+
+            return BookingRoomPage(
+              hotel: hotel,
+              room: room,
+            );
+          },
+          transitionType: PageTransitionType.slide,
         ),
 
         TransitionGoRoute(
@@ -219,12 +242,6 @@ class AppRouter {
         ),
 
         TransitionGoRoute(
-          path: '/profile/activity',
-          builder: (context, state) => const ActivityPage(),
-          transitionType: PageTransitionType.slide,
-        ),
-
-        TransitionGoRoute(
           path: '/profile/edit',
           builder: (context, state) {
             final userData = state.extra as Map<String, dynamic>?;
@@ -238,16 +255,24 @@ class AppRouter {
           builder: (context, state) {
             final postIndex = int.tryParse(state.pathParameters['postIndex'] ?? '0') ?? 0;
             final extra = state.extra as Map<String, dynamic>?;
-            final imagePath = extra?['imagePath'] ?? '';
-            final userData = extra?['userData'] ?? {};
+
+            if (extra == null) {
+              // Fallback to profile if no data provided
+              return AppWrapper(currentRoute: '/profile', child: ProfilePage());
+            }
+
+            final postData = extra['postData'] as Map<String, dynamic>? ?? {};
+            final userData = extra['userData'] as Map<String, dynamic>? ?? {};
 
             return PostDetailPage(
-              imagePath: imagePath,
+              postData: postData,
               userData: userData,
+              postIndex: postIndex,
             );
           },
           transitionType: PageTransitionType.slide,
         ),
+
 
         // NEW: Bucket List Route
         TransitionGoRoute(

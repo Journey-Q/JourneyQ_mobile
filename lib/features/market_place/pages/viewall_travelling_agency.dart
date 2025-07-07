@@ -16,6 +16,9 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
 
   String selectedLocation = 'Colombo';
 
+  // Standard distance for price calculation (you can change this value)
+  final int standardDistance = 100; // 100km for example
+
   final List<String> sriLankanCities = [
     'Colombo',
     'Kandy',
@@ -202,6 +205,20 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
     context.push('/marketplace/travel_agencies/details', extra: agency);
   }
 
+  // Calculate total price for standard distance
+  String _calculateTotalPrice(int pricePerKm) {
+    int totalPrice = pricePerKm * standardDistance;
+    return _formatPrice(totalPrice);
+  }
+
+  // Format price with commas
+  String _formatPrice(int price) {
+    return price.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
+    );
+  }
+
   Widget _buildAgencyCard(Map<String, dynamic> agency) {
     List<Map<String, dynamic>> vehicles = List<Map<String, dynamic>>.from(agency['vehicles']);
 
@@ -326,10 +343,10 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
 
                   // Vehicle Types and Pricing
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.blue.shade200),
                     ),
                     child: Column(
@@ -344,7 +361,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'Available Vehicles:',
+                              'Available Vehicles (${standardDistance}km trip):',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.blue.shade700,
@@ -353,27 +370,55 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        ...vehicles.map((vehicle) => Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
+                        const SizedBox(height: 12),
+                        ...vehicles.map((vehicle) => Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                vehicle['type'],
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black87,
-                                ),
+                              Row(
+                                children: [
+                                  Icon(
+                                    _getVehicleIcon(vehicle['type']),
+                                    color: const Color(0xFF0088cc),
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    vehicle['type'],
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                'LKR ${vehicle['pricePerKm']}/km',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF0088cc),
-                                ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'LKR ${_calculateTotalPrice(vehicle['pricePerKm'])}',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF0088cc),
+                                    ),
+                                  ),
+                                  Text(
+                                    'for ${standardDistance}km',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -390,12 +435,13 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
+                          horizontal: 12,
+                          vertical: 8,
                         ),
                         decoration: BoxDecoration(
                           color: Colors.green.shade50,
                           borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.green.shade200),
                         ),
                         child: Text(
                           agency['experience'],
@@ -414,13 +460,16 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                           backgroundColor: const Color(0xFF0088cc),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         ),
                         child: const Text(
                           'View Details',
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                     ],
@@ -432,6 +481,20 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
         ),
       ),
     );
+  }
+
+  // Get appropriate icon for vehicle type
+  IconData _getVehicleIcon(String vehicleType) {
+    switch (vehicleType.toLowerCase()) {
+      case 'car':
+        return Icons.directions_car;
+      case 'van':
+        return Icons.airport_shuttle;
+      case 'bus':
+        return Icons.directions_bus;
+      default:
+        return Icons.directions_car;
+    }
   }
 
   @override

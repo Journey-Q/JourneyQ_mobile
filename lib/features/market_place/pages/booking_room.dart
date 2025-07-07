@@ -1,42 +1,44 @@
-// File: lib/features/marketplace/pages/book_package_page.dart
+// File: lib/features/marketplace/pages/booking_room.dart
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
-class BookPackagePage extends StatefulWidget {
-  final Map<String, dynamic> package;
+class BookingRoomPage extends StatefulWidget {
+  final Map<String, dynamic>? hotel;
+  final Map<String, dynamic>? room;
 
-  const BookPackagePage({
-    Key? key,
-    required this.package,
-  }) : super(key: key);
+  const BookingRoomPage({Key? key, this.hotel, this.room}) : super(key: key);
 
   @override
-  State<BookPackagePage> createState() => _BookPackagePageState();
+  State<BookingRoomPage> createState() => _BookingRoomPageState();
 }
 
-class _BookPackagePageState extends State<BookPackagePage> {
+class _BookingRoomPageState extends State<BookingRoomPage> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _specialRequestsController = TextEditingController();
 
-  // Booking Details
-  DateTime? _selectedDate;
-  int _adults = 1;
-  int _children = 0;
+  DateTime? _checkInDate;
+  DateTime? _checkOutDate;
+  int _guests = 1;
+  int _nights = 1;
+  bool _isLoading = false;
 
-  // Personal Information
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _specialRequirementsController = TextEditingController();
-
-  bool _isSubmitting = false;
+  late Map<String, dynamic> hotelData;
+  late Map<String, dynamic> roomData;
 
   @override
   void initState() {
     super.initState();
-    // Set default date to 7 days from now
-    _selectedDate = DateTime.now().add(const Duration(days: 7));
+    hotelData = widget.hotel ?? _getDefaultHotelData();
+    roomData = widget.room ?? _getDefaultRoomData();
+
+    // Set default dates (today and tomorrow)
+    _checkInDate = DateTime.now();
+    _checkOutDate = DateTime.now().add(const Duration(days: 1));
+    _calculateNights();
   }
 
   @override
@@ -44,21 +46,57 @@ class _BookPackagePageState extends State<BookPackagePage> {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _specialRequirementsController.dispose();
+    _specialRequestsController.dispose();
     super.dispose();
   }
 
-  double get _totalPrice {
-    final basePrice = double.parse(
-      widget.package['price'].replaceAll('LKR ', '').replaceAll(',', ''),
-    );
-    return basePrice * (_adults + _children * 0.7); // Children 30% discount
+  Map<String, dynamic> _getDefaultHotelData() {
+    return {
+      'name': 'Shangri-La Hotel Colombo',
+      'location': 'Galle Face, Colombo',
+      'contact': '+94 11 254 4544',
+      'email': 'reservations@shangrilacolombro.com',
+    };
   }
 
-  void _selectDate() async {
+  Map<String, dynamic> _getDefaultRoomData() {
+    return {
+      'type': 'Deluxe Ocean View',
+      'price': 'LKR 45,000/night',
+      'size': '45 sqm',
+      'image': 'assets/images/room_deluxe.jpg',
+      'backgroundColor': const Color(0xFF8B4513),
+      'amenities': ['King Bed', 'Ocean View', 'WiFi', 'Minibar', 'Safe', 'Air Conditioning', 'Bathroom'],
+    };
+  }
+
+  void _calculateNights() {
+    if (_checkInDate != null && _checkOutDate != null) {
+      setState(() {
+        _nights = _checkOutDate!.difference(_checkInDate!).inDays;
+        if (_nights < 1) _nights = 1;
+      });
+    }
+  }
+
+  double _calculateTotalAmount() {
+    // Extract numeric value from price string (e.g., "LKR 45,000/night" -> 45000)
+    String priceStr = roomData['price'].toString();
+    RegExp regex = RegExp(r'[\d,]+');
+    String numericStr = regex.firstMatch(priceStr)?.group(0) ?? '0';
+    double basePrice = double.tryParse(numericStr.replaceAll(',', '')) ?? 0;
+
+    double subtotal = basePrice * _nights;
+    double taxes = subtotal * 0.12; // 12% tax
+    double serviceCharge = subtotal * 0.10; // 10% service charge
+
+    return subtotal + taxes + serviceCharge;
+  }
+
+  Future<void> _selectDate(BuildContext context, bool isCheckIn) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now().add(const Duration(days: 7)),
+      initialDate: isCheckIn ? _checkInDate ?? DateTime.now() : _checkOutDate ?? DateTime.now().add(const Duration(days: 1)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (context, child) {
@@ -76,219 +114,123 @@ class _BookPackagePageState extends State<BookPackagePage> {
       },
     );
 
-    if (picked != null && picked != _selectedDate) {
+    if (picked != null) {
       setState(() {
-        _selectedDate = picked;
+        if (isCheckIn) {
+          _checkInDate = picked;
+          // Ensure check-out is at least 1 day after check-in
+          if (_checkOutDate != null && _checkOutDate!.isBefore(picked.add(const Duration(days: 1)))) {
+            _checkOutDate = picked.add(const Duration(days: 1));
+          }
+        } else {
+          _checkOutDate = picked;
+        }
+        _calculateNights();
       });
     }
   }
 
-  void _showTravelersSelector() {
+  void _showGuestSelector() {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter modalSetState) {
-            return Container(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Select Number of Guests',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 30),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  IconButton(
+                    onPressed: _guests > 1 ? () {
+                      setState(() {
+                        _guests--;
+                      });
+                    } : null,
+                    icon: Icon(
+                      Icons.remove_circle,
+                      color: _guests > 1 ? const Color(0xFF0088cc) : Colors.grey,
+                      size: 40,
+                    ),
+                  ),
+                  const SizedBox(width: 30),
                   Container(
-                    width: 40,
-                    height: 4,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2),
+                      border: Border.all(color: const Color(0xFF0088cc)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '$_guests',
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0088cc),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Select Number of Travelers',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-
-                  // Adults
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Adults',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            'Age 12 and above',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          IconButton(
-                            onPressed: _adults > 1 ? () {
-                              modalSetState(() {
-                                _adults--;
-                              });
-                              setState(() {});
-                            } : null,
-                            icon: Icon(
-                              Icons.remove_circle,
-                              color: _adults > 1 ? const Color(0xFF0088cc) : Colors.grey,
-                              size: 30,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: const Color(0xFF0088cc)),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '$_adults',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF0088cc),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          IconButton(
-                            onPressed: _adults < 10 ? () {
-                              modalSetState(() {
-                                _adults++;
-                              });
-                              setState(() {});
-                            } : null,
-                            icon: Icon(
-                              Icons.add_circle,
-                              color: _adults < 10 ? const Color(0xFF0088cc) : Colors.grey,
-                              size: 30,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Children
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Children',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            'Age 2-11 (30% discount)',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          IconButton(
-                            onPressed: _children > 0 ? () {
-                              modalSetState(() {
-                                _children--;
-                              });
-                              setState(() {});
-                            } : null,
-                            icon: Icon(
-                              Icons.remove_circle,
-                              color: _children > 0 ? const Color(0xFF0088cc) : Colors.grey,
-                              size: 30,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: const Color(0xFF0088cc)),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '$_children',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF0088cc),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          IconButton(
-                            onPressed: _children < 10 ? () {
-                              modalSetState(() {
-                                _children++;
-                              });
-                              setState(() {});
-                            } : null,
-                            icon: Icon(
-                              Icons.add_circle,
-                              color: _children < 10 ? const Color(0xFF0088cc) : Colors.grey,
-                              size: 30,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 30),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0088cc),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'Confirm',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                  const SizedBox(width: 30),
+                  IconButton(
+                    onPressed: _guests < 6 ? () {
+                      setState(() {
+                        _guests++;
+                      });
+                    } : null,
+                    icon: Icon(
+                      Icons.add_circle,
+                      color: _guests < 6 ? const Color(0xFF0088cc) : Colors.grey,
+                      size: 40,
                     ),
                   ),
                 ],
               ),
-            );
-          },
+              const SizedBox(height: 30),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0088cc),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Confirm',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -297,10 +239,10 @@ class _BookPackagePageState extends State<BookPackagePage> {
   Future<void> _submitBooking() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_selectedDate == null) {
+    if (_checkInDate == null || _checkOutDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please select a travel date'),
+          content: Text('Please select check-in and check-out dates'),
           backgroundColor: Colors.red,
         ),
       );
@@ -308,14 +250,14 @@ class _BookPackagePageState extends State<BookPackagePage> {
     }
 
     setState(() {
-      _isSubmitting = true;
+      _isLoading = true;
     });
 
     // Simulate API call
     await Future.delayed(const Duration(seconds: 2));
 
     setState(() {
-      _isSubmitting = false;
+      _isLoading = false;
     });
 
     // Show success dialog
@@ -361,7 +303,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
               ),
               const SizedBox(height: 16),
               const Text(
-                'Booking Request Sent!',
+                'Booking Confirmed!',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -369,9 +311,9 @@ class _BookPackagePageState extends State<BookPackagePage> {
                 ),
               ),
               const SizedBox(height: 8),
-              Text(
-                'Your booking request for ${widget.package['title']} has been sent to the tour agency. They will contact you within 24 hours to confirm your booking.',
-                style: const TextStyle(
+              const Text(
+                'Your room has been successfully booked.',
+                style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey,
                 ),
@@ -403,7 +345,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
                       ],
                     ),
                     Text(
-                      '#PKG${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+                      '#BK${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -411,11 +353,12 @@ class _BookPackagePageState extends State<BookPackagePage> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    _buildBookingDetailRow('Package', widget.package['title']),
-                    _buildBookingDetailRow('Date', DateFormat('MMM dd, yyyy').format(_selectedDate!)),
-                    _buildBookingDetailRow('Travelers', '${_adults + _children}'),
+                    _buildBookingDetailRow('Hotel', hotelData['name']),
+                    _buildBookingDetailRow('Room', roomData['type']),
+                    _buildBookingDetailRow('Dates', '${_checkInDate?.day}/${_checkInDate?.month}/${_checkInDate?.year} - ${_checkOutDate?.day}/${_checkOutDate?.month}/${_checkOutDate?.year}'),
+                    _buildBookingDetailRow('Guests', '$_guests'),
                     const Divider(),
-                    _buildBookingDetailRow('Total', 'LKR ${NumberFormat('#,###').format(_totalPrice)}', isTotal: true),
+                    _buildBookingDetailRow('Total', 'LKR ${_calculateTotalAmount().toStringAsFixed(2)}', isTotal: true),
                   ],
                 ),
               ),
@@ -425,7 +368,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    context.go('/marketplace/tour_packages');
+                    context.go('/marketplace/hotels');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0088cc),
@@ -478,6 +421,491 @@ class _BookPackagePageState extends State<BookPackagePage> {
     );
   }
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: const Text(
+          'Book Room',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: const Color(0xFF0088cc),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context), // This will go back to hotel details
+          icon: const Icon(Icons.arrow_back),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Room Summary Card with Image
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    // Room Image
+                    Container(
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.asset(
+                          roomData['image'],
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    roomData['backgroundColor'],
+                                    roomData['backgroundColor'].withOpacity(0.8),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Icon(
+                                Icons.bed,
+                                color: Colors.white,
+                                size: 40,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            roomData['type'],
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            hotelData['name'],
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.blue.shade200),
+                                ),
+                                child: Text(
+                                  roomData['size'],
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.blue.shade700,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                roomData['price'],
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF0088cc),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 30),
+
+              // Booking Details
+              const Text(
+                'Booking Details',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Date Selection Cards
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _selectDate(context, true),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade200),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.calendar_today, color: Color(0xFF0088cc), size: 18),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Check-in',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _checkInDate != null
+                                  ? '${_checkInDate!.day}/${_checkInDate!.month}/${_checkInDate!.year}'
+                                  : 'Select date',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _selectDate(context, false),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade200),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.calendar_today, color: Color(0xFF0088cc), size: 18),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Check-out',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _checkOutDate != null
+                                  ? '${_checkOutDate!.day}/${_checkOutDate!.month}/${_checkOutDate!.year}'
+                                  : 'Select date',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Number of Guests
+              GestureDetector(
+                onTap: _showGuestSelector,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.shade200),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.person, color: Color(0xFF0088cc), size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Number of Guests',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '$_guests guest${_guests > 1 ? 's' : ''}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
+
+              // Guest Information
+              const Text(
+                'Guest Information',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Form Fields
+              _buildTextField(
+                controller: _nameController,
+                label: 'Full Name',
+                icon: Icons.person_outline,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your full name';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              _buildTextField(
+                controller: _emailController,
+                label: 'Email Address',
+                icon: Icons.email_outlined,
+                keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email';
+                  }
+                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                    return 'Please enter a valid email';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              _buildTextField(
+                controller: _phoneController,
+                label: 'Phone Number',
+                icon: Icons.phone_outlined,
+                keyboardType: TextInputType.phone,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your phone number';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              _buildTextField(
+                controller: _specialRequestsController,
+                label: 'Special Requests (Optional)',
+                icon: Icons.note_outlined,
+                maxLines: 3,
+              ),
+              const SizedBox(height: 30),
+
+              // Booking Summary
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Booking Summary',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSummaryRow('$_nights night${_nights > 1 ? 's' : ''} × ${roomData['price']}',
+                        'LKR ${(_calculateTotalAmount() / 1.22).toStringAsFixed(2)}'),
+                    const SizedBox(height: 8),
+                    _buildSummaryRow('Service Charge (10%)',
+                        'LKR ${((_calculateTotalAmount() / 1.22) * 0.10).toStringAsFixed(2)}'),
+                    const SizedBox(height: 8),
+                    _buildSummaryRow('Taxes (12%)',
+                        'LKR ${((_calculateTotalAmount() / 1.22) * 0.12).toStringAsFixed(2)}'),
+                    const SizedBox(height: 12),
+                    Container(
+                      height: 1,
+                      color: Colors.grey.shade200,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Total Amount',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        Text(
+                          'LKR ${_calculateTotalAmount().toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0088cc),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 40),
+
+              // Book Now Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _submitBooking,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0088cc),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 3,
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                      : const Text(
+                    'Confirm Booking',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -513,452 +941,26 @@ class _BookPackagePageState extends State<BookPackagePage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: const Text(
-          'Book Package',
-          style: TextStyle(
+  Widget _buildSummaryRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.black87,
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
             fontWeight: FontWeight.w600,
+            color: Colors.black87,
           ),
         ),
-        backgroundColor: const Color(0xFF0088cc),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Package Summary Card
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      spreadRadius: 1,
-                      blurRadius: 15,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    // Package Image
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.2),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.asset(
-                          widget.package['image'] ?? 'assets/images/default_package.jpg',
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16),
-                                gradient: LinearGradient(
-                                  colors: [
-                                    widget.package['backgroundColor'] ?? const Color(0xFF0088cc),
-                                    (widget.package['backgroundColor'] ?? const Color(0xFF0088cc)).withOpacity(0.8),
-                                  ],
-                                ),
-                              ),
-                              child: Icon(
-                                widget.package['icon'] ?? Icons.tour,
-                                color: Colors.white,
-                                size: 40,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.package['title'],
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            widget.package['subtitle'],
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.shade50,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.orange.shade200),
-                                ),
-                                child: Text(
-                                  widget.package['duration'],
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.orange.shade700,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                widget.package['price'],
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF0088cc),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 30),
-
-              // Booking Details
-              const Text(
-                'Booking Details',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Travel Date and Travelers in a Row
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: _selectDate,
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade300),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.calendar_today, color: Color(0xFF0088cc), size: 18),
-                                SizedBox(width: 8),
-                                Text(
-                                  'Travel Date',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _selectedDate != null
-                                  ? DateFormat('MMM dd, yyyy').format(_selectedDate!)
-                                  : 'Select date',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: _showTravelersSelector,
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade300),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.people_outline, color: Color(0xFF0088cc), size: 18),
-                                SizedBox(width: 8),
-                                Text(
-                                  'Travelers',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${_adults + _children} travelers',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Personal Information
-              const Text(
-                'Contact Information',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              _buildTextField(
-                controller: _nameController,
-                label: 'Full Name *',
-                icon: Icons.person_outline,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter your full name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              _buildTextField(
-                controller: _emailController,
-                label: 'Email Address *',
-                icon: Icons.email_outlined,
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                    return 'Please enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              _buildTextField(
-                controller: _phoneController,
-                label: 'Phone Number *',
-                icon: Icons.phone_outlined,
-                keyboardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter your phone number';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              _buildTextField(
-                controller: _specialRequirementsController,
-                label: 'Special Requirements (Optional)',
-                icon: Icons.note_outlined,
-                maxLines: 3,
-              ),
-              const SizedBox(height: 30),
-
-              // Price Summary
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      spreadRadius: 1,
-                      blurRadius: 15,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Price Summary',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Adults ($_adults × ${widget.package['price']})'),
-                        Text('LKR ${NumberFormat('#,###').format(double.parse(widget.package['price'].replaceAll('LKR ', '').replaceAll(',', '')) * _adults)}'),
-                      ],
-                    ),
-                    if (_children > 0) ...[
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Children ($_children × 70%)'),
-                          Text('LKR ${NumberFormat('#,###').format(double.parse(widget.package['price'].replaceAll('LKR ', '').replaceAll(',', '')) * _children * 0.7)}'),
-                        ],
-                      ),
-                    ],
-                    const SizedBox(height: 12),
-                    Container(
-                      height: 1,
-                      color: Colors.grey.shade200,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Total Amount',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        Text(
-                          'LKR ${NumberFormat('#,###').format(_totalPrice)}',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF0088cc),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 40),
-
-              // Submit Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submitBooking,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0088cc),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 3,
-                  ),
-                  child: _isSubmitting
-                      ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                      : const Text(
-                    'Send Booking Request',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Center(
-                child: Text(
-                  'Tour agency will contact you to confirm booking',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
-      ),
+      ],
     );
   }
 }

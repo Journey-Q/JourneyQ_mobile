@@ -166,7 +166,9 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
 
   Widget _buildVehicleCard(Map<String, dynamic> vehicle, int index) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: EdgeInsets.only(
+        bottom: index == (enhancedAgency['vehicles'] as List).length - 1 ? 0 : 16,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -331,7 +333,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
           // Divider line between vehicles
           if (index < (enhancedAgency['vehicles'] as List).length - 1)
             Padding(
-              padding: const EdgeInsets.only(top: 16),
+              padding: const EdgeInsets.only(top: 12),
               child: Divider(
                 color: Colors.grey.shade300,
                 thickness: 1,
@@ -360,7 +362,6 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
 
   Widget _buildDriverCard(Map<String, dynamic> driver) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -698,17 +699,13 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                             color: Colors.black87,
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: (enhancedAgency['vehicles'] as List).length,
-                          itemBuilder: (context, index) {
-                            return _buildVehicleCard(
-                              enhancedAgency['vehicles'][index],
-                              index,
-                            );
-                          },
+                        const SizedBox(height: 8), // Reduced to match About Us
+                        Column(
+                          children: (enhancedAgency['vehicles'] as List).asMap().entries.map((entry) {
+                            int index = entry.key;
+                            Map<String, dynamic> vehicle = entry.value;
+                            return _buildVehicleCard(vehicle, index);
+                          }).toList(),
                         ),
                       ],
                     ),
@@ -742,14 +739,18 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                             color: Colors.black87,
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: (enhancedAgency['drivers'] as List).length,
-                          itemBuilder: (context, index) {
-                            return _buildDriverCard(enhancedAgency['drivers'][index]);
-                          },
+                        const SizedBox(height: 8), // Reduced to match About Us
+                        Column(
+                          children: (enhancedAgency['drivers'] as List).asMap().entries.map((entry) {
+                            int index = entry.key;
+                            Map<String, dynamic> driver = entry.value;
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                bottom: index == (enhancedAgency['drivers'] as List).length - 1 ? 0 : 12,
+                              ),
+                              child: _buildDriverCard(driver),
+                            );
+                          }).toList(),
                         ),
                       ],
                     ),
