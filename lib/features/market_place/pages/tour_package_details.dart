@@ -206,8 +206,8 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
   }
 
   Widget _buildItineraryItem(Map<String, String> item) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6), // CHANGED: Using Padding instead of Container with margin
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -215,10 +215,10 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: Colors.blue.shade50, // Light blue background
+              color: Colors.blue.shade50,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: Colors.blue.shade300, // Blue border
+                color: Colors.blue.shade300,
                 width: 2,
               ),
             ),
@@ -228,7 +228,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.blue.shade700, // Blue text color
+                  color: Colors.blue.shade700,
                 ),
               ),
             ),
@@ -520,7 +520,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
 
                   const SizedBox(height: 20),
 
-                  // Agency Information Card (without buttons)
+                  // Agency Information Card
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -671,7 +671,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
 
                   const SizedBox(height: 20),
 
-                  // Highlights (without container)
+                  // Highlights
                   const Text(
                     'Tour Highlights',
                     style: TextStyle(
@@ -691,7 +691,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
 
                   const SizedBox(height: 20),
 
-                  // What's Included (without container)
+                  // What's Included
                   const Text(
                     'What\'s Included',
                     style: TextStyle(
@@ -711,7 +711,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
 
                   const SizedBox(height: 20),
 
-                  // Itinerary (reduced spacing)
+                  // Itinerary - UPDATED SECTION
                   const Text(
                     'Tour Itinerary',
                     style: TextStyle(
@@ -720,14 +720,11 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                       color: Colors.black87,
                     ),
                   ),
-                  const SizedBox(height: 8), // Reduced from 16 to 8
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: (enhancedPackage['itinerary'] as List).length,
-                    itemBuilder: (context, index) {
-                      return _buildItineraryItem(enhancedPackage['itinerary'][index]);
-                    },
+                  const SizedBox(height: 12),
+                  Column(
+                    children: (enhancedPackage['itinerary'] as List)
+                        .map<Widget>((item) => _buildItineraryItem(item))
+                        .toList(),
                   ),
 
                   const SizedBox(height: 20),
@@ -859,7 +856,6 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(16),
-
                     ),
                     child: ElevatedButton(
                       onPressed: _bookPackage,
