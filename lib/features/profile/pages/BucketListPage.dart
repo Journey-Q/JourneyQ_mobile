@@ -104,17 +104,7 @@ class _BucketListPageState extends State<BucketListPage> {
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: Colors.black),
-            onPressed: _addNewDestination,
-          ),
-          IconButton(
-            icon: const Icon(Icons.map_outlined, color: Colors.black),
-            onPressed: _openInteractiveMap,
-          ),
-        ],
+        )
       ),
       body: Column(
         children: [
@@ -190,12 +180,7 @@ class _BucketListPageState extends State<BucketListPage> {
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _planTrip,
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.add_location_alt, color: Colors.white),
-      ),
+      )
     );
   }
 
@@ -290,11 +275,7 @@ class _BucketListPageState extends State<BucketListPage> {
                           color: Colors.black,
                         ),
                       ),
-                    ),
-                    IconButton(
-                      onPressed: () => _editDestination(index),
-                      icon: const Icon(Icons.edit_outlined, size: 20, color: Colors.grey),
-                    ),
+                    )
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -328,8 +309,7 @@ class _BucketListPageState extends State<BucketListPage> {
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () => _planRoute(item),
-                        icon: const Icon(Icons.route, size: 16),
-                        label: const Text('Plan Route'),
+                        label: const Text('View journey'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
                           foregroundColor: Colors.white,
@@ -345,14 +325,7 @@ class _BucketListPageState extends State<BucketListPage> {
                       onPressed: () => _shareDestination(item),
                       icon: const Icon(Icons.share, size: 16),
                       label: const Text('Share'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey[200],
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
+                      
                     ),
                   ],
                 ),
@@ -375,29 +348,9 @@ class _BucketListPageState extends State<BucketListPage> {
     });
   }
 
-  void _addNewDestination() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Add new destination to bucket list')),
-    );
-  }
+  
 
-  void _openInteractiveMap() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Opening interactive map for trip planning')),
-    );
-  }
-
-  void _planTrip() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Plan solo or group trip functionality')),
-    );
-  }
-
-  void _editDestination(int index) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Edit ${bucketListItems[index]['destination']}')),
-    );
-  }
+  
 
   void _planRoute(Map<String, dynamic> item) {
     ScaffoldMessenger.of(context).showSnackBar(
