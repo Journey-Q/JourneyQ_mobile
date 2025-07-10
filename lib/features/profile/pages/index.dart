@@ -13,6 +13,7 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker();
+  bool isSubscribed = false; // Track subscription status
 
   // Enhanced posts data with individual post information
   List<Map<String, dynamic>> userPosts = [
@@ -151,6 +152,15 @@ class _ProfilePageState extends State<ProfilePage> {
                       color: Colors.blue,
                       size: 16,
                     ),
+                  if (isSubscribed)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 4),
+                      child: Icon(
+                        Icons.star,
+                        color: Colors.amber,
+                        size: 16,
+                      ),
+                    ),
                 ],
               ),
               actions: [
@@ -239,8 +249,14 @@ class _ProfilePageState extends State<ProfilePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _buildStatColumn(userPosts.length.toString(), 'Posts'),
-                    _buildStatColumn(userData['followers'].toString(), 'Followers'),
-                    _buildStatColumn(userData['following'].toString(), 'Following'),
+                    GestureDetector(
+                      onTap: () => _navigateToFollowersFollowing('followers'),
+                      child: _buildStatColumn(userData['followers'].toString(), 'Followers'),
+                    ),
+                    GestureDetector(
+                      onTap: () => _navigateToFollowersFollowing('following'),
+                      child: _buildStatColumn(userData['following'].toString(), 'Following'),
+                    ),
                   ],
                 ),
               ),
@@ -304,26 +320,63 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildActionButtons() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: _editProfile,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.grey[200],
-            foregroundColor: Colors.black,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+      child: Row(
+        children: [
+          // Edit Profile Button
+          Expanded(
+            child: ElevatedButton(
+              onPressed: _editProfile,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[200],
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: const Text(
+                'Edit profile',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
-            padding: const EdgeInsets.symmetric(vertical: 12),
           ),
-          child: const Text(
-            'Edit profile',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+          const SizedBox(width: 12),
+          
+          // Subscribe Button
+          Expanded(
+            child: ElevatedButton(
+              onPressed: _handleSubscribe,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isSubscribed ? Colors.amber : Colors.blue,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    isSubscribed ? Icons.star : Icons.star_outline,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    isSubscribed ? 'Premium' : 'Subscribe',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -355,6 +408,16 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 child: const Icon(Icons.person_pin_outlined, color: Colors.grey),
+              ),
+            ),
+          ),
+          // Add like toggle button
+          Expanded(
+            child: GestureDetector(
+              onTap: _showLikedPosts,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: const Icon(Icons.favorite_outline, color: Colors.grey),
               ),
             ),
           ),
@@ -390,43 +453,6 @@ class _ProfilePageState extends State<ProfilePage> {
           },
           childCount: userPosts.length,
         ),
-      ),
-    );
-  }
-
-  // User Interaction Methods
-  void _sendMessage() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Opening chat with ${userData['username']}...'),
-        duration: const Duration(seconds: 1),
-      ),
-    );
-    // Navigate to chat page
-    // context.push('/chat/new', extra: userData);
-  }
-
-  void _showBlockConfirmation() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Block ${userData['username']}?'),
-        content: Text('They won\'t be able to find your profile and posts on JourneyQ. They won\'t be notified that you blocked them.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${userData['username']} has been blocked')),
-              );
-            },
-            child: const Text('Block', style: TextStyle(color: Colors.red)),
-          ),
-        ],
       ),
     );
   }
@@ -497,6 +523,117 @@ class _ProfilePageState extends State<ProfilePage> {
     context.push('/profile/edit', extra: userData);
   }
 
+  void _handleSubscribe() {
+    if (isSubscribed) {
+      // Show subscription management
+      _showSubscriptionManagement();
+    } else {
+      // Navigate to payment page
+      context.push('/profile/payment', extra: userData);
+    }
+  }
+
+  void _showSubscriptionManagement() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.star, color: Colors.amber, size: 24),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Premium Subscription',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'You currently have an active premium subscription with access to all premium features.',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: const Icon(Icons.settings, color: Colors.black),
+                title: const Text('Manage Subscription', style: TextStyle(color: Colors.black)),
+                trailing: const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
+                onTap: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Opening subscription management...')),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.cancel, color: Colors.red),
+                title: const Text('Cancel Subscription', style: TextStyle(color: Colors.red)),
+                trailing: const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showCancelSubscriptionDialog();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showCancelSubscriptionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: const Text(
+          'Cancel Subscription?',
+          style: TextStyle(color: Colors.black),
+        ),
+        content: const Text(
+          'Are you sure you want to cancel your premium subscription? You will lose access to premium features.',
+          style: TextStyle(color: Colors.black),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Keep Premium'),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                isSubscribed = false;
+              });
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Subscription cancelled'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            },
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _viewPost(int index) {
     context.push('/profile/post/$index', extra: {
       'postData': userPosts[index],
@@ -507,5 +644,103 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _navigateToBucketList() {
     context.push('/profile/bucketlist');
+  }
+
+  void _navigateToFollowersFollowing(String tab) {
+    context.push('/profile/followers-following', extra: {
+      'initialTab': tab,
+      'userData': userData,
+    });
+  }
+
+  void _showLikedPosts() {
+    // Filter liked posts
+    final likedPosts = userPosts.where((post) => post['isLiked'] == true).toList();
+    
+    if (likedPosts.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No liked posts yet'),
+          backgroundColor: Colors.grey,
+        ),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.7,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.favorite, color: Colors.red, size: 24),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Liked Posts',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Colors.black),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 2,
+                    mainAxisSpacing: 2,
+                    childAspectRatio: 1.0,
+                  ),
+                  itemCount: likedPosts.length,
+                  itemBuilder: (context, index) {
+                    final post = likedPosts[index];
+                    final originalIndex = userPosts.indexOf(post);
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        _viewPost(originalIndex);
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: NetworkImage(post['imageUrl']),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        child: const Align(
+                          alignment: Alignment.topRight,
+                          child: Padding(
+                            padding: EdgeInsets.all(4),
+                            child: Icon(
+                              Icons.favorite,
+                              color: Colors.red,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
