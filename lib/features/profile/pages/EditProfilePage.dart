@@ -16,20 +16,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController _nameController;
   late TextEditingController _usernameController;
   late TextEditingController _bioController;
-  late TextEditingController _websiteController;
   final ImagePicker _picker = ImagePicker();
   String? _profileImagePath;
+  
+  // User preferences from database
+  List<String> userActivities = [];
+  String userTripMood = '';
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.userData['name']);
-    _usernameController = TextEditingController(
-      text: widget.userData['username'],
-    );
+    _usernameController = TextEditingController(text: widget.userData['username']);
     _bioController = TextEditingController(text: widget.userData['bio']);
-    _websiteController = TextEditingController();
     _profileImagePath = widget.userData['profileImage'];
+    
+    // Initialize user preferences from database
+    userActivities = List<String>.from(widget.userData['activities'] ?? []);
+    userTripMood = widget.userData['tripMood'] ?? '';
   }
 
   @override
@@ -37,7 +41,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _nameController.dispose();
     _usernameController.dispose();
     _bioController.dispose();
-    _websiteController.dispose();
     super.dispose();
   }
 
@@ -87,7 +90,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       radius: 50,
                       backgroundColor: Colors.grey[300],
                       backgroundImage: _profileImagePath != null
-                          ? FileImage(File(_profileImagePath!))
+                          ? (_profileImagePath!.startsWith('http')
+                              ? NetworkImage(_profileImagePath!)
+                              : FileImage(File(_profileImagePath!)) as ImageProvider)
                           : null,
                       child: _profileImagePath == null
                           ? const Icon(
@@ -156,30 +161,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 hint: 'Write a bio...',
                 maxLines: 3,
               ),
-              const SizedBox(height: 20),
-
-              _buildTextField(
-                controller: _websiteController,
-                label: 'Website',
-                hint: 'Add website...',
-              ),
-
               const SizedBox(height: 30),
 
-              // Personal Information Settings
-              _buildSettingsSection('Personal information settings', [
-                _buildSettingItem(
-                  'Personal details',
-                  'Provide personal details, even if the account is used for a business, a pet or something else',
-                  () => _navigateToPage('Personal details'),
-                ),
-                _buildSettingItem(
-                  'Contact syncing',
-                  'Upload and manage your contacts',
-                  () => _navigateToPage('Contact syncing'),
-                ),
-              ]),
+              // Activities Section
+              _buildActivitiesSection(),
+              const SizedBox(height: 30),
 
+              // Trip Mood Section
+              _buildTripMoodSection(),
               const SizedBox(height: 30),
             ],
           ),
@@ -229,46 +218,458 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  Widget _buildSettingsSection(String title, List<Widget> items) {
+  Widget _buildActivitiesSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: const TextStyle(
-            color: Colors.black,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Activities',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            GestureDetector(
+              onTap: _editActivities,
+              child: const Text(
+                'Edit',
+                style: TextStyle(
+                  color: Colors.blue,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Your selected travel activities',
+          style: TextStyle(
+            color: Colors.grey,
+            fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 12),
+        userActivities.isEmpty
+            ? Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.add, color: Colors.grey[600], size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'No activities selected. Tap Edit to add.',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: userActivities.map((activity) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                    ),
+                    child: Text(
+                      activity,
+                      style: const TextStyle(
+                        color: Colors.blue,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+      ],
+    );
+  }
+
+  Widget _buildTripMoodSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Trip Mood',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            GestureDetector(
+              onTap: _editTripMood,
+              child: const Text(
+                'Edit',
+                style: TextStyle(
+                  color: Colors.blue,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Your preferred travel style',
+          style: TextStyle(
+            color: Colors.grey,
+            fontSize: 14,
           ),
         ),
         const SizedBox(height: 12),
         Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(12),
+            color: userTripMood.isEmpty ? Colors.grey[100] : Colors.purple.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: userTripMood.isEmpty ? Colors.grey[300]! : Colors.purple.withOpacity(0.3),
+            ),
           ),
-          child: Column(children: items),
+          child: Row(
+            children: [
+              Icon(
+                userTripMood.isEmpty ? Icons.add : _getTripMoodIcon(userTripMood),
+                color: userTripMood.isEmpty ? Colors.grey[600] : Colors.purple,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                userTripMood.isEmpty ? 'No trip mood selected. Tap Edit to choose.' : userTripMood,
+                style: TextStyle(
+                  color: userTripMood.isEmpty ? Colors.grey[600] : Colors.purple,
+                  fontSize: 14,
+                  fontWeight: userTripMood.isEmpty ? FontWeight.normal : FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildSettingItem(String title, String subtitle, VoidCallback onTap) {
-    return ListTile(
-      title: Text(
-        title,
-        style: const TextStyle(color: Colors.black, fontSize: 16),
+  IconData _getTripMoodIcon(String mood) {
+    switch (mood.toLowerCase()) {
+      case 'adventure':
+        return Icons.hiking;
+      case 'relaxation':
+        return Icons.spa;
+      case 'cultural':
+        return Icons.museum;
+      case 'wildlife':
+        return Icons.pets;
+      case 'photography':
+        return Icons.camera_alt;
+      case 'backpacking':
+        return Icons.backpack;
+      default:
+        return Icons.explore;
+    }
+  }
+
+  void _editActivities() {
+    // Show bottom sheet or navigate to activities selection page
+    _showActivitiesBottomSheet();
+  }
+
+  void _editTripMood() {
+    // Show bottom sheet or navigate to trip mood selection page
+    _showTripMoodBottomSheet();
+  }
+
+  void _showActivitiesBottomSheet() {
+    final List<String> availableActivities = [
+      'Wildlife Safari',
+      'Sightseeing',
+      'Road Trip',
+      'Temple Visits',
+      'Spa & Wellness',
+      'Nightlife',
+      'Shopping',
+      'Local Experiences',
+      'Photography',
+      'Hiking',
+      'Swimming',
+      'Cycling',
+    ];
+
+    List<String> tempSelected = List.from(userActivities);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      subtitle: Text(
-        subtitle,
-        style: const TextStyle(color: Colors.grey, fontSize: 14),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.7,
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  // Handle bar
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  
+                  const Text(
+                    'Select Activities',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Custom activity input
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            decoration: const InputDecoration(
+                              hintText: 'Enter activity name...',
+                              border: InputBorder.none,
+                            ),
+                            onSubmitted: (value) {
+                              if (value.trim().isNotEmpty && !tempSelected.contains(value.trim())) {
+                                setModalState(() {
+                                  tempSelected.add(value.trim());
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Add custom activity logic here
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          child: const Text('Add', style: TextStyle(color: Colors.white)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Popular Activities',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: availableActivities.length,
+                      itemBuilder: (context, index) {
+                        final activity = availableActivities[index];
+                        final isSelected = tempSelected.contains(activity);
+                        
+                        return CheckboxListTile(
+                          title: Text(activity),
+                          value: isSelected,
+                          onChanged: (bool? value) {
+                            setModalState(() {
+                              if (value == true) {
+                                tempSelected.add(activity);
+                              } else {
+                                tempSelected.remove(activity);
+                              }
+                            });
+                          },
+                          activeColor: Colors.blue,
+                        );
+                      },
+                    ),
+                  ),
+
+                  // Bottom buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Cancel'),
+                        ),
+                      ),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              userActivities = tempSelected;
+                            });
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text('Done', style: TextStyle(color: Colors.white)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showTripMoodBottomSheet() {
+    final List<String> tripMoods = [
+      'Adventure',
+      'Relaxation',
+      'Cultural',
+      'Wildlife',
+      'Photography',
+      'Backpacking',
+    ];
+
+    String tempSelected = userTripMood;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      trailing: const Icon(
-        Icons.arrow_forward_ios,
-        color: Colors.grey,
-        size: 16,
-      ),
-      onTap: onTap,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Handle bar
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  
+                  const Text(
+                    'Select Trip Mood',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  ...tripMoods.map((mood) {
+                    final isSelected = tempSelected == mood;
+                    return RadioListTile<String>(
+                      title: Text(mood),
+                      value: mood,
+                      groupValue: tempSelected,
+                      onChanged: (String? value) {
+                        setModalState(() {
+                          tempSelected = value ?? '';
+                        });
+                      },
+                      activeColor: Colors.purple,
+                    );
+                  }).toList(),
+
+                  const SizedBox(height: 20),
+
+                  // Bottom buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Cancel'),
+                        ),
+                      ),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              userTripMood = tempSelected;
+                            });
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.purple,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text('Done', style: TextStyle(color: Colors.white)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -340,6 +741,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
     widget.userData['username'] = _usernameController.text;
     widget.userData['bio'] = _bioController.text;
     widget.userData['profileImage'] = _profileImagePath;
+    widget.userData['activities'] = userActivities;
+    widget.userData['tripMood'] = userTripMood;
 
     // In a real app, you would save this to backend/database
     ScaffoldMessenger.of(context).showSnackBar(
@@ -347,11 +750,5 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
 
     Navigator.pop(context);
-  }
-
-  void _navigateToPage(String pageName) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Navigate to $pageName')));
   }
 }
