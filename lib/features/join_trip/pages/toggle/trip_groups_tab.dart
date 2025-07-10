@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:journeyq/features/join_trip/pages/data.dart';
+import 'package:journeyq/app/themes/theme.dart'; // Import theme
 
 class TripGroupsTab extends StatefulWidget {
   final Function(String, String, String) onNavigateToChat;
@@ -48,9 +49,7 @@ class _TripGroupsTabState extends State<TripGroupsTab> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      gradient: _showMyGroups 
-                        ? const LinearGradient(colors: [Color(0xFF0088cc), Color(0xFF00B4DB)])
-                        : null,
+                      color: _showMyGroups ? AppTheme.lightTheme.colorScheme.secondary : null,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -63,7 +62,7 @@ class _TripGroupsTabState extends State<TripGroupsTab> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'My Groups (${myCreatedGroups.length})',
+                          'My Groups',
                           style: TextStyle(
                             color: _showMyGroups ? Colors.white : Colors.grey[600],
                             fontWeight: FontWeight.w600,
@@ -80,9 +79,7 @@ class _TripGroupsTabState extends State<TripGroupsTab> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      gradient: !_showMyGroups 
-                        ? const LinearGradient(colors: [Color(0xFF0088cc), Color(0xFF00B4DB)])
-                        : null,
+                      color: !_showMyGroups ? AppTheme.lightTheme.colorScheme.secondary : null,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -95,7 +92,7 @@ class _TripGroupsTabState extends State<TripGroupsTab> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Joined (${joinedGroups.length})',
+                          'Joined',
                           style: TextStyle(
                             color: !_showMyGroups ? Colors.white : Colors.grey[600],
                             fontWeight: FontWeight.w600,
