@@ -21,6 +21,9 @@ import 'package:journeyq/features/profile/pages/SettingsPage.dart';
 import 'package:journeyq/features/profile/pages/EditProfilePage.dart';
 import 'package:journeyq/features/profile/pages/PostDetailPage.dart';
 import 'package:journeyq/features/profile/pages/BucketListPage.dart';
+// ADD THESE NEW IMPORTS
+import 'package:journeyq/features/profile/pages/FollowersFollowingPage.dart';
+import 'package:journeyq/features/profile/pages/PaymentPage.dart';
 import 'package:journeyq/app/app.dart';
 import 'package:journeyq/features/search/pages/search_page.dart';
 import 'package:journeyq/features/notification/pages/notification.dart';
@@ -116,10 +119,7 @@ class AppRouter {
             final hotel = extra['hotel'] as Map<String, dynamic>?;
             final room = extra['room'] as Map<String, dynamic>?;
 
-            return BookingRoomPage(
-              hotel: hotel,
-              room: room,
-            );
+            return BookingRoomPage(hotel: hotel, room: room);
           },
           transitionType: PageTransitionType.slide,
         ),
@@ -225,8 +225,6 @@ class AppRouter {
           transitionType: PageTransitionType.none,
         ),
 
-
-
         TransitionGoRoute(
           path: '/profile',
           builder: (context, state) =>
@@ -251,9 +249,45 @@ class AppRouter {
         ),
 
         TransitionGoRoute(
+          path: '/profile/followers-following',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+
+            if (extra == null) {
+              // Fallback to profile if no data provided
+              return AppWrapper(currentRoute: '/profile', child: ProfilePage());
+            }
+
+            final initialTab = extra['initialTab'] as String? ?? 'followers';
+            final userData = extra['userData'] as Map<String, dynamic>? ?? {};
+
+            return FollowersFollowingPage(
+              initialTab: initialTab,
+              userData: userData,
+            );
+          },
+          transitionType: PageTransitionType.slide,
+        ),
+
+        TransitionGoRoute(
+          path: '/profile/payment',
+          builder: (context, state) {
+            final userData = state.extra as Map<String, dynamic>?;
+
+            if (userData == null) {
+              // Fallback to profile if no data provided
+              return AppWrapper(currentRoute: '/profile', child: ProfilePage());
+            }
+
+            return PaymentPage(userData: userData);
+          },
+          transitionType: PageTransitionType.slide,
+        ),
+        TransitionGoRoute(
           path: '/profile/post/:postIndex',
           builder: (context, state) {
-            final postIndex = int.tryParse(state.pathParameters['postIndex'] ?? '0') ?? 0;
+            final postIndex =
+                int.tryParse(state.pathParameters['postIndex'] ?? '0') ?? 0;
             final extra = state.extra as Map<String, dynamic>?;
 
             if (extra == null) {
@@ -272,7 +306,6 @@ class AppRouter {
           },
           transitionType: PageTransitionType.slide,
         ),
-
 
         // NEW: Bucket List Route
         TransitionGoRoute(

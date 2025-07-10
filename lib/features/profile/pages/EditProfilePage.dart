@@ -24,7 +24,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.userData['name']);
-    _usernameController = TextEditingController(text: widget.userData['username']);
+    _usernameController = TextEditingController(
+      text: widget.userData['username'],
+    );
     _bioController = TextEditingController(text: widget.userData['bio']);
     _websiteController = TextEditingController();
     _profileImagePath = widget.userData['profileImage'];
@@ -89,10 +91,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           : null,
                       child: _profileImagePath == null
                           ? const Icon(
-                        Icons.person,
-                        size: 50,
-                        color: Colors.grey,
-                      )
+                              Icons.person,
+                              size: 50,
+                              color: Colors.grey,
+                            )
                           : null,
                     ),
                     Positioned(
@@ -161,54 +163,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 label: 'Website',
                 hint: 'Add website...',
               ),
-              const SizedBox(height: 30),
-
-              // Professional Account Toggle
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Switch to professional account',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Get tools to help you manage your travel business and connect with travelers',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Implement professional account switch
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Switch to professional account')),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text('Switch to professional'),
-                    ),
-                  ],
-                ),
-              ),
 
               const SizedBox(height: 30),
 
@@ -217,12 +171,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 _buildSettingItem(
                   'Personal details',
                   'Provide personal details, even if the account is used for a business, a pet or something else',
-                      () => _navigateToPage('Personal details'),
+                  () => _navigateToPage('Personal details'),
                 ),
                 _buildSettingItem(
                   'Contact syncing',
                   'Upload and manage your contacts',
-                      () => _navigateToPage('Contact syncing'),
+                  () => _navigateToPage('Contact syncing'),
                 ),
               ]),
 
@@ -303,17 +257,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return ListTile(
       title: Text(
         title,
-        style: const TextStyle(
-          color: Colors.black,
-          fontSize: 16,
-        ),
+        style: const TextStyle(color: Colors.black, fontSize: 16),
       ),
       subtitle: Text(
         subtitle,
-        style: const TextStyle(
-          color: Colors.grey,
-          fontSize: 14,
-        ),
+        style: const TextStyle(color: Colors.grey, fontSize: 14),
       ),
       trailing: const Icon(
         Icons.arrow_forward_ios,
@@ -336,7 +284,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
             children: [
               ListTile(
                 leading: const Icon(Icons.camera_alt, color: Colors.black),
-                title: const Text('Camera', style: TextStyle(color: Colors.black)),
+                title: const Text(
+                  'Camera',
+                  style: TextStyle(color: Colors.black),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImage(ImageSource.camera);
@@ -344,7 +295,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library, color: Colors.black),
-                title: const Text('Gallery', style: TextStyle(color: Colors.black)),
+                title: const Text(
+                  'Gallery',
+                  style: TextStyle(color: Colors.black),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImage(ImageSource.gallery);
@@ -353,7 +307,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
               if (_profileImagePath != null)
                 ListTile(
                   leading: const Icon(Icons.delete, color: Colors.red),
-                  title: const Text('Remove Photo', style: TextStyle(color: Colors.red)),
+                  title: const Text(
+                    'Remove Photo',
+                    style: TextStyle(color: Colors.red),
+                  ),
                   onTap: () {
                     Navigator.pop(context);
                     setState(() {
@@ -393,8 +350,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   void _navigateToPage(String pageName) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Navigate to $pageName')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Navigate to $pageName')));
   }
 }
