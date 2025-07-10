@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:journeyq/app/themes/theme.dart';
+// Import your theme file
 
 class TripTabBar extends StatelessWidget {
   final TabController tabController;
@@ -46,20 +48,17 @@ class TripTabBar extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          gradient: isSelected
-              ? const LinearGradient(
-                  colors: [Color(0xFF0088cc), Color(0xFF00B4DB)],
-                )
-              : null,
-          color: isSelected ? null : Colors.white,
+          color: isSelected 
+              ? const Color.fromARGB(255, 212, 225, 238) 
+              : const Color(0xFFF0F0F0), 
           borderRadius: BorderRadius.circular(25),
           boxShadow: [
             BoxShadow(
               color: isSelected 
-                  ? const Color(0xFF0088cc).withOpacity(0.3)
+                  ? const Color.fromARGB(255, 143, 180, 198).withOpacity(0.2)
                   : Colors.grey.withOpacity(0.1),
               spreadRadius: 1,
-              blurRadius: isSelected ? 8 : 5,
+              blurRadius: isSelected ? 6 : 3,
               offset: const Offset(0, 2),
             ),
           ],
@@ -80,7 +79,9 @@ class TripTabBar extends StatelessWidget {
                 title,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.grey[600],
+                  color: isSelected 
+                      ? const Color(0xFF1565C0) // Dark blue text when selected
+                      : const Color(0xFF757575), // Light black/gray text when not selected
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   fontSize: 14,
                 ),

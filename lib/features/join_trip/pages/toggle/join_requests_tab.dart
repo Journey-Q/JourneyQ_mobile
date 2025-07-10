@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:journeyq/features/join_trip/pages/data.dart';
 import 'package:journeyq/features/join_trip/pages/common/trip_details_widget.dart';
+import 'package:journeyq/app/themes/theme.dart'; // Import theme
 
 class JoinRequestsTab extends StatefulWidget {
   const JoinRequestsTab({super.key});
@@ -19,20 +20,13 @@ class _JoinRequestsTabState extends State<JoinRequestsTab> {
     
     return Column(
       children: [
-        // Toggle Section
+        // Toggle Section - No Shadow
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                spreadRadius: 1,
-                blurRadius: 5,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            // Removed boxShadow property
           ),
           child: Row(
             children: [
@@ -42,9 +36,7 @@ class _JoinRequestsTabState extends State<JoinRequestsTab> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      gradient: _showReceivedRequests 
-                        ? const LinearGradient(colors: [Color(0xFF0088cc), Color(0xFF00B4DB)])
-                        : null,
+                      color: _showReceivedRequests ? AppTheme.lightTheme.colorScheme.secondary : null,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -57,7 +49,7 @@ class _JoinRequestsTabState extends State<JoinRequestsTab> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Received (${receivedRequests.length})',
+                          'Received',
                           style: TextStyle(
                             color: _showReceivedRequests ? Colors.white : Colors.grey[600],
                             fontWeight: FontWeight.w600,
@@ -74,9 +66,7 @@ class _JoinRequestsTabState extends State<JoinRequestsTab> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      gradient: !_showReceivedRequests 
-                        ? const LinearGradient(colors: [Color(0xFF0088cc), Color(0xFF00B4DB)])
-                        : null,
+                      color: !_showReceivedRequests ? AppTheme.lightTheme.colorScheme.secondary : null,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -89,7 +79,7 @@ class _JoinRequestsTabState extends State<JoinRequestsTab> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Sent (${sentRequests.length})',
+                          'Sent',
                           style: TextStyle(
                             color: !_showReceivedRequests ? Colors.white : Colors.grey[600],
                             fontWeight: FontWeight.w600,
@@ -174,7 +164,7 @@ class _JoinRequestsTabState extends State<JoinRequestsTab> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              'Wants to join ${request['trip']}',
+                              'Join ${request['trip']}',
                               style: TextStyle(
                                 color: Colors.blue[700],
                                 fontSize: 14,
@@ -185,81 +175,63 @@ class _JoinRequestsTabState extends State<JoinRequestsTab> {
                         ],
                       ),
                     ),
-                    IconButton(
-                      icon: Icon(Icons.info_outline, color: Colors.grey[600]),
-                      onPressed: () => _showTripDetails(request['trip']!),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Colors.green, Color(0xFF4CAF50)],
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: () => _acceptRequest(index),
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.check, color: Colors.white, size: 18),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Accept',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                    // Action buttons in the same row
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Accept button
+                        const SizedBox(width: 8),
+
+                        GestureDetector(
+                          onTap: () => _acceptRequest(index),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(255, 92, 189, 92),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.check,
+                              color: Colors.white,
+                              size: 16,
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.red[300]!),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: () => _rejectRequest(index),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.close, color: Colors.red[600], size: 18),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Decline',
-                                    style: TextStyle(
-                                      color: Colors.red[600],
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                        const SizedBox(width: 8),
+                        // Decline button
+                        GestureDetector(
+                          onTap: () => _rejectRequest(index),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(255, 212, 110, 73),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 16,
                             ),
                           ),
                         ),
-                      ),
+                        const SizedBox(width: 8),
+                        // Info button
+                        GestureDetector(
+                          onTap: () => _showTripDetails(request['trip']!),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.info_outline,
+                              color: Colors.grey[600],
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
