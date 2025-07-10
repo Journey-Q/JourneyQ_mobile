@@ -1,172 +1,382 @@
-// journey_data.dart - Complete journey details data
+// journey_data.dart - Complete Sri Lankan journey details data
 final List<Map<String, dynamic>> journeyDetailsData = [
   {
     'id': '1',
-    'tripTitle': 'Discovering Modern Tokyo',
-    'authorName': 'Alex Johnson',
-    'authorImage': 'https://i.pravatar.cc/150?img=8',
-    'totalDays': 5,
-    'tripMood': 'Adventurous',
-    'overallRating': 4.8,
-    'totalBudget': 2500,
-    'currency': 'USD',
+    'tripTitle': 'Ancient Wonders of Cultural Triangle',
+    'authorName': 'Samantha Fernando',
+    'authorImage': 'https://i.pravatar.cc/150?img=25',
+    'totalDays': 6,
+    'tripMood': 'Cultural Explorer',
+    'overallRating': 4.9,
+    'totalBudget': 85000,
+    'currency': 'LKR',
     'budgetBreakdown': {
-      'accommodation': 35, // percentage
+      'accommodation': 30,
+      'food': 25,
+      'transport': 25,
+      'activities': 20,
+    },
+    'places': [
+      {
+        'name': 'Sigiriya Rock Fortress',
+        'day': 1,
+        'timeSpent': '5 hours',
+        'location': {
+          'latitude': 7.9571,
+          'longitude': 80.7603,
+          'address': 'Sigiriya, Matale District, Sri Lanka'
+        },
+        'images': [
+          'https://images.unsplash.com/photo-1544735716-392fe2489ffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+        ],
+        'activities': [
+          'Climbing the 1200-step ancient rock fortress',
+          'Viewing the famous Sigiriya frescoes',
+          'Exploring the royal palace ruins at the summit',
+          'Walking through the mirror wall with ancient graffiti',
+          'Visiting the water gardens at the base'
+        ],
+        'experiences': [
+          {
+            'title': 'Ancient Royal Palace',
+            'description': 'Standing atop the 200-meter rock fortress with panoramic views of the jungle',
+            'rating': 5.0
+          },
+          {
+            'title': 'Sigiriya Maidens',
+            'description': 'Witnessing the 1500-year-old frescoes of celestial nymphs',
+            'rating': 4.8
+          }
+        ],
+        'budget': 15000,
+        'recommendations': {
+          'restaurants': [
+            {
+              'name': 'Sigiriya Village Restaurant',
+              'type': 'Sri Lankan Cuisine',
+              'rating': 4.5,
+              'priceRange': 'LKR 2000-3000',
+              'specialty': 'Traditional rice and curry with village atmosphere'
+            }
+          ],
+          'cafes': [
+            {
+              'name': 'Rock View Cafe',
+              'type': 'Local Cafe',
+              'rating': 4.2,
+              'priceRange': 'LKR 500-1000',
+              'specialty': 'Fresh fruit juices and local snacks'
+            }
+          ]
+        }
+      },
+      {
+        'name': 'Dambulla Cave Temple',
+        'day': 2,
+        'timeSpent': '3 hours',
+        'location': {
+          'latitude': 7.8567,
+          'longitude': 80.6490,
+          'address': 'Dambulla, Matale District, Sri Lanka'
+        },
+        'images': [
+          'https://images.unsplash.com/photo-1580654712603-eb43273aff33?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1566139996634-082433de5b14?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+        ],
+        'activities': [
+          'Exploring 5 sacred cave temples',
+          'Viewing 150+ Buddha statues and murals',
+          'Learning about 2000+ years of Buddhist art',
+          'Meditation in ancient caves',
+          'Photography of religious artwork'
+        ],
+        'experiences': [
+          {
+            'title': 'Golden Cave Temple',
+            'description': 'The largest cave with a 14-meter reclining Buddha statue covered in gold',
+            'rating': 4.9
+          },
+          {
+            'title': 'Ancient Murals',
+            'description': 'Intricate ceiling paintings depicting Buddhist Jataka stories',
+            'rating': 4.7
+          }
+        ],
+        'budget': 8000,
+        'recommendations': {
+          'restaurants': [
+            {
+              'name': 'Dambulla Dedicated Hotel Restaurant',
+              'type': 'International & Local',
+              'rating': 4.3,
+              'priceRange': 'LKR 1500-2500',
+              'specialty': 'Buffet with Sri Lankan and continental dishes'
+            }
+          ]
+        }
+      },
+      {
+        'name': 'Polonnaruwa Ancient City',
+        'day': 3,
+        'timeSpent': '6 hours',
+        'location': {
+          'latitude': 7.9403,
+          'longitude': 81.0188,
+          'address': 'Polonnaruwa, North Central Province, Sri Lanka'
+        },
+        'images': [
+          'https://images.unsplash.com/photo-1539650116574-75c0c6d73c9e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1549144511-f099e773c147?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+        ],
+        'activities': [
+          'Bicycle tour through ancient ruins',
+          'Visiting Gal Vihara rock sculptures',
+          'Exploring the Royal Palace complex',
+          'Seeing the Lotus Pond and Council Chamber',
+          'Photography at Rankoth Vehera stupa'
+        ],
+        'experiences': [
+          {
+            'title': 'Gal Vihara Masterpiece',
+            'description': 'Four magnificent Buddha statues carved from a single granite wall',
+            'rating': 5.0
+          },
+          {
+            'title': 'Medieval Capital',
+            'description': 'Walking through the ruins of Sri Lanka\'s ancient royal capital',
+            'rating': 4.8
+          }
+        ],
+        'budget': 12000,
+        'recommendations': {
+          'restaurants': [
+            {
+              'name': 'Priyamali Gedara',
+              'type': 'Traditional Sri Lankan',
+              'rating': 4.6,
+              'priceRange': 'LKR 2000-3500',
+              'specialty': 'Authentic village-style meals in traditional setting'
+            }
+          ]
+        }
+      }
+    ],
+    'overallRecommendations': {
+      'hotels': [
+        {
+          'name': 'Sigiriya Village Hotel',
+          'rating': 4.4,
+          'priceRange': 'LKR 12000-18000',
+          'location': 'Sigiriya',
+          'features': ['Pool with rock view', 'Cultural show', 'Ayurveda spa']
+        },
+        {
+          'name': 'Hotel Sigiriya',
+          'rating': 4.2,
+          'priceRange': 'LKR 8000-15000',
+          'location': 'Sigiriya',
+          'features': ['Garden setting', 'Traditional architecture', 'Local cuisine']
+        }
+      ],
+      'restaurants': [
+        {
+          'name': 'Sigiriya Village Restaurant',
+          'type': 'Sri Lankan',
+          'rating': 4.5,
+          'priceRange': 'LKR 2000-3000',
+          'specialty': 'Traditional rice and curry experience'
+        },
+        {
+          'name': 'Priyamali Gedara',
+          'type': 'Village Cuisine',
+          'rating': 4.6,
+          'priceRange': 'LKR 2500-4000',
+          'specialty': 'Authentic village cooking in clay pots'
+        }
+      ],
+      'transportation': [
+        {
+          'name': 'Private Car with Driver',
+          'type': 'Transportation',
+          'rating': 4.7,
+          'price': 'LKR 15000/day',
+          'duration': '6 days',
+          'benefits': ['Flexible schedule', 'Local knowledge', 'AC comfort']
+        }
+      ]
+    },
+    'tips': [
+      'Start early morning climbs to avoid heat and crowds',
+      'Wear comfortable shoes with good grip for Sigiriya',
+      'Carry plenty of water and sun protection',
+      'Respect religious sites - dress modestly and remove shoes',
+      'Hire a guide to learn the fascinating history'
+    ]
+  },
+  {
+    'id': '2',
+    'tripTitle': 'Cultural Heart of Sri Lanka',
+    'authorName': 'Kasun Ratnayake',
+    'authorImage': 'https://i.pravatar.cc/150?img=42',
+    'totalDays': 4,
+    'tripMood': 'Spiritual Journey',
+    'overallRating': 4.7,
+    'totalBudget': 65000,
+    'currency': 'LKR',
+    'budgetBreakdown': {
+      'accommodation': 35,
       'food': 30,
       'transport': 20,
       'activities': 15,
     },
     'places': [
       {
-        'name': 'Shibuya Crossing',
+        'name': 'Temple of the Sacred Tooth Relic',
         'day': 1,
-        'timeSpent': '3 hours',
+        'timeSpent': '4 hours',
         'location': {
-          'latitude': 35.6598,
-          'longitude': 139.7006,
-          'address': 'Shibuya City, Tokyo, Japan'
+          'latitude': 7.2906,
+          'longitude': 80.6337,
+          'address': 'Sri Dalada Veediya, Kandy, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1542051841857-5f90071e7989?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+          'https://images.unsplash.com/photo-1580654712603-eb43273aff33?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1566139996634-082433de5b14?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
         ],
         'activities': [
-          'People watching at the world\'s busiest intersection',
-          'Shopping in Shibuya 109',
-          'Visit Hachiko statue',
-          'Experience the nightlife'
+          'Attending evening puja ceremony',
+          'Exploring the temple complex',
+          'Learning about Buddhist traditions',
+          'Viewing ancient artifacts and gifts',
+          'Walking around Kandy Lake nearby'
         ],
         'experiences': [
           {
-            'title': 'Rush Hour Crossing',
-            'description': 'Witnessed the famous Shibuya scramble during peak hours - absolutely mesmerizing!',
+            'title': 'Sacred Tooth Relic',
+            'description': 'Witnessing the most sacred Buddhist relic in Sri Lanka during evening prayers',
             'rating': 5.0
           },
           {
-            'title': 'Street Photography',
-            'description': 'Perfect spot for capturing the energy of modern Tokyo',
-            'rating': 4.5
+            'title': 'Royal Palace Complex',
+            'description': 'Exploring the former royal palace with intricate Kandyan architecture',
+            'rating': 4.6
           }
         ],
-        'budget': 150,
+        'budget': 8000,
         'recommendations': {
           'restaurants': [
             {
-              'name': 'Sushi Zanmai',
-              'type': 'Sushi Restaurant',
-              'rating': 4.6,
-              'priceRange': '45',
-              'specialty': 'Fresh sushi and sashimi'
+              'name': 'The Empire Cafe',
+              'type': 'Continental & Local',
+              'rating': 4.4,
+              'priceRange': 'LKR 1500-2500',
+              'specialty': 'Rooftop dining with Kandy city views'
             }
           ],
           'cafes': [
             {
-              'name': 'Starbucks Shibuya Sky',
-              'type': 'Coffee Shop',
-              'rating': 4.3,
-              'priceRange': '45',
-              'specialty': 'Coffee with a view'
+              'name': 'Kandy Muslim Hotel',
+              'type': 'Local Eatery',
+              'rating': 4.6,
+              'priceRange': 'LKR 500-800',
+              'specialty': 'Famous for authentic Sri Lankan breakfast'
             }
           ]
         }
       },
       {
-        'name': 'Tokyo Tower',
+        'name': 'Royal Botanical Gardens Peradeniya',
         'day': 2,
-        'timeSpent': '4 hours',
+        'timeSpent': '5 hours',
         'location': {
-          'latitude': 35.6586,
-          'longitude': 139.7454,
-          'address': '4 Chome-2-8 Shibakoen, Minato City, Tokyo, Japan'
+          'latitude': 7.2734,
+          'longitude': 80.5967,
+          'address': 'Peradeniya, Kandy, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1513407030348-c983a97b98d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1554797589-7241bb691973?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1572454591674-2739f30d0135?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1464822759844-d150baef493e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
         ],
         'activities': [
-          'Observation deck visit',
-          'Tokyo Tower Aquarium',
-          'Souvenir shopping',
-          'Sunset photography'
+          'Walking through 147-acre botanical paradise',
+          'Seeing the famous Giant Bamboo collection',
+          'Visiting the Orchid House',
+          'Exploring spice garden and medicinal plants',
+          'Relaxing by the Mahaweli River bend'
         ],
         'experiences': [
           {
-            'title': 'Panoramic City Views',
-            'description': 'Breathtaking 360-degree views of Tokyo from the main observatory',
+            'title': 'Cannonball Tree Avenue',
+            'description': 'Walking under the spectacular canopy of rare tropical trees',
             'rating': 4.8
           },
           {
-            'title': 'Night Illumination',
-            'description': 'The tower\'s beautiful lighting display in the evening',
+            'title': 'Royal Palm Avenue',
+            'description': 'The iconic palm-lined pathway planted by royalty',
             'rating': 4.7
           }
         ],
-        'budget': 200,
+        'budget': 5000,
         'recommendations': {
           'restaurants': [
             {
-              'name': 'Tokyo Tower Restaurant',
-              'type': 'International Cuisine',
-              'rating': 4.2,
-              'priceRange': '45',
-              'specialty': 'Fine dining with tower views'
+              'name': 'Devon Restaurant',
+              'type': 'Local Sri Lankan',
+              'rating': 4.3,
+              'priceRange': 'LKR 1200-2000',
+              'specialty': 'Traditional hoppers and string hoppers'
             }
           ]
         }
       },
       {
-        'name': 'Senso-ji Temple',
+        'name': 'Kandy Lake & City Walk',
         'day': 3,
-        'timeSpent': '5 hours',
+        'timeSpent': '3 hours',
         'location': {
-          'latitude': 35.7148,
-          'longitude': 139.7967,
-          'address': '2 Chome-3-1 Asakusa, Taito City, Tokyo, Japan'
+          'latitude': 7.2906,
+          'longitude': 80.6337,
+          'address': 'Kandy Lake, Kandy, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1524413840807-0c3cb6fa808d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1480796927426-f609979314bd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+          'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1568393691622-c7ba131d63b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1539650116574-75c0c6d73c9e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
         ],
         'activities': [
-          'Temple prayer and blessing',
-          'Nakamise-dori shopping street',
-          'Traditional food tasting',
-          'Cultural photography',
-          'Fortune telling (Omikuji)'
+          'Walking around the scenic artificial lake',
+          'Shopping in Kandy City Centre',
+          'Visiting local spice markets',
+          'Exploring traditional craft shops',
+          'Enjoying sunset views from the lake'
         ],
         'experiences': [
           {
-            'title': 'Traditional Japanese Culture',
-            'description': 'Immersed in ancient Japanese traditions and spirituality',
-            'rating': 5.0
+            'title': 'Peaceful Lake Walk',
+            'description': 'Serene evening stroll around the man-made lake built by the last king',
+            'rating': 4.5
           },
           {
-            'title': 'Street Food Adventure',
-            'description': 'Tried authentic Japanese street food along Nakamise-dori',
-            'rating': 4.9
+            'title': 'Cultural Shopping',
+            'description': 'Discovering authentic Sri Lankan handicrafts and spices',
+            'rating': 4.4
           }
         ],
-        'budget': 180,
+        'budget': 7000,
         'recommendations': {
           'restaurants': [
             {
-              'name': 'Daikokuya Tempura',
-              'type': 'Traditional Tempura',
-              'rating': 4.7,
-              'priceRange': '45',
-              'specialty': 'Historic tempura restaurant since 1887'
-            }
-          ],
-          'cafes': [
-            {
-              'name': 'Kagetsudo',
-              'type': 'Traditional Sweets',
+              'name': 'Balaji Dosai',
+              'type': 'South Indian',
               'rating': 4.5,
-              'priceRange': '45',
-              'specialty': 'Famous melon pan'
+              'priceRange': 'LKR 800-1200',
+              'specialty': 'Authentic South Indian dosas and chutneys'
             }
           ]
         }
@@ -175,431 +385,215 @@ final List<Map<String, dynamic>> journeyDetailsData = [
     'overallRecommendations': {
       'hotels': [
         {
-          'name': 'Park Hyatt Tokyo',
-          'rating': 4.9,
-          'priceRange': '45',
-          'location': 'Shinjuku',
-          'features': ['Luxury amenities', 'City views', 'Spa']
+          'name': 'The Golden Crown Hotel',
+          'rating': 4.3,
+          'priceRange': 'LKR 8000-12000',
+          'location': 'Kandy City',
+          'features': ['City center location', 'Traditional architecture', 'Cultural shows']
         },
         {
-          'name': 'Hotel Gracery Shinjuku',
-          'rating': 4.3,
-          'priceRange': '45',
-          'location': 'Shinjuku',
-          'features': ['Godzilla themed', 'Central location', 'Modern rooms']
+          'name': 'Hotel Suisse',
+          'rating': 4.5,
+          'priceRange': 'LKR 15000-25000',
+          'location': 'Kandy Hills',
+          'features': ['Mountain views', 'Colonial charm', 'Fine dining']
         }
       ],
       'restaurants': [
         {
-          'name': 'Jiro Dreams of Sushi',
-          'type': 'Sushi',
-          'rating': 4.9,
-          'priceRange': '45',
-          'specialty': 'World-famous sushi experience'
+          'name': 'The Empire Cafe',
+          'type': 'Multi-cuisine',
+          'rating': 4.4,
+          'priceRange': 'LKR 1500-2500',
+          'specialty': 'Rooftop dining with panoramic views'
         },
         {
-          'name': 'Ramen Yokocho',
-          'type': 'Ramen',
+          'name': 'Kandy Muslim Hotel',
+          'type': 'Local',
           'rating': 4.6,
-          'priceRange': '45',
-          'specialty': 'Authentic Tokyo-style ramen'
+          'priceRange': 'LKR 500-800',
+          'specialty': 'Authentic Sri Lankan breakfast'
         }
       ],
       'transportation': [
         {
-          'name': 'JR Pass',
-          'type': 'Rail Pass',
-          'rating': 4.8,
-          'price': '280 USD',
-          'duration': '7 days',
-          'benefits': ['Unlimited JR trains', 'Airport access', 'Shinkansen included']
+          'name': 'Three-wheeler (Tuk-tuk)',
+          'type': 'Local Transport',
+          'rating': 4.2,
+          'price': 'LKR 200-500/trip',
+          'duration': 'Per journey',
+          'benefits': ['Authentic experience', 'Flexible routes', 'Local interaction']
         }
       ]
     },
     'tips': [
-      'Learn basic Japanese phrases for better interaction',
-      'Carry cash as many places don\'t accept cards',
-      'Download Google Translate with camera feature',
-      'Respect local customs and bow when greeting',
-      'Try to avoid rush hours in trains (7-9 AM, 5-7 PM)'
+      'Attend the evening puja at Temple of Tooth (6:30 PM)',
+      'Dress modestly when visiting religious sites',
+      'Try traditional Kandyan dance performance',
+      'Buy authentic spices from local markets',
+      'Take a scenic train ride to/from Kandy'
     ]
   },
   {
-    'id': '2',
-    'tripTitle': 'Gaudi\'s Architectural Wonders',
-    'authorName': 'Maria Rodriguez',
-    'authorImage': 'https://i.pravatar.cc/150?img=5',
-    'totalDays': 4,
-    'tripMood': 'Cultural Explorer',
-    'overallRating': 4.6,
-    'totalBudget': 1800,
-    'currency': 'EUR',
+    'id': '3',
+    'tripTitle': 'Colonial Charm & Coastal Beauty',
+    'authorName': 'Tharaka Wijesinghe',
+    'authorImage': 'https://i.pravatar.cc/150?img=33',
+    'totalDays': 5,
+    'tripMood': 'Beach & Heritage',
+    'overallRating': 4.8,
+    'totalBudget': 75000,
+    'currency': 'LKR',
     'budgetBreakdown': {
-      'accommodation': 30,
-      'food': 35,
+      'accommodation': 40,
+      'food': 25,
       'transport': 15,
       'activities': 20,
     },
     'places': [
       {
-        'name': 'Sagrada Familia',
+        'name': 'Galle Dutch Fort',
         'day': 1,
-        'timeSpent': '3 hours',
-        'location': {
-          'latitude': 41.4036,
-          'longitude': 2.1744,
-          'address': 'C/ de Mallorca, 401, Barcelona, Spain'
-        },
-        'images': [
-          'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1571501679680-de32f1e7aad4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1580654712603-eb43273aff33?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
-        ],
-        'activities': [
-          'Basilica interior tour',
-          'Audio guide experience',
-          'Tower climb',
-          'Architecture photography'
-        ],
-        'experiences': [
-          {
-            'title': 'Gaudi\'s Masterpiece',
-            'description': 'Awe-inspiring architecture with intricate details everywhere you look',
-            'rating': 5.0
-          },
-          {
-            'title': 'Spiritual Experience',
-            'description': 'The play of light through stained glass windows is breathtaking',
-            'rating': 4.8
-          }
-        ],
-        'budget': 120,
-        'recommendations': {
-          'restaurants': [
-            {
-              'name': 'Cal Pep',
-              'type': 'Tapas Bar',
-              'rating': 4.8,
-              'priceRange': '45',
-              'specialty': 'Traditional Catalan tapas'
-            }
-          ],
-          'cafes': [
-            {
-              'name': 'Federal Café',
-              'type': 'Coffee Shop',
-              'rating': 4.4,
-              'priceRange': '45',
-              'specialty': 'Australian-style coffee and brunch'
-            }
-          ]
-        }
-      },
-      {
-        'name': 'Park Güell',
-        'day': 2,
         'timeSpent': '4 hours',
         'location': {
-          'latitude': 41.4145,
-          'longitude': 2.1527,
-          'address': '08024 Barcelona, Spain'
+          'latitude': 6.0535,
+          'longitude': 80.2210,
+          'address': 'Galle Fort, Galle, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1571501679680-de32f1e7aad4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1583422409516-2895a77efded?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+          'https://images.unsplash.com/photo-1539650116574-75c0c6d73c9e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1533105079780-92b9be482077?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
         ],
         'activities': [
-          'Mosaic terrace exploration',
-          'Panoramic city views',
-          'Gaudi house museum visit',
-          'Garden walks',
-          'Architectural photography'
+          'Walking along 17th-century fortification walls',
+          'Exploring colonial architecture and museums',
+          'Shopping in boutique stores and galleries',
+          'Watching sunset from the lighthouse',
+          'Photography at iconic Clock Tower'
         ],
         'experiences': [
           {
-            'title': 'Mosaic Wonderland',
-            'description': 'The colorful ceramic mosaics create a fairy-tale atmosphere',
+            'title': 'UNESCO World Heritage',
+            'description': 'Walking through the best-preserved colonial fortification in Asia',
             'rating': 4.9
           },
           {
-            'title': 'Barcelona Views',
-            'description': 'Stunning panoramic views of Barcelona from the main terrace',
-            'rating': 4.7
+            'title': 'Sunset at Ramparts',
+            'description': 'Magical golden hour views over the Indian Ocean from fort walls',
+            'rating': 5.0
           }
         ],
-        'budget': 95,
+        'budget': 8000,
         'recommendations': {
           'restaurants': [
             {
-              'name': 'La Pepita',
-              'type': 'Tapas Restaurant',
+              'name': 'Pedlar\'s Inn Cafe',
+              'type': 'Continental & Local',
               'rating': 4.6,
-              'priceRange': '45',
-              'specialty': 'Modern tapas with creative twists'
-            }
-          ]
-        }
-      },
-      {
-        'name': 'Casa Batlló',
-        'day': 3,
-        'timeSpent': '2 hours',
-        'location': {
-          'latitude': 41.3916,
-          'longitude': 2.1649,
-          'address': 'Passeig de Gràcia, 43, Barcelona, Spain'
-        },
-        'images': [
-          'https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
-        ],
-        'activities': [
-          'Interior architectural tour',
-          'Rooftop chimney exploration',
-          'Dragon-inspired facade viewing',
-          'Audio guide experience',
-          'Shopping on Passeig de Gràcia'
-        ],
-        'experiences': [
-          {
-            'title': 'Architectural Fantasy',
-            'description': 'Gaudi\'s imagination brought to life in every detail of this building',
-            'rating': 4.8
-          },
-          {
-            'title': 'Rooftop Magic',
-            'description': 'The chimney sculptures look like medieval knights',
-            'rating': 4.6
-          }
-        ],
-        'budget': 85,
-        'recommendations': {
-          'restaurants': [
-            {
-              'name': 'Disfrutar',
-              'type': 'Fine Dining',
-              'rating': 4.9,
-              'priceRange': '45',
-              'specialty': 'Creative Mediterranean cuisine'
+              'priceRange': 'LKR 2000-3500',
+              'specialty': 'Colonial ambiance with fusion cuisine'
             }
           ],
           'cafes': [
             {
-              'name': 'Café Central',
-              'type': 'Historic Café',
-              'rating': 4.3,
-              'priceRange': '45',
-              'specialty': 'Traditional pastries and coffee'
-            }
-          ]
-        }
-      }
-    ],
-    'overallRecommendations': {
-      'hotels': [
-        {
-          'name': 'Hotel Casa Fuster',
-          'rating': 4.7,
-          'priceRange': '45',
-          'location': 'Eixample',
-          'features': ['Modernist building', 'Rooftop terrace', 'Historic charm']
-        },
-        {
-          'name': 'Monument Hotel',
-          'rating': 4.5,
-          'priceRange': '45',
-          'location': 'Passeig de Gràcia',
-          'features': ['Luxury location', 'Modern amenities', 'Shopping nearby']
-        }
-      ],
-      'restaurants': [
-        {
-          'name': 'Disfrutar',
-          'type': 'Modern Cuisine',
-          'rating': 4.9,
-          'priceRange': '45',
-          'specialty': 'Creative Mediterranean cuisine'
-        },
-        {
-          'name': 'Cal Pep',
-          'type': 'Tapas',
-          'rating': 4.8,
-          'priceRange': '45',
-          'specialty': 'Traditional Catalan tapas'
-        }
-      ],
-      'transportation': [
-        {
-          'name': 'Barcelona Card',
-          'type': 'City Pass',
-          'rating': 4.2,
-          'price': '45 EUR',
-          'duration': '3 days',
-          'benefits': ['Public transport', 'Museum discounts', 'Free attractions']
-        }
-      ]
-    },
-    'tips': [
-      'Book Sagrada Familia tickets in advance online',
-      'Learn some basic Spanish or Catalan phrases',
-      'Try local vermouth in the afternoon (vermut hora)',
-      'Walk through the Gothic Quarter in the evening',
-      'Avoid tourist restaurants near major attractions'
-    ]
-  },
-  {
-    'id': '3',
-    'tripTitle': 'Romantic Parisian Adventure',
-    'authorName': 'John Smith',
-    'authorImage': 'https://i.pravatar.cc/150?img=12',
-    'totalDays': 6,
-    'tripMood': 'Romantic',
-    'overallRating': 4.7,
-    'totalBudget': 2200,
-    'currency': 'EUR',
-    'budgetBreakdown': {
-      'accommodation': 40,
-      'food': 35,
-      'transport': 10,
-      'activities': 15,
-    },
-    'places': [
-      {
-        'name': 'Eiffel Tower',
-        'day': 1,
-        'timeSpent': '4 hours',
-        'location': {
-          'latitude': 48.8584,
-          'longitude': 2.2945,
-          'address': 'Champ de Mars, 5 Avenue Anatole France, Paris, France'
-        },
-        'images': [
-          'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1543349689-9a4d426bee8e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1502602898536-47ad22581b52?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
-        ],
-        'activities': [
-          'Elevator ride to top floor',
-          'Seine river picnic',
-          'Evening light show viewing',
-          'Romantic dinner nearby',
-          'Photography session'
-        ],
-        'experiences': [
-          {
-            'title': 'City of Lights',
-            'description': 'The evening light show transforms the tower into pure magic',
-            'rating': 5.0
-          },
-          {
-            'title': 'Panoramic Views',
-            'description': 'Breathtaking views of Paris from the summit',
-            'rating': 4.8
-          }
-        ],
-        'budget': 180,
-        'recommendations': {
-          'restaurants': [
-            {
-              'name': 'Le Comptoir du Relais',
-              'type': 'Bistro',
-              'rating': 4.5,
-              'priceRange': '45',
-              'specialty': 'Traditional French bistro cuisine'
+              'name': 'Fortaleza Restaurant',
+              'type': 'Fine Dining',
+              'rating': 4.7,
+              'priceRange': 'LKR 3000-5000',
+              'specialty': 'Upscale dining within the fort walls'
             }
           ]
         }
       },
       {
-        'name': 'Louvre Museum',
+        'name': 'Unawatuna Beach',
         'day': 2,
         'timeSpent': '6 hours',
         'location': {
-          'latitude': 48.8606,
-          'longitude': 2.3376,
-          'address': 'Rue de Rivoli, Paris, France'
+          'latitude': 6.0108,
+          'longitude': 80.2167,
+          'address': 'Unawatuna, Galle District, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1502602898536-47ad22581b52?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1566139996634-082433de5b14?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1584466977773-e625c37cdd50?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1533105079780-92b9be482077?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1549144511-f099e773c147?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
         ],
         'activities': [
-          'Mona Lisa viewing',
-          'Ancient Egyptian collection',
-          'Venus de Milo sculpture',
-          'Palace architecture tour',
-          'Garden stroll'
+          'Swimming in crystal clear blue waters',
+          'Snorkeling among coral reefs',
+          'Surfing lessons for beginners',
+          'Beachside dining and fresh seafood',
+          'Relaxing under palm trees'
         ],
         'experiences': [
           {
-            'title': 'Art Masterpieces',
-            'description': 'Standing before the Mona Lisa and other world-famous artworks',
-            'rating': 4.9
+            'title': 'Golden Crescent Beach',
+            'description': 'One of Sri Lanka\'s most beautiful beaches with perfect swimming conditions',
+            'rating': 4.8
           },
           {
-            'title': 'Palace History',
-            'description': 'Walking through the former royal palace with incredible architecture',
-            'rating': 4.7
+            'title': 'Underwater Paradise',
+            'description': 'Snorkeling among colorful tropical fish and coral formations',
+            'rating': 4.6
           }
         ],
-        'budget': 220,
+        'budget': 12000,
         'recommendations': {
           'restaurants': [
             {
-              'name': 'Loulou',
-              'type': 'French Restaurant',
-              'rating': 4.4,
-              'priceRange': '45',
-              'specialty': 'Modern French cuisine in Tuileries Garden'
+              'name': 'Lucky Tuna',
+              'type': 'Seafood',
+              'rating': 4.5,
+              'priceRange': 'LKR 2500-4000',
+              'specialty': 'Fresh tuna and other local seafood'
             }
           ]
         }
       },
       {
-        'name': 'Notre-Dame',
+        'name': 'Mirissa Whale Watching',
         'day': 3,
-        'timeSpent': '3 hours',
+        'timeSpent': '5 hours',
         'location': {
-          'latitude': 48.8530,
-          'longitude': 2.3499,
-          'address': '6 Parvis Notre-Dame, Paris, France'
+          'latitude': 5.9467,
+          'longitude': 80.4610,
+          'address': 'Mirissa Harbor, Matara District, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1431274172761-fca41d930114?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1502602898536-47ad22581b52?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1533105079780-92b9be482077?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1568393691622-c7ba131d63b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
           'https://images.unsplash.com/photo-1549144511-f099e773c147?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
         ],
         'activities': [
-          'Gothic architecture exploration',
-          'Rose window viewing',
-          'Seine riverside walk',
-          'Île de la Cité discovery',
-          'Historical reflection'
+          'Early morning whale watching boat tour',
+          'Spotting blue whales and sperm whales',
+          'Dolphin watching and photography',
+          'Learning about marine conservation',
+          'Relaxing at Mirissa Beach after tour'
         ],
         'experiences': [
           {
-            'title': 'Gothic Majesty',
-            'description': 'The stunning Gothic architecture and rose windows are breathtaking',
-            'rating': 4.8
+            'title': 'Blue Whale Encounters',
+            'description': 'Witnessing the largest animals on Earth in their natural habitat',
+            'rating': 5.0
           },
           {
-            'title': 'Historical Significance',
-            'description': 'Standing in the heart of Paris\'s history and cultural heritage',
-            'rating': 4.6
+            'title': 'Marine Wildlife Safari',
+            'description': 'Spotting various dolphin species and sea turtles',
+            'rating': 4.7
           }
         ],
-        'budget': 150,
+        'budget': 15000,
         'recommendations': {
           'restaurants': [
             {
-              'name': 'Café de Flore',
-              'type': 'Historic Café',
-              'rating': 4.2,
-              'priceRange': '45',
-              'specialty': 'Classic Parisian café experience'
+              'name': 'Mirissa Eye Beach Restaurant',
+              'type': 'Seafood & International',
+              'rating': 4.4,
+              'priceRange': 'LKR 2000-3000',
+              'specialty': 'Beachfront dining with ocean views'
             }
           ]
         }
@@ -608,206 +602,215 @@ final List<Map<String, dynamic>> journeyDetailsData = [
     'overallRecommendations': {
       'hotels': [
         {
-          'name': 'Hotel Plaza Athénée',
+          'name': 'Amangalla',
           'rating': 4.8,
-          'priceRange': '45',
-          'location': 'Champs-Élysées',
-          'features': ['Luxury suite', 'Eiffel Tower views', 'Michelin dining']
+          'priceRange': 'LKR 50000-80000',
+          'location': 'Galle Fort',
+          'features': ['Luxury heritage hotel', 'Colonial elegance', 'Spa treatments']
         },
         {
-          'name': 'Hotel des Grands Boulevards',
-          'rating': 4.4,
-          'priceRange': '45',
-          'location': 'Grands Boulevards',
-          'features': ['Boutique hotel', 'Central location', 'Modern comfort']
+          'name': 'Fort Printers',
+          'rating': 4.6,
+          'priceRange': 'LKR 25000-40000',
+          'location': 'Galle Fort',
+          'features': ['Boutique hotel', 'Historic building', 'Modern amenities']
         }
       ],
       'restaurants': [
         {
-          'name': 'L\'Ambroisie',
-          'type': 'Fine Dining',
-          'rating': 4.9,
-          'priceRange': '45',
-          'specialty': 'Three Michelin star French cuisine'
+          'name': 'Pedlar\'s Inn Cafe',
+          'type': 'Fusion',
+          'rating': 4.6,
+          'priceRange': 'LKR 2000-3500',
+          'specialty': 'Colonial charm with international cuisine'
         },
         {
-          'name': 'Breizh Café',
-          'type': 'Crêperie',
-          'rating': 4.6,
-          'priceRange': '45',
-          'specialty': 'Modern take on traditional crêpes'
+          'name': 'Lucky Tuna',
+          'type': 'Seafood',
+          'rating': 4.5,
+          'priceRange': 'LKR 2500-4000',
+          'specialty': 'Fresh catch of the day'
         }
       ],
       'transportation': [
         {
-          'name': 'Navigo Weekly Pass',
-          'type': 'Metro Pass',
-          'rating': 4.3,
-          'price': '30 EUR',
-          'duration': '7 days',
-          'benefits': ['Unlimited metro', 'Bus access', 'RER trains']
+          'name': 'Coastal Train',
+          'type': 'Scenic Railway',
+          'rating': 4.8,
+          'price': 'LKR 300-500',
+          'duration': '2-3 hours',
+          'benefits': ['Ocean views', 'Local experience', 'Affordable travel']
         }
       ]
     },
     'tips': [
-      'Book museum tickets online to skip lines',
-      'Learn basic French greetings - locals appreciate it',
-      'Enjoy long meals - dining is an experience in Paris',
-      'Walk along the Seine at sunset for romantic views',
-      'Carry a reusable water bottle - public fountains everywhere'
+      'Book whale watching tours in advance (season: Nov-Apr)',
+      'Best time to visit Galle Fort is during sunset',
+      'Try fresh seafood at beachside restaurants',
+      'Carry reef-safe sunscreen for water activities',
+      'Take the scenic coastal train for beautiful views'
     ]
   },
   {
     'id': '4',
-    'tripTitle': 'Big Apple City Exploration',
-    'authorName': 'Emma Wilson',
-    'authorImage': 'https://i.pravatar.cc/150?img=16',
-    'totalDays': 7,
-    'tripMood': 'Urban Explorer',
-    'overallRating': 4.5,
-    'totalBudget': 3200,
-    'currency': 'USD',
+    'tripTitle': 'Hill Country Tea Trail Adventure',
+    'authorName': 'Anjali Mendis',
+    'authorImage': 'https://i.pravatar.cc/150?img=27',
+    'totalDays': 5,
+    'tripMood': 'Mountain Explorer',
+    'overallRating': 4.9,
+    'totalBudget': 70000,
+    'currency': 'LKR',
     'budgetBreakdown': {
-      'accommodation': 45,
+      'accommodation': 35,
       'food': 25,
-      'transport': 10,
-      'activities': 20,
+      'transport': 25,
+      'activities': 15,
     },
     'places': [
       {
-        'name': 'Times Square',
+        'name': 'Nine Arch Bridge',
         'day': 1,
-        'timeSpent': '4 hours',
-        'location': {
-          'latitude': 40.7580,
-          'longitude': -73.9855,
-          'address': 'Times Square, New York, NY, USA'
-        },
-        'images': [
-          'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1500916434205-0c77489c6cf7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
-        ],
-        'activities': [
-          'Broadway show watching',
-          'Street performer viewing',
-          'Shopping in flagship stores',
-          'LED billboard spotting',
-          'Tourist photography'
-        ],
-        'experiences': [
-          {
-            'title': 'The Crossroads of the World',
-            'description': 'The energy and chaos of Times Square is uniquely New York',
-            'rating': 4.3
-          },
-          {
-            'title': 'Broadway Magic',
-            'description': 'Caught an amazing Broadway show - pure entertainment',
-            'rating': 4.8
-          }
-        ],
-        'budget': 280,
-        'recommendations': {
-          'restaurants': [
-            {
-              'name': 'Junior\'s Restaurant',
-              'type': 'American Diner',
-              'rating': 4.4,
-              'priceRange': '45',
-              'specialty': 'Famous New York cheesecake'
-            }
-          ]
-        }
-      },
-      {
-        'name': 'Central Park',
-        'day': 2,
-        'timeSpent': '5 hours',
-        'location': {
-          'latitude': 40.7829,
-          'longitude': -73.9654,
-          'address': 'Central Park, New York, NY, USA'
-        },
-        'images': [
-          'https://images.unsplash.com/photo-1485871981521-5b1fd3805eee?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
-        ],
-        'activities': [
-          'Boat ride on the lake',
-          'Strawberry Fields visit',
-          'Zoo exploration',
-          'Picnic on the Great Lawn',
-          'Horse carriage ride'
-        ],
-        'experiences': [
-          {
-            'title': 'Urban Oasis',
-            'description': 'A peaceful escape from the bustling city streets',
-            'rating': 4.7
-          },
-          {
-            'title': 'Seasonal Beauty',
-            'description': 'The park\'s autumn colors were absolutely stunning',
-            'rating': 4.9
-          }
-        ],
-        'budget': 120,
-        'recommendations': {
-          'restaurants': [
-            {
-              'name': 'The Loeb Boathouse',
-              'type': 'American Cuisine',
-              'rating': 4.2,
-              'priceRange': '45',
-              'specialty': 'Lakeside dining in Central Park'
-            }
-          ]
-        }
-      },
-      {
-        'name': 'Brooklyn Bridge',
-        'day': 3,
         'timeSpent': '3 hours',
         'location': {
-          'latitude': 40.7061,
-          'longitude': -73.9969,
-          'address': 'Brooklyn Bridge, New York, NY, USA'
+          'latitude': 6.8728,
+          'longitude': 81.0550,
+          'address': 'Gotuwala, Ella, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1518391846015-55a9cc003b25?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1546436836-07a91091f160?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-          'https://images.unsplash.com/photo-1505489007338-1c8d46ba7d69?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1464822759844-d150baef493e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
         ],
         'activities': [
-          'Bridge walk across to Brooklyn',
-          'Manhattan skyline photography',
-          'DUMBO neighborhood exploration',
-          'Sunset viewing',
-          'Historical architecture appreciation'
+          'Photography of the iconic stone bridge',
+          'Train spotting (10:30 AM and 2:30 PM trains)',
+          'Walking through tea plantations to reach bridge',
+          'Enjoying panoramic valley views',
+          'Meeting local tea workers'
         ],
         'experiences': [
           {
-            'title': 'Iconic Views',
-            'description': 'The classic Manhattan skyline view from the bridge is unbeatable',
+            'title': 'Engineering Marvel',
+            'description': 'Witnessing the 100-year-old bridge built entirely of stone, brick and cement',
+            'rating': 4.9
+          },
+          {
+            'title': 'Train Over Bridge',
+            'description': 'Perfect timing to capture the blue train crossing the nine arches',
+            'rating': 5.0
+          }
+        ],
+        'budget': 5000,
+        'recommendations': {
+          'restaurants': [
+            {
+              'name': 'Curd Shop Ella',
+              'type': 'Local Delicacy',
+              'rating': 4.7,
+              'priceRange': 'LKR 500-800',
+              'specialty': 'Fresh buffalo curd with treacle'
+            }
+          ],
+          'cafes': [
+            {
+              'name': 'Cafe Chill',
+              'type': 'Mountain Cafe',
+              'rating': 4.4,
+              'priceRange': 'LKR 800-1200',
+              'specialty': 'Coffee with mountain views'
+            }
+          ]
+        }
+      },
+      {
+        'name': 'Little Adam\'s Peak',
+        'day': 2,
+        'timeSpent': '4 hours',
+        'location': {
+          'latitude': 6.8667,
+          'longitude': 81.0500,
+          'address': 'Ella, Badulla District, Sri Lanka'
+        },
+        'images': [
+          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1548013146-72479768bada?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1574087980103-e2c7e3a37628?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+        ],
+        'activities': [
+          'Easy hiking to the summit (1141m)',
+          'Sunrise viewing from the peak',
+          'Photography of hill country landscape',
+          'Walking through tea plantations',
+          'Picnicking with panoramic views'
+        ],
+        'experiences': [
+          {
+            'title': 'Sunrise Summit',
+            'description': 'Breathtaking 360-degree views of the hill country at dawn',
             'rating': 5.0
           },
           {
-            'title': 'Engineering Marvel',
-            'description': 'Appreciated the incredible 19th-century engineering and design',
-            'rating': 4.6
+            'title': 'Tea Country Panorama',
+            'description': 'Rolling hills covered in emerald green tea bushes stretching to horizon',
+            'rating': 4.8
           }
         ],
-        'budget': 90,
+        'budget': 3000,
         'recommendations': {
           'restaurants': [
             {
-              'name': 'Time Out Market',
-              'type': 'Food Hall',
+              'name': 'AK Ristoro',
+              'type': 'Italian & Local',
+              'rating': 4.5,
+              'priceRange': 'LKR 1500-2500',
+              'specialty': 'Wood-fired pizza with mountain views'
+            }
+          ]
+        }
+      },
+      {
+        'name': 'Tea Plantation Experience',
+        'day': 3,
+        'timeSpent': '5 hours',
+        'location': {
+          'latitude': 6.8833,
+          'longitude': 81.0667,
+          'address': 'Lipton\'s Seat, Haputale, Sri Lanka'
+        },
+        'images': [
+          'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1464822759844-d150baef493e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+        ],
+        'activities': [
+          'Tea factory tour and processing demonstration',
+          'Tea tasting session with expert',
+          'Learning about different tea grades',
+          'Walking through active tea plantations',
+          'Visiting Lipton\'s Seat viewpoint'
+        ],
+        'experiences': [
+          {
+            'title': 'Ceylon Tea Heritage',
+            'description': 'Learning the complete process from leaf to cup at authentic tea factory',
+            'rating': 4.8
+          },
+          {
+            'title': 'Lipton\'s Legacy',
+            'description': 'Standing where Sir Thomas Lipton once surveyed his tea empire',
+            'rating': 4.7
+          }
+        ],
+        'budget': 8000,
+        'recommendations': {
+          'restaurants': [
+            {
+              'name': 'Grand Indian Restaurant',
+              'type': 'Indian & Chinese',
               'rating': 4.3,
-              'priceRange': '45',
-              'specialty': 'Diverse NYC food vendors under one roof'
+              'priceRange': 'LKR 1200-2000',
+              'specialty': 'Spicy curries to warm up in cool hills'
             }
           ]
         }
@@ -816,53 +819,467 @@ final List<Map<String, dynamic>> journeyDetailsData = [
     'overallRecommendations': {
       'hotels': [
         {
-          'name': 'The Plaza Hotel',
-          'rating': 4.6,
-          'priceRange': '45',
-          'location': 'Midtown Manhattan',
-          'features': ['Luxury historic hotel', 'Central Park views', 'Iconic location']
+          'name': 'Tea Bush Hotel',
+          'rating': 4.5,
+          'priceRange': 'LKR 15000-25000',
+          'location': 'Ella',
+          'features': ['Tea plantation views', 'Colonial architecture', 'Mountain air']
         },
         {
-          'name': 'Pod Hotels',
-          'rating': 4.1,
-          'priceRange': '45',
-          'location': 'Multiple locations',
-          'features': ['Modern pods', 'Tech-friendly', 'Budget-conscious']
+          'name': 'Ella Mount Heaven',
+          'rating': 4.3,
+          'priceRange': 'LKR 8000-15000',
+          'location': 'Ella Town',
+          'features': ['Budget friendly', 'Central location', 'Mountain views']
         }
       ],
       'restaurants': [
         {
-          'name': 'Katz\'s Delicatessen',
-          'type': 'Jewish Deli',
+          'name': 'AK Ristoro',
+          'type': 'Italian',
           'rating': 4.5,
-          'priceRange': '45',
-          'specialty': 'Famous pastrami sandwiches since 1888'
+          'priceRange': 'LKR 1500-2500',
+          'specialty': 'Wood-fired pizza in the mountains'
         },
         {
-          'name': 'Joe\'s Pizza',
-          'type': 'Pizza',
-          'rating': 4.4,
-          'priceRange': '45',
-          'specialty': 'Classic New York style pizza slices'
+          'name': 'Curd Shop Ella',
+          'type': 'Local',
+          'rating': 4.7,
+          'priceRange': 'LKR 500-800',
+          'specialty': 'Traditional buffalo curd dessert'
         }
       ],
       'transportation': [
         {
-          'name': 'MetroCard',
-          'type': 'Subway Pass',
-          'rating': 4.0,
-          'price': '33 USD',
-          'duration': '7 days',
-          'benefits': ['Unlimited subway', 'Bus access', 'Express trains']
+          'name': 'Hill Country Train',
+          'type': 'Scenic Railway',
+          'rating': 4.9,
+          'price': 'LKR 500-1000',
+          'duration': '3-4 hours',
+          'benefits': ['Most scenic train ride', 'Tea plantation views', 'Cultural experience']
         }
       ]
     },
     'tips': [
-      'Walk fast and stay aware - this is New York!',
-      'Tip 18-20% at restaurants - it\'s expected',
-      'Use the subway - it\'s faster than taxis in traffic',
-      'Book Broadway shows in advance for better seats',
-      'Don\'t drive in Manhattan - public transport is better'
+      'Take the train from Kandy to Ella - one of world\'s most scenic rides',
+      'Visit Nine Arch Bridge at 10:30 AM or 2:30 PM for train photos',
+      'Bring warm clothes - it gets cool in the hills',
+      'Buy fresh tea directly from factories for best prices',
+      'Start Little Adam\'s Peak hike early for sunrise views'
+    ]
+  },
+  {
+    'id': '5',
+    'tripTitle': 'Wildlife Safari Adventure',
+    'authorName': 'Dinesh Jayawardena',
+    'authorImage': 'https://i.pravatar.cc/150?img=39',
+    'totalDays': 4,
+    'tripMood': 'Wildlife Explorer',
+    'overallRating': 4.8,
+    'totalBudget': 95000,
+    'currency': 'LKR',
+    'budgetBreakdown': {
+      'accommodation': 40,
+      'food': 20,
+      'transport': 25,
+      'activities': 15,
+    },
+    'places': [
+      {
+        'name': 'Yala National Park Block 1',
+        'day': 1,
+        'timeSpent': '6 hours',
+        'location': {
+          'latitude': 6.3779,
+          'longitude': 81.5205,
+          'address': 'Yala National Park, Hambantota District, Sri Lanka'
+        },
+        'images': [
+          'https://images.unsplash.com/photo-1549144511-f099e773c147?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1568393691622-c7ba131d63b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+        ],
+        'activities': [
+          'Early morning leopard tracking safari',
+          'Elephant herd observation',
+          'Bird watching (220+ species)',
+          'Photography of wildlife and landscapes',
+          'Visiting ancient Buddhist ruins'
+        ],
+        'experiences': [
+          {
+            'title': 'Leopard Capital',
+            'description': 'Highest leopard density in the world - spotted 2 magnificent cats!',
+            'rating': 5.0
+          },
+          {
+            'title': 'Elephant Encounters',
+            'description': 'Close encounters with wild elephant herds in their natural habitat',
+            'rating': 4.9
+          }
+        ],
+        'budget': 25000,
+        'recommendations': {
+          'restaurants': [
+            {
+              'name': 'Chaarya Resort Restaurant',
+              'type': 'International & Local',
+              'rating': 4.4,
+              'priceRange': 'LKR 2500-4000',
+              'specialty': 'Buffet meals with safari atmosphere'
+            }
+          ]
+        }
+      },
+      {
+        'name': 'Bundala National Park',
+        'day': 2,
+        'timeSpent': '4 hours',
+        'location': {
+          'latitude': 6.1957,
+          'longitude': 81.2319,
+          'address': 'Bundala National Park, Hambantota District, Sri Lanka'
+        },
+        'images': [
+          'https://images.unsplash.com/photo-1568393691622-c7ba131d63b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1549144511-f099e773c147?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+        ],
+        'activities': [
+          'Migratory bird watching (Sep-Mar season)',
+          'Flamingo colony observation',
+          'Crocodile spotting in lagoons',
+          'Photography of wetland ecosystems',
+          'Learning about bird migration patterns'
+        ],
+        'experiences': [
+          {
+            'title': 'Flamingo Flocks',
+            'description': 'Thousands of greater flamingos creating pink carpets across lagoons',
+            'rating': 4.8
+          },
+          {
+            'title': 'Wetland Paradise',
+            'description': 'UNESCO Biosphere Reserve with incredible biodiversity',
+            'rating': 4.6
+          }
+        ],
+        'budget': 15000,
+        'recommendations': {
+          'restaurants': [
+            {
+              'name': 'Lagoon Paradise Restaurant',
+              'type': 'Seafood',
+              'rating': 4.2,
+              'priceRange': 'LKR 2000-3000',
+              'specialty': 'Fresh lagoon crab and prawns'
+            }
+          ]
+        }
+      },
+      {
+        'name': 'Palatupana Beach',
+        'day': 3,
+        'timeSpent': '3 hours',
+        'location': {
+          'latitude': 6.3167,
+          'longitude': 81.6167,
+          'address': 'Palatupana, Yala, Sri Lanka'
+        },
+        'images': [
+          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1533105079780-92b9be482077?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1549144511-f099e773c147?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+        ],
+        'activities': [
+          'Relaxing on pristine untouched beach',
+          'Swimming in clear waters',
+          'Beachcombing and shell collecting',
+          'Sunset photography',
+          'Picnicking on the shore'
+        ],
+        'experiences': [
+          {
+            'title': 'Wild Beach Paradise',
+            'description': 'Untouched coastline where jungle meets the ocean',
+            'rating': 4.7
+          },
+          {
+            'title': 'Peaceful Solitude',
+            'description': 'Remote beach with no crowds - pure natural beauty',
+            'rating': 4.8
+          }
+        ],
+        'budget': 5000,
+        'recommendations': {
+          'restaurants': [
+            {
+              'name': 'Beach Picnic Setup',
+              'type': 'Outdoor Dining',
+              'rating': 4.0,
+              'priceRange': 'LKR 1500-2000',
+              'specialty': 'Packed meals for beach enjoyment'
+            }
+          ]
+        }
+      }
+    ],
+    'overallRecommendations': {
+      'hotels': [
+        {
+          'name': 'Chaarya Resort & Spa',
+          'rating': 4.6,
+          'priceRange': 'LKR 20000-35000',
+          'location': 'Yala',
+          'features': ['Luxury tented safari', 'Spa treatments', 'Wildlife views']
+        },
+        {
+          'name': 'Kithala Resort',
+          'rating': 4.3,
+          'priceRange': 'LKR 12000-20000',
+          'location': 'Yala Junction',
+          'features': ['Safari lodge', 'Pool', 'Local cuisine']
+        }
+      ],
+      'restaurants': [
+        {
+          'name': 'Chaarya Resort Restaurant',
+          'type': 'International',
+          'rating': 4.4,
+          'priceRange': 'LKR 2500-4000',
+          'specialty': 'Fine dining with wildlife ambiance'
+        },
+        {
+          'name': 'Lagoon Paradise',
+          'type': 'Seafood',
+          'rating': 4.2,
+          'priceRange': 'LKR 2000-3000',
+          'specialty': 'Fresh local seafood'
+        }
+      ],
+      'transportation': [
+        {
+          'name': 'Safari Jeep with Guide',
+          'type': 'Wildlife Vehicle',
+          'rating': 4.8,
+          'price': 'LKR 12000-15000/day',
+          'duration': 'Full day',
+          'benefits': ['Expert guide', 'Wildlife spotting', 'Park access']
+        }
+      ]
+    },
+    'tips': [
+      'Book safari tours in advance during peak season (Dec-Apr)',
+      'Bring binoculars and camera with telephoto lens',
+      'Wear neutral-colored clothing for wildlife viewing',
+      'Start early morning safaris (6 AM) for best animal sightings',
+      'Respect park rules and maintain distance from animals'
+    ]
+  },
+  {
+    'id': '6',
+    'tripTitle': 'Little England in the Hills',
+    'authorName': 'Chamara Gunasekara',
+    'authorImage': 'https://i.pravatar.cc/150?img=34',
+    'totalDays': 4,
+    'tripMood': 'Mountain Retreat',
+    'overallRating': 4.6,
+    'totalBudget': 80000,
+    'currency': 'LKR',
+    'budgetBreakdown': {
+      'accommodation': 40,
+      'food': 25,
+      'transport': 20,
+      'activities': 15,
+    },
+    'places': [
+      {
+        'name': 'Horton Plains & World\'s End',
+        'day': 1,
+        'timeSpent': '6 hours',
+        'location': {
+          'latitude': 6.8067,
+          'longitude': 80.7933,
+          'address': 'Horton Plains National Park, Nuwara Eliya District, Sri Lanka'
+        },
+        'images': [
+          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1548013146-72479768bada?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1574087980103-e2c7e3a37628?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+        ],
+        'activities': [
+          'Hiking the 9km circular trail',
+          'Standing at World\'s End precipice (4000ft drop)',
+          'Photography at Baker\'s Falls',
+          'Wildlife spotting (sambar deer, endemic birds)',
+          'Experiencing cloud forest ecosystem'
+        ],
+        'experiences': [
+          {
+            'title': 'World\'s End Cliff',
+            'description': 'Standing at the dramatic 4000-foot sheer drop with panoramic views',
+            'rating': 5.0
+          },
+          {
+            'title': 'Cloud Forest Trek',
+            'description': 'Hiking through misty montane grasslands and dwarf forests',
+            'rating': 4.8
+          }
+        ],
+        'budget': 15000,
+        'recommendations': {
+          'restaurants': [
+            {
+              'name': 'Grand Hotel Restaurant',
+              'type': 'Colonial Fine Dining',
+              'rating': 4.5,
+              'priceRange': 'LKR 3000-5000',
+              'specialty': 'British colonial cuisine in historic setting'
+            }
+          ]
+        }
+      },
+      {
+        'name': 'Gregory Lake & Nuwara Eliya Town',
+        'day': 2,
+        'timeSpent': '5 hours',
+        'location': {
+          'latitude': 6.9497,
+          'longitude': 80.7891,
+          'address': 'Gregory Lake, Nuwara Eliya, Sri Lanka'
+        },
+        'images': [
+          'https://images.unsplash.com/photo-1548013146-72479768bada?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1574087980103-e2c7e3a37628?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+        ],
+        'activities': [
+          'Boat rides on Gregory Lake',
+          'Walking around the scenic lake perimeter',
+          'Exploring colonial architecture in town',
+          'Shopping for fresh strawberries and vegetables',
+          'Visiting Victoria Park'
+        ],
+        'experiences': [
+          {
+            'title': 'Little England Charm',
+            'description': 'Strolling through colonial-era town that feels like rural England',
+            'rating': 4.6
+          },
+          {
+            'title': 'Cool Mountain Air',
+            'description': 'Refreshing climate at 6200 feet above sea level',
+            'rating': 4.7
+          }
+        ],
+        'budget': 8000,
+        'recommendations': {
+          'restaurants': [
+            {
+              'name': 'Milano Restaurant',
+              'type': 'Italian & Chinese',
+              'rating': 4.3,
+              'priceRange': 'LKR 2000-3000',
+              'specialty': 'Warm comfort food for cool mountain weather'
+            }
+          ]
+        }
+      },
+      {
+        'name': 'Pedro Tea Estate',
+        'day': 3,
+        'timeSpent': '4 hours',
+        'location': {
+          'latitude': 6.9333,
+          'longitude': 80.7667,
+          'address': 'Pedro Tea Estate, Nuwara Eliya, Sri Lanka'
+        },
+        'images': [
+          'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1464822759844-d150baef493e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+        ],
+        'activities': [
+          'Tea factory tour and production process',
+          'Tea tasting of high-altitude Ceylon tea',
+          'Walking through manicured tea gardens',
+          'Learning about British tea plantation history',
+          'Purchasing premium teas directly from source'
+        ],
+        'experiences': [
+          {
+            'title': 'High-Grown Ceylon Tea',
+            'description': 'Tasting the finest quality tea grown at optimal altitude',
+            'rating': 4.8
+          },
+          {
+            'title': 'Colonial Tea Heritage',
+            'description': 'Understanding the British colonial legacy in Sri Lankan tea industry',
+            'rating': 4.5
+          }
+        ],
+        'budget': 6000,
+        'recommendations': [
+          {
+            'name': 'Hill Club Restaurant',
+            'type': 'British Colonial',
+            'rating': 4.4,
+            'priceRange': 'LKR 2500-4000',
+            'specialty': 'Traditional English fare in gentleman\'s club setting'
+          }
+        ]
+      }
+    ],
+    'overallRecommendations': {
+      'hotels': [
+        {
+          'name': 'Grand Hotel Nuwara Eliya',
+          'rating': 4.3,
+          'priceRange': 'LKR 18000-30000',
+          'location': 'Nuwara Eliya',
+          'features': ['Historic colonial hotel', 'Golf course', 'Traditional afternoon tea']
+        },
+        {
+          'name': 'The Hill Club',
+          'rating': 4.5,
+          'priceRange': 'LKR 25000-40000',
+          'location': 'Nuwara Eliya',
+          'features': ['Gentleman\'s club', 'Fireplace dining', 'Colonial elegance']
+        }
+      ],
+      'restaurants': [
+        {
+          'name': 'Grand Hotel Restaurant',
+          'type': 'Colonial',
+          'rating': 4.5,
+          'priceRange': 'LKR 3000-5000',
+          'specialty': 'British colonial fine dining'
+        },
+        {
+          'name': 'Milano Restaurant',
+          'type': 'Multi-cuisine',
+          'rating': 4.3,
+          'priceRange': 'LKR 2000-3000',
+          'specialty': 'Comfort food for cool weather'
+        }
+      ],
+      'transportation': [
+        {
+          'name': 'Highland Train',
+          'type': 'Mountain Railway',
+          'rating': 4.7,
+          'price': 'LKR 800-1200',
+          'duration': '4-5 hours',
+          'benefits': ['Scenic mountain views', 'Tea plantation vistas', 'Colonial era experience']
+        }
+      ]
+    },
+    'tips': [
+      'Start Horton Plains hike very early (6 AM) before clouds cover views',
+      'Bring warm clothes - temperature can drop to 5°C at night',
+      'Book accommodation in advance during peak season (Dec-Mar)',
+      'Try fresh strawberries and cream - local specialty',
+      'Visit during April for rhododendron blooms in the hills'
     ]
   }
 ];

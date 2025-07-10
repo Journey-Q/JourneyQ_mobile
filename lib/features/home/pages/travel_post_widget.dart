@@ -3,7 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 
 class TravelPostWidget extends StatefulWidget {
-  final String postId; // Add postId to map to journey details
+  final String postId;
   final String userName;
   final String location;
   final String userImage;
@@ -21,7 +21,7 @@ class TravelPostWidget extends StatefulWidget {
 
   const TravelPostWidget({
     super.key,
-    required this.postId, // Add this required field
+    required this.postId,
     required this.userName,
     required this.location,
     required this.userImage,
@@ -66,6 +66,24 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
   // Handle "View Journey" button tap
   void _onViewJourney() {
     context.push('/journey/${widget.postId}');
+  }
+
+  // Handle save to bucket list
+  void _onSavePost() {
+    setState(() {
+      _isBookmarked = !_isBookmarked;
+    });
+    
+    // Show feedback to user
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          _isBookmarked ? 'Post saved to bucket list' : 'Post removed from bucket list',
+        ),
+        duration: const Duration(seconds: 2),
+        backgroundColor: _isBookmarked ? Colors.green : Colors.grey[600],
+      ),
+    );
   }
 
   @override
@@ -143,17 +161,28 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
               setState(() {
                 _isFollowed = !_isFollowed;
               });
+              
+              // Show feedback
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    _isFollowed ? 'Following ${widget.userName}' : 'Unfollowed ${widget.userName}',
+                  ),
+                  duration: const Duration(seconds: 2),
+                  backgroundColor: _isFollowed ? Colors.blue : Colors.grey[600],
+                ),
+              );
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: _isFollowed ? Colors.blue[100] : Colors.grey[300],
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 _isFollowed ? 'Following' : 'Follow',
-                style: const TextStyle(
-                  color: Colors.black87,
+                style: TextStyle(
+                  color: _isFollowed ? Colors.blue[800] : Colors.black87,
                   fontWeight: FontWeight.w500,
                   fontSize: 12,
                 ),
@@ -270,6 +299,8 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
                             ? loadingProgress.cumulativeBytesLoaded /
                                   loadingProgress.expectedTotalBytes!
                             : null,
+                        strokeWidth: 3,
+                        color: Colors.blue[400],
                       ),
                     ),
                   );
@@ -277,8 +308,18 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     color: Colors.grey[300],
-                    child: const Center(
-                      child: Icon(Icons.error, color: Colors.grey, size: 50),
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.broken_image, color: Colors.grey[600], size: 50),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Failed to load image',
+                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },
@@ -334,48 +375,74 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
                   color: _isLiked ? Colors.red : Colors.black,
                   size: 24,
                 ),
-                const SizedBox(width: 2),
+                const SizedBox(width: 4),
                 Text(
                   '${widget.likesCount + (_isLiked ? 1 : 0)}',
                   style: const TextStyle(
                     color: Colors.black87,
                     fontWeight: FontWeight.w500,
+                    fontSize: 14,
                   ),
                 ),
               ],
             ),
           ),
-
-          const SizedBox(width: 8),
-
+          
+          const SizedBox(width: 16),
+          
           // Comment Button
           GestureDetector(
             onTap: widget.onComment,
             child: Row(
               children: [
                 Icon(LucideIcons.messageCircle, color: Colors.black, size: 24),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
                 Text(
                   '${widget.commentsCount}',
                   style: const TextStyle(
                     color: Colors.black87,
                     fontWeight: FontWeight.w500,
+                    fontSize: 14,
                   ),
                 ),
               ],
             ),
           ),
-
-          const Spacer(),
-
-          // View Journey Button - Updated to use navigation
+          
+          const SizedBox(width: 16),
+          
+          // Save to Bucket List Button
           GestureDetector(
-            onTap: _onViewJourney, // Use the navigation method
+            onTap: _onSavePost,
+            child: Icon(
+              _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+              color: _isBookmarked ? Colors.blue : Colors.black,
+              size: 24,
+            ),
+          ),
+          
+          const Spacer(),
+          
+          // View Journey Button
+          GestureDetector(
+            onTap: _onViewJourney,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.blue,
+                gradient: LinearGradient(
+                  colors: [Colors.blue[400]!, Colors.blue[600]!],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
                 borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.3),
+                    spreadRadius: 0,
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: const Text(
                 'View Journey',
