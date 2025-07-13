@@ -3,6 +3,7 @@ import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:journeyq/features/authentication/pages/signup_page.dart';
 import 'package:journeyq/features/authentication/pages/login_page.dart';
 import 'package:journeyq/features/market_place/pages/index.dart';
+import 'package:journeyq/features/market_place/pages/BookingHistoryPage.dart';
 import 'package:journeyq/features/market_place/pages/viewall_hotels.dart';
 import 'package:journeyq/features/market_place/pages/hotel_details.dart';
 import 'package:journeyq/features/market_place/pages/booking_room.dart';
@@ -81,6 +82,12 @@ class AppRouter {
             child: MarketplacePage(),
           ),
           transitionType: PageTransitionType.none,
+        ),
+
+        TransitionGoRoute(
+          path: '/booking-history',
+          builder: (context, state) => const BookingHistoryPage(),
+          transitionType: PageTransitionType.slide,
         ),
 
         TransitionGoRoute(
