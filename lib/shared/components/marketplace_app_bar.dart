@@ -8,13 +8,13 @@ class JourneyQAppBar extends StatelessWidget implements PreferredSizeWidget {
   final int chatCount;
   final VoidCallback? onNotificationTap;
   final VoidCallback? onChatTap;
-  final VoidCallback? onMenuTap; // New callback for menu
+  final VoidCallback? onMenuTap;
   final String selectedLocation;
   final List<String> sriLankanCities;
   final TextEditingController searchController;
   final ValueChanged<String?>? onLocationChanged;
   final String searchHint;
-  final bool showMenuIcon; // New parameter to show/hide menu icon
+  final bool showMenuIcon;
 
   const JourneyQAppBar({
     super.key,
@@ -22,13 +22,13 @@ class JourneyQAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.chatCount = 0,
     this.onNotificationTap,
     this.onChatTap,
-    this.onMenuTap, // New parameter
+    this.onMenuTap,
     required this.selectedLocation,
     required this.sriLankanCities,
     required this.searchController,
     this.onLocationChanged,
     this.searchHint = 'Search...',
-    this.showMenuIcon = false, // Default to false for backward compatibility
+    this.showMenuIcon = false,
   });
 
   // Gradient colors from AppTheme
@@ -55,7 +55,7 @@ class JourneyQAppBar extends StatelessWidget implements PreferredSizeWidget {
     showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(
-        position.dx + button.size.width - 200, // Adjust position to align with button
+        position.dx + button.size.width - 200,
         position.dy + button.size.height,
         position.dx + button.size.width,
         position.dy + button.size.height + 200,
@@ -182,21 +182,17 @@ class JourneyQAppBar extends StatelessWidget implements PreferredSizeWidget {
   void _handleMenuSelection(BuildContext context, String selection) {
     switch (selection) {
       case 'booking_history':
-      // Navigate to booking history page
         context.push('/booking-history');
         break;
       case 'notifications':
-      // Handle notifications tap
         if (onNotificationTap != null) {
           onNotificationTap!();
         }
         break;
       case 'profile':
-      // Navigate to profile page
         context.push('/profile');
         break;
       case 'settings':
-      // Navigate to settings page
         context.push('/settings');
         break;
     }
@@ -204,187 +200,195 @@ class JourneyQAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent, // Remove Material 3 tinting
-        foregroundColor: Colors.black87, // Set text/icon colors
-        elevation: 1,
-        shadowColor: Colors.grey.withOpacity(0.2),
-        automaticallyImplyLeading: false,
-        titleSpacing: 20,
-        clipBehavior: Clip.none,
-        title: Column(
-          children: [
-            // Original title row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // JourneyQ Logo with Gradient
-                Flexible(
-                  child: ShaderMask(
-                    shaderCallback: gradientShader,
-                    child: Text(
-                      'MarketPlace',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1A1A1A),
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-
-                // Icons container
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Menu Icon (3 dots) - Always show with functionality
-                    Builder(
-                      builder: (BuildContext context) {
-                        return _buildIconWithBadge(
-                          icon: Icons.more_vert,
-                          count: 0, // Remove badge for cleaner look
-                          onTap: () => _showMenuOptions(context),
-                          isDark: false,
-                          isMenuIcon: false,
-                        );
-                      },
-                    ),
-
-                    const SizedBox(width: 10),
-
-                    // Chat Icon with Badge
-                    _buildIconWithBadge(
-                      icon: LucideIcons.messageCircle,
-                      count: chatCount,
-                      onTap: onChatTap,
-                      isDark: false,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            // Location and Search Row
-            Row(
-              children: [
-                // Location Dropdown
-                Expanded(
-                  flex: 2,
-                  child: Container(
-                    height: 45,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.grey.shade300,
-                        width: 0.5,
-                      ),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedLocation,
-                        icon: const Icon(Icons.keyboard_arrow_down, size: 20),
-                        isExpanded: true,
-                        isDense: true,
-                        items: sriLankanCities.map((String city) {
-                          return DropdownMenuItem<String>(
-                            value: city,
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.location_on,
-                                  color: Color(0xFF0088cc),
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    city,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: onLocationChanged,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Search Bar
-                Expanded(
-                  flex: 3,
-                  child: Container(
-                    height: 45,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.grey.shade300,
-                        width: 0.5,
-                      ),
-                    ),
-                    child: TextField(
-                      controller: searchController,
-                      style: const TextStyle(fontSize: 14),
-                      decoration: InputDecoration(
-                        hintText: searchHint,
-                        hintStyle: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.search,
-                          color: Color(0xFF0088cc),
-                          size: 20,
-                        ),
-                        suffixIcon: searchController.text.isNotEmpty
-                            ? IconButton(
-                          icon: Icon(
-                            Icons.clear,
-                            color: Colors.grey.shade600,
-                            size: 18,
-                          ),
-                          onPressed: () {
-                            searchController.clear();
-                          },
-                        )
-                            : null,
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                      ),
-                      onTap: () {
-                        // Optional: Navigate to dedicated search page
-                        // context.go('/search');
-                      },
-                      onSubmitted: (value) {
-                        // Handle search submission
-                        if (value.trim().isNotEmpty) {
-                          // Perform search logic here
-                          print('Searching for: $value');
-                        }
-                      },
-                    ),
-                  ),
-                ),
-              ],
+    return SafeArea(
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
           ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Title and icons row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // MarketPlace Logo with Gradient
+                  Flexible(
+                    child: ShaderMask(
+                      shaderCallback: gradientShader,
+                      child: const Text(
+                        'MarketPlace',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+
+                  // Icons container
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Menu Icon (3 dots)
+                      Builder(
+                        builder: (BuildContext context) {
+                          return _buildIconWithBadge(
+                            icon: Icons.more_vert,
+                            count: 0,
+                            onTap: () => _showMenuOptions(context),
+                            isDark: false,
+                            isMenuIcon: false,
+                          );
+                        },
+                      ),
+
+                      const SizedBox(width: 10),
+
+                      // Chat Icon with Badge
+                      _buildIconWithBadge(
+                        icon: LucideIcons.messageCircle,
+                        count: chatCount,
+                        onTap: onChatTap,
+                        isDark: false,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // Location and Search Row
+              Row(
+                children: [
+                  // Location Dropdown
+                  Expanded(
+                    flex: 2,
+                    child: Container(
+                      height: 45,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.grey.shade300,
+                          width: 0.5,
+                        ),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: selectedLocation,
+                          icon: const Icon(Icons.keyboard_arrow_down, size: 20),
+                          isExpanded: true,
+                          isDense: true,
+                          items: sriLankanCities.map((String city) {
+                            return DropdownMenuItem<String>(
+                              value: city,
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.location_on,
+                                    color: Color(0xFF0088cc),
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      city,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: onLocationChanged,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+
+                  // Search Bar
+                  Expanded(
+                    flex: 3,
+                    child: Container(
+                      height: 45,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.grey.shade300,
+                          width: 0.5,
+                        ),
+                      ),
+                      child: TextField(
+                        controller: searchController,
+                        style: const TextStyle(fontSize: 14),
+                        decoration: InputDecoration(
+                          hintText: searchHint,
+                          hintStyle: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: Color(0xFF0088cc),
+                            size: 20,
+                          ),
+                          suffixIcon: searchController.text.isNotEmpty
+                              ? IconButton(
+                            icon: Icon(
+                              Icons.clear,
+                              color: Colors.grey.shade600,
+                              size: 18,
+                            ),
+                            onPressed: () {
+                              searchController.clear();
+                            },
+                          )
+                              : null,
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
+                        ),
+                        onTap: () {
+                          // Optional: Navigate to dedicated search page
+                          // context.go('/search');
+                        },
+                        onSubmitted: (value) {
+                          // Handle search submission
+                          if (value.trim().isNotEmpty) {
+                            print('Searching for: $value');
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );
@@ -431,8 +435,8 @@ class JourneyQAppBar extends StatelessWidget implements PreferredSizeWidget {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: isMenuIcon
-                          ? [Color(0xFF0088cc), Color(0xFF0066aa)] // Solid blue for menu
-                          : gradientBlue, // Original gradient for notifications
+                          ? [Color(0xFF0088cc), Color(0xFF0066aa)]
+                          : gradientBlue,
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -466,5 +470,5 @@ class JourneyQAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(120);
+  Size get preferredSize => const Size.fromHeight(130);
 }
