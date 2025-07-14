@@ -169,14 +169,14 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
                     _isFollowed ? 'Following ${widget.userName}' : 'Unfollowed ${widget.userName}',
                   ),
                   duration: const Duration(seconds: 2),
-                  backgroundColor: _isFollowed ? Colors.blue : Colors.grey[600],
+                  backgroundColor: _isFollowed ? Colors.blue : Colors.grey[300],
                 ),
               );
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: _isFollowed ? Colors.blue[100] : Colors.grey[300],
+                color:  Colors.grey[300],
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -435,14 +435,6 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
                   end: Alignment.centerRight,
                 ),
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blue.withOpacity(0.3),
-                    spreadRadius: 0,
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
               ),
               child: const Text(
                 'View Journey',

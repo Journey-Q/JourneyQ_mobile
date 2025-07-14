@@ -51,6 +51,7 @@ class _NotificationPageState extends State<NotificationPage> {
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.black),

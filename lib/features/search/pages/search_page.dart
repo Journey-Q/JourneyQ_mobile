@@ -2,26 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:journeyq/features/search/data.dart';
 import 'package:go_router/go_router.dart';
 
-// Search widget for the search page
-class SearchPageWidget extends StatefulWidget {
+// Search widget for the search bar (without back button)
+class SearchBarWidget extends StatefulWidget {
   final String hintText;
   final TextEditingController? controller;
   final Function(String)? onChanged;
-  final VoidCallback? onBack;
 
-  const SearchPageWidget({
+  const SearchBarWidget({
     super.key,
     this.hintText = 'Search travellers, destinations, trips...',
     this.controller,
     this.onChanged,
-    this.onBack,
   });
 
   @override
-  State<SearchPageWidget> createState() => _SearchPageWidgetState();
+  State<SearchBarWidget> createState() => _SearchBarWidgetState();
 }
 
-class _SearchPageWidgetState extends State<SearchPageWidget> {
+class _SearchBarWidgetState extends State<SearchBarWidget> {
   late FocusNode _focusNode;
   bool _showClearButton = false;
 
@@ -61,60 +59,47 @@ class _SearchPageWidgetState extends State<SearchPageWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        // Back Button OUTSIDE the search box
-        IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: widget.onBack,
-        ),
-
-        // Search box
-        Expanded(
-          child: Container(
-            height: 50,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(28),
-            ),
-            child: Row(
-              children: [
-                // Removed back button from here
-                Expanded(
-                  child: TextField(
-                    controller: widget.controller,
-                    focusNode: _focusNode,
-                    onChanged: widget.onChanged,
-                    decoration: InputDecoration(
-                      hintText: widget.hintText,
-                      hintStyle: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 16,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 2,
-                        vertical: 12,
-                      ),
-                    ),
-                  ),
+    return Container(
+      height: 50,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(28),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.search, color: Colors.grey[600], size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              controller: widget.controller,
+              focusNode: _focusNode,
+              onChanged: widget.onChanged,
+              decoration: InputDecoration(
+                hintText: widget.hintText,
+                hintStyle: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 16,
                 ),
-
-                // Clear button
-                if (_showClearButton)
-                  IconButton(
-                    icon: Icon(Icons.clear, color: Colors.grey[600], size: 20),
-                    onPressed: () {
-                      widget.controller?.clear();
-                      widget.onChanged?.call('');
-                    },
-                  ),
-              ],
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                ),
+              ),
             ),
           ),
-        ),
-      ],
+          // Clear button
+          if (_showClearButton)
+            IconButton(
+              icon: Icon(Icons.clear, color: Colors.grey[600], size: 20),
+              onPressed: () {
+                widget.controller?.clear();
+                widget.onChanged?.call('');
+              },
+            ),
+        ],
+      ),
     );
   }
 }
@@ -171,17 +156,35 @@ class _SearchPageState extends State<SearchPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        automaticallyImplyLeading: false,
-        title: SearchPageWidget(
-          controller: _searchController,
-          onChanged: _onSearchChanged,
-          onBack: () => context.pop(context),
-          hintText: 'Search travellers, destinations, trips...',
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: () => context.pop(),
         ),
+        title: Row(
+          children: [
+            const Text(
+              'Search ',
+              style: TextStyle(
+                color: Colors.black87,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        titleSpacing: 0,
       ),
       body: Column(
         children: [
-          const SizedBox(height: 15),
+          
+          // Search bar
+          SearchBarWidget(
+            controller: _searchController,
+            onChanged: _onSearchChanged,
+            hintText: 'Search travellers, destinations, trips...',
+          ),
+          const SizedBox(height: 8),
+          // Search results
           Expanded(child: _buildSearchResults()),
         ],
       ),

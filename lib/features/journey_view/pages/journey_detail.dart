@@ -15,6 +15,10 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   Map<String, dynamic>? journeyData;
   Map<String, int> _currentImageIndexes = {};
   Map<String, PageController> _pageControllers = {};
+  
+  // Add controllers for places pagination
+  final PageController _placesPageController = PageController();
+  int _currentPlaceIndex = 0;
 
   @override
   void initState() {
@@ -25,6 +29,7 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   @override
   void dispose() {
     _pageControllers.values.forEach((controller) => controller.dispose());
+    _placesPageController.dispose();
     super.dispose();
   }
 
@@ -44,23 +49,25 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: CustomScrollView(
-        slivers: [
-          _buildSliverAppBar(),
-          SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildTripStats(),
-                _buildAllPlacesSection(),
-                _buildRecommendationsSection(),
-                _buildTipsSection(),
-                _buildBudgetBreakdown(),
-                const SizedBox(height: 10), // Bottom padding
-              ],
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            _buildSliverAppBar(),
+            SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTripStats(),
+                  _buildAllPlacesSection(),
+                  _buildRecommendationsSection(),
+                  _buildTipsSection(),
+                  _buildBudgetBreakdown(),
+                  const SizedBox(height: 10), // Bottom padding
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -73,8 +80,9 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
     return SliverAppBar(
       expandedHeight: 200,
       pinned: true,
-      backgroundColor: Theme.of(context).primaryColor,
-      foregroundColor: Colors.white,
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black,
+      surfaceTintColor: Colors.transparent,
       elevation: 0,
       flexibleSpace: FlexibleSpaceBar(
         background: Stack(
@@ -202,9 +210,76 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ...places.map((place) => _buildPlaceCard(place)).toList(),
-        const SizedBox(height: 10),
+        // Places title with current place indicator
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              const Text(
+                'Places to Visit',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const Spacer(),
+              Text(
+                '${_currentPlaceIndex + 1} of ${places.length}',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        
+        // Horizontal scrollable places
+        SizedBox(
+          height: 560, // Increased height to accommodate scrollable activities
+          child: PageView.builder(
+            controller: _placesPageController,
+            onPageChanged: (index) {
+              setState(() {
+                _currentPlaceIndex = index;
+              });
+            },
+            itemCount: places.length,
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: _buildPlaceCard(places[index]),
+              );
+            },
+          ),
+        ),
+        
+        // Dot indicators for places
+        if (places.length > 1) ...[
+          const SizedBox(height: 8),
+          _buildPlacesDotsIndicator(places.length),
+          const SizedBox(height: 16),
+        ],
       ],
+    );
+  }
+
+  Widget _buildPlacesDotsIndicator(int placeCount) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(
+        placeCount,
+        (index) => AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          height: 8,
+          width: _currentPlaceIndex == index ? 24 : 8,
+          decoration: BoxDecoration(
+            color: _currentPlaceIndex == index
+                ? Colors.blue[600]
+                : Colors.grey[300],
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+      ),
     );
   }
 
@@ -213,6 +288,7 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
     final activities = place['activities'] as List<String>;
     final experiences = place['experiences'] as List<Map<String, dynamic>>;
     final placeName = place['name'];
+    final tripMood = place['trip_mood'] ?? '';
 
     // Initialize page controller and current index for this place if not exists
     if (!_pageControllers.containsKey(placeName)) {
@@ -221,92 +297,134 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
     }
 
     return Container(
-  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      // Place name and day info
-      Row(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Text(
-              place['name'],
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
+          // Place name and trip mood
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  place['name'],
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              if (tripMood.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.orange[600],
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    tripMood,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Image carousel
+          _buildImageCarousel(images, placeName),
+          _buildDotsIndicator(images, placeName),
+          const SizedBox(height: 12),
+
+          // Activities
+          const Text(
+            'Activities',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 10),
+
+          // Activities as horizontal scrollable
+          SizedBox(
+            height: 40,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: [
+                  ...activities.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final activity = entry.value;
+                    return Row(
+                      children: [
+                        if (index > 0) const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[600],
+                            borderRadius: BorderRadius.circular(22),
+                          ),
+                          child: Text(
+                            activity,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              height: 1.4,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                  const SizedBox(width: 16),
+                ],
               ),
             ),
           ),
+
+          const SizedBox(height: 12),
+
+          // Experiences as vertical scrollable
+          if (experiences.isNotEmpty) ...[
+            const Text(
+              'Experiences',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 120, // Fixed height for experiences section
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children: experiences.map((experience) {
+                    return Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        experience['description'],
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontSize: 14,
+                          height: 1.3,
+                        ),
+                        maxLines: null,
+                        overflow: TextOverflow.visible,
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
-      const SizedBox(height: 12),
-
-      // Image carousel
-      _buildImageCarousel(images, placeName),
-      _buildDotsIndicator(images, placeName),
-      const SizedBox(height: 12),
-
-      // Activities
-      const Text(
-        'Activities',
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-      ),
-      const SizedBox(height: 10),
-
-      Wrap(
-        spacing: 8, // horizontal spacing between items
-        runSpacing: 8, // vertical spacing between lines
-        children: activities.map((activity) {
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.blue[600],
-              borderRadius: BorderRadius.circular(22),
-            ),
-            child: Text(
-              activity,
-              style: const TextStyle(
-                fontSize: 14,
-                height: 1.4,
-                color: Colors.white,
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-
-      const SizedBox(height: 12),
-
-      // Experiences
-      if (experiences.isNotEmpty) ...[
-        const Text(
-          'Experiences',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 10),
-        ...experiences.map((experience) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 6),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              experience['description'],
-              style: const TextStyle(
-                color: Colors.black87,
-                fontSize: 14,
-                height: 1.3,
-              ),
-            ),
-          );
-        }).toList(),
-      ],
-    ],
-  ),
-);
-
+    );
   }
 
   Widget _buildRecommendationsSection() {
@@ -412,51 +530,50 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   }
 
   Widget _buildTipsSection() {
-  final tips = journeyData!['tips'] as List<String>;
+    final tips = journeyData!['tips'] as List<String>;
 
-  return Padding(
-    padding: const EdgeInsets.all(16),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Travel Tips',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
-        ...tips.map((tip) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue[50],
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue[200]!),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  LucideIcons.lightbulb,
-                  size: 18,
-                  color: Colors.blue[700],
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    tip,
-                    style: const TextStyle(fontSize: 14, height: 1.4),
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Travel Tips',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          ...tips.map((tip) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue[200]!),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    LucideIcons.lightbulb,
+                    size: 18,
+                    color: Colors.blue[700],
                   ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      ],
-    ),
-  );
-}
-
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      tip,
+                      style: const TextStyle(fontSize: 14, height: 1.4),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
 
   Widget _buildBudgetBreakdown() {
     final breakdown = journeyData!['budgetBreakdown'] as Map<String, dynamic>;
