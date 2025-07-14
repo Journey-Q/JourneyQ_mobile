@@ -469,7 +469,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF0088cc),
+                                color: Colors.black87,
                               ),
                             ),
                             Text(

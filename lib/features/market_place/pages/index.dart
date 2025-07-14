@@ -79,8 +79,8 @@ class _MarketplacePageState extends State<MarketplacePage> {
     }
   }
 
-  // Nearby Hotels Data
-  final List<Map<String, dynamic>> nearbyHotels = [
+  // Popular Hotels Data (renamed from nearbyHotels)
+  final List<Map<String, dynamic>> popularHotels = [
     {
       'name': 'Shangri-La Hotel Colombo',
       'location': 'Galle Face, Colombo',
@@ -704,12 +704,12 @@ class _MarketplacePageState extends State<MarketplacePage> {
 
               const SizedBox(height: 20), // Reduced from 32 to 20
 
-              // Nearby Hotels Section
+              // Popular Hotels Section (changed from "Nearby Hotels")
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Nearby Hotels',
+                    'Popular Hotels',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -735,9 +735,9 @@ class _MarketplacePageState extends State<MarketplacePage> {
                 height: 220,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: nearbyHotels.length,
+                  itemCount: popularHotels.length,
                   itemBuilder: (context, index) {
-                    return _buildHotelCard(nearbyHotels[index]);
+                    return _buildHotelCard(popularHotels[index]);
                   },
                 ),
               ),
