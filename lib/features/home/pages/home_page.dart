@@ -1,4 +1,3 @@
-// home_page.dart - Complete with built-in comments functionality
 import 'package:flutter/material.dart';
 import 'package:journeyq/shared/components/app_bar.dart';
 import 'package:journeyq/features/home/pages/search_wiget.dart';
@@ -160,11 +159,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   // Event handlers
-  void _handleViewJourney(Map<String, dynamic> post) {
-    print('View journey tapped for ${post['userName']}');
-    // Navigate to journey details page
-    // context.push('/journey/${post['id']}');
-  }
 
   void _handleLike(Map<String, dynamic> post, int postIndex) {
     setState(() {
