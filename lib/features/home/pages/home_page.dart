@@ -71,10 +71,7 @@ class _HomePageState extends State<HomePage> {
                     // Explore World Card
                     ExploreWorldCard(
                       onCreateJourney: () {
-                        SnackBarService.showSuccess(
-                          context,
-                          "Login Successful! Welcome back!",
-                        );
+                        context.push('/planner');
                       },
                     ),
 

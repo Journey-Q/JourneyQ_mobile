@@ -31,6 +31,7 @@ import 'package:journeyq/features/notification/pages/notification.dart';
 import 'package:journeyq/features/chat/pages/indexpage.dart';
 import 'package:journeyq/features/chat/pages/chatpage.dart';
 import 'package:journeyq/features/journey_view/pages/journey_detail.dart';
+import 'package:journeyq/features/Trip_planner/pages/index.dart';
 
 class AppRouter {
   static GoRouter createRouter(AuthProvider authProvider) {
@@ -336,6 +337,12 @@ class AppRouter {
         TransitionGoRoute(
           path: '/chat',
           builder: (context, state) => const ChatPage(),
+          transitionType: PageTransitionType.slide,
+        ),
+
+        TransitionGoRoute(
+          path: '/planner',
+          builder: (context, state) => const  TripPlannerPage(),
           transitionType: PageTransitionType.slide,
         ),
 
