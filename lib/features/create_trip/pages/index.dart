@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:journeyq/features/create_trip/pages/widget.dart';
 import 'package:journeyq/data/models/journey_model/joureny_model.dart';
 import 'package:journeyq/features/create_trip/pages/add_place.dart';
+import 'package:journeyq/shared/widgets/dialog/show_dialog.dart';
+import 'package:go_router/go_router.dart';
 
 class CreateTripPage extends StatefulWidget {
   const CreateTripPage({Key? key}) : super(key: key);
@@ -17,7 +19,8 @@ class _CreateTripPageState extends State<CreateTripPage> {
   // Trip basic details
   final TextEditingController _tripTitleController = TextEditingController();
   final TextEditingController _totalDaysController = TextEditingController();
-  final TextEditingController _numberOfPersonsController = TextEditingController();
+  final TextEditingController _numberOfPersonsController =
+      TextEditingController();
   final TextEditingController _totalBudgetController = TextEditingController();
 
   // Recommendation controllers
@@ -74,7 +77,8 @@ class _CreateTripPageState extends State<CreateTripPage> {
   );
 
   int _currentStep = 0;
-  final int _totalSteps = 4; // Basic Details -> Recommendations -> Budget -> Travel Tips
+  final int _totalSteps =
+      4; // Basic Details -> Recommendations -> Budget -> Travel Tips
 
   @override
   void dispose() {
@@ -116,7 +120,10 @@ class _CreateTripPageState extends State<CreateTripPage> {
     _nextStep();
   }
 
-  void _goToAddPlace({PlaceModel? editingPlace, List<PlaceModel>? accumulatedPlaces}) async {
+  void _goToAddPlace({
+    PlaceModel? editingPlace,
+    List<PlaceModel>? accumulatedPlaces,
+  }) async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _currentTrip = _currentTrip.copyWith(
@@ -136,7 +143,8 @@ class _CreateTripPageState extends State<CreateTripPage> {
         ),
       );
 
-      if (result is Map<String, dynamic> && result['places'] is List<PlaceModel>) {
+      if (result is Map<String, dynamic> &&
+          result['places'] is List<PlaceModel>) {
         setState(() {
           _currentTrip = _currentTrip.copyWith(places: result['places']);
           _currentStep = result['nextStep'] ?? 1; // Go to recommendations step
@@ -149,7 +157,9 @@ class _CreateTripPageState extends State<CreateTripPage> {
       } else if (result is PlaceModel && editingPlace != null) {
         setState(() {
           final updatedPlaces = [..._currentTrip.places];
-          final index = _currentTrip.places.indexWhere((p) => p.name == editingPlace.name);
+          final index = _currentTrip.places.indexWhere(
+            (p) => p.name == editingPlace.name,
+          );
           if (index != -1) updatedPlaces[index] = result;
           _currentTrip = _currentTrip.copyWith(places: updatedPlaces);
         });
@@ -194,10 +204,16 @@ class _CreateTripPageState extends State<CreateTripPage> {
   void _updateTripRecommendations() {
     _currentTrip = _currentTrip.copyWith(
       overallRecommendations: _currentTrip.overallRecommendations.copyWith(
-        hotels: _hotelsList.map((name) => RecommendationItem(name: name, rating: 0.0)).toList(),
-        restaurants: _restaurantsList.map((name) => RecommendationItem(name: name, rating: 0.0)).toList(),
+        hotels: _hotelsList
+            .map((name) => RecommendationItem(name: name, rating: 0.0))
+            .toList(),
+        restaurants: _restaurantsList
+            .map((name) => RecommendationItem(name: name, rating: 0.0))
+            .toList(),
         transportation: _selectedTransports
-            .map((transport) => RecommendationItem(name: transport, rating: 0.0))
+            .map(
+              (transport) => RecommendationItem(name: transport, rating: 0.0),
+            )
             .toList(),
       ),
     );
@@ -228,111 +244,89 @@ class _CreateTripPageState extends State<CreateTripPage> {
         _isLoading = false;
       });
 
-      // Show success and return
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => SuccessDialog(
-          title: 'Trip Published Successfully!',
-          message:
-              'Your trip "${_currentTrip.tripTitle}" is now live and ready to inspire other travelers.',
-          onContinue: () {
-            Navigator.pop(context); // Close success dialog
-            Navigator.pushNamedAndRemoveUntil(
-              context, 
-              '/home', 
-              (route) => false,
-            ); // Navigate to home and clear stack
-          },
-        ),
-      );
+      SnackBarService.showSuccess(context, 'Trip published successfully!');
+      context.go('/home');
     } catch (error) {
       setState(() {
         _isLoading = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to publish trip: $error'),
-          backgroundColor: Colors.red,
-          action: SnackBarAction(
-            label: 'Retry',
-            onPressed: _publishTrip,
-          ),
-        ),
-      );
+      SnackBarService.showError(context, 'Failed to publish trip: $error');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: Colors.white,
-    appBar: AppBar(
-      title: Text(
-        _currentStep == 0
-            ? 'Create New Journey'
-            : _currentStep == 1
-                ? 'Recommendations'
-                : _currentStep == 2
-                    ? 'Budget'
-                    : 'Travel Tips',
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: Colors.black87,
-        ),
-      ),
+    return Scaffold(
       backgroundColor: Colors.white,
-      foregroundColor: Colors.black,
-      elevation: 0,
-      surfaceTintColor: Colors.transparent,
-      centerTitle: _currentStep == 0, // Only center for "Create New Journey"
-      leading: _currentStep > 0
-          ? IconButton(
-              icon: const Icon(Icons.arrow_back, size: 28),
-              onPressed: _previousStep,
-            )
-          : null,
-    ),
-    body: SafeArea(
-      child: LoadingOverlay(
-        isLoading: _isLoading,
-        message: _loadingMessage,
-        child: Column(
-          children: [
-            // Progress indicator - Centered
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 0),
-              child: Center(
-                child: StepProgressIndicator(
-                  currentStep: _currentStep,
-                  totalSteps: _totalSteps,
+      appBar: AppBar(
+        title: Text(
+          _currentStep == 0
+              ? 'Create New Journey'
+              : _currentStep == 1
+              ? 'Recommendations'
+              : _currentStep == 2
+              ? 'Budget'
+              : 'Travel Tips',
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: _currentStep == 0, // Only center for "Create New Journey"
+        leading: _currentStep > 0
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back, size: 28),
+                onPressed: _previousStep,
+              )
+            : null,
+      ),
+      body: SafeArea(
+        child: LoadingOverlay(
+          isLoading: _isLoading,
+          message: _loadingMessage,
+          child: Column(
+            children: [
+              // Progress indicator - Centered
+              Container(
+                color: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 30,
+                  vertical: 0,
+                ),
+                child: Center(
+                  child: StepProgressIndicator(
+                    currentStep: _currentStep,
+                    totalSteps: _totalSteps,
+                  ),
                 ),
               ),
-            ),
-            // Page content
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  _buildBasicDetailsStep(),
-                  _buildRecommendationsStep(),
-                  _buildBudgetStep(),
-                  _buildTravelTipsStep(),
-                ],
+              // Page content
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    _buildBasicDetailsStep(),
+                    _buildRecommendationsStep(),
+                    _buildBudgetStep(),
+                    _buildTravelTipsStep(),
+                  ],
+                ),
               ),
-            ),
-            // Bottom button
-            _buildBottomButton(),
-          ],
+              // Bottom button
+              _buildBottomButton(),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildBottomButton() {
     return Container(
@@ -377,7 +371,10 @@ class _CreateTripPageState extends State<CreateTripPage> {
                 child: OutlinedButton(
                   onPressed: _skipStep,
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFF0088cc), width: 1.5),
+                    side: const BorderSide(
+                      color: Color(0xFF0088cc),
+                      width: 1.5,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
                     ),
@@ -430,7 +427,10 @@ class _CreateTripPageState extends State<CreateTripPage> {
                 child: OutlinedButton(
                   onPressed: _skipStep,
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFF0088cc), width: 1.5),
+                    side: const BorderSide(
+                      color: Color(0xFF0088cc),
+                      width: 1.5,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
                     ),
@@ -483,7 +483,10 @@ class _CreateTripPageState extends State<CreateTripPage> {
                 child: OutlinedButton(
                   onPressed: _publishTrip,
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFF0088cc), width: 1.5),
+                    side: const BorderSide(
+                      color: Color(0xFF0088cc),
+                      width: 1.5,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
                     ),
@@ -662,8 +665,6 @@ class _CreateTripPageState extends State<CreateTripPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-     
-
           // Header - Updated to match gradient style
           Container(
             width: double.infinity,
@@ -790,7 +791,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // Input field with add button
           Row(
             children: [
@@ -809,9 +810,15 @@ class _CreateTripPageState extends State<CreateTripPage> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF0088cc), width: 2),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF0088cc),
+                        width: 2,
+                      ),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
                   onFieldSubmitted: (_) => onAdd(),
                 ),
@@ -833,7 +840,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
               ),
             ],
           ),
-          
+
           // Added items list
           if (items.isNotEmpty) ...[
             const SizedBox(height: 16),
@@ -842,11 +849,16 @@ class _CreateTripPageState extends State<CreateTripPage> {
               final item = entry.value;
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF0088cc).withOpacity(0.05),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFF0088cc).withOpacity(0.2)),
+                  border: Border.all(
+                    color: const Color(0xFF0088cc).withOpacity(0.2),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -904,7 +916,11 @@ class _CreateTripPageState extends State<CreateTripPage> {
         children: [
           Row(
             children: [
-              const Icon(Icons.directions_car, color: Color(0xFF0088cc), size: 24),
+              const Icon(
+                Icons.directions_car,
+                color: Color(0xFF0088cc),
+                size: 24,
+              ),
               const SizedBox(width: 12),
               const Text(
                 'Transportation',
@@ -940,12 +956,19 @@ class _CreateTripPageState extends State<CreateTripPage> {
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF0088cc) : Colors.grey[100],
+                    color: isSelected
+                        ? const Color(0xFF0088cc)
+                        : Colors.grey[100],
                     borderRadius: BorderRadius.circular(25),
                     border: Border.all(
-                      color: isSelected ? const Color(0xFF0088cc) : Colors.grey[300]!,
+                      color: isSelected
+                          ? const Color(0xFF0088cc)
+                          : Colors.grey[300]!,
                     ),
                   ),
                   child: Row(
@@ -998,8 +1021,6 @@ class _CreateTripPageState extends State<CreateTripPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-         
-
           // Header - Updated to match gradient style
           Container(
             width: double.infinity,
@@ -1231,25 +1252,41 @@ class _CreateTripPageState extends State<CreateTripPage> {
   }
 
   void _adjustOtherSliders(String changedSlider) {
-    double total = _accommodationPercentage + _foodPercentage + _transportPercentage + _activitiesPercentage;
+    double total =
+        _accommodationPercentage +
+        _foodPercentage +
+        _transportPercentage +
+        _activitiesPercentage;
     if (total > 100) {
       double excess = total - 100;
-      List<String> otherSliders = ['accommodation', 'food', 'transport', 'activities']..remove(changedSlider);
+      List<String> otherSliders = [
+        'accommodation',
+        'food',
+        'transport',
+        'activities',
+      ]..remove(changedSlider);
       double reduction = excess / otherSliders.length;
 
       for (String slider in otherSliders) {
         switch (slider) {
           case 'accommodation':
-            _accommodationPercentage = (_accommodationPercentage - reduction).clamp(0, 100);
+            _accommodationPercentage = (_accommodationPercentage - reduction)
+                .clamp(0, 100);
             break;
           case 'food':
             _foodPercentage = (_foodPercentage - reduction).clamp(0, 100);
             break;
           case 'transport':
-            _transportPercentage = (_transportPercentage - reduction).clamp(0, 100);
+            _transportPercentage = (_transportPercentage - reduction).clamp(
+              0,
+              100,
+            );
             break;
           case 'activities':
-            _activitiesPercentage = (_activitiesPercentage - reduction).clamp(0, 100);
+            _activitiesPercentage = (_activitiesPercentage - reduction).clamp(
+              0,
+              100,
+            );
             break;
         }
       }
@@ -1262,8 +1299,6 @@ class _CreateTripPageState extends State<CreateTripPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-       
-
           // Header - Updated to match gradient style
           Container(
             width: double.infinity,

@@ -1,6 +1,6 @@
-// widget.dart
 import 'package:flutter/material.dart';
-import 'package:journeyq/data/models/journey_model/joureny_model.dart'; // Fixed typo: joureny -> journey
+import 'package:journeyq/data/models/journey_model/joureny_model.dart';
+import 'dart:math' as math; // Fixed typo: joureny -> journey
 
 class StepProgressIndicator extends StatelessWidget {
   final int currentStep;
@@ -560,7 +560,7 @@ class EmptyPlacesWidget extends StatelessWidget {
   }
 }
 
-class LoadingOverlay extends StatelessWidget {
+class LoadingOverlay extends StatefulWidget {
   final bool isLoading;
   final String message;
   final Widget child;
@@ -573,141 +573,247 @@ class LoadingOverlay extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        child,
-        if (isLoading)
-          Container(
-            color: Colors.black54,
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.all(32),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Color(0xFF1E3A8A), Color(0xFF06B6D4)],
-                        ),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Center(
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          strokeWidth: 3,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      message,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1E3A8A),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
+  State<LoadingOverlay> createState() => _LoadingOverlayState();
 }
 
-class SuccessDialog extends StatelessWidget {
-  final String title;
-  final String message;
-  final VoidCallback? onContinue;
+class _LoadingOverlayState extends State<LoadingOverlay>
+    with TickerProviderStateMixin {
+  late AnimationController _slideController;
+  late AnimationController _shimmerController;
+  late Animation<double> _slideAnimation;
+  late Animation<double> _shimmerAnimation;
 
-  const SuccessDialog({
-    Key? key,
-    required this.title,
-    required this.message,
-    this.onContinue,
-  }) : super(key: key);
+  @override
+  void initState() {
+    super.initState();
+    
+    // Slide animation for the progress bar
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+    
+    // Shimmer animation for the loading container
+    _shimmerController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+
+    _slideAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _slideController,
+      curve: Curves.easeInOutCubic,
+    ));
+
+    _shimmerAnimation = Tween<double>(
+      begin: -1.0,
+      end: 2.0,
+    ).animate(CurvedAnimation(
+      parent: _shimmerController,
+      curve: Curves.easeInOutSine,
+    ));
+
+    if (widget.isLoading) {
+      _startAnimations();
+    }
+  }
+
+  @override
+  void didUpdateWidget(LoadingOverlay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isLoading && !oldWidget.isLoading) {
+      _startAnimations();
+    } else if (!widget.isLoading && oldWidget.isLoading) {
+      _stopAnimations();
+    }
+  }
+
+  void _startAnimations() {
+    _slideController.repeat();
+    _shimmerController.repeat();
+  }
+
+  void _stopAnimations() {
+    _slideController.stop();
+    _shimmerController.stop();
+  }
+
+  @override
+  void dispose() {
+    _slideController.dispose();
+    _shimmerController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      content: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF10B981), Color(0xFF34D399)],
-                ),
-                shape: BoxShape.circle,
+    return Stack(
+      children: [
+        widget.child,
+        if (widget.isLoading)
+          Container(
+            color: Colors.black.withOpacity(0.7),
+            child: Center(
+              child: AnimatedBuilder(
+                animation: _shimmerController,
+                builder: (context, child) {
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 40),
+                    padding: const EdgeInsets.all(32),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 30,
+                          offset: const Offset(0, 15),
+                          spreadRadius: 5,
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        
+                        // Loading Message
+                        Text(
+                          widget.message,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                            letterSpacing: 0.5,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Please wait a moment',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.grey[600],
+                            letterSpacing: 0.3,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 32),
+                        
+                        // Slider Progress Bar
+                        Container(
+                          width: double.infinity,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                          child: AnimatedBuilder(
+                            animation: _slideAnimation,
+                            builder: (context, child) {
+                              return Stack(
+                                children: [
+                                  // Background track
+                                  Container(
+                                    width: double.infinity,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[200],
+                                      borderRadius: BorderRadius.circular(3),
+                                    ),
+                                  ),
+                                  // Animated progress slider
+                                  FractionallySizedBox(
+                                    widthFactor: _slideAnimation.value * 0.4 + 0.1,
+                                    child: Container(
+                                      height: 6,
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [Color(0xFF33a3dd), Color(0xFF0088cc)],
+                                        ),
+                                        borderRadius: BorderRadius.circular(3),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFF0088cc).withOpacity(0.4),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  // Sliding highlight effect
+                                  Positioned(
+                                    left: (_slideAnimation.value * 200) - 30,
+                                    child: Container(
+                                      width: 30,
+                                      height: 6,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.transparent,
+                                            Colors.white.withOpacity(0.8),
+                                            Colors.transparent,
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(3),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Progress dots
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(3, (index) {
+                            return AnimatedBuilder(
+                              animation: _slideAnimation,
+                              builder: (context, child) {
+                                double delay = (index * 0.3);
+                                double animValue = (_slideAnimation.value - delay).clamp(0.0, 1.0);
+                                double opacity = (math.sin(animValue * math.pi) * 0.8 + 0.2).clamp(0.2, 1.0);
+                                
+                                return Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF0088cc).withOpacity(opacity),
+                                    shape: BoxShape.circle,
+                                  ),
+                                );
+                              },
+                            );
+                          }),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-              child: const Icon(
-                Icons.check,
-                color: Colors.white,
-                size: 40,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1E3A8A),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 10, left: 20, right: 20),
-          child: SizedBox(
-            width: double.infinity,
-            child: ProfessionalButton(
-              text: 'Continue',
-              onPressed: onContinue ?? () => Navigator.pop(context),
-              isPrimary: true,
             ),
           ),
-        ),
       ],
     );
   }
 }
+
+// Don't forget to import dart:math for the progress dots animation
+
+
+
 
 class BudgetBreakdownWidget extends StatelessWidget {
   final BudgetBreakdown budgetBreakdown;
