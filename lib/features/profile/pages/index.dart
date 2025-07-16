@@ -16,7 +16,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool isSubscribed = false;
   String selectedTab = 'posts'; // 'posts', 'bucketlist', 'liked'
 
-  // Enhanced posts data with individual post information
+  // Enhanced posts data with travel destination information
   List<Map<String, dynamic>> userPosts = [
     {
       'imageUrl': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
@@ -26,7 +26,11 @@ class _ProfilePageState extends State<ProfilePage> {
       'isSaved': false,
       'caption': 'Breathtaking mountain views at sunrise! Nature never fails to amaze me 🏔️',
       'location': 'Swiss Alps',
+      'destination': 'Swiss Alps, Switzerland',
+      'description': 'Majestic mountain range with stunning alpine scenery',
       'timestamp': '2 hours ago',
+      'isVisited': true,
+      'visitDate': '2024-06-15',
     },
     {
       'imageUrl': 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400',
@@ -36,7 +40,11 @@ class _ProfilePageState extends State<ProfilePage> {
       'isSaved': false,
       'caption': 'Lost in the beauty of this forest trail 🌲',
       'location': 'Black Forest, Germany',
+      'destination': 'Black Forest, Germany',
+      'description': 'Dense woodland region famous for its scenic beauty',
       'timestamp': '5 hours ago',
+      'isVisited': true,
+      'visitDate': '2024-06-10',
     },
     {
       'imageUrl': 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400',
@@ -46,7 +54,11 @@ class _ProfilePageState extends State<ProfilePage> {
       'isSaved': true,
       'caption': 'Golden hour magic ✨ The perfect end to an incredible day',
       'location': 'Yosemite National Park',
+      'destination': 'Yosemite National Park, USA',
+      'description': 'Iconic national park with waterfalls and granite cliffs',
       'timestamp': '1 day ago',
+      'isVisited': true,
+      'visitDate': '2024-06-08',
     },
     {
       'imageUrl': 'https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=400',
@@ -56,7 +68,11 @@ class _ProfilePageState extends State<ProfilePage> {
       'isSaved': false,
       'caption': 'Adventure awaits in every corner 🎒',
       'location': 'Banff National Park',
+      'destination': 'Banff National Park, Canada',
+      'description': 'Stunning Canadian Rockies wilderness and lakes',
       'timestamp': '2 days ago',
+      'isVisited': true,
+      'visitDate': '2024-06-05',
     },
     {
       'imageUrl': 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=400',
@@ -66,7 +82,11 @@ class _ProfilePageState extends State<ProfilePage> {
       'isSaved': false,
       'caption': 'Ocean waves and endless horizons 🌊',
       'location': 'Maldives',
+      'destination': 'Maldives Islands',
+      'description': 'Tropical paradise with crystal clear waters',
       'timestamp': '3 days ago',
+      'isVisited': true,
+      'visitDate': '2024-06-01',
     },
     {
       'imageUrl': 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=400',
@@ -76,7 +96,11 @@ class _ProfilePageState extends State<ProfilePage> {
       'isSaved': true,
       'caption': 'Camping under the stars never gets old ⭐',
       'location': 'Joshua Tree National Park',
+      'destination': 'Joshua Tree National Park, USA',
+      'description': 'Desert landscape with unique Joshua trees',
       'timestamp': '4 days ago',
+      'isVisited': true,
+      'visitDate': '2024-05-28',
     },
     {
       'imageUrl': 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=400',
@@ -86,7 +110,11 @@ class _ProfilePageState extends State<ProfilePage> {
       'isSaved': false,
       'caption': 'Every sunset is a promise of a new dawn 🌅',
       'location': 'Santorini, Greece',
+      'destination': 'Santorini, Greece',
+      'description': 'Beautiful Greek island with white-washed buildings',
       'timestamp': '5 days ago',
+      'isVisited': true,
+      'visitDate': '2024-05-25',
     },
     {
       'imageUrl': 'https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=400',
@@ -96,7 +124,11 @@ class _ProfilePageState extends State<ProfilePage> {
       'isSaved': false,
       'caption': 'Exploring hidden gems off the beaten path 🗺️',
       'location': 'Iceland',
+      'destination': 'Reykjavik, Iceland',
+      'description': 'Land of fire and ice with stunning landscapes',
       'timestamp': '1 week ago',
+      'isVisited': true,
+      'visitDate': '2024-05-20',
     },
     {
       'imageUrl': 'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?w=400',
@@ -106,18 +138,22 @@ class _ProfilePageState extends State<ProfilePage> {
       'isSaved': true,
       'caption': 'The journey is the destination 🚗',
       'location': 'Route 66, USA',
+      'destination': 'Route 66, USA',
+      'description': 'Historic highway across the American Southwest',
       'timestamp': '1 week ago',
+      'isVisited': true,
+      'visitDate': '2024-05-15',
     },
   ];
 
   // Mock user data
   final Map<String, dynamic> userData = {
     'name': 'Samantha Fernando',
-    'username': 'alexadventures',
+    'username': 'samantha_travels',
     'bio': 'Travel enthusiast | Exploring the world 🌍\n✈️ 47 countries visited\n📸 Capturing moments',
     'posts': 9,
-    'followers': 2847,
-    'following': 312,
+    'followers': 5,
+    'following': 4,
     'profileImage': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
     'isVerified': true,
     'level': 'Explorer',
@@ -543,7 +579,6 @@ class _ProfilePageState extends State<ProfilePage> {
         children: [
           _buildTabItem('posts', 'Posts', Icons.grid_view),
           _buildTabItem('bucketlist', 'Bucket List', Icons.bookmark),
-          _buildTabItem('liked', 'Liked', Icons.favorite),
         ],
       ),
     );
@@ -589,8 +624,6 @@ class _ProfilePageState extends State<ProfilePage> {
         return _buildPostsGrid();
       case 'bucketlist':
         return _buildBucketListView();
-      case 'liked':
-        return _buildLikedPostsGrid();
       default:
         return _buildPostsGrid();
     }
@@ -599,114 +632,196 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildPostsGrid() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: GridView.builder(
+      child: ListView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 0.85,
-        ),
         itemCount: userPosts.length,
         itemBuilder: (context, index) {
           final post = userPosts[index];
-          return GestureDetector(
-            onTap: () => _viewPost(index),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Stack(
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Image with visit status
+                Stack(
                   children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: NetworkImage(post['imageUrl']),
-                          fit: BoxFit.cover,
-                        ),
+                    ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
                       ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.7),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
                       child: Container(
-                        padding: const EdgeInsets.all(6),
+                        height: 200,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: NetworkImage(post['imageUrl']),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (post['isVisited'])
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00B894),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.check_circle, color: Colors.white, size: 14),
+                              const SizedBox(width: 4),
+                              const Text(
+                                'Visited',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    // Heart icon for likes
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: Colors.black.withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.favorite, color: Colors.white, size: 12),
-                            const SizedBox(width: 2),
+                            Icon(
+                              post['isLiked'] ? Icons.favorite : Icons.favorite_border,
+                              color: post['isLiked'] ? Colors.red : Colors.white,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
                             Text(
                               post['likes'].toString(),
-                              style: const TextStyle(color: Colors.white, fontSize: 10),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ],
                         ),
                       ),
                     ),
-                    Positioned(
-                      bottom: 8,
-                      left: 8,
-                      right: 8,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  ],
+                ),
+                // Content
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        post['destination'],
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2D3436),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        post['description'],
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF636E72),
+                        ),
+                      ),
+                      if (post['isVisited'] && post['visitDate'] != null) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(Icons.calendar_today, size: 14, color: Color(0xFF636E72)),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Visited: ${post['visitDate']}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF636E72),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      // Action buttons
+                      Row(
                         children: [
-                          if (post['location'] != null)
-                            Row(
-                              children: [
-                                const Icon(Icons.location_on, color: Colors.white, size: 12),
-                                const SizedBox(width: 2),
-                                Expanded(
-                                  child: Text(
-                                    post['location'],
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: ElevatedButton(
+                                onPressed: () => _viewPost(index),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF0088cc),
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
-                              ],
+                                child: const Text(
+                                  'View Journey',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
                             ),
-                          Text(
-                            post['timestamp'],
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 9,
+                          ),
+                          const SizedBox(width: 12),
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: const Color(0xFF0088cc)),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: IconButton(
+                              onPressed: () => _sharePost(index),
+                              icon: const Icon(
+                                Icons.share,
+                                color: Color(0xFF0088cc),
+                                size: 20,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
           );
         },
@@ -1260,6 +1375,18 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _sharePost(int index) {
+    final post = userPosts[index];
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Sharing ${post['destination']}...'),
+        backgroundColor: const Color(0xFF0088cc),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
