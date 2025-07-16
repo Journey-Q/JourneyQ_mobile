@@ -17,11 +17,20 @@ class TourPackageDetailsPage extends StatefulWidget {
 
 class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
   late Map<String, dynamic> enhancedPackage;
+  late PageController _pageController;
+  int _currentPhotoIndex = 0;
 
   @override
   void initState() {
     super.initState();
     enhancedPackage = _enhancePackageData(widget.package);
+    _pageController = PageController(viewportFraction: 0.85);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   Map<String, dynamic> _enhancePackageData(Map<String, dynamic> basicPackage) {
@@ -32,6 +41,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
     enhanced.putIfAbsent('includes', () => _getIncludesByTitle(basicPackage['title']));
     enhanced.putIfAbsent('highlights', () => _getHighlightsByTitle(basicPackage['title']));
     enhanced.putIfAbsent('itinerary', () => _getItineraryByTitle(basicPackage['title']));
+    enhanced.putIfAbsent('pastTourPhotos', () => _getPastTourPhotosByTitle(basicPackage['title']));
     enhanced.putIfAbsent('reviews', () => 156);
     enhanced.putIfAbsent('originalPrice', () => null);
     enhanced.putIfAbsent('difficulty', () => 'Moderate');
@@ -44,6 +54,126 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
     enhanced.putIfAbsent('agencyTours', () => '500+ tours completed');
 
     return enhanced;
+  }
+
+  List<Map<String, String>> _getPastTourPhotosByTitle(String? title) {
+    switch (title?.toLowerCase()) {
+      case 'cultural triangle tour':
+        return [
+          {
+            'image': 'assets/images/past_tour_photos/cultural_past_1.jpeg',
+            'caption': 'Sigiriya Lion Rock',
+            'date': '2 weeks ago'
+          },
+          {
+            'image': 'assets/images/past_tour_photos/cultural_past_2.jpg',
+            'caption': 'Dambulla Cave Temple',
+            'date': '1 month ago'
+          },
+          {
+            'image': 'assets/images/past_tour_photos/cultural_past_3.jpg',
+            'caption': 'Polonnaruwa Ruins',
+            'date': '3 weeks ago'
+          },
+          {
+            'image': 'assets/images/past_tour_photos/cultural_past_4.jpeg',
+            'caption': 'Anuradhapura Stupa',
+            'date': '2 months ago'
+          },
+        ];
+      case 'hill country adventure':
+        return [
+          {
+            'image': 'assets/images/past_tour_photos/hill_past_1.jpg',
+            'caption': 'Nine Arch Bridge',
+            'date': '1 week ago'
+          },
+          {
+            'image': 'assets/images/past_tour_photos/hill_past_2.jpeg',
+            'caption': 'Tea Plantation',
+            'date': '3 weeks ago'
+          },
+          {
+            'image': 'assets/images/past_tour_photos/hill_past_3.jpeg',
+            'caption': 'Nuwara Eliya Views',
+            'date': '2 weeks ago'
+          },
+          {
+            'image': 'assets/images/past_tour_photos/hill_past_4.jpeg',
+            'caption': 'Train Journey',
+            'date': '1 month ago'
+          },
+        ];
+      case 'southern coast explorer':
+        return [
+          {
+            'image': 'assets/images/past_tour_photos/coast_past_1.jpeg',
+            'caption': 'Galle Fort Sunset',
+            'date': '5 days ago'
+          },
+          {
+            'image': 'assets/images/past_tour_photos/coast_past_2.jpeg',
+            'caption': 'Whale Watching',
+            'date': '2 weeks ago'
+          },
+          {
+            'image': 'assets/images/past_tour_photos/coast_past_3.jpeg',
+            'caption': 'Hikkaduwa Beach',
+            'date': '1 week ago'
+          },
+          {
+            'image': 'assets/images/past_tour_photos/coast_past_4.jpg',
+            'caption': 'Stilt Fishermen',
+            'date': '3 weeks ago'
+          },
+        ];
+      case 'wildlife safari package':
+        return [
+          {
+            'image': 'assets/images/past_tour_photos/wildlife_past_1.jpg',
+            'caption': 'Leopard Sighting',
+            'date': '4 days ago'
+          },
+          {
+            'image': 'assets/images/past_tour_photos/wildlife_past_2.jpeg',
+            'caption': 'Elephant Herd',
+            'date': '1 week ago'
+          },
+          {
+            'image': 'assets/images/past_tour_photos/wildlife_past_3.jpeg',
+            'caption': 'Bird Watching',
+            'date': '2 weeks ago'
+          },
+          {
+            'image': 'assets/images/past_tour_photos/wildlife_past_4.jpeg',
+            'caption': 'Safari Jeep',
+            'date': '3 weeks ago'
+          },
+        ];
+      default:
+        return [
+          {
+            'image': 'assets/images/past_tour_photos/default_past_1.jpg',
+            'caption': 'Beautiful Scenery',
+            'date': '1 week ago'
+          },
+          {
+            'image': 'assets/images/past_tour_photos/default_past_2.jpeg',
+            'caption': 'Cultural Experience',
+            'date': '2 weeks ago'
+          },
+          {
+            'image': 'assets/images/past_tour_photos/default_past_3.jpeg',
+            'caption': 'Adventure Time',
+            'date': '3 weeks ago'
+          },
+          {
+            'image': 'assets/images/past_tour_photos/default_past_4.jpeg',
+            'caption': 'Group Photo',
+            'date': '1 month ago'
+          },
+        ];
+    }
   }
 
   String _getAgencyByTitle(String? title) {
@@ -207,7 +337,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
 
   Widget _buildItineraryItem(Map<String, String> item) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6), // CHANGED: Using Padding instead of Container with margin
+      padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -258,6 +388,43 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPastTourPhoto(Map<String, String> photo) {
+    return Container(
+      margin: const EdgeInsets.only(right: 16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          color: Colors.grey.shade300,
+          child: Image.asset(
+            photo['image'] ?? '',
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.blue.shade100,
+                      Colors.blue.shade300,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.photo_camera,
+                    size: 50,
+                    color: Colors.white,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -432,7 +599,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Quick Info
+                        // Quick Info - REMOVED LANGUAGE DISPLAY
                         Row(
                           children: [
                             Expanded(
@@ -447,18 +614,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                                 ],
                               ),
                             ),
-                            Expanded(
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.language, size: 16, color: Colors.grey),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    (enhancedPackage['languages'] as List).join(', '),
-                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            // Removed the language section completely
                           ],
                         ),
                         const SizedBox(height: 16),
@@ -671,6 +827,74 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
 
                   const SizedBox(height: 20),
 
+                  // Past Tour Photos Section
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Past Tour Photos',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          height: 200,
+                          child: PageView.builder(
+                            controller: _pageController,
+                            onPageChanged: (index) {
+                              setState(() {
+                                _currentPhotoIndex = index;
+                              });
+                            },
+                            itemCount: (enhancedPackage['pastTourPhotos'] as List).length,
+                            itemBuilder: (context, index) {
+                              return _buildPastTourPhoto(
+                                (enhancedPackage['pastTourPhotos'] as List)[index],
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            (enhancedPackage['pastTourPhotos'] as List).length,
+                                (index) => Container(
+                              width: 8,
+                              height: 8,
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: index == _currentPhotoIndex
+                                    ? const Color(0xFF0088cc)
+                                    : Colors.grey.shade300,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
                   // Highlights
                   const Text(
                     'Tour Highlights',
@@ -711,7 +935,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
 
                   const SizedBox(height: 20),
 
-                  // Itinerary - UPDATED SECTION
+                  // Itinerary
                   const Text(
                     'Tour Itinerary',
                     style: TextStyle(

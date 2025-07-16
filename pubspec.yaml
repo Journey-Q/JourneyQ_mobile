@@ -114,3 +114,23 @@ flutter:
     - assets/images/serendib.jpeg
     - assets/images/walkers.jpg
     - assets/images/temple_heritage.jpg
+    - assets/images/past_tour_photos/cultural_past_1.jpeg
+    - assets/images/past_tour_photos/cultural_past_2.jpg
+    - assets/images/past_tour_photos/cultural_past_3.jpg
+    - assets/images/past_tour_photos/cultural_past_4.jpeg
+    - assets/images/past_tour_photos/hill_past_1.jpg
+    - assets/images/past_tour_photos/hill_past_2.jpeg
+    - assets/images/past_tour_photos/hill_past_3.jpeg
+    - assets/images/past_tour_photos/hill_past_4.jpeg
+    - assets/images/past_tour_photos/coast_past_1.jpeg
+    - assets/images/past_tour_photos/coast_past_2.jpeg
+    - assets/images/past_tour_photos/coast_past_3.jpeg
+    - assets/images/past_tour_photos/coast_past_4.jpeg
+    - assets/images/past_tour_photos/wildlife_past_1.jpg
+    - assets/images/past_tour_photos/wildlife_past_2.jpeg
+    - assets/images/past_tour_photos/wildlife_past_3.jpeg
+    - assets/images/past_tour_photos/wildlife_past_4.jpeg
+    - assets/images/past_tour_photos/default_past_1.jpg
+    - assets/images/past_tour_photos/default_past_2.jpeg
+    - assets/images/past_tour_photos/default_past_3.jpeg
+    - assets/images/past_tour_photos/default_past_4.jpeg
