@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:journeyq/data/models/user_model/user_model.dart';
 
 /// LocalStorage class for managing app data persistence
-/// 
+///
 /// WARNING: This implementation stores sensitive data (tokens) in SharedPreferences
 /// which is less secure than FlutterSecureStorage. Consider the security implications
 /// for your specific use case.
@@ -26,9 +26,7 @@ class LocalStorage {
 
   final SharedPreferences _prefs;
 
-  LocalStorage({
-    required SharedPreferences prefs,
-  }) : _prefs = prefs;
+  LocalStorage({required SharedPreferences prefs}) : _prefs = prefs;
 
   // Token storage methods (WARNING: Less secure than FlutterSecureStorage)
   Future<void> saveAccessToken(String token) async {
@@ -67,11 +65,8 @@ class LocalStorage {
   Future<Map<String, String?>> getTokens() async {
     final accessToken = await getAccessToken();
     final refreshToken = await getRefreshToken();
-    
-    return {
-      'accessToken': accessToken,
-      'refreshToken': refreshToken,
-    };
+
+    return {'accessToken': accessToken, 'refreshToken': refreshToken};
   }
 
   // User data storage methods
@@ -209,16 +204,16 @@ class LocalStorage {
 
   Future<void> addToSearchHistory(String query) async {
     if (query.trim().isEmpty) return;
-    
+
     final history = await getSearchHistory();
     history.remove(query); // Remove if already exists
     history.insert(0, query); // Add to beginning
-    
+
     // Keep only last 20 searches
     if (history.length > 20) {
       history.removeRange(20, history.length);
     }
-    
+
     await saveSearchHistory(history);
   }
 
@@ -237,16 +232,16 @@ class LocalStorage {
 
   Future<void> addToRecentlyViewed(String itemId) async {
     if (itemId.trim().isEmpty) return;
-    
+
     final recentItems = await getRecentlyViewed();
     recentItems.remove(itemId); // Remove if already exists
     recentItems.insert(0, itemId); // Add to beginning
-    
+
     // Keep only last 50 items
     if (recentItems.length > 50) {
       recentItems.removeRange(50, recentItems.length);
     }
-    
+
     await saveRecentlyViewed(recentItems);
   }
 
@@ -307,7 +302,7 @@ class LocalStorage {
         return null;
       }
     }
-    
+
     return _prefs.getString('cache_$key');
   }
 
@@ -328,7 +323,7 @@ class LocalStorage {
   Future<void> clearCacheData() async {
     final keys = _prefs.getKeys();
     final cacheKeys = keys.where((key) => key.startsWith('cache_')).toList();
-    
+
     for (final key in cacheKeys) {
       await _prefs.remove(key);
     }
@@ -346,12 +341,12 @@ class LocalStorage {
   Future<Map<String, dynamic>> getAllPrefs() async {
     final keys = _prefs.getKeys();
     final Map<String, dynamic> prefsMap = {};
-    
+
     for (String key in keys) {
       final value = _prefs.get(key);
       prefsMap[key] = value;
     }
-    
+
     return prefsMap;
   }
 
@@ -414,6 +409,4 @@ class LocalStorage {
       }
     });
   }
-
-  
 }
