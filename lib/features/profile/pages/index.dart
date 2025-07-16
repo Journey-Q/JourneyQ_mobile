@@ -13,7 +13,8 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker();
-  bool isSubscribed = false; // Track subscription status
+  bool isSubscribed = false;
+  String selectedTab = 'posts'; // 'posts', 'bucketlist', 'liked'
 
   // Enhanced posts data with individual post information
   List<Map<String, dynamic>> userPosts = [
@@ -109,9 +110,9 @@ class _ProfilePageState extends State<ProfilePage> {
     },
   ];
 
-  // Mock user data with updated post count
+  // Mock user data
   final Map<String, dynamic> userData = {
-    'name': 'Alex Johnson',
+    'name': 'Samantha Fernando',
     'username': 'alexadventures',
     'bio': 'Travel enthusiast | Exploring the world 🌍\n✈️ 47 countries visited\n📸 Capturing moments',
     'posts': 9,
@@ -119,170 +120,636 @@ class _ProfilePageState extends State<ProfilePage> {
     'following': 312,
     'profileImage': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
     'isVerified': true,
+    'level': 'Explorer',
+    'joinDate': 'March 2022',
+    'achievements': ['Mountain Climber', 'Ocean Explorer', 'City Wanderer'],
   };
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8F9FA),
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            // App Bar
-            SliverAppBar(
-              backgroundColor: Colors.white,
-              elevation: 0,
-              floating: true,
-              pinned: false,
-              title: Row(
-                children: [
-                  const Icon(Icons.lock_outline, color: Colors.black, size: 16),
-                  const SizedBox(width: 8),
-                  Text(
-                    userData['username'],
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (userData['isVerified'])
-                    const Icon(
-                      Icons.verified,
-                      color: Colors.blue,
-                      size: 16,
-                    ),
-                  if (isSubscribed)
-                    const Padding(
-                      padding: EdgeInsets.only(left: 4),
-                      child: Icon(
-                        Icons.star,
-                        color: Colors.amber,
-                        size: 16,
-                      ),
-                    ),
-                ],
-              ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.add_box_outlined, color: Colors.black),
-                  onPressed: _showPostOptions,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.menu, color: Colors.black),
-                  onPressed: () => context.push('/profile/settings'),
-                ),
-              ],
-            ),
-
-            // Profile Content
-            SliverToBoxAdapter(
-              child: Column(
-                children: [
-                  _buildProfileHeader(),
-                  _buildActionButtons(),
-                  _buildPostsTabBar(),
-                ],
-              ),
-            ),
-
-            // Posts Grid
-            _buildSliverPostsGrid(),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildHeader(),
+              _buildProfileCard(),
+              _buildStatsCard(),
+              _buildActionButtons(),
+              _buildTabSection(),
+              _buildContentSection(),
+              const SizedBox(height: 100), // Space for bottom navigation
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // Profile Header Section
-  Widget _buildProfileHeader() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Row(
         children: [
-          Row(
-            children: [
-              // Profile Picture
-              Stack(
-                children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundColor: Colors.grey[300],
-                    backgroundImage: userData['profileImage'] != null
-                        ? NetworkImage(userData['profileImage'])
-                        : null,
-                    child: userData['profileImage'] == null
-                        ? const Icon(
-                      Icons.person,
-                      size: 40,
-                      color: Colors.grey,
-                    )
-                        : null,
-                  ),
-                  if (true) // Always show profile picture edit for own profile
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: GestureDetector(
-                        onTap: _changeProfilePicture,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.blue,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.add,
-                            color: Colors.white,
-                            size: 16,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(width: 20),
-
-              // Stats
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildStatColumn(userPosts.length.toString(), 'Posts'),
-                    GestureDetector(
-                      onTap: () => _navigateToFollowersFollowing('followers'),
-                      child: _buildStatColumn(userData['followers'].toString(), 'Followers'),
-                    ),
-                    GestureDetector(
-                      onTap: () => _navigateToFollowersFollowing('following'),
-                      child: _buildStatColumn(userData['following'].toString(), 'Following'),
-                    ),
-                  ],
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Name and Bio
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
+                const Icon(Icons.person, color: Color(0xFF0088cc), size: 16),
+                const SizedBox(width: 6),
                 Text(
-                  userData['name'],
+                  userData['username'],
                   style: const TextStyle(
-                    color: Colors.black,
+                    color: Color(0xFF2D3436),
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+                if (userData['isVerified']) ...[
+                  const SizedBox(width: 4),
+                  const Icon(Icons.verified, color: Color(0xFF0088cc), size: 16),
+                ],
+              ],
+            ),
+          ),
+          const Spacer(),
+          _buildHeaderButton(Icons.add_circle_outline, _showPostOptions),
+          const SizedBox(width: 8),
+          _buildHeaderButton(Icons.settings_outlined, () => context.push('/profile/settings')),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderButton(IconData icon, VoidCallback onPressed) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: const Color(0xFF2D3436)),
+        onPressed: onPressed,
+        iconSize: 22,
+      ),
+    );
+  }
+
+  Widget _buildProfileCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Stack(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF0088cc), Color(0xFF00B894)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0088cc).withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(3),
+                child: CircleAvatar(
+                  radius: 45,
+                  backgroundColor: Colors.white,
+                  child: CircleAvatar(
+                    radius: 42,
+                    backgroundImage: userData['profileImage'] != null
+                        ? NetworkImage(userData['profileImage'])
+                        : null,
+                    backgroundColor: Colors.grey[200],
+                    child: userData['profileImage'] == null
+                        ? const Icon(Icons.person, size: 40, color: Colors.grey)
+                        : null,
+                  ),
+                ),
+              ),
+              if (isSubscribed)
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFFD700),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.star, color: Colors.white, size: 16),
+                  ),
+                ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: GestureDetector(
+                  onTap: _changeProfilePicture,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0088cc),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: const Icon(Icons.camera_alt, color: Colors.white, size: 14),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        userData['name'],
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2D3436),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0088cc).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    userData['level'],
+                    style: const TextStyle(
+                      color: Color(0xFF0088cc),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 Text(
                   userData['bio'],
                   style: const TextStyle(
-                    color: Colors.black,
+                    color: Color(0xFF636E72),
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_today, size: 14, color: Color(0xFF636E72)),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Joined ${userData['joinDate']}',
+                      style: const TextStyle(
+                        color: Color(0xFF636E72),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildStatItem(
+            userPosts.length.toString(),
+            'Posts',
+            Icons.photo_library,
+            const Color(0xFF0088cc),
+          ),
+          _buildDivider(),
+          GestureDetector(
+            onTap: () => _navigateToFollowersFollowing('followers'),
+            child: _buildStatItem(
+              _formatNumber(userData['followers']),
+              'Followers',
+              Icons.people,
+              const Color(0xFF00B894),
+            ),
+          ),
+          _buildDivider(),
+          GestureDetector(
+            onTap: () => _navigateToFollowersFollowing('following'),
+            child: _buildStatItem(
+              userData['following'].toString(),
+              'Following',
+              Icons.person_add,
+              const Color(0xFFE17055),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String count, String label, IconData icon, Color color) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: color, size: 24),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          count,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF2D3436),
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Color(0xFF636E72),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDivider() {
+    return Container(
+      height: 40,
+      width: 1,
+      color: Colors.grey[200],
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ElevatedButton.icon(
+                onPressed: _editProfile,
+                icon: const Icon(Icons.edit, size: 18),
+                label: const Text('Edit Profile'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF2D3436),
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(
+                  colors: isSubscribed
+                      ? [const Color(0xFFFFD700), const Color(0xFFFF6B6B)]
+                      : [const Color(0xFF0088cc), Color(0xFF0088cc).withOpacity(0.8)],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: (isSubscribed ? const Color(0xFFFFD700) : const Color(0xFF0088cc))
+                        .withOpacity(0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: ElevatedButton.icon(
+                onPressed: _handleSubscribe,
+                icon: Icon(isSubscribed ? Icons.star : Icons.star_outline, size: 18),
+                label: Text(isSubscribed ? 'Premium' : 'Subscribe'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          _buildTabItem('posts', 'Posts', Icons.grid_view),
+          _buildTabItem('bucketlist', 'Bucket List', Icons.bookmark),
+          _buildTabItem('liked', 'Liked', Icons.favorite),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabItem(String tabId, String label, IconData icon) {
+    final isSelected = selectedTab == tabId;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _selectTab(tabId),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFF0088cc) : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? Colors.white : const Color(0xFF636E72),
+                size: 20,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : const Color(0xFF636E72),
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContentSection() {
+    switch (selectedTab) {
+      case 'posts':
+        return _buildPostsGrid();
+      case 'bucketlist':
+        return _buildBucketListView();
+      case 'liked':
+        return _buildLikedPostsGrid();
+      default:
+        return _buildPostsGrid();
+    }
+  }
+
+  Widget _buildPostsGrid() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 0.85,
+        ),
+        itemCount: userPosts.length,
+        itemBuilder: (context, index) {
+          final post = userPosts[index];
+          return GestureDetector(
+            onTap: () => _viewPost(index),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Stack(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: NetworkImage(post['imageUrl']),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.7),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.favorite, color: Colors.white, size: 12),
+                            const SizedBox(width: 2),
+                            Text(
+                              post['likes'].toString(),
+                              style: const TextStyle(color: Colors.white, fontSize: 10),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 8,
+                      left: 8,
+                      right: 8,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (post['location'] != null)
+                            Row(
+                              children: [
+                                const Icon(Icons.location_on, color: Colors.white, size: 12),
+                                const SizedBox(width: 2),
+                                Expanded(
+                                  child: Text(
+                                    post['location'],
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          Text(
+                            post['timestamp'],
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 9,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBucketListView() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: const Column(
+              children: [
+                Icon(Icons.bookmark_border, size: 48, color: Color(0xFF636E72)),
+                SizedBox(height: 16),
+                Text(
+                  'Bucket List',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2D3436),
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Your travel bucket list is empty.\nStart adding places you want to visit!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF636E72),
                     fontSize: 14,
                   ),
                 ),
@@ -294,195 +761,229 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildStatColumn(String count, String label) {
-    return Column(
-      children: [
-        Text(
-          count,
-          style: const TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.black,
-            fontSize: 14,
-          ),
-        ),
-      ],
-    );
-  }
+  Widget _buildLikedPostsGrid() {
+    final likedPosts = userPosts.where((post) => post['isLiked'] == true).toList();
 
-  // Action Buttons Section
-  Widget _buildActionButtons() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-      child: Row(
-        children: [
-          // Edit Profile Button
-          Expanded(
-            child: ElevatedButton(
-              onPressed: _editProfile,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[200],
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
+    if (likedPosts.isEmpty) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
               ),
-              child: const Text(
-                'Edit profile',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
+            ],
           ),
-          const SizedBox(width: 12),
-          
-          // Subscribe Button
-          Expanded(
-            child: ElevatedButton(
-              onPressed: _handleSubscribe,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isSubscribed ? Colors.amber : Colors.blue,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+          child: const Column(
+            children: [
+              Icon(Icons.favorite_border, size: 48, color: Color(0xFF636E72)),
+              SizedBox(height: 16),
+              Text(
+                'No Liked Posts',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2D3436),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    isSubscribed ? Icons.star : Icons.star_outline,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    isSubscribed ? 'Premium' : 'Subscribe',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+              SizedBox(height: 8),
+              Text(
+                'Posts you like will appear here.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Color(0xFF636E72),
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 0.85,
+        ),
+        itemCount: likedPosts.length,
+        itemBuilder: (context, index) {
+          final post = likedPosts[index];
+          final originalIndex = userPosts.indexOf(post);
+          return GestureDetector(
+            onTap: () => _viewPost(originalIndex),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Posts Grid Section
-  Widget _buildPostsTabBar() {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Colors.grey[300]!, width: 0.5),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                // Posts grid is already shown by default
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: const Icon(Icons.grid_on, color: Colors.black),
-              ),
-            ),
-          ),
-          Expanded(
-            child: GestureDetector(
-              onTap: _navigateToBucketList,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: const Icon(Icons.person_pin_outlined, color: Colors.grey),
-              ),
-            ),
-          ),
-          // Add like toggle button
-          Expanded(
-            child: GestureDetector(
-              onTap: _showLikedPosts,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: const Icon(Icons.favorite_outline, color: Colors.grey),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSliverPostsGrid() {
-    return SliverPadding(
-      padding: const EdgeInsets.only(bottom: 20),
-      sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 2,
-          mainAxisSpacing: 2,
-          childAspectRatio: 1.0,
-        ),
-        delegate: SliverChildBuilderDelegate(
-              (context, index) {
-            final post = userPosts[index];
-            return GestureDetector(
-              onTap: () => _viewPost(index),
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: NetworkImage(post['imageUrl']),
-                    fit: BoxFit.cover,
-                  ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Stack(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: NetworkImage(post['imageUrl']),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.7),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Icon(Icons.favorite, color: Colors.red, size: 20),
+                    ),
+                    Positioned(
+                      bottom: 8,
+                      left: 8,
+                      right: 8,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (post['location'] != null)
+                            Row(
+                              children: [
+                                const Icon(Icons.location_on, color: Colors.white, size: 12),
+                                const SizedBox(width: 2),
+                                Expanded(
+                                  child: Text(
+                                    post['location'],
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          Text(
+                            post['timestamp'],
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 9,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            );
-          },
-          childCount: userPosts.length,
-        ),
+            ),
+          );
+        },
       ),
     );
+  }
+
+  String _formatNumber(int number) {
+    if (number >= 1000000) {
+      return '${(number / 1000000).toStringAsFixed(1)}M';
+    } else if (number >= 1000) {
+      return '${(number / 1000).toStringAsFixed(1)}K';
+    }
+    return number.toString();
+  }
+
+  void _selectTab(String tabId) {
+    setState(() {
+      selectedTab = tabId;
+    });
+
+    if (tabId == 'bucketlist') {
+      _navigateToBucketList();
+    }
   }
 
   void _showPostOptions() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
           padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ListTile(
-                leading: const Icon(Icons.camera_alt, color: Colors.black),
-                title: const Text('Camera', style: TextStyle(color: Colors.black)),
-                onTap: () {
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Add New Post',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2D3436),
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildPostOption(
+                Icons.camera_alt,
+                'Camera',
+                'Take a new photo',
+                const Color(0xFF0088cc),
+                    () {
                   Navigator.pop(context);
                   _pickImage(ImageSource.camera);
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.photo_library, color: Colors.black),
-                title: const Text('Gallery', style: TextStyle(color: Colors.black)),
-                onTap: () {
+              const SizedBox(height: 12),
+              _buildPostOption(
+                Icons.photo_library,
+                'Gallery',
+                'Choose from gallery',
+                const Color(0xFF00B894),
+                    () {
                   Navigator.pop(context);
                   _pickImage(ImageSource.gallery);
                 },
               ),
+              const SizedBox(height: 20),
             ],
           ),
         );
@@ -490,11 +991,61 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Widget _buildPostOption(IconData icon, String title, String subtitle, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF2D3436),
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF636E72),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, color: color, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _pickImage(ImageSource source) async {
     final XFile? image = await _picker.pickImage(source: source);
     if (image != null) {
       setState(() {
-        userPosts.add({
+        userPosts.insert(0, {
           'imageUrl': image.path,
           'likes': 0,
           'comments': 0,
@@ -506,6 +1057,15 @@ class _ProfilePageState extends State<ProfilePage> {
         });
         userData['posts'] = userPosts.length;
       });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('New post added!'),
+          backgroundColor: const Color(0xFF00B894),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
     }
   }
 
@@ -515,6 +1075,15 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         userData['profileImage'] = image.path;
       });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Profile picture updated!'),
+          backgroundColor: const Color(0xFF0088cc),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
     }
   }
 
@@ -525,10 +1094,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _handleSubscribe() {
     if (isSubscribed) {
-      // Show subscription management
       _showSubscriptionManagement();
     } else {
-      // Navigate to payment page
       context.push('/profile/payment', extra: userData);
     }
   }
@@ -536,21 +1103,44 @@ class _ProfilePageState extends State<ProfilePage> {
   void _showSubscriptionManagement() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
           padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
               Row(
                 children: [
-                  const Icon(Icons.star, color: Colors.amber, size: 24),
-                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFD700).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.star, color: Color(0xFFFFD700), size: 24),
+                  ),
+                  const SizedBox(width: 12),
                   const Text(
                     'Premium Subscription',
                     style: TextStyle(
-                      color: Colors.black,
+                      color: Color(0xFF2D3436),
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -561,27 +1151,33 @@ class _ProfilePageState extends State<ProfilePage> {
               const Text(
                 'You currently have an active premium subscription with access to all premium features.',
                 style: TextStyle(
-                  color: Colors.black,
+                  color: Color(0xFF636E72),
                   fontSize: 14,
                 ),
               ),
               const SizedBox(height: 20),
-              ListTile(
-                leading: const Icon(Icons.settings, color: Colors.black),
-                title: const Text('Manage Subscription', style: TextStyle(color: Colors.black)),
-                trailing: const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
-                onTap: () {
+              _buildSubscriptionOption(
+                Icons.settings,
+                'Manage Subscription',
+                const Color(0xFF0088cc),
+                    () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Opening subscription management...')),
+                    SnackBar(
+                      content: const Text('Opening subscription management...'),
+                      backgroundColor: const Color(0xFF0088cc),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
                   );
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.cancel, color: Colors.red),
-                title: const Text('Cancel Subscription', style: TextStyle(color: Colors.red)),
-                trailing: const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
-                onTap: () {
+              const SizedBox(height: 12),
+              _buildSubscriptionOption(
+                Icons.cancel,
+                'Cancel Subscription',
+                const Color(0xFFE17055),
+                    () {
                   Navigator.pop(context);
                   _showCancelSubscriptionDialog();
                 },
@@ -593,18 +1189,50 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Widget _buildSubscriptionOption(IconData icon, String title, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, color: color, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showCancelSubscriptionDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
           'Cancel Subscription?',
-          style: TextStyle(color: Colors.black),
+          style: TextStyle(color: Color(0xFF2D3436)),
         ),
         content: const Text(
           'Are you sure you want to cancel your premium subscription? You will lose access to premium features.',
-          style: TextStyle(color: Colors.black),
+          style: TextStyle(color: Color(0xFF636E72)),
         ),
         actions: [
           TextButton(
@@ -618,15 +1246,17 @@ class _ProfilePageState extends State<ProfilePage> {
               });
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Subscription cancelled'),
-                  backgroundColor: Colors.red,
+                SnackBar(
+                  content: const Text('Subscription cancelled'),
+                  backgroundColor: const Color(0xFFE17055),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               );
             },
             child: const Text(
               'Cancel',
-              style: TextStyle(color: Colors.red),
+              style: TextStyle(color: Color(0xFFE17055)),
             ),
           ),
         ],
@@ -651,96 +1281,5 @@ class _ProfilePageState extends State<ProfilePage> {
       'initialTab': tab,
       'userData': userData,
     });
-  }
-
-  void _showLikedPosts() {
-    // Filter liked posts
-    final likedPosts = userPosts.where((post) => post['isLiked'] == true).toList();
-    
-    if (likedPosts.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No liked posts yet'),
-          backgroundColor: Colors.grey,
-        ),
-      );
-      return;
-    }
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      isScrollControlled: true,
-      builder: (context) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.7,
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.favorite, color: Colors.red, size: 24),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Liked Posts',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: Colors.black),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 2,
-                    mainAxisSpacing: 2,
-                    childAspectRatio: 1.0,
-                  ),
-                  itemCount: likedPosts.length,
-                  itemBuilder: (context, index) {
-                    final post = likedPosts[index];
-                    final originalIndex = userPosts.indexOf(post);
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                        _viewPost(originalIndex);
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: NetworkImage(post['imageUrl']),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        child: const Align(
-                          alignment: Alignment.topRight,
-                          child: Padding(
-                            padding: EdgeInsets.all(4),
-                            child: Icon(
-                              Icons.favorite,
-                              color: Colors.red,
-                              size: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
   }
 }
