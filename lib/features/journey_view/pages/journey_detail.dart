@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:journeyq/features/journey_view/data.dart'; // Import the journey data
+import 'package:journeyq/features/journey_view/data.dart';
 
 class JourneyDetailsPage extends StatefulWidget {
   final String journeyId;

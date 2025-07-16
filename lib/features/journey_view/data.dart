@@ -24,9 +24,7 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Sigiriya, Matale District, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-l2_8b6Se-q4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',// Sigiriya Lion Rock from distance
-          'https://images.unsplash.com/photo-1566139996634-082433de5b14?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Ancient lion paws at Sigiriya
-          'https://images.unsplash.com/photo-1590736969955-71cc94901144?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'  // Sigiriya summit view
+          'assets/images/img1.jpg',
         ],
         'activities': [
           'Climbing the 1200-step ancient rock fortress',
@@ -53,9 +51,7 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Dambulla, Matale District, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1580654712603-eb43273aff33?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Buddha statues in cave temple
-          'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Cave temple interior
-          'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'  // Cave temple murals
+          'assets/images/img4.jpg',
         ],
         'activities': [
           'Exploring 5 sacred cave temples',
@@ -82,9 +78,8 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Polonnaruwa, North Central Province, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1539650116574-75c0c6d73c9e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Ancient Buddha statues at Gal Vihara
-          'https://images.unsplash.com/photo-1549144511-f099e773c147?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Ancient ruins of Polonnaruwa
-          'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'  // Royal Palace ruins
+          'assets/images/img5.jpg', // Ancient Buddha statues at Gal Vihara
+          
         ],
         'activities': [
           'Bicycle tour through ancient ruins',
@@ -165,9 +160,7 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Sri Dalada Veediya, Kandy, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1593693411502-1e5e62e42e35?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Temple of the Tooth exterior
-          'https://images.unsplash.com/photo-1593693411394-4fb7b7e1e0ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Buddhist ceremony at temple
-          'https://images.unsplash.com/photo-1593693411320-e5a5d1b20c0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'  // Kandy temple architecture
+          'assets/images/img11.jpg', // Temple of the Tooth exterior
         ],
         'activities': [
           'Attending evening puja ceremony',
@@ -194,9 +187,8 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Peradeniya, Kandy, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1464822759844-d150baef493e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Tropical botanical gardens
-          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Palm avenue in gardens
-          'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'  // Orchid house
+          'assets/images/img10.jpg', // Tropical botanical gardens
+      
         ],
         'activities': [
           'Walking through 147-acre botanical paradise',
@@ -223,9 +215,8 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Kandy Lake, Kandy, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1568393691622-c7ba131d63b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Kandy Lake with temple
-          'https://images.unsplash.com/photo-1574087980103-e2c7e3a37628?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Kandy city and hills
-          'https://images.unsplash.com/photo-1548013146-72479768bada?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'  // Traditional Sri Lankan crafts
+          'assets/images/img8.jpg', // Kandy Lake with temple
+          
         ],
         'activities': [
           'Walking around the scenic artificial lake',
@@ -306,9 +297,7 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Galle Fort, Galle, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Galle Fort colonial architecture
-          'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Galle Fort lighthouse
-          'https://images.unsplash.com/photo-1549144511-f099e773c147?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'  // Galle Fort walls and ocean
+          'assets/images/img12.jpg',
         ],
         'activities': [
           'Walking along 17th-century fortification walls',
@@ -335,9 +324,7 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Unawatuna, Galle District, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Unawatuna beach panorama
-          'https://images.unsplash.com/photo-1533105079780-92b9be482077?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Palm trees on beach
-          'https://images.unsplash.com/photo-1583212292454-1fe6229603b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'  // Tropical beach clear water
+          'assets/images/img16.jpg',
         ],
         'activities': [
           'Swimming in crystal clear blue waters',
@@ -364,9 +351,7 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Mirissa Harbor, Matara District, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Blue whale in ocean
-          'https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Dolphins jumping
-          'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'  // Whale watching boat
+          'assets/images/img15.jpg', // Blue whale in ocean
         ],
         'activities': [
           'Early morning whale watching boat tour',
@@ -447,9 +432,8 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Gotuwala, Ella, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Nine Arch Bridge with train
-          'https://images.unsplash.com/photo-1597149041584-0c5e1ac18d4b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Blue train on bridge
-          'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'  // Tea plantations around bridge
+          'assets/images/img14.jpg', // Nine Arch Bridge with train
+          
         ],
         'activities': [
           'Photography of the iconic stone bridge',
@@ -476,9 +460,8 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Ella, Badulla District, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Little Adam's Peak summit
-          'https://images.unsplash.com/photo-1548013146-72479768bada?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Hill country sunrise view
-          'https://images.unsplash.com/photo-1574087980103-e2c7e3a37628?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'  // Tea plantations panorama
+          'assets/images/img13.jpg', // Little Adam's Peak summit
+          
         ],
         'activities': [
           'Easy hiking to the summit (1141m)',
@@ -505,9 +488,8 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Lipton\'s Seat, Haputale, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Tea plantation workers
-          'https://images.unsplash.com/photo-1464822759844-d150baef493e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Tea processing factory
-          'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'  // Lipton's Seat viewpoint
+          'assets/images/img23.jpg', // Tea plantation workers
+          
         ],
         'activities': [
           'Tea factory tour and processing demonstration',
@@ -588,9 +570,8 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Yala National Park, Hambantota District, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1549144511-f099e773c147?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Sri Lankan leopard
-          'https://images.unsplash.com/photo-1568393691622-c7ba131d63b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Elephant herd in Yala
-          'https://images.unsplash.com/photo-1544735716-392fe2489ffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'  // Yala landscape with wildlife
+          'assets/images/img6.jpg', // Sri Lankan leopard
+          
         ],
         'activities': [
           'Early morning leopard tracking safari',
@@ -617,9 +598,7 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Bundala National Park, Hambantota District, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Flamingos in Bundala
-          'https://images.unsplash.com/photo-1464822759844-d150baef493e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Wetland birds
-          'https://images.unsplash.com/photo-1597149041584-0c5e1ac18d4b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'  // Lagoon ecosystem
+          'assets/images/img18.jpg', // Flamingos in Bundala
         ],
         'activities': [
           'Migratory bird watching (Sep-Mar season)',
@@ -646,9 +625,8 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Palatupana, Yala, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Pristine beach coastline
-          'https://images.unsplash.com/photo-1533105079780-92b9be482077?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Beach where jungle meets ocean
-          'https://images.unsplash.com/photo-1583212292454-1fe6229603b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'  // Untouched beach sunset
+          'assets/images/img19.jpg', // Pristine beach coastline
+          
         ],
         'activities': [
           'Relaxing on pristine untouched beach',
@@ -729,9 +707,7 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Horton Plains National Park, Nuwara Eliya District, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // World's End cliff view
-          'https://images.unsplash.com/photo-1548013146-72479768bada?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Horton Plains plateau
-          'https://images.unsplash.com/photo-1574087980103-e2c7e3a37628?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'  // Baker's Falls
+          'assets/images/img31.jpg', // World's End cliff view
         ],
         'activities': [
           'Hiking the 9km circular trail',
@@ -758,9 +734,8 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Gregory Lake, Nuwara Eliya, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1548013146-72479768bada?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Gregory Lake with colonial buildings
-          'https://images.unsplash.com/photo-1574087980103-e2c7e3a37628?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Nuwara Eliya colonial architecture
-          'https://images.unsplash.com/photo-1568393691622-c7ba131d63b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'  // Hill station town view
+          'assets/images/img32.jpg', // Gregory Lake with colonial buildings
+          
         ],
         'activities': [
           'Boat rides on Gregory Lake',
@@ -787,9 +762,7 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Pedro Tea Estate, Nuwara Eliya, Sri Lanka'
         },
         'images': [
-          'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // High altitude tea plantation
-          'https://images.unsplash.com/photo-1464822759844-d150baef493e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Tea factory processing
-          'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'  // Tea tasting session
+          'assets/images/img33.jpg', 
         ],
         'activities': [
           'Tea factory tour and production process',

@@ -13,8 +13,7 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
   // Constants
   static const Color primaryBlue = Color(0xFF0088cc);
   static const Color primaryLightColor = Color(0xFF33a3dd);
-  static const Color accentPurple = Color(0xFF6366f1);
-  static const Color accentPink = Color(0xFFec4899);
+ 
 
   // Form controllers
   final _destinationController = TextEditingController();

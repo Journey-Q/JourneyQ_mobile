@@ -8,9 +8,9 @@ final List<Map<String, dynamic>> post_data = [
     'journeyTitle': 'Ancient Wonders of Cultural Triangle',
     'placesVisited': ['Sigiriya Rock Fortress', 'Dambulla Cave Temple', 'Polonnaruwa'],
     'postImages': [
-      'https://unsplash.com/photos/a-large-rock-in-the-middle-of-a-forest-l2_8b6Se-q4', // Sigiriya Lion Rock
-      'https://images.unsplash.com/photo-1566139996634-082433de5b14?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Ancient lion paws
-      'https://images.unsplash.com/photo-1580654712603-eb43273aff33?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Dambulla cave temple
+      'assets/images/img1.jpg', 
+      'assets/images/img4.jpg', 
+      'assets/images/img5.jpg', 
     ],
     'likesCount': 98,
     'commentsCount': 15,
@@ -85,9 +85,9 @@ final List<Map<String, dynamic>> post_data = [
     'journeyTitle': 'Cultural Heart of Sri Lanka',
     'placesVisited': ['Temple of the Tooth', 'Kandy Lake', 'Royal Botanical Gardens'],
     'postImages': [
-      'https://images.unsplash.com/photo-1593693411502-1e5e62e42e35?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Temple of the Tooth Kandy
-      'https://images.unsplash.com/photo-1568393691622-c7ba131d63b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Kandy Lake view
-      'https://images.unsplash.com/photo-1464822759844-d150baef493e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Royal Botanical Gardens
+      'assets/images/img11.jpg', // Temple of the Tooth Kandy
+      'assets/images/img10.jpg', // Kandy Lake view
+      'assets/images/img8.jpg', // Royal Botanical Gardens
     ],
     'likesCount': 76,
     'commentsCount': 11,
@@ -133,9 +133,9 @@ final List<Map<String, dynamic>> post_data = [
     'journeyTitle': 'Colonial Charm & Coastal Beauty',
     'placesVisited': ['Galle Dutch Fort', 'Lighthouse', 'Unawatuna Beach'],
     'postImages': [
-      'https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Galle Dutch Fort
-      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Unawatuna Beach
-      'https://images.unsplash.com/photo-1533105079780-92b9be482077?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Palm trees coastal beach
+      'assets/images/img12.jpg', // Galle Dutch Fort
+      'assets/images/img16.jpg', // Unawatuna Beach
+      'assets/images/img15.jpg', // Palm trees coastal beach
     ],
     'likesCount': 142,
     'commentsCount': 19,
@@ -181,9 +181,9 @@ final List<Map<String, dynamic>> post_data = [
     'journeyTitle': 'Hill Country Tea Trail Adventure',
     'placesVisited': ['Nine Arch Bridge', 'Little Adam\'s Peak', 'Tea Plantations'],
     'postImages': [
-      'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Nine Arch Bridge with train
-      'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Tea plantation hills
-      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Little Adam's Peak view
+      'assets/images/img14.jpg', // World's End Horton Plains
+      'assets/images/img13.jpg', // Gregory Lake Nuwara Eliya
+      'assets/images/img23.jpg', // Little Adam's Peak view
     ],
     'likesCount': 187,
     'commentsCount': 26,
@@ -249,9 +249,9 @@ final List<Map<String, dynamic>> post_data = [
     'journeyTitle': 'Wildlife Safari Adventure',
     'placesVisited': ['Yala Block 1', 'Elephant Rock', 'Palatupana Beach'],
     'postImages': [
-      'https://images.unsplash.com/photo-1549144511-f099e773c147?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Sri Lankan leopard
-      'https://images.unsplash.com/photo-1568393691622-c7ba131d63b4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Elephant herd
-      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Palatupana Beach
+      'assets/images/img6.jpg', // Sri Lankan leopard
+      'assets/images/img18.jpg', // Elephant herd
+      'assets/images/img19.jpg', // Palatupana Beach
     ],
     'likesCount': 234,
     'commentsCount': 32,
@@ -297,9 +297,9 @@ final List<Map<String, dynamic>> post_data = [
     'journeyTitle': 'Little England in the Hills',
     'placesVisited': ['Gregory Lake', 'Horton Plains', 'Pedro Tea Estate'],
     'postImages': [
-      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // World's End Horton Plains
-      'https://images.unsplash.com/photo-1548013146-72479768bada?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Gregory Lake Nuwara Eliya
-      'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Pedro Tea Estate
+      'assets/images/img31.jpg', // World's End Horton Plains
+      'assets/images/img32.jpg', // Gregory Lake Nuwara Eliya
+      'assets/images/img33.jpg', // Pedro Tea Estate
     ],
     'likesCount': 165,
     'commentsCount': 21,
