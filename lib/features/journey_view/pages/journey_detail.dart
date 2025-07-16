@@ -73,81 +73,167 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   }
 
   Widget _buildSliverAppBar() {
-    final places = journeyData!['places'] as List;
-    final firstPlace = places.first;
-    final images = firstPlace['images'] as List<String>;
+  final places = journeyData!['places'] as List;
+  final firstPlace = places.first;
+  final images = firstPlace['images'] as List<String>;
 
-    return SliverAppBar(
-      expandedHeight: 200,
-      pinned: true,
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black,
-      surfaceTintColor: Colors.transparent,
-      elevation: 0,
-      flexibleSpace: FlexibleSpaceBar(
-        background: Stack(
-          children: [
-            PageView.builder(
-              itemCount: images.length,
-              itemBuilder: (context, index) {
-                return Image.network(images[index], fit: BoxFit.cover);
-              },
-            ),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.3),
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.7),
-                  ],
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 20,
-              left: 20,
-              right: 20,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    journeyData!['tripTitle'],
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundImage: NetworkImage(
-                          journeyData!['authorImage'],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Journey by ${journeyData!['authorName']}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
+  return SliverAppBar(
+    expandedHeight: 200,
+    pinned: true,
+    backgroundColor: Colors.white,
+    foregroundColor: Colors.black,
+    surfaceTintColor: Colors.transparent,
+    elevation: 0,
+    flexibleSpace: FlexibleSpaceBar(
+      background: Stack(
+        children: [
+          PageView.builder(
+            itemCount: images.length,
+            itemBuilder: (context, index) {
+              return _buildImage(images[index]); // Use the helper method
+            },
+          ),
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.3),
+                  Colors.transparent,
+                  Colors.black.withOpacity(0.7),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+          Positioned(
+            bottom: 20,
+            left: 20,
+            right: 20,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  journeyData!['tripTitle'],
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundImage: journeyData!['authorImage'].startsWith('assets/')
+                          ? AssetImage(journeyData!['authorImage']) as ImageProvider
+                          : NetworkImage(journeyData!['authorImage']),
+                      onBackgroundImageError: (_, __) {},
+                      backgroundColor: Colors.grey[300],
+                      child: journeyData!['authorImage'].isEmpty
+                          ? Icon(Icons.person, color: Colors.grey[600])
+                          : null,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Journey by ${journeyData!['authorName']}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
+    ),
+  );
+}
+
+
+Widget _buildImage(String imagePath) {
+  // Check if it's an asset image (starts with 'assets/') or network URL
+  if (imagePath.startsWith('assets/')) {
+    return Image.asset(
+      imagePath,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          color: Colors.grey[300],
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.broken_image, color: Colors.grey[600], size: 50),
+                const SizedBox(height: 8),
+                Text(
+                  'Failed to load image',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  } else if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    // Network image
+    return Image.network(
+      imagePath,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Container(
+          color: Colors.grey[200],
+          child: Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                  : null,
+            ),
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          color: Colors.grey[300],
+          child: const Center(
+            child: Icon(Icons.error, color: Colors.grey, size: 50),
+          ),
+        );
+      },
+    );
+  } else {
+    // Assume it's an asset image without 'assets/' prefix
+    return Image.asset(
+      'assets/images/$imagePath', // Adjust path as needed
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          color: Colors.grey[300],
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.broken_image, color: Colors.grey[600], size: 50),
+                const SizedBox(height: 8),
+                Text(
+                  'Failed to load image',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
+}
 
   Widget _buildTripStats() {
     final places = journeyData!['places'] as List;
@@ -672,53 +758,28 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   }
 
   Widget _buildImageCarousel(List<String> images, String placeName) {
-    return SizedBox(
-      height: 200,
-      child: PageView.builder(
-        controller: _pageControllers[placeName]!,
-        onPageChanged: (index) {
-          setState(() {
-            _currentImageIndexes[placeName] = index;
-          });
-        },
-        itemCount: images.length,
-        itemBuilder: (context, index) {
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 0),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                images[index],
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
-                    color: Colors.grey[200],
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded /
-                                  loadingProgress.expectedTotalBytes!
-                            : null,
-                      ),
-                    ),
-                  );
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey[300],
-                    child: const Center(
-                      child: Icon(Icons.error, color: Colors.grey, size: 50),
-                    ),
-                  );
-                },
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
+  return SizedBox(
+    height: 200,
+    child: PageView.builder(
+      controller: _pageControllers[placeName]!,
+      onPageChanged: (index) {
+        setState(() {
+          _currentImageIndexes[placeName] = index;
+        });
+      },
+      itemCount: images.length,
+      itemBuilder: (context, index) {
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 0),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: _buildImage(images[index]), // Use the helper method
+          ),
+        );
+      },
+    ),
+  );
+}
 
   Widget _buildDotsIndicator(List<String> images, String placeName) {
     return Padding(
