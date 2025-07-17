@@ -344,24 +344,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: userTripMood.isEmpty ? Colors.grey[100] : Colors.purple.withOpacity(0.1),
+            color: userTripMood.isEmpty ? Colors.grey[100] : Colors.blue.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: userTripMood.isEmpty ? Colors.grey[300]! : Colors.purple.withOpacity(0.3),
+              color: userTripMood.isEmpty ? Colors.grey[300]! : Colors.blue.withOpacity(0.3),
             ),
           ),
           child: Row(
             children: [
               Icon(
                 userTripMood.isEmpty ? Icons.add : _getTripMoodIcon(userTripMood),
-                color: userTripMood.isEmpty ? Colors.grey[600] : Colors.purple,
+                color: userTripMood.isEmpty ? Colors.grey[600] : Colors.blue,
                 size: 20,
               ),
               const SizedBox(width: 12),
               Text(
                 userTripMood.isEmpty ? 'No trip mood selected. Tap Edit to choose.' : userTripMood,
                 style: TextStyle(
-                  color: userTripMood.isEmpty ? Colors.grey[600] : Colors.purple,
+                  color: userTripMood.isEmpty ? Colors.grey[600] : Colors.blue,
                   fontSize: 14,
                   fontWeight: userTripMood.isEmpty ? FontWeight.normal : FontWeight.w600,
                 ),
@@ -630,7 +630,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           tempSelected = value ?? '';
                         });
                       },
-                      activeColor: Colors.purple,
+                      activeColor: Colors.blue,
                     );
                   }).toList(),
 
@@ -654,7 +654,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             Navigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.purple,
+                            backgroundColor: Colors.blue,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
