@@ -150,7 +150,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final Map<String, dynamic> userData = {
     'name': 'Samantha Fernando',
     'username': 'samantha_travels',
-    'bio': 'Travel enthusiast | Exploring the world 🌍\n✈️ 47 countries visited\n📸 Capturing moments',
+    'bio': 'Travel enthusiast | Exploring Sri Lanka 🇱🇰\n✈️ 8 districts visited',
     'posts': 9,
     'followers': 5,
     'following': 4,
@@ -173,7 +173,6 @@ class _ProfilePageState extends State<ProfilePage> {
               _buildProfileCard(),
               _buildStatsCard(),
               _buildActionButtons(),
-              _buildTabSection(),
               _buildContentSection(),
               const SizedBox(height: 100), // Space for bottom navigation
             ],
@@ -253,7 +252,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildProfileCard() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -267,31 +266,14 @@ class _ProfilePageState extends State<ProfilePage> {
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Stack(
+          Column(
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF0088cc), Color(0xFF00B894)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF0088cc).withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.all(3),
-                child: CircleAvatar(
-                  radius: 45,
-                  backgroundColor: Colors.white,
-                  child: CircleAvatar(
-                    radius: 42,
+              Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 45,
                     backgroundImage: userData['profileImage'] != null
                         ? NetworkImage(userData['profileImage'])
                         : null,
@@ -300,34 +282,48 @@ class _ProfilePageState extends State<ProfilePage> {
                         ? const Icon(Icons.person, size: 40, color: Colors.grey)
                         : null,
                   ),
-                ),
+                  if (isSubscribed)
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFFD700),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.star, color: Colors.white, size: 16),
+                      ),
+                    ),
+                ],
               ),
-              if (isSubscribed)
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFFD700),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.star, color: Colors.white, size: 16),
-                  ),
+              const SizedBox(height: 12),
+              // Subscribe button moved here under profile photo
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  gradient: LinearGradient(
+                    colors: isSubscribed
+                        ? [const Color(0xFFFFD700), const Color(0xFFFF6B6B)]
+                        : [const Color(0xFF0088cc), Color(0xFF0088cc).withOpacity(0.8)],
+                  )
                 ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: GestureDetector(
-                  onTap: _changeProfilePicture,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0088cc),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
+                child: ElevatedButton.icon(
+                  onPressed: _handleSubscribe,
+                  icon: Icon(isSubscribed ? Icons.star : Icons.star_outline, size: 14),
+                  label: Text(isSubscribed ? 'Premium' : 'Subscribe'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
                     ),
-                    child: const Icon(Icons.camera_alt, color: Colors.white, size: 14),
+                    textStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
@@ -376,20 +372,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     fontSize: 14,
                     height: 1.4,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.calendar_today, size: 14, color: Color(0xFF636E72)),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Joined ${userData['joinDate']}',
-                      style: const TextStyle(
-                        color: Color(0xFF636E72),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -525,26 +507,20 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
-                gradient: LinearGradient(
-                  colors: isSubscribed
-                      ? [const Color(0xFFFFD700), const Color(0xFFFF6B6B)]
-                      : [const Color(0xFF0088cc), Color(0xFF0088cc).withOpacity(0.8)],
-                ),
                 boxShadow: [
                   BoxShadow(
-                    color: (isSubscribed ? const Color(0xFFFFD700) : const Color(0xFF0088cc))
-                        .withOpacity(0.3),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
               child: ElevatedButton.icon(
-                onPressed: _handleSubscribe,
-                icon: Icon(isSubscribed ? Icons.star : Icons.star_outline, size: 18),
-                label: Text(isSubscribed ? 'Premium' : 'Subscribe'),
+                onPressed: _navigateToBucketList,
+                icon: const Icon(Icons.bookmark, size: 18),
+                label: const Text('Bucket List'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
+                  backgroundColor: const Color(0xFF0088cc),
                   foregroundColor: Colors.white,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -578,7 +554,6 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Row(
         children: [
           _buildTabItem('posts', 'Posts', Icons.grid_view),
-          _buildTabItem('bucketlist', 'Bucket List', Icons.bookmark),
         ],
       ),
     );
@@ -619,14 +594,24 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildContentSection() {
-    switch (selectedTab) {
-      case 'posts':
-        return _buildPostsGrid();
-      case 'bucketlist':
-        return _buildBucketListView();
-      default:
-        return _buildPostsGrid();
-    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // "My Posts" title
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: const Text(
+            'My Posts',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2D3436),
+            ),
+          ),
+        ),
+        _buildPostsGrid(),
+      ],
+    );
   }
 
   Widget _buildPostsGrid() {
@@ -654,84 +639,22 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Image with visit status
-                Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        topRight: Radius.circular(16),
-                      ),
-                      child: Container(
-                        height: 200,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: NetworkImage(post['imageUrl']),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                // Image without likes and visited label
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                  child: Container(
+                    height: 200,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: NetworkImage(post['imageUrl']),
+                        fit: BoxFit.cover,
                       ),
                     ),
-                    if (post['isVisited'])
-                      Positioned(
-                        top: 12,
-                        right: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF00B894),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.check_circle, color: Colors.white, size: 14),
-                              const SizedBox(width: 4),
-                              const Text(
-                                'Visited',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    // Heart icon for likes
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              post['isLiked'] ? Icons.favorite : Icons.favorite_border,
-                              color: post['isLiked'] ? Colors.red : Colors.white,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              post['likes'].toString(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
                 // Content
                 Padding(
@@ -755,68 +678,29 @@ class _ProfilePageState extends State<ProfilePage> {
                           color: Color(0xFF636E72),
                         ),
                       ),
-                      if (post['isVisited'] && post['visitDate'] != null) ...[
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            const Icon(Icons.calendar_today, size: 14, color: Color(0xFF636E72)),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Visited: ${post['visitDate']}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF636E72),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
                       const SizedBox(height: 12),
-                      // Action buttons
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: ElevatedButton(
-                                onPressed: () => _viewPost(index),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF0088cc),
-                                  foregroundColor: Colors.white,
-                                  elevation: 0,
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'View Journey',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: const Color(0xFF0088cc)),
+                      // Only View Journey button (removed share button)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () => _viewPost(index),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0088cc),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: IconButton(
-                              onPressed: () => _sharePost(index),
-                              icon: const Icon(
-                                Icons.share,
-                                color: Color(0xFF0088cc),
-                                size: 20,
-                              ),
+                          ),
+                          child: const Text(
+                            'View Journey',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
@@ -1036,10 +920,6 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() {
       selectedTab = tabId;
     });
-
-    if (tabId == 'bucketlist') {
-      _navigateToBucketList();
-    }
   }
 
   void _showPostOptions() {
@@ -1375,18 +1255,6 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  void _sharePost(int index) {
-    final post = userPosts[index];
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Sharing ${post['destination']}...'),
-        backgroundColor: const Color(0xFF0088cc),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
