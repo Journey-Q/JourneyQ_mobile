@@ -1,14 +1,11 @@
-// File: lib/features/marketplace/pages/hotel_details.dart
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'booking_room.dart'; // Import the booking room page
-import 'booking_room.dart'; // Import the booking page
+import 'booking_room.dart';
 
 class HotelDetailsPage extends StatefulWidget {
-  final Map<String, dynamic>? hotel;
+  final String hotelId;
 
-  const HotelDetailsPage({Key? key, this.hotel}) : super(key: key);
+  const HotelDetailsPage({Key? key, required this.hotelId}) : super(key: key);
 
   @override
   State<HotelDetailsPage> createState() => _HotelDetailsPageState();
@@ -16,70 +13,329 @@ class HotelDetailsPage extends StatefulWidget {
 
 class _HotelDetailsPageState extends State<HotelDetailsPage> {
   late Map<String, dynamic> hotelData;
+  bool isLoading = true;
+  bool hasError = false;
 
   @override
   void initState() {
     super.initState();
-    // Use passed hotel data or default data
-    hotelData = widget.hotel ?? _getDefaultHotelData();
-
-    // Enhance hotel data with additional details if needed
-    _enhanceHotelData();
+    _loadHotelData();
   }
 
-  Map<String, dynamic> _getDefaultHotelData() {
-    return {
+  void _loadHotelData() {
+    try {
+      // Get hotel data by ID
+      final hotel = _getHotelById(widget.hotelId);
+      if (hotel != null) {
+        hotelData = hotel;
+        setState(() {
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          hasError = true;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        hasError = true;
+        isLoading = false;
+      });
+    }
+  }
+
+  // Comprehensive hotel database with all details
+  static final List<Map<String, dynamic>> _hotelDatabase = [
+    {
+      'id': 'hotel_001',
       'name': 'Shangri-La Hotel Colombo',
       'location': 'Galle Face, Colombo',
       'rating': 4.8,
+      'reviewCount': 1250,
+      'price': 'LKR 45,000/night',
+      'contact': '+94 11 254 4544',
+      'email': 'reservations@shangrilahotelcolombo.com',
+      'openTime': '24/7',
       'image': 'assets/images/shangri_la.jpg',
+      'mainImage': 'assets/images/shangri_la_main.jpg',
       'backgroundColor': const Color(0xFF8B4513),
-    };
-  }
+      'isAvailable': true,
+      'description': 'Experience luxury and comfort at Shangri-La Hotel Colombo. Located in the heart of Galle Face, our hotel offers world-class amenities, stunning ocean views, and exceptional service that defines luxury hospitality.',
+      'amenities': [
+        'Infinity Pool',
+        'CHI Spa',
+        'Free WiFi',
+        'Multiple Restaurants',
+        'Fitness Center',
+        'Business Center',
+        'Concierge Service',
+        '24h Room Service',
+        'Valet Parking',
+        'Airport Shuttle'
+      ],
+      'rooms': [
+        {
+          'id': 'room_001_deluxe',
+          'type': 'Deluxe Ocean View',
+          'price': 'LKR 45,000/night',
+          'size': '45 sqm',
+          'image': 'assets/images/shangri_la_deluxe.jpg',
+          'backgroundColor': const Color(0xFF8B4513),
+          'amenities': ['King Bed', 'Ocean View', 'WiFi', 'Minibar', 'Safe', 'Air Conditioning', 'Marble Bathroom', 'Balcony'],
+          'available': true,
+        },
+        {
+          'id': 'room_001_exec',
+          'type': 'Executive Suite',
+          'price': 'LKR 65,000/night',
+          'size': '75 sqm',
+          'image': 'assets/images/shangri_la_suite.jpg',
+          'backgroundColor': const Color(0xFF20B2AA),
+          'amenities': ['Separate Living Room', 'King Bed', 'City View', 'WiFi', 'Minibar', 'Work Desk', 'Premium Bathroom', 'Executive Lounge Access'],
+          'available': true,
+        },
+        {
+          'id': 'room_001_pres',
+          'type': 'Presidential Suite',
+          'price': 'LKR 120,000/night',
+          'size': '120 sqm',
+          'image': 'assets/images/shangri_la_presidential.jpg',
+          'backgroundColor': const Color(0xFF9370DB),
+          'amenities': ['Master Bedroom', 'Living & Dining Area', 'Panoramic Ocean View', 'Butler Service', 'Premium Amenities', 'Private Balcony'],
+          'available': false,
+        },
+      ],
+    },
+    {
+      'id': 'hotel_002',
+      'name': 'Galle Face Hotel',
+      'location': 'Galle Face Green, Colombo',
+      'rating': 4.5,
+      'reviewCount': 980,
+      'price': 'LKR 38,000/night',
+      'contact': '+94 11 254 1010',
+      'email': 'reservations@gallefacehotel.com',
+      'openTime': '24/7',
+      'image': 'assets/images/galle_face.jpg',
+      'mainImage': 'assets/images/galle_face_main.jpg',
+      'backgroundColor': const Color(0xFF228B22),
+      'isAvailable': true,
+      'description': 'Step into history at Galle Face Hotel, Sri Lanka\'s grand dame. With over 150 years of heritage, we offer timeless elegance, colonial charm, and modern luxury in the heart of Colombo.',
+      'amenities': [
+        'Heritage Pool',
+        'Spa Ceylon',
+        'Free WiFi',
+        'Sea Spray Restaurant',
+        'Fitness Center',
+        'Heritage Tours',
+        'Concierge Service',
+        'Room Service',
+        'Valet Parking',
+        'Ballroom'
+      ],
+      'rooms': [
+        {
+          'id': 'room_002_heritage',
+          'type': 'Heritage Room',
+          'price': 'LKR 38,000/night',
+          'size': '35 sqm',
+          'image': 'assets/images/galle_face_heritage.jpg',
+          'backgroundColor': const Color(0xFF228B22),
+          'amenities': ['Colonial Decor', 'Queen Bed', 'Garden View', 'WiFi', 'Classic Furnishing', 'Air Conditioning', 'Period Furniture'],
+          'available': true,
+        },
+        {
+          'id': 'room_002_ocean',
+          'type': 'Ocean Suite',
+          'price': 'LKR 55,000/night',
+          'size': '65 sqm',
+          'image': 'assets/images/galle_face_ocean.jpg',
+          'backgroundColor': const Color(0xFF20B2AA),
+          'amenities': ['Ocean Facing', 'King Bed', 'Sitting Area', 'WiFi', 'Period Furniture', 'Premium Bathroom', 'Balcony'],
+          'available': true,
+        },
+        {
+          'id': 'room_002_regent',
+          'type': 'Regent Suite',
+          'price': 'LKR 85,000/night',
+          'size': '95 sqm',
+          'image': 'assets/images/galle_face_regent.jpg',
+          'backgroundColor': const Color(0xFF9370DB),
+          'amenities': ['Historical Suite', 'Separate Living Room', 'Ocean View', 'Antique Furnishing', 'Butler Service'],
+          'available': true,
+        },
+      ],
+    },
+    {
+      'id': 'hotel_003',
+      'name': 'Cinnamon Grand Colombo',
+      'location': 'Fort, Colombo',
+      'rating': 4.7,
+      'reviewCount': 1100,
+      'price': 'LKR 42,000/night',
+      'contact': '+94 11 249 1437',
+      'email': 'reservations@cinnamongrandcolombo.com',
+      'openTime': '24/7',
+      'image': 'assets/images/cinnamon_grand.jpg',
+      'mainImage': 'assets/images/cinnamon_grand_main.jpg',
+      'backgroundColor': const Color(0xFF20B2AA),
+      'isAvailable': true,
+      'description': 'Discover urban sophistication at Cinnamon Grand Colombo. Located in Fort, our hotel combines contemporary design with warm Sri Lankan hospitality, offering premium accommodations and facilities.',
+      'amenities': [
+        'Rooftop Pool',
+        'Red Spa',
+        'Free WiFi',
+        'Nuga Gama Restaurant',
+        'Fitness Center',
+        'Business Center',
+        'Concierge Service',
+        'Room Service',
+        'Shopping Arcade',
+        'Event Facilities'
+      ],
+      'rooms': [
+        {
+          'id': 'room_003_superior',
+          'type': 'Superior Room',
+          'price': 'LKR 42,000/night',
+          'size': '38 sqm',
+          'image': 'assets/images/cinnamon_superior.jpg',
+          'backgroundColor': const Color(0xFF20B2AA),
+          'amenities': ['King Bed', 'City View', 'WiFi', 'Minibar', 'Work Station', 'Air Conditioning', 'Modern Bathroom'],
+          'available': true,
+        },
+        {
+          'id': 'room_003_club',
+          'type': 'Club Room',
+          'price': 'LKR 58,000/night',
+          'size': '42 sqm',
+          'image': 'assets/images/cinnamon_club.jpg',
+          'backgroundColor': const Color(0xFF8FBC8F),
+          'amenities': ['King Bed', 'Club Lounge Access', 'WiFi', 'Minibar', 'Premium Amenities', 'Complimentary Breakfast'],
+          'available': true,
+        },
+      ],
+    },
+    {
+      'id': 'hotel_004',
+      'name': 'Hilton Colombo',
+      'location': 'Echelon Square, Colombo',
+      'rating': 4.6,
+      'reviewCount': 890,
+      'price': 'LKR 40,000/night',
+      'contact': '+94 11 254 9200',
+      'email': 'reservations@hiltoncolombo.com',
+      'openTime': '24/7',
+      'image': 'assets/images/hilton.jpg',
+      'mainImage': 'assets/images/hilton_main.jpg',
+      'backgroundColor': const Color(0xFF8FBC8F),
+      'isAvailable': true,
+      'description': 'Experience world-class hospitality at Hilton Colombo. Our modern hotel in Echelon Square offers luxury accommodations, excellent dining, and comprehensive business facilities.',
+      'amenities': [
+        'Outdoor Pool',
+        'eforea Spa',
+        'Free WiFi',
+        'Graze Kitchen',
+        'Executive Lounge',
+        'Business Center',
+        'Concierge Service',
+        'Room Service',
+        'Fitness Center',
+        'Event Spaces'
+      ],
+      'rooms': [
+        {
+          'id': 'room_004_guest',
+          'type': 'Guest Room',
+          'price': 'LKR 40,000/night',
+          'size': '36 sqm',
+          'image': 'assets/images/hilton_guest.jpg',
+          'backgroundColor': const Color(0xFF8FBC8F),
+          'amenities': ['King Bed', 'City View', 'WiFi', 'Work Desk', 'Minibar', 'Air Conditioning', 'Modern Bathroom'],
+          'available': true,
+        },
+        {
+          'id': 'room_004_exec',
+          'type': 'Executive Room',
+          'price': 'LKR 55,000/night',
+          'size': '40 sqm',
+          'image': 'assets/images/hilton_executive.jpg',
+          'backgroundColor': const Color(0xFF20B2AA),
+          'amenities': ['King Bed', 'Executive Lounge Access', 'WiFi', 'Premium Amenities', 'Complimentary Breakfast', 'Evening Cocktails'],
+          'available': true,
+        },
+      ],
+    },
+    {
+      'id': 'hotel_005',
+      'name': 'Taj Samudra',
+      'location': 'Galle Face, Colombo',
+      'rating': 4.4,
+      'reviewCount': 750,
+      'price': 'LKR 35,000/night',
+      'contact': '+94 11 244 6622',
+      'email': 'reservations@tajsamudra.com',
+      'openTime': '24/7',
+      'image': 'assets/images/taj_samudra.jpg',
+      'mainImage': 'assets/images/taj_samudra_main.jpg',
+      'backgroundColor': const Color(0xFF9370DB),
+      'isAvailable': true,
+      'description': 'Indulge in refined luxury at Taj Samudra. Overlooking the Indian Ocean, our hotel offers impeccable service, elegant accommodations, and authentic experiences in the heart of Colombo.',
+      'amenities': [
+        'Ocean Pool',
+        'Jiva Spa',
+        'Free WiFi',
+        'Golden Dragon Restaurant',
+        'Fitness Center',
+        'Business Center',
+        'Concierge Service',
+        'Room Service',
+        'Cultural Experiences',
+        'Banquet Halls'
+      ],
+      'rooms': [
+        {
+          'id': 'room_005_deluxe',
+          'type': 'Deluxe Room',
+          'price': 'LKR 35,000/night',
+          'size': '32 sqm',
+          'image': 'assets/images/taj_deluxe.jpg',
+          'backgroundColor': const Color(0xFF9370DB),
+          'amenities': ['King Bed', 'Ocean/City View', 'WiFi', 'Minibar', 'Traditional Decor', 'Air Conditioning'],
+          'available': true,
+        },
+        {
+          'id': 'room_005_luxury',
+          'type': 'Luxury Room',
+          'price': 'LKR 48,000/night',
+          'size': '38 sqm',
+          'image': 'assets/images/taj_luxury.jpg',
+          'backgroundColor': const Color(0xFF20B2AA),
+          'amenities': ['King Bed', 'Premium Ocean View', 'WiFi', 'Premium Amenities', 'Elegant Furnishing', 'Marble Bathroom'],
+          'available': true,
+        },
+        {
+          'id': 'room_005_suite',
+          'type': 'Taj Club Suite',
+          'price': 'LKR 75,000/night',
+          'size': '68 sqm',
+          'image': 'assets/images/taj_suite.jpg',
+          'backgroundColor': const Color(0xFF8B4513),
+          'amenities': ['Separate Living Area', 'Ocean View', 'Club Benefits', 'Butler Service', 'Premium Location'],
+          'available': false,
+        },
+      ],
+    },
+  ];
 
-  void _enhanceHotelData() {
-    // Add default values for missing fields
-    hotelData.putIfAbsent('reviewCount', () => 1250);
-    hotelData.putIfAbsent('price', () => 'LKR 45,000/night');
-    hotelData.putIfAbsent('contact', () => '+94 11 254 4544');
-    hotelData.putIfAbsent('email', () => 'reservations@${hotelData['name'].toLowerCase().replaceAll(' ', '').replaceAll('-', '')}.com');
-    hotelData.putIfAbsent('openTime', () => '24/7');
-    hotelData.putIfAbsent('description', () => 'Experience luxury and comfort at ${hotelData['name']}. Located in the heart of ${hotelData['location']}, our hotel offers world-class amenities and exceptional service.');
-    hotelData.putIfAbsent('amenities', () => ['Pool', 'Spa', 'WiFi', 'Restaurant', 'Gym', 'Business Center', 'Concierge', 'Room Service']);
-    hotelData.putIfAbsent('isAvailable', () => true);
-    hotelData.putIfAbsent('mainImage', () => hotelData['image']);
-  }
-
-  List<Map<String, dynamic>> _getHotelRooms() {
-    return [
-      {
-        'type': 'Deluxe Ocean View',
-        'price': 'LKR 45,000/night',
-        'size': '45 sqm',
-        'image': 'assets/images/room_deluxe.jpg',
-        'backgroundColor': hotelData['backgroundColor'],
-        'amenities': ['King Bed', 'Ocean View', 'WiFi', 'Minibar', 'Safe', 'Air Conditioning', 'Bathroom'],
-        'available': true,
-      },
-      {
-        'type': 'Executive Suite',
-        'price': 'LKR 65,000/night',
-        'size': '75 sqm',
-        'image': 'assets/images/room_suite.jpg',
-        'backgroundColor': const Color(0xFF20B2AA),
-        'amenities': ['Separate Living Room', 'King Bed', 'City View', 'WiFi', 'Minibar', 'Work Desk', 'Premium Bathroom'],
-        'available': true,
-      },
-      {
-        'type': 'Presidential Suite',
-        'price': 'LKR 120,000/night',
-        'size': '120 sqm',
-        'image': 'assets/images/room_presidential.jpg',
-        'backgroundColor': const Color(0xFF9370DB),
-        'amenities': ['Master Bedroom', 'Living & Dining Area', 'Panoramic View', 'Butler Service', 'Premium Amenities'],
-        'available': false,
-      },
-    ];
+  // Method to get hotel by ID
+  Map<String, dynamic>? _getHotelById(String id) {
+    try {
+      return _hotelDatabase.firstWhere((hotel) => hotel['id'] == id);
+    } catch (e) {
+      return null;
+    }
   }
 
   Widget _buildRoomCard(Map<String, dynamic> room) {
@@ -271,7 +527,65 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final rooms = _getHotelRooms();
+    if (isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          leading: IconButton(
+            onPressed: () => context.go('/marketplace/hotels'),
+            icon: const Icon(Icons.arrow_back),
+          ),
+          title: const Text('Loading...'),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (hasError) {
+      return Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          leading: IconButton(
+            onPressed: () => context.go('/marketplace/hotels'),
+            icon: const Icon(Icons.arrow_back),
+          ),
+          title: const Text('Hotel Not Found'),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.grey,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Hotel not found',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Hotel ID: ${widget.hotelId}',
+                style: const TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => context.go('/marketplace/hotels'),
+                child: const Text('Back to Hotels'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final rooms = hotelData['rooms'] as List<Map<String, dynamic>>;
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -479,9 +793,11 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                           children: [
                             const Icon(Icons.email, color: Color(0xFF0088cc)),
                             const SizedBox(width: 12),
-                            Text(
-                              hotelData['email'],
-                              style: const TextStyle(fontSize: 14),
+                            Expanded(
+                              child: Text(
+                                hotelData['email'],
+                                style: const TextStyle(fontSize: 14),
+                              ),
                             ),
                           ],
                         ),
@@ -547,13 +863,9 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                       color: Colors.black,
                     ),
                   ),
-                  const SizedBox(height: 8), // Reduced from 16 to 8
+                  const SizedBox(height: 8),
                   Column(
-                    children: rooms.asMap().entries.map((entry) {
-                      int index = entry.key;
-                      Map<String, dynamic> room = entry.value;
-                      return _buildRoomCard(room);
-                    }).toList(),
+                    children: rooms.map((room) => _buildRoomCard(room)).toList(),
                   ),
                 ],
               ),
