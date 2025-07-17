@@ -6,10 +6,8 @@ import 'package:go_router/go_router.dart';
 class TourPackageDetailsPage extends StatefulWidget {
   final String packageId;
 
-  const TourPackageDetailsPage({
-    Key? key,
-    required this.packageId,
-  }) : super(key: key);
+  const TourPackageDetailsPage({Key? key, required this.packageId})
+    : super(key: key);
 
   @override
   State<TourPackageDetailsPage> createState() => _TourPackageDetailsPageState();
@@ -80,69 +78,70 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
       'agencyLogo': 'assets/images/heritage_tours_logo.png',
       'agencyEstablished': '2010',
       'agencyTours': '800+ tours completed',
-      'description': 'Embark on a fascinating journey through Sri Lanka\'s Cultural Triangle, home to ancient kingdoms and UNESCO World Heritage sites. This 5-day tour takes you through the historical cities of Anuradhapura, Polonnaruwa, and the iconic Sigiriya Rock Fortress. Experience the rich cultural heritage, ancient architecture, and spiritual significance of these magnificent sites.',
+      'description':
+          'Embark on a fascinating journey through Sri Lanka\'s Cultural Triangle, home to ancient kingdoms and UNESCO World Heritage sites. This 5-day tour takes you through the historical cities of Anuradhapura, Polonnaruwa, and the iconic Sigiriya Rock Fortress. Experience the rich cultural heritage, ancient architecture, and spiritual significance of these magnificent sites.',
       'includes': [
         'Accommodation',
         'All Meals',
         'Transportation',
         'Professional Guide',
         'Entrance Fees',
-        'Cultural Performances'
+        'Cultural Performances',
       ],
       'highlights': [
         'Sigiriya Rock Fortress',
         'Ancient Temples',
         'Royal Palace Ruins',
         'Buddha Statues',
-        'Archaeological Sites'
+        'Archaeological Sites',
       ],
       'itinerary': [
         {
           'day': 'Day 1',
           'title': 'Arrival & Anuradhapura',
-          'description': 'Explore ancient stupas and monasteries'
+          'description': 'Explore ancient stupas and monasteries',
         },
         {
           'day': 'Day 2',
           'title': 'Polonnaruwa Discovery',
-          'description': 'Visit royal palace ruins and Gal Vihara'
+          'description': 'Visit royal palace ruins and Gal Vihara',
         },
         {
           'day': 'Day 3',
           'title': 'Sigiriya Rock Fortress',
-          'description': 'Climb the famous lion rock and see frescoes'
+          'description': 'Climb the famous lion rock and see frescoes',
         },
         {
           'day': 'Day 4',
           'title': 'Dambulla Cave Temple',
-          'description': 'Marvel at ancient Buddhist cave paintings'
+          'description': 'Marvel at ancient Buddhist cave paintings',
         },
         {
           'day': 'Day 5',
           'title': 'Cultural Performances',
-          'description': 'Enjoy traditional dances and departure'
+          'description': 'Enjoy traditional dances and departure',
         },
       ],
       'pastTourPhotos': [
         {
           'image': 'assets/images/past_tour_photos/cultural_past_1.jpeg',
           'caption': 'Sigiriya Lion Rock',
-          'date': '2 weeks ago'
+          'date': '2 weeks ago',
         },
         {
           'image': 'assets/images/past_tour_photos/cultural_past_2.jpg',
           'caption': 'Dambulla Cave Temple',
-          'date': '1 month ago'
+          'date': '1 month ago',
         },
         {
           'image': 'assets/images/past_tour_photos/cultural_past_3.jpg',
           'caption': 'Polonnaruwa Ruins',
-          'date': '3 weeks ago'
+          'date': '3 weeks ago',
         },
         {
           'image': 'assets/images/past_tour_photos/cultural_past_4.jpeg',
           'caption': 'Anuradhapura Stupa',
-          'date': '2 months ago'
+          'date': '2 months ago',
         },
       ],
     },
@@ -166,64 +165,65 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
       'agencyLogo': 'assets/images/mountain_escape_logo.png',
       'agencyEstablished': '2012',
       'agencyTours': '600+ tours completed',
-      'description': 'Escape to the cool, misty hills of Sri Lanka\'s central highlands. This 4-day adventure showcases the stunning landscapes of Kandy, Nuwara Eliya, and Ella. Experience tea plantations, scenic train rides, and breathtaking mountain views while exploring charming colonial-era towns and pristine natural beauty.',
+      'description':
+          'Escape to the cool, misty hills of Sri Lanka\'s central highlands. This 4-day adventure showcases the stunning landscapes of Kandy, Nuwara Eliya, and Ella. Experience tea plantations, scenic train rides, and breathtaking mountain views while exploring charming colonial-era towns and pristine natural beauty.',
       'includes': [
         'Mountain Lodge Stay',
         'Meals',
         'Train Tickets',
         'Guide',
         'Tea Factory Visit',
-        'Nature Walks'
+        'Nature Walks',
       ],
       'highlights': [
         'Tea Plantations',
         'Nine Arch Bridge',
         'Little Adam\'s Peak',
         'Scenic Train Ride',
-        'Mountain Views'
+        'Mountain Views',
       ],
       'itinerary': [
         {
           'day': 'Day 1',
           'title': 'Kandy Exploration',
-          'description': 'Temple of Tooth and cultural show'
+          'description': 'Temple of Tooth and cultural show',
         },
         {
           'day': 'Day 2',
           'title': 'Scenic Train to Nuwara Eliya',
-          'description': 'Tea country and colonial charm'
+          'description': 'Tea country and colonial charm',
         },
         {
           'day': 'Day 3',
           'title': 'Ella Adventures',
-          'description': 'Nine Arch Bridge and Little Adam\'s Peak'
+          'description': 'Nine Arch Bridge and Little Adam\'s Peak',
         },
         {
           'day': 'Day 4',
           'title': 'Tea Plantation Tour',
-          'description': 'Factory visit and tasting experience'
+          'description': 'Factory visit and tasting experience',
         },
       ],
       'pastTourPhotos': [
         {
           'image': 'assets/images/past_tour_photos/hill_past_1.jpg',
           'caption': 'Nine Arch Bridge',
-          'date': '1 week ago'
+          'date': '1 week ago',
         },
         {
           'image': 'assets/images/past_tour_photos/hill_past_2.jpeg',
           'caption': 'Tea Plantation',
-          'date': '3 weeks ago'
+          'date': '3 weeks ago',
         },
         {
           'image': 'assets/images/past_tour_photos/hill_past_3.jpeg',
           'caption': 'Nuwara Eliya Views',
-          'date': '2 weeks ago'
+          'date': '2 weeks ago',
         },
         {
           'image': 'assets/images/past_tour_photos/hill_past_4.jpeg',
           'caption': 'Train Journey',
-          'date': '1 month ago'
+          'date': '1 month ago',
         },
       ],
     },
@@ -246,59 +246,60 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
       'agencyLogo': 'assets/images/coastal_adventures_logo.png',
       'agencyEstablished': '2015',
       'agencyTours': '400+ tours completed',
-      'description': 'Discover the pristine beaches and rich maritime heritage of Sri Lanka\'s southern coast. This 3-day tour combines relaxation with exploration, featuring the historic Galle Fort, vibrant coral reefs, and opportunities for whale watching. Perfect for those seeking a blend of culture and coastal beauty.',
+      'description':
+          'Discover the pristine beaches and rich maritime heritage of Sri Lanka\'s southern coast. This 3-day tour combines relaxation with exploration, featuring the historic Galle Fort, vibrant coral reefs, and opportunities for whale watching. Perfect for those seeking a blend of culture and coastal beauty.',
       'includes': [
         'Beach Resort',
         'Meals',
         'Transportation',
         'Boat Trips',
         'Snorkeling Equipment',
-        'Guide'
+        'Guide',
       ],
       'highlights': [
         'Galle Fort',
         'Whale Watching',
         'Beach Activities',
         'Coral Reefs',
-        'Sunset Views'
+        'Sunset Views',
       ],
       'itinerary': [
         {
           'day': 'Day 1',
           'title': 'Galle Fort',
-          'description': 'Historic fort and lighthouse exploration'
+          'description': 'Historic fort and lighthouse exploration',
         },
         {
           'day': 'Day 2',
           'title': 'Whale Watching',
-          'description': 'Mirissa whale watching and beach time'
+          'description': 'Mirissa whale watching and beach time',
         },
         {
           'day': 'Day 3',
           'title': 'Hikkaduwa',
-          'description': 'Snorkeling and coral garden visit'
+          'description': 'Snorkeling and coral garden visit',
         },
       ],
       'pastTourPhotos': [
         {
           'image': 'assets/images/past_tour_photos/coast_past_1.jpeg',
           'caption': 'Galle Fort Sunset',
-          'date': '5 days ago'
+          'date': '5 days ago',
         },
         {
           'image': 'assets/images/past_tour_photos/coast_past_2.jpeg',
           'caption': 'Whale Watching',
-          'date': '2 weeks ago'
+          'date': '2 weeks ago',
         },
         {
           'image': 'assets/images/past_tour_photos/coast_past_3.jpeg',
           'caption': 'Hikkaduwa Beach',
-          'date': '1 week ago'
+          'date': '1 week ago',
         },
         {
           'image': 'assets/images/past_tour_photos/coast_past_4.jpg',
           'caption': 'Stilt Fishermen',
-          'date': '3 weeks ago'
+          'date': '3 weeks ago',
         },
       ],
     },
@@ -322,74 +323,75 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
       'agencyLogo': 'assets/images/wild_sri_lanka_logo.png',
       'agencyEstablished': '2008',
       'agencyTours': '1000+ tours completed',
-      'description': 'Experience Sri Lanka\'s incredible biodiversity across multiple national parks. This 6-day safari adventure takes you through Yala, Udawalawe, and Minneriya, offering exceptional opportunities to spot elephants, leopards, and hundreds of bird species in their natural habitats.',
+      'description':
+          'Experience Sri Lanka\'s incredible biodiversity across multiple national parks. This 6-day safari adventure takes you through Yala, Udawalawe, and Minneriya, offering exceptional opportunities to spot elephants, leopards, and hundreds of bird species in their natural habitats.',
       'includes': [
         'Safari Lodge',
         'All Meals',
         'Safari Jeep',
         'Naturalist Guide',
         'Park Fees',
-        'Binoculars'
+        'Binoculars',
       ],
       'highlights': [
         'Leopard Spotting',
         'Elephant Gathering',
         'Bird Watching',
         'Night Safari',
-        'Nature Photography'
+        'Nature Photography',
       ],
       'itinerary': [
         {
           'day': 'Day 1',
           'title': 'Arrival at Yala',
-          'description': 'Check-in and evening safari'
+          'description': 'Check-in and evening safari',
         },
         {
           'day': 'Day 2',
           'title': 'Full Day Yala Safari',
-          'description': 'Morning and evening game drives'
+          'description': 'Morning and evening game drives',
         },
         {
           'day': 'Day 3',
           'title': 'Udawalawe Journey',
-          'description': 'Travel to Udawalawe and elephant orphanage'
+          'description': 'Travel to Udawalawe and elephant orphanage',
         },
         {
           'day': 'Day 4',
           'title': 'Udawalawe Safari',
-          'description': 'Full day safari and bird watching'
+          'description': 'Full day safari and bird watching',
         },
         {
           'day': 'Day 5',
           'title': 'Minneriya Safari',
-          'description': 'Elephant gathering experience'
+          'description': 'Elephant gathering experience',
         },
         {
           'day': 'Day 6',
           'title': 'Departure',
-          'description': 'Morning safari and departure'
+          'description': 'Morning safari and departure',
         },
       ],
       'pastTourPhotos': [
         {
           'image': 'assets/images/past_tour_photos/wildlife_past_1.jpg',
           'caption': 'Leopard Sighting',
-          'date': '4 days ago'
+          'date': '4 days ago',
         },
         {
           'image': 'assets/images/past_tour_photos/wildlife_past_2.jpeg',
           'caption': 'Elephant Herd',
-          'date': '1 week ago'
+          'date': '1 week ago',
         },
         {
           'image': 'assets/images/past_tour_photos/wildlife_past_3.jpeg',
           'caption': 'Bird Watching',
-          'date': '2 weeks ago'
+          'date': '2 weeks ago',
         },
         {
           'image': 'assets/images/past_tour_photos/wildlife_past_4.jpeg',
           'caption': 'Safari Jeep',
-          'date': '3 weeks ago'
+          'date': '3 weeks ago',
         },
       ],
     },
@@ -412,79 +414,80 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
       'agencyLogo': 'assets/images/spiritual_journey_logo.png',
       'agencyEstablished': '2011',
       'agencyTours': '700+ tours completed',
-      'description': 'A spiritual and cultural journey through Sri Lanka\'s most sacred temples and heritage sites. This 7-day tour offers deep insights into Buddhist culture, ancient architecture, and traditional practices while visiting the Temple of the Tooth, cave temples, and historic monasteries.',
+      'description':
+          'A spiritual and cultural journey through Sri Lanka\'s most sacred temples and heritage sites. This 7-day tour offers deep insights into Buddhist culture, ancient architecture, and traditional practices while visiting the Temple of the Tooth, cave temples, and historic monasteries.',
       'includes': [
         'Accommodation',
         'Vegetarian Meals',
         'Transportation',
         'Spiritual Guide',
         'Temple Fees',
-        'Meditation Sessions'
+        'Meditation Sessions',
       ],
       'highlights': [
         'Temple of Tooth',
         'Cave Temples',
         'Meditation Sessions',
         'Buddhist Culture',
-        'Ancient Art'
+        'Ancient Art',
       ],
       'itinerary': [
         {
           'day': 'Day 1',
           'title': 'Arrival in Kandy',
-          'description': 'Temple of the Tooth visit'
+          'description': 'Temple of the Tooth visit',
         },
         {
           'day': 'Day 2',
           'title': 'Sacred Sites',
-          'description': 'Ancient temples and monasteries'
+          'description': 'Ancient temples and monasteries',
         },
         {
           'day': 'Day 3',
           'title': 'Dambulla Caves',
-          'description': 'Cave temple complex exploration'
+          'description': 'Cave temple complex exploration',
         },
         {
           'day': 'Day 4',
           'title': 'Meditation Retreat',
-          'description': 'Mindfulness and meditation practices'
+          'description': 'Mindfulness and meditation practices',
         },
         {
           'day': 'Day 5',
           'title': 'Cultural Immersion',
-          'description': 'Traditional ceremonies and rituals'
+          'description': 'Traditional ceremonies and rituals',
         },
         {
           'day': 'Day 6',
           'title': 'Heritage Sites',
-          'description': 'Historical monuments and art'
+          'description': 'Historical monuments and art',
         },
         {
           'day': 'Day 7',
           'title': 'Spiritual Conclusion',
-          'description': 'Final blessings and departure'
+          'description': 'Final blessings and departure',
         },
       ],
       'pastTourPhotos': [
         {
           'image': 'assets/images/past_tour_photos/temple_past_1.jpg',
           'caption': 'Temple of the Tooth',
-          'date': '1 week ago'
+          'date': '1 week ago',
         },
         {
           'image': 'assets/images/past_tour_photos/temple_past_2.jpeg',
           'caption': 'Cave Temple Art',
-          'date': '2 weeks ago'
+          'date': '2 weeks ago',
         },
         {
           'image': 'assets/images/past_tour_photos/temple_past_3.jpeg',
           'caption': 'Meditation Session',
-          'date': '3 weeks ago'
+          'date': '3 weeks ago',
         },
         {
           'image': 'assets/images/past_tour_photos/temple_past_4.jpeg',
           'caption': 'Buddhist Ceremony',
-          'date': '1 month ago'
+          'date': '1 month ago',
         },
       ],
     },
@@ -533,11 +536,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.check_circle,
-            size: 16,
-            color: Colors.green.shade700,
-          ),
+          Icon(Icons.check_circle, size: 16, color: Colors.green.shade700),
           const SizedBox(width: 4),
           Text(
             include,
@@ -564,10 +563,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
             decoration: BoxDecoration(
               color: Colors.blue.shade50,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: Colors.blue.shade300,
-                width: 2,
-              ),
+              border: Border.all(color: Colors.blue.shade300, width: 2),
             ),
             child: Center(
               child: Text(
@@ -596,10 +592,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                 const SizedBox(height: 4),
                 Text(
                   item['description'] ?? '',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
               ],
             ),
@@ -623,10 +616,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
               return Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      Colors.blue.shade100,
-                      Colors.blue.shade300,
-                    ],
+                    colors: [Colors.blue.shade100, Colors.blue.shade300],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -659,9 +649,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
           ),
           title: const Text('Loading...'),
         ),
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -671,7 +659,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
         appBar: AppBar(
           backgroundColor: Colors.white,
           leading: IconButton(
-            onPressed: () => context.go('/marketplace/tour_packages'),
+            onPressed: () => context.pop(),
             icon: const Icon(Icons.arrow_back),
           ),
           title: const Text('Package Not Found'),
@@ -680,11 +668,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.grey,
-              ),
+              const Icon(Icons.error_outline, size: 64, color: Colors.grey),
               const SizedBox(height: 16),
               const Text(
                 'Tour Package not found',
@@ -697,7 +681,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
               ),
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () => context.go('/marketplace/tour_packages'),
+                onPressed: () => context.pop(),
                 child: const Text('Back to Tour Packages'),
               ),
             ],
@@ -717,7 +701,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
             backgroundColor: const Color(0xFF0088cc),
             leading: IconButton(
               onPressed: () {
-                context.go('/marketplace/tour_packages');
+                context.pop();
               },
               icon: const Icon(Icons.arrow_back, color: Colors.white),
             ),
@@ -767,7 +751,10 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                     top: 100,
                     right: 20,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black54,
                         borderRadius: BorderRadius.circular(20),
@@ -856,7 +843,10 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                             ),
                             const Spacer(),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.blue.shade50,
                                 borderRadius: BorderRadius.circular(20),
@@ -880,11 +870,18 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                             Expanded(
                               child: Row(
                                 children: [
-                                  const Icon(Icons.group, size: 16, color: Colors.grey),
+                                  const Icon(
+                                    Icons.group,
+                                    size: 16,
+                                    color: Colors.grey,
+                                  ),
                                   const SizedBox(width: 4),
                                   Text(
                                     packageData['groupSize'] ?? '2-15 people',
-                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -928,7 +925,10 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                             ),
                             if (packageData['originalPrice'] != null)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.red,
                                   borderRadius: BorderRadius.circular(20),
@@ -1137,7 +1137,8 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                                 _currentPhotoIndex = index;
                               });
                             },
-                            itemCount: (packageData['pastTourPhotos'] as List).length,
+                            itemCount:
+                                (packageData['pastTourPhotos'] as List).length,
                             itemBuilder: (context, index) {
                               return _buildPastTourPhoto(
                                 (packageData['pastTourPhotos'] as List)[index],
@@ -1150,7 +1151,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: List.generate(
                             (packageData['pastTourPhotos'] as List).length,
-                                (index) => Container(
+                            (index) => Container(
                               width: 8,
                               height: 8,
                               margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -1183,7 +1184,9 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                     spacing: 8,
                     runSpacing: 8,
                     children: (packageData['highlights'] as List)
-                        .map<Widget>((highlight) => _buildHighlightChip(highlight))
+                        .map<Widget>(
+                          (highlight) => _buildHighlightChip(highlight),
+                        )
                         .toList(),
                   ),
 
@@ -1259,10 +1262,10 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                         const SizedBox(height: 12),
                         const Text(
                           '• Please bring comfortable walking shoes\n'
-                              '• Carry sun protection and water\n'
-                              '• Respectful dress required for religious sites\n'
-                              '• Travel insurance recommended\n'
-                              '• Minimum 2 people required for tour confirmation',
+                          '• Carry sun protection and water\n'
+                          '• Respectful dress required for religious sites\n'
+                          '• Travel insurance recommended\n'
+                          '• Minimum 2 people required for tour confirmation',
                           style: TextStyle(
                             fontSize: 14,
                             height: 1.5,
@@ -1294,10 +1297,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
             ),
           ],
           border: Border(
-            top: BorderSide(
-              color: Colors.grey.withOpacity(0.1),
-              width: 1,
-            ),
+            top: BorderSide(color: Colors.grey.withOpacity(0.1), width: 1),
           ),
         ),
         child: SafeArea(
@@ -1346,10 +1346,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                     height: 52,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF0088cc),
-                          Color(0xFF0088cc),
-                        ],
+                        colors: [Color(0xFF0088cc), Color(0xFF0088cc)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),

@@ -533,7 +533,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
         appBar: AppBar(
           backgroundColor: Colors.white,
           leading: IconButton(
-            onPressed: () => context.go('/marketplace/hotels'),
+            onPressed: () => context.pop(),
             icon: const Icon(Icons.arrow_back),
           ),
           title: const Text('Loading...'),
@@ -576,7 +576,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
               ),
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () => context.go('/marketplace/hotels'),
+                onPressed: () => context.pop(),
                 child: const Text('Back to Hotels'),
               ),
             ],
@@ -597,7 +597,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
             pinned: true,
             leading: IconButton(
               onPressed: () {
-                context.go('/marketplace/hotels');
+                context.pop();
               },
               icon: const Icon(Icons.arrow_back, color: Colors.white),
             ),
