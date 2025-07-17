@@ -13,7 +13,6 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
   // Constants
   static const Color primaryBlue = Color(0xFF0088cc);
   static const Color primaryLightColor = Color(0xFF33a3dd);
- 
 
   // Form controllers
   final _destinationController = TextEditingController();
@@ -24,7 +23,7 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
   int _numberOfDays = 3;
   int _numberOfPersons = 2;
   String _selectedBudget = 'Mid-range (Rs.12,000-25,000/day)';
-  String _selectedMood = '';
+  List<String> _selectedMoods = [];
   bool _isLoading = false;
 
   // Options
@@ -95,9 +94,7 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
       width: double.infinity,
       height: 52,
       decoration: BoxDecoration(
-        gradient: isLoading
-            ? LinearGradient(colors: [Colors.grey[400]!, Colors.grey[500]!])
-            : const LinearGradient(
+        gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [primaryLightColor, primaryBlue],
@@ -342,7 +339,7 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color:Colors.white,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -366,27 +363,27 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
   }
 
   Widget _buildCounterButton(IconData icon, VoidCallback? onPressed) {
-  return Container(
-    width: 28,
-    height: 28,
-    decoration: BoxDecoration(
-      color: Colors.grey[50],   // Disabled state
-      borderRadius: BorderRadius.circular(8),
-    ),
-    child: Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onPressed,
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
         borderRadius: BorderRadius.circular(8),
-        child: Icon(
-          icon,
-          color: Color(0xFF0088CC),
-          size: 16,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(8),
+          child: Icon(
+            icon,
+            color: primaryBlue,
+            size: 16,
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildBudgetSelection() {
     return _buildCard(
@@ -481,11 +478,11 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
+                decoration:  BoxDecoration(
+                  gradient: LinearGradient(
                     colors: [primaryLightColor, primaryBlue],
                   ),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius:BorderRadius.circular(8.0),
                 ),
                 child: const Icon(
                   Icons.psychology,
@@ -499,7 +496,7 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Choose what excites you most about traveling',
+            'Choose what excites you most about traveling (select multiple)',
             style: TextStyle(
               fontSize: 13,
               color: Colors.grey[600],
@@ -511,9 +508,17 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
             spacing: 8,
             runSpacing: 8,
             children: _moodOptions.map((mood) {
-              final isSelected = _selectedMood == mood;
+              final isSelected = _selectedMoods.contains(mood);
               return GestureDetector(
-                onTap: () => setState(() => _selectedMood = mood),
+                onTap: () {
+                  setState(() {
+                    if (isSelected) {
+                      _selectedMoods.remove(mood);
+                    } else {
+                      _selectedMoods.add(mood);
+                    }
+                  });
+                },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(
@@ -535,18 +540,35 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
                       width: 1,
                     ),
                   ),
-                  child: Text(
-                    mood,
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : primaryBlue,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        mood,
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : primaryBlue,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      
+                    ],
                   ),
                 ),
               );
             }).toList(),
           ),
+          if (_selectedMoods.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              '${_selectedMoods.length} mood${_selectedMoods.length == 1 ? '' : 's'} selected',
+              style: TextStyle(
+                fontSize: 12,
+                color: primaryBlue,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -621,10 +643,10 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
 
   void _generateItinerary() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedMood.isEmpty) {
+    if (_selectedMoods.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please select a trip mood'),
+          content: const Text('Please select at least one trip mood'),
           backgroundColor: Colors.redAccent,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -661,7 +683,6 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
             color: Colors.black87,
           ),
         ),
-        
         elevation: 0,
       ),
       body: SingleChildScrollView(

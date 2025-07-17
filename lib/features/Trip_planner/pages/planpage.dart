@@ -1,25 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class TripPlanViewPage extends StatefulWidget {
   final Map<String, dynamic> tripData;
 
-  const TripPlanViewPage({Key? key, required this.tripData}) : super(key: key);
+  const TripPlanViewPage({super.key, required this.tripData});
 
   @override
-  State<TripPlanViewPage> createState() => _EnhancedTripPlanViewPageState();
+  State<TripPlanViewPage> createState() => _TripPlanViewPageState();
 }
 
-class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
+class _TripPlanViewPageState extends State<TripPlanViewPage>
     with TickerProviderStateMixin {
   late TabController _tabController;
-  GoogleMapController? _mapController;
-  Set<Marker> _markers = {};
-  Set<Polyline> _polylines = {};
-  List<LatLng> _routePoints = [];
-  bool _isMapLoading = true;
-  String _routeInfo = "";
-  
+  final GlobalKey<MapRouteWidgetState> _mapKey = GlobalKey<MapRouteWidgetState>();
+
   // Professional Color Scheme
   static const _primaryColor = Color(0xFF2563EB);
   static const _secondaryColor = Color(0xFF64748B);
@@ -33,125 +27,12 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _initializeMapMarkers();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _mapController?.dispose();
     super.dispose();
-  }
-
-  // Initialize map markers and routes from trip data
-  void _initializeMapMarkers() {
-    final itinerary = widget.tripData['dayByDayItinerary'] as List? ?? [];
-    List<LatLng> allPoints = [];
-    int totalPlaces = 0;
-    
-    for (int dayIndex = 0; dayIndex < itinerary.length; dayIndex++) {
-      final dayData = itinerary[dayIndex];
-      final places = dayData['places'] as List? ?? [];
-      List<LatLng> dayPoints = [];
-      
-      for (int placeIndex = 0; placeIndex < places.length; placeIndex++) {
-        final place = places[placeIndex];
-        
-        // Simulate coordinates (in real app, get from geocoding API)
-        final lat = 6.9271 + (dayIndex * 0.015) + (placeIndex * 0.008);
-        final lng = 79.8612 + (dayIndex * 0.015) + (placeIndex * 0.008);
-        final position = LatLng(lat, lng);
-        
-        allPoints.add(position);
-        dayPoints.add(position);
-        totalPlaces++;
-        
-        // Create markers with custom icons for start/end points
-        BitmapDescriptor markerIcon;
-        if (dayIndex == 0 && placeIndex == 0) {
-          markerIcon = BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen); // Start
-        } else if (dayIndex == itinerary.length - 1 && placeIndex == places.length - 1) {
-          markerIcon = BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed); // End
-        } else {
-          markerIcon = BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue); // Regular points
-        }
-        
-        _markers.add(
-          Marker(
-            markerId: MarkerId('day_${dayIndex}_place_$placeIndex'),
-            position: position,
-            infoWindow: InfoWindow(
-              title: place['name'] ?? 'Unknown Place',
-              snippet: 'Day ${dayData['day']} - ${dayData['city']} - Stop ${totalPlaces}',
-            ),
-            icon: markerIcon,
-          ),
-        );
-      }
-      
-      // Create polyline for each day (different colors)
-      if (dayPoints.length > 1) {
-        _polylines.add(
-          Polyline(
-            polylineId: PolylineId('day_$dayIndex'),
-            points: dayPoints,
-            color: _getDayRouteColor(dayIndex),
-            width: 4,
-            patterns: [], // Solid line
-          ),
-        );
-      }
-    }
-    
-    // Create main route connecting all points
-    if (allPoints.length > 1) {
-      _routePoints = allPoints;
-      _polylines.add(
-        Polyline(
-          polylineId: const PolylineId('main_route'),
-          points: allPoints,
-          color: _primaryColor,
-          width: 3,
-          patterns: [PatternItem.dash(10), PatternItem.gap(5)], // Dashed line for main route
-        ),
-      );
-      
-      // Calculate route info
-      double totalDistance = _calculateTotalDistance(allPoints);
-      _routeInfo = "${totalPlaces} stops • ${totalDistance.toStringAsFixed(1)} km estimated";
-    }
-    
-    setState(() {
-      _isMapLoading = false;
-    });
-  }
-  
-  // Get color for each day's route
-  Color _getDayRouteColor(int dayIndex) {
-    List<Color> colors = [
-      Colors.red.withOpacity(0.7),
-      Colors.blue.withOpacity(0.7),
-      Colors.green.withOpacity(0.7),
-      Colors.orange.withOpacity(0.7),
-      Colors.purple.withOpacity(0.7),
-    ];
-    return colors[dayIndex % colors.length];
-  }
-  
-  // Calculate approximate distance between points
-  double _calculateTotalDistance(List<LatLng> points) {
-    double totalDistance = 0;
-    for (int i = 0; i < points.length - 1; i++) {
-      // Simple distance calculation (in real app, use proper distance calculation)
-      double lat1 = points[i].latitude;
-      double lng1 = points[i].longitude;
-      double lat2 = points[i + 1].latitude;
-      double lng2 = points[i + 1].longitude;
-      
-      double distance = ((lat2 - lat1) * (lat2 - lat1) + (lng2 - lng1) * (lng2 - lng1));
-      totalDistance += distance * 111; // Rough conversion to km
-    }
-    return totalDistance;
   }
 
   // Professional Card Widget
@@ -181,30 +62,42 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
     );
   }
 
-  // Simple Badge Widget (No Icons)
-  Widget _buildSimpleBadge(String text, {Color? color}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: (color ?? _primaryColor).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: (color ?? _primaryColor).withOpacity(0.3),
-          width: 1,
+  // Enhanced Activity Badge Widget
+  Widget _buildActivityBadge(String activity, {Color? color}) {
+    return GestureDetector(
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Selected activity: $activity'),
+            backgroundColor: _accentColor,
+            duration: const Duration(seconds: 1),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        margin: const EdgeInsets.only(right: 2, bottom: 2),
+        decoration: BoxDecoration(
+          color: color ?? const Color(0xFF0088cc),
+          borderRadius: BorderRadius.circular(20),
         ),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 12,
-          color: color ?? _primaryColor,
-          fontWeight: FontWeight.w600,
+        child: Text(
+          activity,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.2,
+          ),
         ),
       ),
     );
   }
 
-  // Enhanced Trip Header
+  // Enhanced Trip Header with Original Colors
   Widget _buildEnhancedTripHeader() {
     return _buildProfessionalCard(
       child: Column(
@@ -218,7 +111,7 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
                   color: _primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.location_on,
                   color: _primaryColor,
                   size: 28,
@@ -253,7 +146,6 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
             ],
           ),
           const SizedBox(height: 20),
-          
           // Trip Statistics
           Container(
             padding: const EdgeInsets.all(16),
@@ -266,7 +158,7 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
                 Expanded(
                   child: _buildStatItem(
                     Icons.calendar_today,
-                    '${widget.tripData['numberOfDays']} Days',
+                    widget.tripData['numberOfDays']?.toString() ?? 'N/A',
                     'Duration',
                   ),
                 ),
@@ -278,7 +170,7 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
                 Expanded(
                   child: _buildStatItem(
                     Icons.people,
-                    '${widget.tripData['numberOfPersons']} Persons',
+                    widget.tripData['numberOfPersons']?.toString() ?? 'N/A',
                     'Travelers',
                   ),
                 ),
@@ -297,31 +189,6 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
               ],
             ),
           ),
-          
-          const SizedBox(height: 16),
-          
-          // Trip Moods (No Icons)
-          if (widget.tripData['tripMoods'] != null) ...[
-            Text(
-              'Trip Vibes',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: _textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: (widget.tripData['tripMoods'] as List).map<Widget>((mood) {
-                return _buildSimpleBadge(
-                  mood.toString(),
-                  color: _accentColor,
-                );
-              }).toList(),
-            ),
-          ],
         ],
       ),
     );
@@ -330,7 +197,7 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
   Widget _buildStatItem(IconData icon, String value, String label) {
     return Column(
       children: [
-        Icon(icon, color: _primaryColor, size: 20),
+        Icon(icon, color:  _primaryColor, size: 20),
         const SizedBox(height: 4),
         Text(
           value,
@@ -351,350 +218,49 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
     );
   }
 
-  // Google Maps View with Route
-  Widget _buildMapView() {
-    if (_isMapLoading) {
-      return Container(
-        height: 400,
-        child: const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
-    return _buildProfessionalCard(
-      padding: EdgeInsets.zero,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: SizedBox(
-          height: 400,
-          child: Stack(
-            children: [
-              GoogleMap(
-                onMapCreated: (GoogleMapController controller) {
-                  _mapController = controller;
-                  _fitMarkersInView();
-                },
-                initialCameraPosition: const CameraPosition(
-                  target: LatLng(6.9271, 79.8612), // Colombo coordinates
-                  zoom: 11,
-                ),
-                markers: _markers,
-                polylines: _polylines,
-                myLocationEnabled: true,
-                myLocationButtonEnabled: false,
-                mapType: MapType.normal,
-                zoomControlsEnabled: false,
-              ),
-              
-              // Route Info Panel at Top
-              if (_routeInfo.isNotEmpty)
-                Positioned(
-                  top: 16,
-                  left: 16,
-                  right: 16,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(25),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: _primaryColor,
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: const Icon(
-                            Icons.route,
-                            color: Colors.white,
-                            size: 16,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            _routeInfo,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: _textPrimary,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: _fitMarkersInView,
-                          icon: Icon(Icons.center_focus_strong, color: _primaryColor),
-                          constraints: const BoxConstraints(),
-                          padding: EdgeInsets.zero,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              
-              // Map Controls at Bottom Right
-              Positioned(
-                bottom: 16,
-                right: 16,
-                child: Column(
-                  children: [
-                    FloatingActionButton.small(
-                      onPressed: () => _mapController?.animateCamera(
-                        CameraUpdate.zoomIn(),
-                      ),
-                      backgroundColor: Colors.white,
-                      foregroundColor: _primaryColor,
-                      child: const Icon(Icons.add),
-                    ),
-                    const SizedBox(height: 8),
-                    FloatingActionButton.small(
-                      onPressed: () => _mapController?.animateCamera(
-                        CameraUpdate.zoomOut(),
-                      ),
-                      backgroundColor: Colors.white,
-                      foregroundColor: _primaryColor,
-                      child: const Icon(Icons.remove),
-                    ),
-                    const SizedBox(height: 8),
-                    FloatingActionButton.small(
-                      onPressed: _showRouteDetails,
-                      backgroundColor: _primaryColor,
-                      foregroundColor: Colors.white,
-                      child: const Icon(Icons.info_outline),
-                    ),
-                  ],
-                ),
-              ),
-              
-              // Route Legend at Bottom Left
-              if (_routePoints.isNotEmpty)
-                Positioned(
-                  bottom: 16,
-                  left: 16,
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 12,
-                              height: 12,
-                              decoration: BoxDecoration(
-                                color: Colors.green,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            const Text('Start', style: TextStyle(fontSize: 11)),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 12,
-                              height: 12,
-                              decoration: BoxDecoration(
-                                color: Colors.blue,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            const Text('Stops', style: TextStyle(fontSize: 11)),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 12,
-                              height: 12,
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            const Text('End', style: TextStyle(fontSize: 11)),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-  
-  // Fit all markers in view
-  void _fitMarkersInView() {
-    if (_routePoints.isEmpty || _mapController == null) return;
-    
-    double minLat = _routePoints.first.latitude;
-    double maxLat = _routePoints.first.latitude;
-    double minLng = _routePoints.first.longitude;
-    double maxLng = _routePoints.first.longitude;
-    
-    for (final point in _routePoints) {
-      minLat = minLat < point.latitude ? minLat : point.latitude;
-      maxLat = maxLat > point.latitude ? maxLat : point.latitude;
-      minLng = minLng < point.longitude ? minLng : point.longitude;
-      maxLng = maxLng > point.longitude ? maxLng : point.longitude;
-    }
-    
-    _mapController!.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          southwest: LatLng(minLat, minLng),
-          northeast: LatLng(maxLat, maxLng),
-        ),
-        100.0, // padding
-      ),
-    );
-  }
-  
-  // Show route details dialog
-  void _showRouteDetails() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Route Information'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Total Stops: ${_routePoints.length}'),
-            const SizedBox(height: 8),
-            Text('Estimated Distance: ${_calculateTotalDistance(_routePoints).toStringAsFixed(1)} km'),
-            const SizedBox(height: 8),
-            const Text('Route shows the planned sequence of visits for your trip.'),
-            const SizedBox(height: 8),
-            const Text('• Green marker: Starting point'),
-            const Text('• Blue markers: Intermediate stops'),
-            const Text('• Red marker: Final destination'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
   // Show specific day on map
   void _showDayOnMap(Map<String, dynamic> dayData) {
-    if (_mapController == null) return;
-    
-    final places = dayData['places'] as List? ?? [];
-    if (places.isEmpty) return;
-    
-    // Find markers for this specific day
-    List<LatLng> dayPoints = [];
-    final dayIndex = dayData['day'] - 1;
-    
-    for (int placeIndex = 0; placeIndex < places.length; placeIndex++) {
-      final lat = 6.9271 + (dayIndex * 0.015) + (placeIndex * 0.008);
-      final lng = 79.8612 + (dayIndex * 0.015) + (placeIndex * 0.008);
-      dayPoints.add(LatLng(lat, lng));
-    }
-    
-    if (dayPoints.isNotEmpty) {
-      // Switch to map tab
-      _tabController.animateTo(1);
-      
-      // Focus on day's locations
-      if (dayPoints.length == 1) {
-        _mapController!.animateCamera(
-          CameraUpdate.newLatLngZoom(dayPoints.first, 14),
-        );
-      } else {
-        double minLat = dayPoints.first.latitude;
-        double maxLat = dayPoints.first.latitude;
-        double minLng = dayPoints.first.longitude;
-        double maxLng = dayPoints.first.longitude;
-        
-        for (final point in dayPoints) {
-          minLat = minLat < point.latitude ? minLat : point.latitude;
-          maxLat = maxLat > point.latitude ? maxLat : point.latitude;
-          minLng = minLng < point.longitude ? minLng : point.longitude;
-          maxLng = maxLng > point.longitude ? maxLng : point.longitude;
-        }
-        
-        _mapController!.animateCamera(
-          CameraUpdate.newLatLngBounds(
-            LatLngBounds(
-              southwest: LatLng(minLat, minLng),
-              northeast: LatLng(maxLat, maxLng),
-            ),
-            100.0,
-          ),
-        );
-      }
-    }
+    _tabController.animateTo(1);
+    Future.delayed(const Duration(milliseconds: 300), () {
+      _mapKey.currentState?.focusOnDay(dayData);
+    });
   }
 
-  // Enhanced Itinerary Section
+  // Enhanced Itinerary Section with Header
   Widget _buildEnhancedItinerary() {
     final itinerary = widget.tripData['dayByDayItinerary'] as List? ?? [];
 
-    if (itinerary.isEmpty) {
-      return _buildProfessionalCard(
-        child: Column(
-          children: [
-            Icon(Icons.calendar_month, size: 48, color: _textSecondary),
-            const SizedBox(height: 16),
-            Text(
-              'No itinerary available',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: _textPrimary,
-              ),
-            ),
-            Text(
-              'Your detailed day-by-day plan will appear here',
-              style: TextStyle(color: _textSecondary),
-            ),
-          ],
-        ),
-      );
-    }
-
     return Column(
-      children: itinerary.map((dayData) => _buildEnhancedDayCard(dayData)).toList(),
+      children: [
+        _buildEnhancedTripHeader(),
+        if (itinerary.isEmpty)
+          _buildProfessionalCard(
+            child: Column(
+              children: [
+                Icon(Icons.calendar_month, size: 48, color: _textSecondary),
+                const SizedBox(height: 16),
+                Text(
+                  'No itinerary available',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: _textPrimary,
+                  ),
+                ),
+                Text(
+                  'Your detailed day-by-day plan will appear here',
+                  style: TextStyle(color: _textSecondary),
+                ),
+              ],
+            ),
+          )
+        else
+          ...itinerary
+              .asMap()
+              .entries
+              .map((entry) => _buildEnhancedDayCard(entry.value))
+              .toList(),
+      ],
     );
   }
 
@@ -710,10 +276,10 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [_primaryColor, _primaryColor.withOpacity(0.8)],
+                  gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
+                    colors: [Color(0xFF33a3dd), Color(0xFF0088cc)],
                   ),
                   borderRadius: BorderRadius.circular(24),
                 ),
@@ -734,7 +300,7 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Day ${dayData['day']}',
+                      'Day ${dayData['day'] ?? 'N/A'}',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -754,23 +320,18 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
               ),
               IconButton(
                 onPressed: () => _showDayOnMap(dayData),
-                icon: Icon(Icons.map, color: _primaryColor),
+                icon: const Icon(Icons.map, color: Color(0xFF0088cc)),
                 tooltip: 'View on Map',
               ),
             ],
           ),
-          
           const SizedBox(height: 20),
-          
           // Places
-          if (dayData['places'] != null) ...[
-            ...((dayData['places'] as List).asMap().entries.map((entry) {
-              final index = entry.key;
-              final place = entry.value;
-              return _buildPlaceCard(place, index);
-            })),
-          ],
-          
+          if (dayData['places'] != null && (dayData['places'] as List).isNotEmpty)
+            ...((dayData['places'] as List)
+                .asMap()
+                .entries
+                .map((entry) => _buildPlaceCard(entry.value, entry.key))),
           // Hotel
           if (dayData['hotel'] != null) _buildHotelCard(dayData['hotel']),
         ],
@@ -779,90 +340,87 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
   }
 
   Widget _buildPlaceCard(Map<String, dynamic> place, int index) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _backgroundColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: _accentColor,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Center(
-                  child: Text(
-                    '${index + 1}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  place['name'] ?? 'Unknown Place',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: _textPrimary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 12),
-          
-          // Activities (No Icons - Just Text Badges)
-          if (place['activities'] != null) ...[
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: (place['activities'] as List).map<Widget>((activity) {
-                return _buildSimpleBadge(
-                  activity.toString(),
-                  color: _secondaryColor,
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 12),
-          ],
-          
-          if (place['experience'] != null)
+  return Container(
+    margin: const EdgeInsets.only(bottom: 16),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: _backgroundColor,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: Colors.grey[200]!),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
             Text(
-              place['experience'],
-              style: TextStyle(
-                fontSize: 14,
-                color: _textSecondary,
-                height: 1.4,
+              '${index + 1}. ',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: _textPrimary,
               ),
             ),
+            Expanded(
+              child: Text(
+                place['name'] ?? 'Unknown Place',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: _textPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Enhanced Activities Section
+        if (place['activities'] != null &&
+            (place['activities'] as List).isNotEmpty) ...[
+          Text(
+            'Activities',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: _textPrimary,
+              letterSpacing: -0.2,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: (place['activities'] as List)
+                .map<Widget>((activity) => _buildActivityBadge(
+                      activity.toString(),
+                      color: _accentColor,
+                    ))
+                .toList(),
+          ),
+          const SizedBox(height: 16),
         ],
-      ),
-    );
-  }
+        if (place['experience'] != null)
+          Text(
+            place['experience'],
+            style: TextStyle(
+              fontSize: 14,
+              color: _textSecondary,
+              height: 1.5,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+      ],
+    ),
+  );
+}
 
   Widget _buildHotelCard(Map<String, dynamic> hotel) {
     return Container(
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue[50],
+        color: Colors.white, // Changed from Colors.blue[50]
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue[200]!),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -872,7 +430,7 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue,
+                  color: Colors.black, // Changed from Colors.blue
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.hotel, color: Colors.white, size: 16),
@@ -882,7 +440,7 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
                 'Accommodation',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: Colors.blue,
+                  color: Colors.black, // Changed from Colors.blue
                   fontSize: 16,
                 ),
               ),
@@ -917,11 +475,29 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
               if (hotel['rating'] != null)
                 _buildSimpleBadge(
                   '⭐ ${hotel['rating']}',
-                  color: Colors.orange,
+                  color: Colors.black,
                 ),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  // Simple Badge Widget (Used for Hotel Price and Rating)
+  Widget _buildSimpleBadge(String text, {Color? color}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12,
+          color: color ?? _primaryColor,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -946,7 +522,7 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
                   color: _accentColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.lightbulb_outline,
                   color: _accentColor,
                   size: 20,
@@ -1026,42 +602,20 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
       backgroundColor: _backgroundColor,
       appBar: AppBar(
         title: const Text('Your Trip Plan'),
-        backgroundColor: _primaryColor,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
-        actions: [
-          IconButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Sharing feature coming soon!'),
-                  backgroundColor: _accentColor,
-                ),
-              );
-            },
-            icon: const Icon(Icons.share),
-          ),
-          IconButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Download feature coming soon!'),
-                  backgroundColor: _accentColor,
-                ),
-              );
-            },
-            icon: const Icon(Icons.file_download),
-          ),
-        ],
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          indicatorColor: Colors.blue,
+          labelColor: Colors.blue,
+          unselectedLabelColor: Colors.black,
+          dividerColor: Colors.transparent,
           tabs: const [
             Tab(icon: Icon(Icons.list_alt), text: 'Itinerary'),
             Tab(icon: Icon(Icons.map), text: 'Route Map'),
-            Tab(icon: Icon(Icons.info_outline), text: 'Overview'),
+            Tab(icon: Icon(Icons.info_outline), text: 'Tips'),
           ],
         ),
       ),
@@ -1073,69 +627,20 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
             padding: const EdgeInsets.all(16),
             child: _buildEnhancedItinerary(),
           ),
-          
-          // Map Tab
+          // Map Tab - Using the separated MapRouteWidget
           SingleChildScrollView(
             padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                _buildMapView(),
-                const SizedBox(height: 16),
-                _buildProfessionalCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.route, color: _primaryColor),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Route Information',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: _textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'The map shows your complete travel route connecting all planned locations. Follow the path from your starting point (green marker) through all stops (blue markers) to your final destination (red marker).',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: _textSecondary,
-                          height: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          _buildSimpleBadge(
-                            'Interactive Map',
-                            color: _primaryColor,
-                          ),
-                          const SizedBox(width: 8),
-                          _buildSimpleBadge(
-                            'Live Updates',
-                            color: _accentColor,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            child: MapRouteWidget(
+              key: _mapKey,
+              tripData: widget.tripData,
             ),
           ),
-          
-          // Overview Tab
+          // Tips Tab
           SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildEnhancedTripHeader(),
                 _buildEnhancedTips(),
                 const SizedBox(height: 80), // Space for bottom buttons
               ],
@@ -1187,7 +692,7 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
                   icon: const Icon(Icons.bookmark),
                   label: const Text('Save Plan'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _primaryColor,
+                    backgroundColor: const Color(0xFF0088cc),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
@@ -1198,6 +703,55 @@ class _EnhancedTripPlanViewPageState extends State<TripPlanViewPage>
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// Placeholder widget for the separated MapRouteWidget
+class MapRouteWidget extends StatefulWidget {
+  final Map<String, dynamic> tripData;
+
+  const MapRouteWidget({super.key, required this.tripData});
+
+  @override
+  State<MapRouteWidget> createState() => MapRouteWidgetState();
+}
+
+class MapRouteWidgetState extends State<MapRouteWidget> {
+  void focusOnDay(Map<String, dynamic> dayData) {
+    // This method will be implemented in the actual MapRouteWidget
+    print('Focusing on day ${dayData['day']}');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 400,
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.map, size: 48, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              'Map Route Widget',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey,
+              ),
+            ),
+            Text(
+              'Import the actual MapRouteWidget file',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
         ),
       ),
     );
