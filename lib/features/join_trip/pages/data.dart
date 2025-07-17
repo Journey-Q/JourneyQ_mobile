@@ -8,17 +8,21 @@ class SampleData {
       'startDate': 'September 10, 2025',
       'endDate': 'September 24, 2025',
       'duration': '14 days',
-      'maxMembers': 8,
+      'maxMembers': '8',
       'difficulty': 'Hard',
       'tripType': 'Adventure',
       'description': 'Epic 14-day trekking adventure in the Himalayas. We\'ll hike to Everest Base Camp, experience Sherpa culture, and witness breathtaking mountain views. For experienced hikers only!',
       'status': 'Active',
-      'requestCount': 15,
+      'requestCount': '15',
       'createdDate': 'May 15, 2025',
       'budget': '\$2,500',
       'budgetType': 'Per Person',
       'meetingPoint': 'Kathmandu Airport',
       'activities': ['Hiking', 'Mountain Climbing', 'Photography', 'Cultural Tours'],
+      'travelBudget': '1000',
+      'foodBudget': '500',
+      'hotelBudget': '800',
+      'otherBudget': '200',
     },
     {
       'id': 'form_2',
@@ -27,17 +31,21 @@ class SampleData {
       'startDate': 'November 5, 2025',
       'endDate': 'November 12, 2025',
       'duration': '7 days',
-      'maxMembers': 6,
+      'maxMembers': '6',
       'difficulty': 'Easy',
       'tripType': 'Relaxation',
       'description': 'A relaxing week in Bali with beautiful beaches, temples, and amazing food. Perfect for those looking to unwind and enjoy tropical paradise.',
       'status': 'Draft',
-      'requestCount': 8,
+      'requestCount': '8',
       'createdDate': 'Jun 10, 2025',
       'budget': '\$1,200',
       'budgetType': 'Per Person',
       'meetingPoint': 'Bali International Airport',
       'activities': ['Beach Activities', 'Surfing', 'Temple Visits', 'Spa & Wellness'],
+      'travelBudget': '400',
+      'foodBudget': '300',
+      'hotelBudget': '400',
+      'otherBudget': '100',
     },
     {
       'id': 'form_3',
@@ -46,17 +54,21 @@ class SampleData {
       'startDate': 'August 1, 2025',
       'endDate': 'August 21, 2025',
       'duration': '21 days',
-      'maxMembers': 4,
+      'maxMembers': '4',
       'difficulty': 'Moderate',
       'tripType': 'Cultural',
       'description': 'Epic 3-week road trip across Europe visiting Paris, Rome, Barcelona, and Amsterdam. Experience diverse cultures, food, and history.',
       'status': 'Active',
-      'requestCount': 23,
+      'requestCount': '23',
       'createdDate': 'Apr 20, 2025',
       'budget': '\$3,500',
       'budgetType': 'Per Person',
       'meetingPoint': 'Paris Charles de Gaulle Airport',
       'activities': ['Road Trip', 'Sightseeing', 'Food Tours', 'Museums'],
+      'travelBudget': '1500',
+      'foodBudget': '800',
+      'hotelBudget': '1000',
+      'otherBudget': '200',
     },
   ];
 
@@ -320,6 +332,185 @@ class SampleData {
     },
   ];
 
+  // Gallery Images Data (NEW!)
+  static Map<String, List<Map<String, dynamic>>> galleryImages = {
+    'group_1': [
+      {
+        'id': 'img_1_1',
+        'url': 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'thumbnail': 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+        'caption': 'Beautiful Tokyo sunset from our hotel room! 🌅',
+        'uploadedBy': 'Alex Johnson',
+        'uploadedById': 'user_1',
+        'uploadedAt': '2025-06-27T14:30:00Z',
+        'userAvatar': 'https://i.pravatar.cc/150?img=8',
+        'groupId': 'group_1',
+        'likes': 12,
+        'comments': 3,
+      },
+      {
+        'id': 'img_1_2',
+        'url': 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'thumbnail': 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+        'caption': 'Amazing street food in Shibuya! Best takoyaki ever 🐙',
+        'uploadedBy': 'You',
+        'uploadedById': 'current_user',
+        'uploadedAt': '2025-06-27T12:15:00Z',
+        'userAvatar': 'https://i.pravatar.cc/150?img=1',
+        'groupId': 'group_1',
+        'likes': 8,
+        'comments': 2,
+      },
+      {
+        'id': 'img_1_3',
+        'url': 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'thumbnail': 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+        'caption': 'Traditional temple visit - so peaceful and spiritual ⛩️',
+        'uploadedBy': 'Maria Rodriguez',
+        'uploadedById': 'user_3',
+        'uploadedAt': '2025-06-27T10:45:00Z',
+        'userAvatar': 'https://i.pravatar.cc/150?img=5',
+        'groupId': 'group_1',
+        'likes': 15,
+        'comments': 5,
+      },
+      {
+        'id': 'img_1_4',
+        'url': 'https://images.unsplash.com/photo-1480796927426-f609979314bd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'thumbnail': 'https://images.unsplash.com/photo-1480796927426-f609979314bd?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+        'caption': 'Group photo at Tokyo Tower! Amazing views 🗼',
+        'uploadedBy': 'John Smith',
+        'uploadedById': 'user_4',
+        'uploadedAt': '2025-06-26T18:20:00Z',
+        'userAvatar': 'https://i.pravatar.cc/150?img=12',
+        'groupId': 'group_1',
+        'likes': 20,
+        'comments': 7,
+      },
+      {
+        'id': 'img_1_5',
+        'url': 'https://images.unsplash.com/photo-1542640244-7e672d6cef4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'thumbnail': 'https://images.unsplash.com/photo-1542640244-7e672d6cef4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+        'caption': 'Cherry blossom season is magical! Perfect timing 🌸',
+        'uploadedBy': 'Emma Wilson',
+        'uploadedById': 'user_5',
+        'uploadedAt': '2025-06-26T16:10:00Z',
+        'userAvatar': 'https://i.pravatar.cc/150?img=16',
+        'groupId': 'group_1',
+        'likes': 25,
+        'comments': 9,
+      },
+      {
+        'id': 'img_1_6',
+        'url': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'thumbnail': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+        'caption': 'Delicious ramen at 2 AM - best meal ever! 🍜',
+        'uploadedBy': 'You',
+        'uploadedById': 'current_user',
+        'uploadedAt': '2025-06-26T13:30:00Z',
+        'userAvatar': 'https://i.pravatar.cc/150?img=1',
+        'groupId': 'group_1',
+        'likes': 18,
+        'comments': 4,
+      },
+    ],
+    'group_2': [
+      {
+        'id': 'img_2_1',
+        'url': 'https://images.unsplash.com/photo-1431274172761-fca41d930114?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'thumbnail': 'https://images.unsplash.com/photo-1431274172761-fca41d930114?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+        'caption': 'Eiffel Tower at night - absolutely breathtaking! ✨',
+        'uploadedBy': 'Maria Rodriguez',
+        'uploadedById': 'user_2',
+        'uploadedAt': '2025-06-25T20:30:00Z',
+        'userAvatar': 'https://i.pravatar.cc/150?img=5',
+        'groupId': 'group_2',
+        'likes': 22,
+        'comments': 6,
+      },
+      {
+        'id': 'img_2_2',
+        'url': 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'thumbnail': 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+        'caption': 'Louvre Museum - culture overload in the best way! 🎨',
+        'uploadedBy': 'You',
+        'uploadedById': 'current_user',
+        'uploadedAt': '2025-06-25T14:15:00Z',
+        'userAvatar': 'https://i.pravatar.cc/150?img=1',
+        'groupId': 'group_2',
+        'likes': 16,
+        'comments': 3,
+      },
+      {
+        'id': 'img_2_3',
+        'url': 'https://images.unsplash.com/photo-1502602898536-47ad22581b52?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'thumbnail': 'https://images.unsplash.com/photo-1502602898536-47ad22581b52?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+        'caption': 'Seine River cruise - Paris from the water 🚢',
+        'uploadedBy': 'Sarah Lee',
+        'uploadedById': 'user_6',
+        'uploadedAt': '2025-06-25T11:45:00Z',
+        'userAvatar': 'https://i.pravatar.cc/150?img=15',
+        'groupId': 'group_2',
+        'likes': 14,
+        'comments': 2,
+      },
+    ],
+    'group_3': [
+      {
+        'id': 'img_3_1',
+        'url': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'thumbnail': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+        'caption': 'Everest Base Camp - we made it! Incredible journey 🏔️',
+        'uploadedBy': 'You',
+        'uploadedById': 'current_user',
+        'uploadedAt': '2025-06-24T09:30:00Z',
+        'userAvatar': 'https://i.pravatar.cc/150?img=1',
+        'groupId': 'group_3',
+        'likes': 35,
+        'comments': 12,
+      },
+      {
+        'id': 'img_3_2',
+        'url': 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'thumbnail': 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+        'caption': 'Sherpa village - learning about local culture 🏘️',
+        'uploadedBy': 'Alex Johnson',
+        'uploadedById': 'user_7',
+        'uploadedAt': '2025-06-23T15:20:00Z',
+        'userAvatar': 'https://i.pravatar.cc/150?img=8',
+        'groupId': 'group_3',
+        'likes': 28,
+        'comments': 8,
+      },
+      {
+        'id': 'img_3_3',
+        'url': 'https://images.unsplash.com/photo-1464822759844-d150baec93c5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'thumbnail': 'https://images.unsplash.com/photo-1464822759844-d150baec93c5?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+        'caption': 'Mountain sunrise - worth every step of the trek 🌄',
+        'uploadedBy': 'Sarah Lee',
+        'uploadedById': 'user_8',
+        'uploadedAt': '2025-06-23T06:15:00Z',
+        'userAvatar': 'https://i.pravatar.cc/150?img=15',
+        'groupId': 'group_3',
+        'likes': 42,
+        'comments': 15,
+      },
+      {
+        'id': 'img_3_4',
+        'url': 'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'thumbnail': 'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+        'caption': 'Prayer flags in the wind - spiritual moment 🙏',
+        'uploadedBy': 'Mike Chen',
+        'uploadedById': 'user_9',
+        'uploadedAt': '2025-06-22T12:40:00Z',
+        'userAvatar': 'https://i.pravatar.cc/150?img=10',
+        'groupId': 'group_3',
+        'likes': 31,
+        'comments': 9,
+      },
+    ],
+  };
+
   // Home Page Posts Data
   static List<Map<String, String>> homePosts = [
     {
@@ -446,5 +637,123 @@ class SampleData {
           'tripType': 'Adventure',
         };
     }
+  }
+
+  // Helper method to get gallery images for a specific group
+  static List<Map<String, dynamic>> getGalleryImages(String groupId) {
+    return galleryImages[groupId] ?? [];
+  }
+
+  // Helper method to add a new image to gallery
+  static void addGalleryImage(String groupId, Map<String, dynamic> imageData) {
+    if (galleryImages[groupId] == null) {
+      galleryImages[groupId] = [];
+    }
+    galleryImages[groupId]!.insert(0, imageData);
+  }
+
+  // Helper method to remove image from gallery
+  static void removeGalleryImage(String groupId, String imageId) {
+    if (galleryImages[groupId] != null) {
+      galleryImages[groupId]!.removeWhere((image) => image['id'] == imageId);
+    }
+  }
+
+  // Helper method to get image by ID
+  static Map<String, dynamic>? getImageById(String groupId, String imageId) {
+    final images = galleryImages[groupId];
+    if (images != null) {
+      try {
+        return images.firstWhere((image) => image['id'] == imageId);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  // Helper method to get total image count for a group
+  static int getImageCount(String groupId) {
+    return galleryImages[groupId]?.length ?? 0;
+  }
+
+  // Helper method to get recent images for a group (last 3)
+  static List<Map<String, dynamic>> getRecentImages(String groupId, {int limit = 3}) {
+    final images = galleryImages[groupId];
+    if (images != null && images.isNotEmpty) {
+      return images.take(limit).toList();
+    }
+    return [];
+  }
+
+  // Helper method to get images by user
+  static List<Map<String, dynamic>> getImagesByUser(String groupId, String userId) {
+    final images = galleryImages[groupId];
+    if (images != null) {
+      return images.where((image) => image['uploadedById'] == userId).toList();
+    }
+    return [];
+  }
+
+  // Helper method to update image caption
+  // static void updateImageCaption(String groupId, String imageId, String newCaption) {
+  //   final images = galleryImages[groupId];
+  //   if (images != null) {
+  //     for (var image in images) {
+  //       if (image['id'] == imageId) {
+  //         image['caption'] = newCaption;
+  //         break;
+  //       }
+  //     }
+  //   }
+  // }
+
+  // Helper method to like/unlike an image
+  // static void toggleImageLike(String groupId, String imageId, String userId) {
+  //   final images = galleryImages[groupId];
+  //   if (images != null) {
+  //     for (var image in images) {
+  //       if (image['id'] == imageId) {
+  //         // Initialize likes list if it doesn't exist
+  //         image['likedBy'] ??= <String>[];
+  //         List<String> likedBy = List<String>.from(image['likedBy']);
+          
+  //         if (likedBy.contains(userId)) {
+  //           likedBy.remove(userId);
+  //           image['likes'] = (image['likes'] ?? 0) - 1;
+  //         } else {
+  //           likedBy.add(userId);
+  //           image['likes'] = (image['likes'] ?? 0) + 1;
+  //         }
+          
+  //         image['likedBy'] = likedBy;
+  //         break;
+  //       }
+  //     }
+  //   }
+  // }
+
+  // Helper method to get gallery stats for a group
+  static Map<String, dynamic> getGalleryStats(String groupId) {
+    final images = galleryImages[groupId] ?? [];
+    
+    // Count images by user
+    Map<String, int> imagesByUser = {};
+    int totalLikes = 0;
+    
+    for (var image in images) {
+      String userId = image['uploadedById'];
+      imagesByUser[userId] = (imagesByUser[userId] ?? 0) + 1;
+      totalLikes += (image['likes'] ?? 0) as int;
+    }
+    
+    return {
+      'totalImages': images.length,
+      'totalLikes': totalLikes,
+      'imagesByUser': imagesByUser,
+      'mostActiveUser': imagesByUser.isNotEmpty 
+          ? imagesByUser.entries.reduce((a, b) => a.value > b.value ? a : b).key
+          : null,
+    };
   }
 }

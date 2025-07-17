@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:journeyq/features/join_trip/pages/data.dart';
-import 'package:journeyq/features/join_trip/pages/common/trip_form_widget.dart';
 import 'package:journeyq/features/join_trip/pages/common/trip_details_widget.dart';
-import 'package:journeyq/features/join_trip/pages/toggle/created_trips/trip_deletion_helper.dart';
+import 'package:journeyq/features/join_trip/pages/common/trip_form_widget.dart';
 
 class CreatedTripsTab extends StatefulWidget {
   final VoidCallback onCreateTrip;
 
-  const CreatedTripsTab({
-    super.key,
-    required this.onCreateTrip,
-  });
+  const CreatedTripsTab({super.key, required this.onCreateTrip});
 
   @override
   State<CreatedTripsTab> createState() => _CreatedTripsTabState();
@@ -19,162 +15,60 @@ class CreatedTripsTab extends StatefulWidget {
 class _CreatedTripsTabState extends State<CreatedTripsTab> {
   @override
   Widget build(BuildContext context) {
-    final createdTripForms = SampleData.createdTripForms;
-
-    if (createdTripForms.isEmpty) {
+    if (SampleData.createdTripForms.isEmpty) {
       return _buildEmptyState();
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: createdTripForms.length,
+      padding: const EdgeInsets.all(16),
+      itemCount: SampleData.createdTripForms.length,
       itemBuilder: (context, index) {
-        final tripForm = createdTripForms[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.08),
-                spreadRadius: 1,
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF0088cc), Color(0xFF00B4DB)],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.location_on,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            tripForm['title']!,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            tripForm['destination']!,
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    PopupMenuButton<String>(
-                      onSelected: (value) {
-                        switch (value) {
-                          case 'view_details':
-                            _viewTripDetails(tripForm);
-                            break;
-                          case 'edit':
-                            _editTripForm(tripForm, index);
-                            break;
-                          case 'delete':
-                            _deleteTripForm(index);
-                            break;
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'view_details',
-                          child: Row(
-                            children: [
-                              Icon(Icons.info, size: 20),
-                              SizedBox(width: 12),
-                              Text('View Full Details'),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'edit',
-                          child: Row(
-                            children: [
-                              Icon(Icons.edit, size: 20),
-                              SizedBox(width: 12),
-                              Text('Edit Trip Details'),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete, size: 20, color: Colors.red),
-                              SizedBox(width: 12),
-                              Text('Delete', style: TextStyle(color: Colors.red)),
-                            ],
-                          ),
-                        ),
-                      ],
-                      child: const Icon(Icons.more_vert, color: Colors.grey),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                
-                // Essential Trip Details Only
-                _buildDetailRow(Icons.calendar_today, 'Start Date', tripForm['startDate']!),
-                _buildDetailRow(Icons.schedule, 'Duration', tripForm['duration'] ?? '14 days'),
-                _buildDetailRow(Icons.attach_money, 'Budget', tripForm['budget'] ?? '\$2,500 per person'),
-              ],
-            ),
-          ),
-        );
+        final trip = SampleData.createdTripForms[index];
+        return _buildTripCard(trip);
       },
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 16, color: Colors.grey[600]),
-          const SizedBox(width: 8),
+          Icon(
+            Icons.add_location_alt_outlined,
+            size: 80,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
           Text(
-            '$label: ',
+            'No Created Trips',
             style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
               color: Colors.grey[600],
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
             ),
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                color: Colors.black87,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+          const SizedBox(height: 8),
+          Text(
+            'Start planning your first adventure!',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[500],
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: widget.onCreateTrip,
+            icon: const Icon(Icons.add, color: Colors.white),
+            label: const Text(
+              'Create Your First Trip',
+              style: TextStyle(color: Colors.white),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0088cc),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
           ),
@@ -183,132 +77,607 @@ class _CreatedTripsTabState extends State<CreatedTripsTab> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.add_location_alt,
-                size: 48,
-                color: Colors.grey[400],
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'No Created Trips Yet',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Create your first trip form and start receiving join requests!',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 24),
-            Container(
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF0088cc), Color(0xFF00B4DB)],
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: widget.onCreateTrip,
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
+  Widget _buildTripCard(Map<String, dynamic> trip) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with icon and menu
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF0088cc), Color(0xFF00B4DB)],
                     ),
-                    child: Text(
-                      'Create Trip',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.location_on,
+                    color: Colors.white,
+                    size: 24,
                   ),
                 ),
-              ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        trip['title'] ?? 'Unknown Trip',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        trip['destination'] ?? 'Unknown Destination',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuButton<String>(
+                  onSelected: (value) => _handleMenuAction(context, value, trip),
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'view_details',
+                      child: Row(
+                        children: [
+                          Icon(Icons.visibility, size: 18),
+                          SizedBox(width: 8),
+                          Text('View Full Details'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'edit_details',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit, size: 18),
+                          SizedBox(width: 8),
+                          Text('Edit Trip Details'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'send_request',
+                      child: Row(
+                        children: [
+                          Icon(Icons.send, size: 18),
+                          SizedBox(width: 8),
+                          Text('Send Request'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, size: 18, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('Delete', style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ),
+                  ],
+                  child: const Icon(Icons.more_vert, color: Colors.grey),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          
+          // Trip Details (removed budget)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                _buildDetailRow(
+                  Icons.calendar_today,
+                  'Start Date',
+                  trip['startDate'] ?? 'Not specified',
+                ),
+                _buildDetailRow(
+                  Icons.schedule,
+                  'Duration',
+                  trip['duration'] ?? 'Not specified',
+                ),
+                // Removed budget row from here
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+        ],
       ),
     );
   }
 
-  // 👁️ VIEW: Use optimized TripDetailsWidget for viewing
-  void _viewTripDetails(Map<String, dynamic> tripForm) {
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: Colors.grey[600],
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '$label: ',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 14,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.black87,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleMenuAction(BuildContext context, String action, Map<String, dynamic> trip) {
+    switch (action) {
+      case 'view_details':
+        _viewTripDetails(context, trip);
+        break;
+      case 'edit_details':
+        _editTripDetails(context, trip);
+        break;
+      case 'send_request':
+        _showFollowerSelection(context, trip);
+        break;
+      case 'delete':
+        _deleteTripConfirmation(context, trip);
+        break;
+    }
+  }
+
+  void _viewTripDetails(BuildContext context, Map<String, dynamic> trip) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => TripDetailsWidget(
-          tripData: tripForm,
+          tripData: trip,
           customTitle: 'Trip Details',
-          showEditButton: true, // Show edit button since user created this trip
-          onEditPressed: () {
-            // Navigate back and then to edit mode
-            Navigator.pop(context);
-            _editTripForm(tripForm, SampleData.createdTripForms.indexOf(tripForm));
-          },
+          showEditButton: false,
+          showSendRequestButton: false,
+          isGroupMember: false, // Creator but not in group yet
         ),
         fullscreenDialog: true,
       ),
     );
   }
 
-  // ✏️ EDIT: Use TripFormWidget for editing
-  void _editTripForm(Map<String, dynamic> tripForm, int index) {
+  void _editTripDetails(BuildContext context, Map<String, dynamic> trip) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => TripFormWidget(
           mode: TripFormMode.edit,
-          initialData: tripForm,
+          initialData: trip,
+          isGroupMember: false, // Creator editing their own trip
+          customTitle: 'Edit ${trip['title']}',
           onSubmit: (updatedData) {
-            // Update the trip in the list
             setState(() {
-              SampleData.createdTripForms[index] = {
-                ...tripForm,
-                ...updatedData,
-              };
+              // Find and update the trip in the list
+              final index = SampleData.createdTripForms.indexWhere(
+                (t) => t['id'] == trip['id']
+              );
+              if (index != -1) {
+                SampleData.createdTripForms[index] = updatedData;
+              }
             });
           },
         ),
         fullscreenDialog: true,
       ),
-    ).then((_) {
-      // Refresh the page when returning from edit
-      setState(() {});
-    });
+    );
   }
 
-  // 🗑️ DELETE: Use deletion helper
-  void _deleteTripForm(int index) {
-    TripDeletionHelper.showDeleteConfirmation(
+  void _showFollowerSelection(BuildContext context, Map<String, dynamic> trip) {
+    showModalBottomSheet(
       context: context,
-      tripIndex: index,
-      onTripDeleted: () {
-        setState(() {});
-      },
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => FollowerSelectionSheet(
+        tripData: trip,
+        onSendRequests: (selectedFollowers) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Requests sent to ${selectedFollowers.length} followers!'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _deleteTripConfirmation(BuildContext context, Map<String, dynamic> trip) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Trip'),
+        content: Text('Are you sure you want to delete "${trip['title']}"? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                SampleData.createdTripForms.removeWhere((t) => t['id'] == trip['id']);
+              });
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${trip['title']} deleted successfully'),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Follower Selection Sheet Widget
+class FollowerSelectionSheet extends StatefulWidget {
+  final Map<String, dynamic> tripData;
+  final Function(List<Map<String, dynamic>>) onSendRequests;
+
+  const FollowerSelectionSheet({
+    super.key,
+    required this.tripData,
+    required this.onSendRequests,
+  });
+
+  @override
+  State<FollowerSelectionSheet> createState() => _FollowerSelectionSheetState();
+}
+
+class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
+  List<Map<String, dynamic>> _selectedFollowers = [];
+  
+  // Sample followers data
+  final List<Map<String, dynamic>> _followers = [
+    {
+      'id': 'follower_1',
+      'name': 'Alex Johnson',
+      'avatar': 'https://i.pravatar.cc/150?img=8',
+      'isOnline': true,
+    },
+    {
+      'id': 'follower_2',
+      'name': 'Maria Rodriguez',
+      'avatar': 'https://i.pravatar.cc/150?img=5',
+      'isOnline': false,
+    },
+    {
+      'id': 'follower_3',
+      'name': 'John Smith',
+      'avatar': 'https://i.pravatar.cc/150?img=12',
+      'isOnline': true,
+    },
+    {
+      'id': 'follower_4',
+      'name': 'Emma Wilson',
+      'avatar': 'https://i.pravatar.cc/150?img=16',
+      'isOnline': false,
+    },
+    {
+      'id': 'follower_5',
+      'name': 'Sarah Lee',
+      'avatar': 'https://i.pravatar.cc/150?img=15',
+      'isOnline': true,
+    },
+    {
+      'id': 'follower_6',
+      'name': 'Mike Chen',
+      'avatar': 'https://i.pravatar.cc/150?img=10',
+      'isOnline': false,
+    },
+    {
+      'id': 'follower_7',
+      'name': 'Lisa Park',
+      'avatar': 'https://i.pravatar.cc/150?img=14',
+      'isOnline': true,
+    },
+    {
+      'id': 'follower_8',
+      'name': 'David Kim',
+      'avatar': 'https://i.pravatar.cc/150?img=18',
+      'isOnline': false,
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.8,
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+          
+          const Text(
+            'Send Trip Request',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          
+          Text(
+            'Select followers to invite for "${widget.tripData['title']}"',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 14,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          
+          // Search bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search followers...',
+                border: InputBorder.none,
+                prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          if (_selectedFollowers.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue[100]!),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.people,
+                    color: Color(0xFF0088cc),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${_selectedFollowers.length} followers selected',
+                    style: const TextStyle(
+                      color: Color(0xFF0088cc),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _selectedFollowers.clear();
+                      });
+                    },
+                    child: const Text(
+                      'Clear All',
+                      style: TextStyle(
+                        color: Color(0xFF0088cc),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          
+          // Select All button
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    setState(() {
+                      if (_selectedFollowers.length == _followers.length) {
+                        _selectedFollowers.clear();
+                      } else {
+                        _selectedFollowers = List.from(_followers);
+                      }
+                    });
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFF0088cc)),
+                  ),
+                  child: Text(
+                    _selectedFollowers.length == _followers.length 
+                        ? 'Deselect All' 
+                        : 'Select All',
+                    style: const TextStyle(color: Color(0xFF0088cc)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          Expanded(
+            child: ListView.builder(
+              itemCount: _followers.length,
+              itemBuilder: (context, index) {
+                final follower = _followers[index];
+                final isSelected = _selectedFollowers.any((f) => f['id'] == follower['id']);
+                
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.blue[50] : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected ? Colors.blue[200]! : Colors.grey[200]!,
+                    ),
+                  ),
+                  child: CheckboxListTile(
+                    value: isSelected,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        if (value ?? false) {
+                          _selectedFollowers.add(follower);
+                        } else {
+                          _selectedFollowers.removeWhere((f) => f['id'] == follower['id']);
+                        }
+                      });
+                    },
+                    activeColor: const Color(0xFF0088cc),
+                    title: Row(
+                      children: [
+                        Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundImage: NetworkImage(follower['avatar']),
+                            ),
+                            if (follower['isOnline'])
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: Colors.green,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white, width: 2),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                follower['name'],
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Text(
+                                follower['isOnline'] ? 'Online' : 'Last seen recently',
+                                style: TextStyle(
+                                  color: follower['isOnline'] ? Colors.green : Colors.grey[500],
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _selectedFollowers.isEmpty 
+                      ? null 
+                      : () => widget.onSendRequests(_selectedFollowers),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0088cc),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    disabledBackgroundColor: Colors.grey[300],
+                  ),
+                  child: Text(
+                    _selectedFollowers.isEmpty 
+                        ? 'Select Followers' 
+                        : 'Send Requests (${_selectedFollowers.length})',
+                    style: TextStyle(
+                      color: _selectedFollowers.isEmpty ? Colors.grey[600] : Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
