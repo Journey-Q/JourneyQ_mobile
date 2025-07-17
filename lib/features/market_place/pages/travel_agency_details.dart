@@ -608,7 +608,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
         appBar: AppBar(
           backgroundColor: Colors.white,
           leading: IconButton(
-            onPressed: () => context.go('/marketplace/travel_agencies'),
+            onPressed: () => context.pop(),
             icon: const Icon(Icons.arrow_back),
           ),
           title: const Text('Loading...'),

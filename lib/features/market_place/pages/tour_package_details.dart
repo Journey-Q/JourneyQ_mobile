@@ -654,7 +654,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
         appBar: AppBar(
           backgroundColor: Colors.white,
           leading: IconButton(
-            onPressed: () => context.go('/marketplace/tour_packages'),
+            onPressed: () => context.pop(),
             icon: const Icon(Icons.arrow_back),
           ),
           title: const Text('Loading...'),

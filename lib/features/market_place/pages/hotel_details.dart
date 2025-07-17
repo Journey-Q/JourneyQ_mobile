@@ -550,7 +550,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
         appBar: AppBar(
           backgroundColor: Colors.white,
           leading: IconButton(
-            onPressed: () => context.go('/marketplace/hotels'),
+            onPressed: () => context.pop(),
             icon: const Icon(Icons.arrow_back),
           ),
           title: const Text('Hotel Not Found'),
