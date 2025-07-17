@@ -41,7 +41,27 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
     // Add drivers with contact numbers
     enhanced.putIfAbsent('drivers', () => _getDriversWithContact(basicAgency['name']));
 
+    // Convert experience to "Since YYYY" format
+    enhanced['since'] = _convertExperienceToSince(basicAgency['experience']);
+
     return enhanced;
+  }
+
+  String _convertExperienceToSince(String? experience) {
+    if (experience == null) return 'Since 2015';
+
+    // Extract years from experience string (e.g., "15+ Years" -> 15)
+    RegExp regex = RegExp(r'(\d+)');
+    Match? match = regex.firstMatch(experience);
+
+    if (match != null) {
+      int years = int.parse(match.group(1)!);
+      int currentYear = DateTime.now().year;
+      int sinceYear = currentYear - years;
+      return 'Since $sinceYear';
+    }
+
+    return 'Since 2015'; // Default fallback
   }
 
   List<Map<String, dynamic>> _getVehiclesWithACPricing() {
@@ -251,7 +271,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'LKR ${((vehicle['acPricePerKm'] ?? vehicle['pricePerKm'] ?? 50) * 50).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} for 50km',
+                        'LKR ${((vehicle['acPricePerKm'] ?? vehicle['pricePerKm'] ?? 50) * 50).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} per 50km',
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -295,7 +315,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'LKR ${((vehicle['nonAcPricePerKm'] ?? ((vehicle['pricePerKm'] ?? 50) * 0.8).round()) * 50).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} for 50km',
+                        'LKR ${((vehicle['nonAcPricePerKm'] ?? ((vehicle['pricePerKm'] ?? 50) * 0.8).round()) * 50).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} per 50km',
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -618,10 +638,10 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            const Icon(Icons.schedule, size: 18, color: Colors.grey),
+                            const Icon(Icons.calendar_today, size: 18, color: Colors.grey),
                             const SizedBox(width: 8),
                             Text(
-                              enhancedAgency['experience'] ?? 'Years of Experience',
+                              enhancedAgency['since'] ?? 'Since 2015',
                               style: const TextStyle(fontSize: 14, color: Colors.grey),
                             ),
                           ],

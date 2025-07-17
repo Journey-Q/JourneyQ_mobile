@@ -60,6 +60,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
         'backgroundColor': hotelData['backgroundColor'],
         'amenities': ['King Bed', 'Ocean View', 'WiFi', 'Minibar', 'Safe', 'Air Conditioning', 'Bathroom'],
         'available': true,
+        'status': 'available',
       },
       {
         'type': 'Executive Suite',
@@ -68,7 +69,8 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
         'image': 'assets/images/room_suite.jpg',
         'backgroundColor': const Color(0xFF20B2AA),
         'amenities': ['Separate Living Room', 'King Bed', 'City View', 'WiFi', 'Minibar', 'Work Desk', 'Premium Bathroom'],
-        'available': true,
+        'available': false,
+        'status': 'maintenance',
       },
       {
         'type': 'Presidential Suite',
@@ -78,11 +80,33 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
         'backgroundColor': const Color(0xFF9370DB),
         'amenities': ['Master Bedroom', 'Living & Dining Area', 'Panoramic View', 'Butler Service', 'Premium Amenities'],
         'available': false,
+        'status': 'booked',
       },
     ];
   }
 
   Widget _buildRoomCard(Map<String, dynamic> room) {
+    String statusText;
+    Color statusColor;
+
+    switch (room['status']) {
+      case 'available':
+        statusText = 'Available';
+        statusColor = Colors.green;
+        break;
+      case 'maintenance':
+        statusText = 'Maintenance';
+        statusColor = Colors.orange;
+        break;
+      case 'booked':
+        statusText = 'Booked';
+        statusColor = Colors.red;
+        break;
+      default:
+        statusText = 'Unknown';
+        statusColor = Colors.grey;
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -143,7 +167,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                       );
                     },
                   ),
-                  // Availability Badge
+                  // Status Badge
                   Positioned(
                     top: 12,
                     right: 12,
@@ -153,11 +177,11 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: room['available'] ? Colors.green : Colors.red,
+                        color: statusColor,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        room['available'] ? 'Available' : 'Booked',
+                        statusText,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
@@ -257,7 +281,10 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: Text(room['available'] ? 'Book Now' : 'Not Available'),
+                      child: Text(
+                          room['available'] ? 'Book Now' :
+                          (room['status'] == 'maintenance' ? 'Under Maintenance' : 'Not Available')
+                      ),
                     ),
                   ],
                 ),
@@ -381,7 +408,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Rating and Reviews
+                  // Rating and Reviews (Price removed)
                   Row(
                     children: [
                       const Icon(
@@ -403,15 +430,6 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                         style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 14,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        hotelData['price'],
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
                         ),
                       ),
                     ],
