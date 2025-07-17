@@ -4,6 +4,7 @@ import 'package:journeyq/data/models/journey_model/joureny_model.dart';
 import 'package:journeyq/features/create_trip/pages/add_place.dart';
 import 'package:journeyq/shared/widgets/dialog/show_dialog.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:async';
 
 class CreateTripPage extends StatefulWidget {
   const CreateTripPage({Key? key}) : super(key: key);
@@ -16,11 +17,24 @@ class _CreateTripPageState extends State<CreateTripPage> {
   final _formKey = GlobalKey<FormState>();
   final PageController _pageController = PageController();
 
+  // Carousel controllers and variables
+  final PageController _carouselController = PageController();
+  int _currentCarouselIndex = 0;
+  Timer? _carouselTimer;
+
+  // Background images for carousel
+  final List<String> _backgroundImages = [
+    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80',
+    'https://images.unsplash.com/photo-1488646953014-85cb44e25828?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2335&q=80',
+    'https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2274&q=80',
+    'https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2080&q=80',
+    'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2532&q=80',
+  ];
+
   // Trip basic details
   final TextEditingController _tripTitleController = TextEditingController();
-  final TextEditingController _totalDaysController = TextEditingController();
-  final TextEditingController _numberOfPersonsController =
-      TextEditingController();
+  int _selectedDays = 1; // Counter for days instead of TextEditingController
+  final TextEditingController _numberOfPersonsController = TextEditingController();
   final TextEditingController _totalBudgetController = TextEditingController();
 
   // Recommendation controllers
@@ -77,18 +91,42 @@ class _CreateTripPageState extends State<CreateTripPage> {
   );
 
   int _currentStep = 0;
-  final int _totalSteps =
-      4; // Basic Details -> Recommendations -> Budget -> Travel Tips
+  final int _totalSteps = 4; // Basic Details -> Recommendations -> Budget -> Travel Tips
+
+  @override
+  void initState() {
+    super.initState();
+    _startCarouselTimer();
+  }
+
+  void _startCarouselTimer() {
+    _carouselTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (_currentCarouselIndex < _backgroundImages.length - 1) {
+        _currentCarouselIndex++;
+      } else {
+        _currentCarouselIndex = 0;
+      }
+      
+      if (_carouselController.hasClients) {
+        _carouselController.animateToPage(
+          _currentCarouselIndex,
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
 
   @override
   void dispose() {
+    _carouselTimer?.cancel();
     _tripTitleController.dispose();
-    _totalDaysController.dispose();
     _numberOfPersonsController.dispose();
     _totalBudgetController.dispose();
     _hotelController.dispose();
     _restaurantController.dispose();
     _pageController.dispose();
+    _carouselController.dispose();
     super.dispose();
   }
 
@@ -124,11 +162,11 @@ class _CreateTripPageState extends State<CreateTripPage> {
     PlaceModel? editingPlace,
     List<PlaceModel>? accumulatedPlaces,
   }) async {
-    if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState!.validate() && _selectedDays > 0) {
       setState(() {
         _currentTrip = _currentTrip.copyWith(
           tripTitle: _tripTitleController.text,
-          totalDays: int.tryParse(_totalDaysController.text) ?? 0,
+          totalDays: _selectedDays, // Use _selectedDays directly
           totalBudget: double.tryParse(_numberOfPersonsController.text) ?? 0,
         );
       });
@@ -274,11 +312,11 @@ class _CreateTripPageState extends State<CreateTripPage> {
             color: Colors.black87,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor:  Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        centerTitle: _currentStep == 0, // Only center for "Create New Journey"
+        centerTitle: _currentStep == 0,
         leading: _currentStep > 0
             ? IconButton(
                 icon: const Icon(Icons.arrow_back, size: 28),
@@ -292,9 +330,9 @@ class _CreateTripPageState extends State<CreateTripPage> {
           message: _loadingMessage,
           child: Column(
             children: [
-              // Progress indicator - Centered
+              // Progress indicator
               Container(
-                color: Colors.white,
+                color: const Color(0xFFF8FAFC),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 30,
                   vertical: 0,
@@ -394,7 +432,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
             const SizedBox(width: 12),
             Expanded(
               child: SizedBox(
-                height: 48,
+                height: 52,
                 child: ElevatedButton(
                   onPressed: _nextStep,
                   style: ElevatedButton.styleFrom(
@@ -537,127 +575,337 @@ class _CreateTripPageState extends State<CreateTripPage> {
   }
 
   Widget _buildBasicDetailsStep() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 0),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF33a3dd), Color(0xFF0088cc)],
-                ),
-                borderRadius: BorderRadius.circular(16),
+  final screenHeight = MediaQuery.of(context).size.height;
+  final safeAreaHeight = MediaQuery.of(context).padding.top + MediaQuery.of(context).padding.bottom;
+  final availableHeight = screenHeight - safeAreaHeight - 200; 
+  final carouselHeight = availableHeight * 0.725; 
+
+  return Form(
+    key: _formKey,
+    child: Column(
+      children: [
+        // Carousel Header with Background Images and Overlaid Trip Title
+        SizedBox(
+          height: carouselHeight,
+          child: Stack(
+            children: [
+              // Image Carousel
+              PageView.builder(
+                controller: _carouselController,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentCarouselIndex = index;
+                  });
+                },
+                itemCount: _backgroundImages.length,
+                itemBuilder: (context, index) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: NetworkImage(_backgroundImages[index]),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withOpacity(0.2),
+                            Colors.black.withOpacity(0.4),
+                            Colors.black.withOpacity(0.8),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
+
+              // Header Content
+              Positioned(
+                top: 200,
+                left: 24,
+                right: 24,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Main title
+                    const Text(
+                      'Tell us about your trip',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.5,
+                        shadows: [
+                          Shadow(
+                            offset: Offset(0, 2),
+                            blurRadius: 4,
+                            color: Colors.black45,
+                          ),
+                        ],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Subtitle
+                    const Text(
+                      'Share your travel experience and help others discover amazing destinations',
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                        height: 1.4,
+                        fontWeight: FontWeight.w400,
+                        shadows: [
+                          Shadow(
+                            offset: Offset(0, 1),
+                            blurRadius: 3,
+                            color: Colors.black45,
+                          ),
+                        ],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+
+              // Trip Title Field Overlay - Bottom of carousel
+              Positioned(
+                bottom: 20,
+                left: 24,
+                right: 24,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.95),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: TextFormField(
+                        controller: _tripTitleController,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2D3748),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a trip title';
+                          }
+                          return null;
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Enter your amazing trip title...',
+                          hintStyle: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.withOpacity(0.7),
+                            fontWeight: FontWeight.w500,
+                          ),
+                          prefixIcon: Container(
+                            margin: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF33a3dd), Color(0xFF0088cc)],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.auto_awesome,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ),
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          errorBorder: InputBorder.none,
+                          focusedErrorBorder: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Duration Counter Below Carousel
+        Expanded(
+          child: Container(
+              padding: const EdgeInsets.all(12), // Reduced padding
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.map_outlined,
-                      color: Color(0xFF0088cc),
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Tell us about your trip',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Share the basic details to get started with your journey planning',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                      height: 1.3,
-                    ),
-                  ),
+                  _buildDurationCounter(),
                 ],
               ),
             ),
+        ),
+      ],
+    ),
+  );
+}
 
-            const SizedBox(height: 24),
+Widget _buildDurationCounter() {
+  return Container(
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Label    
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6), // Reduced padding
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0088cc).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ))
+            ],
+          ),
+      
 
-            ProfessionalTextFormField(
-              controller: _tripTitleController,
-              label: 'Trip Title',
-              hint: 'e.g., Amazing Sri Lankan Adventure',
-              icon: Icons.title,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a trip title';
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 20),
-
-            Row(
+        // Counter Widget
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2), // Reduced padding
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: ProfessionalTextFormField(
-                    controller: _totalDaysController,
-                    label: 'Duration',
-                    hint: '5',
-                    icon: Icons.calendar_today,
-                    suffix: 'days',
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter duration';
-                      }
-                      if (int.tryParse(value) == null) {
-                        return 'Invalid number';
-                      }
-                      return null;
-                    },
+                // Decrease Button
+                GestureDetector(
+                  onTap: () {
+                    if (_selectedDays > 1) {
+                      setState(() {
+                        _selectedDays--;
+                      });
+                    }
+                  },
+                  child: Container(
+                    width: 36, // Reduced size
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: _selectedDays > 1
+                          ? const Color(0xFF0088cc)
+                          : Colors.grey.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: _selectedDays > 1
+                          ? [
+                              BoxShadow(
+                                color: const Color(0xFF0088cc).withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Icon(
+                      Icons.remove,
+                      color: _selectedDays > 1 ? Colors.white : Colors.grey,
+                      size: 20, // Reduced icon size
+                    ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ProfessionalTextFormField(
-                    controller: _numberOfPersonsController,
-                    label: 'Travelers',
-                    hint: '2',
-                    icon: Icons.people,
-                    suffix: 'persons',
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter number';
-                      }
-                      if (int.tryParse(value) == null) {
-                        return 'Invalid number';
-                      }
-                      return null;
-                    },
+
+                // Days Display
+                Column(
+                  children: [
+                    Text(
+                      '$_selectedDays',
+                      style: const TextStyle(
+                        fontSize: 28, // Slightly reduced font size
+                        fontWeight: FontWeight.w800,
+                        color: Colors.black87,
+                        height: 1,
+                      ),
+                    ),
+                    Text(
+                      _selectedDays == 1 ? 'Day' : 'Days',
+                      style: TextStyle(
+                        fontSize: 12, // Reduced font size
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey.withOpacity(0.8),
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Increase Button
+                GestureDetector(
+                  onTap: () {
+                    if (_selectedDays < 30) {
+                      // Max 30 days
+                      setState(() {
+                        _selectedDays++;
+                      });
+                    }
+                  },
+                  child: Container(
+                    width: 36, // Reduced size
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: _selectedDays < 30
+                          ? const Color(0xFF0088cc)
+                          : Colors.grey.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: _selectedDays < 30
+                          ? [
+                              BoxShadow(
+                                color: const Color(0xFF0088cc).withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Icon(
+                      Icons.add,
+                      color: _selectedDays < 30 ? Colors.white : Colors.grey,
+                      size: 20, // Reduced icon size
+                    ),
                   ),
                 ),
               ],
             ),
-          ],
+          ),
         ),
-      ),
-    );
-  }
+      ],
+    ),
+  );
+}
+
+ 
 
   Widget _buildRecommendationsStep() {
     return SingleChildScrollView(
