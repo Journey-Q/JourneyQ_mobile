@@ -412,7 +412,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                                     ),
                                   ),
                                   Text(
-                                    'for ${standardDistance}km',
+                                    'per ${standardDistance}km',
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: Colors.grey[600],

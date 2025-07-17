@@ -579,42 +579,19 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                                 fontSize: 14,
                               ),
                             ),
-                            const Spacer(),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.shade50,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                enhancedPackage['difficulty'] ?? 'Moderate',
-                                style: TextStyle(
-                                  color: Colors.blue.shade700,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
                           ],
                         ),
                         const SizedBox(height: 16),
 
-                        // Quick Info - REMOVED LANGUAGE DISPLAY
+                        // Quick Info - Group Size Only
                         Row(
                           children: [
-                            Expanded(
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.group, size: 16, color: Colors.grey),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    enhancedPackage['groupSize'] ?? '2-15 people',
-                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                  ),
-                                ],
-                              ),
+                            const Icon(Icons.group, size: 16, color: Colors.grey),
+                            const SizedBox(width: 4),
+                            Text(
+                              enhancedPackage['groupSize'] ?? '2-15 people',
+                              style: const TextStyle(fontSize: 12, color: Colors.grey),
                             ),
-                            // Removed the language section completely
                           ],
                         ),
                         const SizedBox(height: 16),
