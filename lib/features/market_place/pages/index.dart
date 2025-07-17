@@ -224,12 +224,6 @@ class _MarketplacePageState extends State<MarketplacePage> {
         foregroundColor: Colors.black87,
         elevation: 0,
         titleSpacing: 20,
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(Icons.arrow_back, color: Colors.black87, size: 24),
-        ),
         title: const Text(
           'Marketplace',
           style: TextStyle(
