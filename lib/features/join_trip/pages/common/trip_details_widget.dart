@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:journeyq/features/join_trip/pages/widget.dart';
+import 'package:journeyq/features/join_trip/pages/common/trip_form_widget.dart';
 
 class TripDetailsWidget extends StatelessWidget {
   final Map<String, dynamic> tripData;
   final String? customTitle;
   final bool showEditButton;
+  final bool showSendRequestButton;
+  final bool isGroupMember; // New parameter to determine if user is group member
   final VoidCallback? onEditPressed;
+  final VoidCallback? onSendRequestPressed;
 
   const TripDetailsWidget({
     super.key,
     required this.tripData,
     this.customTitle,
     this.showEditButton = false,
+    this.showSendRequestButton = false,
+    this.isGroupMember = false,
     this.onEditPressed,
+    this.onSendRequestPressed,
   });
 
   @override
@@ -33,17 +40,85 @@ class TripDetailsWidget extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: showEditButton && onEditPressed != null ? [
-          TextButton.icon(
-            onPressed: onEditPressed,
-            icon: const Icon(Icons.edit, size: 18),
-            label: const Text('Edit'),
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF0088cc),
+        actions: [
+          if (showEditButton && onEditPressed != null)
+            TextButton.icon(
+              onPressed: onEditPressed,
+              icon: const Icon(Icons.edit, size: 18),
+              label: const Text('Edit'),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF0088cc),
+              ),
             ),
+          if (showSendRequestButton && onSendRequestPressed != null)
+            TextButton.icon(
+              onPressed: onSendRequestPressed,
+              icon: const Icon(Icons.send, size: 18),
+              label: const Text('Send Request'),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF0088cc),
+              ),
+            ),
+          PopupMenuButton<String>(
+            onSelected: (value) => _handleMenuAction(context, value),
+            itemBuilder: (context) => [
+              if (isGroupMember) ...[
+                const PopupMenuItem(
+                  value: 'edit_details',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit, size: 18),
+                      SizedBox(width: 8),
+                      Text('Edit Trip Details'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'send_request',
+                  child: Row(
+                    children: [
+                      Icon(Icons.person_add, size: 18),
+                      SizedBox(width: 8),
+                      Text('Send Request to Followers'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'view_requests',
+                  child: Row(
+                    children: [
+                      Icon(Icons.pending_actions, size: 18),
+                      SizedBox(width: 8),
+                      Text('View Pending Requests'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, size: 18, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Delete Trip', style: TextStyle(color: Colors.red)),
+                    ],
+                  ),
+                ),
+              ] else ...[
+                const PopupMenuItem(
+                  value: 'view_only',
+                  child: Row(
+                    children: [
+                      Icon(Icons.visibility, size: 18),
+                      SizedBox(width: 8),
+                      Text('View Only'),
+                    ],
+                  ),
+                ),
+              ],
+            ],
           ),
           const SizedBox(width: 16),
-        ] : null,
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -54,23 +129,40 @@ class TripDetailsWidget extends StatelessWidget {
             _buildHeaderCard(),
             const SizedBox(height: 24),
 
-            // Trip Information Card
-            _buildTripInformationCard(),
+            // Basic Trip Information Card (Always visible)
+            _buildBasicTripInformationCard(),
             const SizedBox(height: 24),
 
-            // Description Card
+            // Description Card (Always visible)
             _buildDescriptionCard(),
             const SizedBox(height: 24),
 
-            // Activities Card (if has activities)
-            if (_hasActivities()) ...[
-              _buildActivitiesCard(),
-              const SizedBox(height: 24),
-            ],
+            // Advanced Details (Only for group members)
+            if (isGroupMember) ...[
+              // Group Details Card
+              if (_hasGroupDetails()) ...[
+                _buildGroupDetailsCard(),
+                const SizedBox(height: 24),
+              ],
 
-            // Budget & Meeting Card
-            _buildBudgetMeetingCard(),
-            const SizedBox(height: 32),
+              // Activities Card
+              if (_hasActivities()) ...[
+                _buildActivitiesCard(),
+                const SizedBox(height: 24),
+              ],
+
+              // Budget Details Card
+              if (_hasBudgetDetails()) ...[
+                _buildBudgetDetailsCard(),
+                const SizedBox(height: 24),
+              ],
+
+              // Meeting Point Card
+              if (_hasMeetingPoint()) ...[
+                _buildMeetingPointCard(),
+                const SizedBox(height: 24),
+              ],
+            ],
 
             // Close Button
             buildPrimaryGradientButton(
@@ -82,6 +174,115 @@ class TripDetailsWidget extends StatelessWidget {
             const SizedBox(height: 20),
           ],
         ),
+      ),
+    );
+  }
+
+  void _handleMenuAction(BuildContext context, String action) {
+    switch (action) {
+      case 'edit_details':
+        _editTripDetails(context);
+        break;
+      case 'send_request':
+        _showFollowerSelection(context);
+        break;
+      case 'view_requests':
+        _viewPendingRequests(context);
+        break;
+      case 'delete':
+        _deleteTripConfirmation(context);
+        break;
+      case 'view_only':
+        // Already in view mode
+        break;
+    }
+  }
+
+  void _editTripDetails(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TripFormWidget(
+          mode: TripFormMode.edit,
+          initialData: tripData,
+          isGroupMember: isGroupMember,
+          customTitle: 'Edit ${tripData['title']}',
+          onSubmit: (updatedData) {
+            // Handle trip update
+            print('Trip updated: $updatedData');
+          },
+        ),
+        fullscreenDialog: true,
+      ),
+    );
+  }
+
+  void _showFollowerSelection(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => FollowerSelectionSheet(
+        tripData: tripData,
+        onSendRequests: (selectedFollowers) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Requests sent to ${selectedFollowers.length} followers!'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _viewPendingRequests(BuildContext context) {
+    // Navigate to pending requests view
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Pending Requests'),
+        content: const Text('View and manage pending join requests for this trip.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteTripConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Trip'),
+        content: const Text('Are you sure you want to delete this trip? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.pop(context); // Close trip details
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Trip deleted successfully'),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }
@@ -130,7 +331,7 @@ class TripDetailsWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildTripInformationCard() {
+  Widget _buildBasicTripInformationCard() {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -160,8 +361,7 @@ class TripDetailsWidget extends StatelessWidget {
           _buildDetailRow('Start Date', tripData['startDate'] ?? 'Not specified', Icons.calendar_today),
           _buildDetailRow('End Date', tripData['endDate'] ?? 'Not specified', Icons.calendar_month),
           _buildDetailRow('Duration', tripData['duration'] ?? 'Not specified', Icons.schedule),
-          _buildDetailRow('Max Members', '${tripData['maxMembers'] ?? 'Not specified'} people', Icons.people),
-          _buildDetailRow('Type', tripData['tripType'] ?? 'Not specified', Icons.category),
+          _buildDetailRow('Trip Type', tripData['tripType'] ?? 'Not specified', Icons.category),
           if (tripData['status'] != null)
             _buildDetailRow('Status', tripData['status'], Icons.info),
           if (tripData['createdDate'] != null)
@@ -207,6 +407,42 @@ class TripDetailsWidget extends StatelessWidget {
               height: 1.6,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGroupDetailsCard() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Group Details',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 20),
+          if (tripData['maxMembers'] != null)
+            _buildDetailRow('Max Members', '${tripData['maxMembers']} people', Icons.people),
+          if (tripData['currentMembers'] != null)
+            _buildDetailRow('Current Members', '${tripData['currentMembers']} people', Icons.group),
         ],
       ),
     );
@@ -309,7 +545,7 @@ class TripDetailsWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildBudgetMeetingCard() {
+  Widget _buildBudgetDetailsCard() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -329,7 +565,7 @@ class TripDetailsWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Budget & Meeting',
+            'Budget Details',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -337,7 +573,51 @@ class TripDetailsWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          _buildDetailRow('Budget', tripData['budget'] ?? 'Not specified', Icons.attach_money),
+          if (tripData['travelBudget'] != null && tripData['travelBudget'].isNotEmpty)
+            _buildDetailRow('Travel Budget', '\$${tripData['travelBudget']}', Icons.flight),
+          if (tripData['foodBudget'] != null && tripData['foodBudget'].isNotEmpty)
+            _buildDetailRow('Food Budget', '\$${tripData['foodBudget']}', Icons.restaurant),
+          if (tripData['hotelBudget'] != null && tripData['hotelBudget'].isNotEmpty)
+            _buildDetailRow('Hotel Budget', '\$${tripData['hotelBudget']}', Icons.hotel),
+          if (tripData['otherBudget'] != null && tripData['otherBudget'].isNotEmpty)
+            _buildDetailRow('Other Expenses', '\$${tripData['otherBudget']}', Icons.more_horiz),
+          if (_getTotalBudget() > 0) ...[
+            const Divider(),
+            _buildDetailRow('Total Budget', '\${_getTotalBudget()}', Icons.attach_money),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMeetingPointCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Meeting Point',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 20),
           _buildDetailRow('Meeting Point', tripData['meetingPoint'] ?? 'Not specified', Icons.location_pin),
         ],
       ),
@@ -392,9 +672,44 @@ class TripDetailsWidget extends StatelessWidget {
     );
   }
 
+  // Helper methods
+  bool _hasGroupDetails() {
+    return tripData['maxMembers'] != null || tripData['currentMembers'] != null;
+  }
+
   bool _hasActivities() {
     final activities = tripData['activities'];
     return activities != null && activities is List && activities.isNotEmpty;
+  }
+
+  bool _hasBudgetDetails() {
+    return (tripData['travelBudget'] != null && tripData['travelBudget'].toString().isNotEmpty) ||
+           (tripData['foodBudget'] != null && tripData['foodBudget'].toString().isNotEmpty) ||
+           (tripData['hotelBudget'] != null && tripData['hotelBudget'].toString().isNotEmpty) ||
+           (tripData['otherBudget'] != null && tripData['otherBudget'].toString().isNotEmpty);
+  }
+
+  bool _hasMeetingPoint() {
+    return tripData['meetingPoint'] != null && tripData['meetingPoint'].toString().isNotEmpty;
+  }
+
+  int _getTotalBudget() {
+    int total = 0;
+    
+    if (tripData['travelBudget'] != null) {
+      total += int.tryParse(tripData['travelBudget'].toString()) ?? 0;
+    }
+    if (tripData['foodBudget'] != null) {
+      total += int.tryParse(tripData['foodBudget'].toString()) ?? 0;
+    }
+    if (tripData['hotelBudget'] != null) {
+      total += int.tryParse(tripData['hotelBudget'].toString()) ?? 0;
+    }
+    if (tripData['otherBudget'] != null) {
+      total += int.tryParse(tripData['otherBudget'].toString()) ?? 0;
+    }
+    
+    return total;
   }
 
   IconData _getActivityIcon(String activity) {
@@ -439,5 +754,249 @@ class TripDetailsWidget extends StatelessWidget {
       default:
         return Icons.local_activity;
     }
+  }
+}
+
+// Follower Selection Sheet Widget (for sending requests from trip details)
+class FollowerSelectionSheet extends StatefulWidget {
+  final Map<String, dynamic> tripData;
+  final Function(List<Map<String, dynamic>>) onSendRequests;
+
+  const FollowerSelectionSheet({
+    super.key,
+    required this.tripData,
+    required this.onSendRequests,
+  });
+
+  @override
+  State<FollowerSelectionSheet> createState() => _FollowerSelectionSheetState();
+}
+
+class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
+  List<Map<String, dynamic>> _selectedFollowers = [];
+  
+  // Sample followers data
+  final List<Map<String, dynamic>> _followers = [
+    {
+      'id': 'follower_1',
+      'name': 'Alex Johnson',
+      'avatar': 'https://i.pravatar.cc/150?img=8',
+      'isOnline': true,
+    },
+    {
+      'id': 'follower_2',
+      'name': 'Maria Rodriguez',
+      'avatar': 'https://i.pravatar.cc/150?img=5',
+      'isOnline': false,
+    },
+    {
+      'id': 'follower_3',
+      'name': 'John Smith',
+      'avatar': 'https://i.pravatar.cc/150?img=12',
+      'isOnline': true,
+    },
+    {
+      'id': 'follower_4',
+      'name': 'Emma Wilson',
+      'avatar': 'https://i.pravatar.cc/150?img=16',
+      'isOnline': false,
+    },
+    {
+      'id': 'follower_5',
+      'name': 'Sarah Lee',
+      'avatar': 'https://i.pravatar.cc/150?img=15',
+      'isOnline': true,
+    },
+    {
+      'id': 'follower_6',
+      'name': 'Mike Chen',
+      'avatar': 'https://i.pravatar.cc/150?img=10',
+      'isOnline': false,
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.8,
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+          
+          const Text(
+            'Send Trip Request',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          
+          Text(
+            'Select followers to invite for "${widget.tripData['title']}"',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 14,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          
+          if (_selectedFollowers.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue[100]!),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.people,
+                    color: Color(0xFF0088cc),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${_selectedFollowers.length} followers selected',
+                    style: const TextStyle(
+                      color: Color(0xFF0088cc),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          
+          Expanded(
+            child: ListView.builder(
+              itemCount: _followers.length,
+              itemBuilder: (context, index) {
+                final follower = _followers[index];
+                final isSelected = _selectedFollowers.any((f) => f['id'] == follower['id']);
+                
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.blue[50] : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected ? Colors.blue[200]! : Colors.grey[200]!,
+                    ),
+                  ),
+                  child: CheckboxListTile(
+                    value: isSelected,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        if (value ?? false) {
+                          _selectedFollowers.add(follower);
+                        } else {
+                          _selectedFollowers.removeWhere((f) => f['id'] == follower['id']);
+                        }
+                      });
+                    },
+                    activeColor: const Color(0xFF0088cc),
+                    title: Row(
+                      children: [
+                        Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundImage: NetworkImage(follower['avatar']),
+                            ),
+                            if (follower['isOnline'])
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: Colors.green,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white, width: 2),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                follower['name'],
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Text(
+                                follower['isOnline'] ? 'Online' : 'Offline',
+                                style: TextStyle(
+                                  color: follower['isOnline'] ? Colors.green : Colors.grey[500],
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _selectedFollowers.isEmpty 
+                      ? null 
+                      : () => widget.onSendRequests(_selectedFollowers),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0088cc),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text(
+                    _selectedFollowers.isEmpty 
+                        ? 'Select Followers' 
+                        : 'Send Requests (${_selectedFollowers.length})',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }

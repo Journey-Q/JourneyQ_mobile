@@ -47,7 +47,7 @@ class _TripGroupsTabState extends State<TripGroupsTab> {
                 child: GestureDetector(
                   onTap: () => setState(() => _showMyGroups = true),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
                       color: _showMyGroups ? AppTheme.lightTheme.colorScheme.secondary : null,
                       borderRadius: BorderRadius.circular(12),
@@ -77,7 +77,7 @@ class _TripGroupsTabState extends State<TripGroupsTab> {
                 child: GestureDetector(
                   onTap: () => setState(() => _showMyGroups = false),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
                       color: !_showMyGroups ? AppTheme.lightTheme.colorScheme.secondary : null,
                       borderRadius: BorderRadius.circular(12),
