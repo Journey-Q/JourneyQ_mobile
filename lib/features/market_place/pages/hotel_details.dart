@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'booking_room.dart'; // Import the booking room page
-import 'booking_room.dart'; // Import the booking page
+
 
 class HotelDetailsPage extends StatefulWidget {
   final Map<String, dynamic>? hotel;
