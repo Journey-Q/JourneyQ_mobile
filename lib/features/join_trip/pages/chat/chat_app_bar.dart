@@ -70,13 +70,13 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                       fontSize: 16,
                     ),
                   ),
-                  Text(
-                    '${members.length} members • Online',
-                    style: TextStyle(
-                      color: Colors.green[600],
-                      fontSize: 12,
-                    ),
-                  ),
+                  // Text(
+                  //   '${members.length} members • Online',
+                  //   style: TextStyle(
+                  //     color: Colors.green[600],
+                  //     fontSize: 12,
+                  //   ),
+                  // ),
                 ],
               ),
             ),
@@ -91,9 +91,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF0088cc), Color(0xFF00B4DB)],
-                ),
+                color: const Color.fromARGB(255, 40, 40, 40),
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: [
                   BoxShadow(

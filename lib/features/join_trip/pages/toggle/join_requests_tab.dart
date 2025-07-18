@@ -167,7 +167,7 @@ class _JoinRequestsTabState extends State<JoinRequestsTab> {
                               'Join ${request['trip']}',
                               style: TextStyle(
                                 color: Colors.blue[700],
-                                fontSize: 14,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
