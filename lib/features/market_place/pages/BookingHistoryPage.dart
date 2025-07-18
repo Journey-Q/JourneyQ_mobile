@@ -217,17 +217,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
   Widget _buildFilterSection() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      color: Colors.white,
       child: Column(
         children: [
           Row(
@@ -902,8 +892,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
                       // Review Section in Details
                       if (booking['status'] == 'Completed') ...[
                         const SizedBox(height: 20),
-                        const Divider(),
-                        const SizedBox(height: 16),
                         if (booking['hasReview']) ...[
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1098,16 +1086,16 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
             color: Colors.white,
             child: TabBar(
               controller: _tabController,
-              isScrollable: true,
               labelColor: const Color(0xFF0088cc),
               unselectedLabelColor: Colors.grey,
               indicatorColor: const Color(0xFF0088cc),
               indicatorWeight: 3,
+              dividerColor: Colors.transparent,
               tabs: [
                 Tab(text: 'All (${getBookingsByType('All').length})'),
                 Tab(text: 'Hotels (${getBookingsByType('Hotel').length})'),
                 Tab(text: 'Tours (${getBookingsByType('Tour Package').length})'),
-                Tab(text: 'Agencies (${getBookingsByType('Travel Agency').length})'),
+                Tab(text: 'Agency (${getBookingsByType('Travel Agency').length})'),
               ],
             ),
           ),
