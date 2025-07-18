@@ -46,6 +46,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
         hasError = true;
         isLoading = false;
       });
+
     }
   }
 
@@ -409,6 +410,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                       const SizedBox(height: 4),
                       Text(
                         'LKR ${((vehicle['acPricePerKm'] ?? 50) * 1).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} per 1km',
+
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -453,6 +455,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                       const SizedBox(height: 4),
                       Text(
                         'LKR ${((vehicle['nonAcPricePerKm'] ?? 40) * 1).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} per 1km',
+
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -831,10 +834,11 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            const Icon(Icons.schedule, size: 18, color: Colors.grey),
+                            const Icon(Icons.calendar_today, size: 18, color: Colors.grey),
                             const SizedBox(width: 8),
                             Text(
                               agencyData['experience'] ?? 'Years of Experience',
+
                               style: const TextStyle(fontSize: 14, color: Colors.grey),
                             ),
                           ],

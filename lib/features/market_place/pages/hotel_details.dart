@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'booking_room.dart';
 
+
+
 class HotelDetailsPage extends StatefulWidget {
   final String hotelId;
 
@@ -388,6 +390,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
     } catch (e) {
       return null;
     }
+
   }
 
   // Enhanced room card with separate bedroom/bathroom counts
@@ -405,6 +408,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
     Color statusColor;
 
     switch (status) {
+
       case 'available':
         statusText = 'Available';
         statusColor = Colors.green;
@@ -674,6 +678,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                       child: Text(
                           isAvailable ? 'Book Now' :
                           (status == 'maintenance' ? 'Under Maintenance' : 'Not Available')
+
                       ),
                     ),
                   ],
@@ -856,7 +861,6 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Rating and Reviews (Price removed as in first page)
                   Row(
                     children: [
                       const Icon(

@@ -541,6 +541,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                                   fontWeight: FontWeight.bold,
                                   color: Color(0xFF0088cc),
                                 ),
+
                               ),
                             ],
                           ),

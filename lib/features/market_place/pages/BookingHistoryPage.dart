@@ -60,6 +60,9 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
       'status': 'Confirmed',
       'bookedDate': DateTime(2025, 5, 20),
       'image': 'assets/images/shangri_la.jpg',
+      'hasReview': false,
+      'rating': null,
+      'review': null,
     },
     {
       'bookingId': 'BK-2025-0612-002',
@@ -78,6 +81,9 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
       'status': 'Completed',
       'bookedDate': DateTime(2025, 5, 15),
       'image': 'assets/images/galle_face.jpg',
+      'hasReview': true,
+      'rating': 4.5,
+      'review': 'Excellent service and beautiful ocean view. The staff was very helpful and the room was clean and comfortable.',
     },
     {
       'bookingId': 'BK-2025-0520-003',
@@ -95,6 +101,9 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
       'status': 'Completed',
       'bookedDate': DateTime(2025, 4, 10),
       'image': 'assets/images/cultural_triangle.jpg',
+      'hasReview': false,
+      'rating': null,
+      'review': null,
     },
     {
       'bookingId': 'BK-2025-0718-004',
@@ -110,6 +119,9 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
       'status': 'Pending',
       'bookedDate': DateTime(2025, 7, 10),
       'image': 'assets/images/ceylon_roots.jpg',
+      'hasReview': false,
+      'rating': null,
+      'review': null,
     },
     {
       'bookingId': 'BK-2025-0505-005',
@@ -128,6 +140,9 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
       'status': 'Cancelled',
       'bookedDate': DateTime(2025, 4, 20),
       'image': 'assets/images/cinnamon_grand.jpg',
+      'hasReview': false,
+      'rating': null,
+      'review': null,
     },
   ];
 
@@ -295,6 +310,9 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
   }
 
   Widget _buildBookingCard(Map<String, dynamic> booking) {
+    bool isCompleted = booking['status'] == 'Completed';
+    bool hasReview = booking['hasReview'] ?? false;
+
     return GestureDetector(
       onTap: () {
         _showBookingDetails(booking);
@@ -360,135 +378,422 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
             // Main content
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(
+              child: Column(
                 children: [
-                  // Service image/icon
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      color: Colors.grey.shade200,
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.asset(
-                        booking['image'],
+                  Row(
+                    children: [
+                      // Service image/icon
+                      Container(
                         width: 60,
                         height: 60,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.grey.shade200,
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.asset(
+                            booking['image'],
                             width: 60,
                             height: 60,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF0088cc).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              _getTypeIcon(booking['type']),
-                              color: const Color(0xFF0088cc),
-                              size: 30,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Service details
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          booking['serviceName'],
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Colors.black87,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF0088cc).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  _getTypeIcon(booking['type']),
+                                  color: const Color(0xFF0088cc),
+                                  size: 30,
+                                ),
+                              );
+                            },
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
-                        if (booking['type'] == 'Hotel') ...[
-                          Text(
-                            '${booking['roomType']} • ${booking['roomNumber']}',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          Text(
-                            '${booking['nights']} nights • ${booking['guests']} guests',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ] else if (booking['type'] == 'Tour Package') ...[
-                          Text(
-                            booking['description'],
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            '${booking['duration']} • ${booking['guests']} guests',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ] else if (booking['type'] == 'Travel Agency') ...[
-                          Text(
-                            booking['service'],
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          Text(
-                            '${booking['guests']} guests',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      ),
+                      const SizedBox(width: 12),
+                      // Service details
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${booking['currency']} ${booking['amount'].toStringAsFixed(2)}',
+                              booking['serviceName'],
                               style: const TextStyle(
-                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
+                                fontSize: 16,
                                 color: Colors.black87,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            Text(
-                              'Booked: ${_formatDate(booking['bookedDate'])}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
+                            const SizedBox(height: 4),
+                            if (booking['type'] == 'Hotel') ...[
+                              Text(
+                                '${booking['roomType']} • ${booking['roomNumber']}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
                               ),
+                              Text(
+                                '${booking['nights']} nights • ${booking['guests']} guests',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ] else if (booking['type'] == 'Tour Package') ...[
+                              Text(
+                                booking['description'],
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                '${booking['duration']} • ${booking['guests']} guests',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ] else if (booking['type'] == 'Travel Agency') ...[
+                              Text(
+                                booking['service'],
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              Text(
+                                '${booking['guests']} guests',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '${booking['currency']} ${booking['amount'].toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                Text(
+                                  'Booked: ${_formatDate(booking['bookedDate'])}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
+
+                  // Rating and Review Section for Completed Bookings
+                  if (isCompleted) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: hasReview
+                          ? _buildExistingReview(booking)
+                          : _buildAddReviewSection(booking),
+                    ),
+                  ],
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildExistingReview(Map<String, dynamic> booking) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Your Review',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            _buildStarRating(booking['rating'], 16),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          booking['review'],
+          style: const TextStyle(
+            fontSize: 13,
+            color: Colors.grey,
+            height: 1.4,
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAddReviewSection(Map<String, dynamic> booking) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Text(
+          'How was your experience?',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
+        ElevatedButton(
+          onPressed: () => _showAddReviewBottomSheet(booking),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF0088cc),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+          child: const Text(
+            'Add Review',
+            style: TextStyle(fontSize: 12),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStarRating(double rating, double size) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        return Icon(
+          index < rating ? Icons.star : Icons.star_border,
+          color: Colors.amber,
+          size: size,
+        );
+      }),
+    );
+  }
+
+  void _showAddReviewBottomSheet(Map<String, dynamic> booking) {
+    double rating = 0;
+    String reviewText = '';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Handle bar
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Title
+                const Text(
+                  'Add Review',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                Text(
+                  'Rate ${booking['serviceName']}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Star rating
+                Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      return GestureDetector(
+                        onTap: () => setModalState(() => rating = index + 1.0),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Icon(
+                            index < rating ? Icons.star : Icons.star_border,
+                            color: Colors.amber,
+                            size: 40,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+
+                if (rating > 0) ...[
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Text(
+                      '${rating.toInt()} out of 5 stars',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 24),
+
+                // Review text field
+                TextField(
+                  onChanged: (value) => reviewText = value,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    hintText: 'Tell us about your experience...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFF0088cc)),
+                    ),
+                    contentPadding: const EdgeInsets.all(16),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Action buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          side: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: rating > 0 ? () {
+                          _submitReview(booking, rating, reviewText);
+                          Navigator.pop(context);
+                        } : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0088cc),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Submit',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _submitReview(Map<String, dynamic> booking, double rating, String reviewText) {
+    setState(() {
+      booking['hasReview'] = true;
+      booking['rating'] = rating;
+      booking['review'] = reviewText;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Review submitted successfully!'),
+        backgroundColor: Colors.green,
       ),
     );
   }
@@ -538,9 +843,9 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
+                          const Text(
                             'Booking Details',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
@@ -593,6 +898,64 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
                       _buildDetailRow('Guests', booking['guests'].toString()),
                       _buildDetailRow('Amount', '${booking['currency']} ${booking['amount'].toStringAsFixed(2)}'),
                       _buildDetailRow('Booked Date', _formatDate(booking['bookedDate'])),
+
+                      // Review Section in Details
+                      if (booking['status'] == 'Completed') ...[
+                        const SizedBox(height: 20),
+                        const Divider(),
+                        const SizedBox(height: 16),
+                        if (booking['hasReview']) ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Your Review',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              _buildStarRating(booking['rating'], 18),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            booking['review'],
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                              height: 1.4,
+                            ),
+                          ),
+                        ] else ...[
+                          const Text(
+                            'Add Review',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _showAddReviewBottomSheet(booking);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF0088cc),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text('Add Review & Rating'),
+                            ),
+                          ),
+                        ],
+                      ],
 
                       const SizedBox(height: 20),
 

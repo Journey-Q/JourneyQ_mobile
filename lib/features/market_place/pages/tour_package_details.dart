@@ -841,6 +841,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                                 fontSize: 14,
                               ),
                             )
+
                           ],
                         ),
                         const SizedBox(height: 16),
@@ -866,6 +867,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                                   ),
                                 ],
                               ),
+
                             ),
                           ],
                         ),

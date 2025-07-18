@@ -22,6 +22,8 @@ import 'package:journeyq/features/profile/pages/SettingsPage.dart';
 import 'package:journeyq/features/profile/pages/EditProfilePage.dart';
 import 'package:journeyq/features/profile/pages/PostDetailPage.dart';
 import 'package:journeyq/features/profile/pages/BucketListPage.dart';
+import 'package:journeyq/features/home/user_profile_page.dart';
+// ADD THESE NEW IMPOR
 import 'package:journeyq/features/profile/pages/FollowersFollowingPage.dart';
 import 'package:journeyq/features/profile/pages/PaymentPage.dart';
 import 'package:journeyq/app/app.dart';
@@ -338,6 +340,20 @@ class AppRouter {
         TransitionGoRoute(
           path: '/profile/bucketlist',
           builder: (context, state) => const BucketListPage(),
+          transitionType: PageTransitionType.slide,
+        ),
+
+        // NEW: User Profile Route (for viewing other users' profiles)
+        TransitionGoRoute(
+          path: '/user-profile/:userId/:userName',
+          builder: (context, state) {
+            final userId = state.pathParameters['userId']!;
+            final userName = Uri.decodeComponent(state.pathParameters['userName']!);
+            return UserProfilePage(
+              userId: userId,
+              userName: userName,
+            );
+          },
           transitionType: PageTransitionType.slide,
         ),
 

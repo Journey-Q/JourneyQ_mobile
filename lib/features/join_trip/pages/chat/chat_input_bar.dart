@@ -5,7 +5,6 @@ class ChatInputBar extends StatelessWidget {
   final bool isTyping;
   final Function(String) onTextChanged;
   final VoidCallback onSendMessage;
-  final VoidCallback onShowAttachmentOptions;
 
   const ChatInputBar({
     super.key,
@@ -13,7 +12,6 @@ class ChatInputBar extends StatelessWidget {
     required this.isTyping,
     required this.onTextChanged,
     required this.onSendMessage,
-    required this.onShowAttachmentOptions,
   });
 
   @override
@@ -40,41 +38,21 @@ class ChatInputBar extends StatelessWidget {
                   color: Colors.grey[100],
                   borderRadius: BorderRadius.circular(25),
                 ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.emoji_emotions, color: Colors.grey),
-                      onPressed: () {
-                        // Emoji picker functionality
-                      },
+                child: TextField(
+                  controller: messageController,
+                  onChanged: onTextChanged,
+                  style: const TextStyle(color: Colors.black),
+                  decoration: InputDecoration(
+                    hintText: 'Type a message...',
+                    hintStyle: TextStyle(color: Colors.grey[500]),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
                     ),
-                    Expanded(
-                      child: TextField(
-                        controller: messageController,
-                        onChanged: onTextChanged,
-                        style: const TextStyle(color: Colors.black),
-                        decoration: InputDecoration(
-                          hintText: 'Type a message...',
-                          hintStyle: TextStyle(color: Colors.grey[500]),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                        ),
-                        maxLines: null,
-                        textCapitalization: TextCapitalization.sentences,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.attach_file, color: Colors.grey),
-                      onPressed: onShowAttachmentOptions,
-                    ),
-                    if (!isTyping)
-                      IconButton(
-                        icon: const Icon(Icons.camera_alt, color: Colors.grey),
-                        onPressed: () {
-                          // Camera functionality
-                        },
-                      ),
-                  ],
+                  ),
+                  maxLines: null,
+                  textCapitalization: TextCapitalization.sentences,
                 ),
               ),
             ),
@@ -87,13 +65,11 @@ class ChatInputBar extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: IconButton(
-                icon: Icon(
-                  isTyping ? Icons.send : Icons.mic,
+                icon: const Icon(
+                  Icons.send,
                   color: Colors.white,
                 ),
-                onPressed: isTyping ? onSendMessage : () {
-                  // Voice message functionality
-                },
+                onPressed: isTyping ? onSendMessage : null,
               ),
             ),
           ],

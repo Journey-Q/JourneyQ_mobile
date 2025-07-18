@@ -45,19 +45,23 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
     // Try to find corresponding trip form data
     final groupData = SampleData.getGroupById(widget.groupId);
     if (groupData != null) {
-      // Convert group data to trip form format
+      // Convert group data to trip form format with all member-accessible fields
       _tripFormData = {
         'title': groupData['title'] ?? widget.groupName,
         'destination': _tripDetails['destination'],
         'startDate': _tripDetails['startDate'],
         'endDate': _tripDetails['endDate'],
-        'budget': _tripDetails['budget'],
         'tripType': _tripDetails['tripType'],
         'description': widget.description,
         'duration': groupData['duration'] ?? '7 days',
         'maxMembers': widget.members.length,
+        'currentMembers': widget.members.length,
         'meetingPoint': 'TBD',
         'activities': <String>[],
+        'travelBudget': '',
+        'foodBudget': '',
+        'hotelBudget': '',
+        'otherBudget': '',
         'status': 'Active',
         'createdDate': widget.createdDate,
       };
@@ -116,7 +120,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
             _buildGroupProfileSection(),
             const SizedBox(height: 24),
             
-            // Trip Details Section with View/Edit
+            // Trip Details Section with View/Edit (Now accessible to all members)
             _buildTripDetailsSection(),
             const SizedBox(height: 24),
             
@@ -231,15 +235,15 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
                       foregroundColor: const Color(0xFF0088cc),
                     ),
                   ),
-                  if (widget.isCreator)
-                    TextButton.icon(
-                      onPressed: _editTripDetails,
-                      icon: const Icon(Icons.edit, size: 18),
-                      label: const Text('Edit'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFF0088cc),
-                      ),
+                  // All group members can edit trip details now
+                  TextButton.icon(
+                    onPressed: _editTripDetails,
+                    icon: const Icon(Icons.edit, size: 18),
+                    label: const Text('Edit'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFF0088cc),
                     ),
+                  ),
                 ],
               ),
             ],
@@ -444,7 +448,8 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
           builder: (context) => TripDetailsWidget(
             tripData: _tripFormData!,
             customTitle: '${widget.groupName} - Trip Details',
-            showEditButton: false, // Don't show edit button since we have separate edit option
+            showEditButton: false,
+            isGroupMember: true, // All group members can see advanced details
           ),
           fullscreenDialog: true,
         ),
@@ -453,13 +458,14 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
   }
 
   void _editTripDetails() {
-    if (_tripFormData != null && widget.isCreator) {
+    if (_tripFormData != null) {
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => TripFormWidget(
             mode: TripFormMode.edit,
             initialData: _tripFormData,
+            isGroupMember: true, // Show all advanced options for group members
             customTitle: 'Edit ${widget.groupName} Trip',
             onSubmit: (updatedData) {
               setState(() {
@@ -469,7 +475,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
                   'destination': updatedData['destination'] ?? _tripDetails['destination']!,
                   'startDate': updatedData['startDate'] ?? _tripDetails['startDate']!,
                   'endDate': updatedData['endDate'] ?? _tripDetails['endDate']!,
-                  'budget': updatedData['budget'] ?? _tripDetails['budget']!,
+                  'budget': _calculateDisplayBudget(updatedData),
                   'tripType': updatedData['tripType'] ?? _tripDetails['tripType']!,
                 };
               });
@@ -479,6 +485,25 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
         ),
       );
     }
+  }
+
+  String _calculateDisplayBudget(Map<String, dynamic> data) {
+    int total = 0;
+    
+    if (data['travelBudget'] != null && data['travelBudget'].toString().isNotEmpty) {
+      total += int.tryParse(data['travelBudget'].toString()) ?? 0;
+    }
+    if (data['foodBudget'] != null && data['foodBudget'].toString().isNotEmpty) {
+      total += int.tryParse(data['foodBudget'].toString()) ?? 0;
+    }
+    if (data['hotelBudget'] != null && data['hotelBudget'].toString().isNotEmpty) {
+      total += int.tryParse(data['hotelBudget'].toString()) ?? 0;
+    }
+    if (data['otherBudget'] != null && data['otherBudget'].toString().isNotEmpty) {
+      total += int.tryParse(data['otherBudget'].toString()) ?? 0;
+    }
+    
+    return total > 0 ? '\${total} total' : 'Not specified';
   }
 
   // Helper methods
@@ -494,23 +519,35 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
   }
 
   void _addMember() {
-    print('Add member');
+    // Show follower selection for adding members
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => FollowerSelectionSheet(
+        tripData: _tripFormData ?? {},
+        onSendRequests: (selectedFollowers) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Invitations sent to ${selectedFollowers.length} followers!'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+      ),
+    );
   }
 
   void _removeMember(Map<String, dynamic> member) {
-    print('Remove member: ${member['name']}');
-  }
-
-  void _makeAdmin(Map<String, dynamic> member) {
-    print('Make admin: ${member['name']}');
-  }
-
-  void _deleteGroup() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Group'),
-        content: const Text('Are you sure you want to delete this group? This action cannot be undone.'),
+        title: const Text('Remove Member'),
+        content: Text('Are you sure you want to remove ${member['name']} from the group?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -519,7 +556,72 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${member['name']} removed from group'),
+                  backgroundColor: Colors.orange,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            child: const Text('Remove', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _makeAdmin(Map<String, dynamic> member) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Make Admin'),
+        content: Text('Make ${member['name']} an admin of this group?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
               Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${member['name']} is now an admin'),
+                  backgroundColor: Colors.green,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            child: const Text('Make Admin'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteGroup() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Group'),
+        content: const Text('Are you sure you want to delete this group? This action cannot be undone. All trip details and member data will be lost.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.pop(context); // Close group details
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Group deleted successfully'),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
@@ -533,7 +635,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Leave Group'),
-        content: const Text('Are you sure you want to leave this group?'),
+        content: const Text('Are you sure you want to leave this group? You will lose access to all trip details and group chats.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -541,10 +643,255 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
+              Navigator.pop(context); // Close dialog
+              Navigator.pop(context); // Close group details
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('You have left the group'),
+                  backgroundColor: Colors.orange,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
             },
             child: const Text('Leave', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Follower Selection Sheet Widget (for adding members to group)
+class FollowerSelectionSheet extends StatefulWidget {
+  final Map<String, dynamic> tripData;
+  final Function(List<Map<String, dynamic>>) onSendRequests;
+
+  const FollowerSelectionSheet({
+    super.key,
+    required this.tripData,
+    required this.onSendRequests,
+  });
+
+  @override
+  State<FollowerSelectionSheet> createState() => _FollowerSelectionSheetState();
+}
+
+class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
+  List<Map<String, dynamic>> _selectedFollowers = [];
+  
+  // Sample followers data (excluding current group members)
+  final List<Map<String, dynamic>> _followers = [
+    {
+      'id': 'follower_7',
+      'name': 'David Kim',
+      'avatar': 'https://i.pravatar.cc/150?img=18',
+      'isOnline': true,
+    },
+    {
+      'id': 'follower_8',
+      'name': 'Anna White',
+      'avatar': 'https://i.pravatar.cc/150?img=20',
+      'isOnline': false,
+    },
+    {
+      'id': 'follower_9',
+      'name': 'Tom Brown',
+      'avatar': 'https://i.pravatar.cc/150?img=22',
+      'isOnline': true,
+    },
+    {
+      'id': 'follower_10',
+      'name': 'Lisa Park',
+      'avatar': 'https://i.pravatar.cc/150?img=14',
+      'isOnline': false,
+    },
+    {
+      'id': 'follower_11',
+      'name': 'James Wilson',
+      'avatar': 'https://i.pravatar.cc/150?img=25',
+      'isOnline': true,
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.8,
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+          
+          const Text(
+            'Add Members to Group',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          
+          Text(
+            'Select followers to invite to this trip group',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 14,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          
+          if (_selectedFollowers.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue[100]!),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.people,
+                    color: Color(0xFF0088cc),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${_selectedFollowers.length} followers selected',
+                    style: const TextStyle(
+                      color: Color(0xFF0088cc),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          
+          Expanded(
+            child: ListView.builder(
+              itemCount: _followers.length,
+              itemBuilder: (context, index) {
+                final follower = _followers[index];
+                final isSelected = _selectedFollowers.any((f) => f['id'] == follower['id']);
+                
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.blue[50] : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected ? Colors.blue[200]! : Colors.grey[200]!,
+                    ),
+                  ),
+                  child: CheckboxListTile(
+                    value: isSelected,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        if (value ?? false) {
+                          _selectedFollowers.add(follower);
+                        } else {
+                          _selectedFollowers.removeWhere((f) => f['id'] == follower['id']);
+                        }
+                      });
+                    },
+                    activeColor: const Color(0xFF0088cc),
+                    title: Row(
+                      children: [
+                        Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundImage: NetworkImage(follower['avatar']),
+                            ),
+                            if (follower['isOnline'])
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: Colors.green,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white, width: 2),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                follower['name'],
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Text(
+                                follower['isOnline'] ? 'Online' : 'Offline',
+                                style: TextStyle(
+                                  color: follower['isOnline'] ? Colors.green : Colors.grey[500],
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _selectedFollowers.isEmpty 
+                      ? null 
+                      : () => widget.onSendRequests(_selectedFollowers),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0088cc),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: Text(
+                    _selectedFollowers.isEmpty 
+                        ? 'Select Followers' 
+                        : 'Send Invitations (${_selectedFollowers.length})',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

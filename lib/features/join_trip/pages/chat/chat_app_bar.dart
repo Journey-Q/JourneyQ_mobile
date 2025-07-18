@@ -9,6 +9,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Map<String, dynamic>> members;
   final bool isCreator;
   final String createdDate;
+  final VoidCallback? onGalleryPressed;
 
   const ChatAppBar({
     super.key,
@@ -19,6 +20,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.members,
     required this.isCreator,
     required this.createdDate,
+    this.onGalleryPressed,
   });
 
   @override
@@ -68,19 +70,49 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                       fontSize: 16,
                     ),
                   ),
-                  Text(
-                    '${members.length} members • Online',
-                    style: TextStyle(
-                      color: Colors.green[600],
-                      fontSize: 12,
-                    ),
-                  ),
+                  // Text(
+                  //   '${members.length} members • Online',
+                  //   style: TextStyle(
+                  //     color: Colors.green[600],
+                  //     fontSize: 12,
+                  //   ),
+                  // ),
                 ],
               ),
             ),
           ],
         ),
       ),
+      actions: [
+        // Gallery Icon
+        Container(
+          margin: const EdgeInsets.only(right: 8),
+          child: IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 40, 40, 40),
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0088cc).withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.photo_library,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+            onPressed: onGalleryPressed,
+            tooltip: 'Trip Gallery',
+          ),
+        ),
+        const SizedBox(width: 8),
+      ],
     );
   }
 

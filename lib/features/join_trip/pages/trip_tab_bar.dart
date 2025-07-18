@@ -19,14 +19,14 @@ class TripTabBar extends StatelessWidget {
             title: 'Trip Groups',
             isSelected: tabController.index == 0,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           _buildTabButton(
             context: context,
             index: 1,
             title: 'Join Request',
             isSelected: tabController.index == 1,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           _buildTabButton(
             context: context,
             index: 2,
@@ -48,17 +48,13 @@ class TripTabBar extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: isSelected 
-              ? const Color.fromARGB(255, 212, 225, 238) 
-              : const Color(0xFFF0F0F0), 
+          color: const Color(0xFFF0F0F0), // Same background color for all tabs
           borderRadius: BorderRadius.circular(25),
           boxShadow: [
             BoxShadow(
-              color: isSelected 
-                  ? const Color.fromARGB(255, 143, 180, 198).withOpacity(0.2)
-                  : Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withOpacity(0.1),
               spreadRadius: 1,
-              blurRadius: isSelected ? 6 : 3,
+              blurRadius: 3,
               offset: const Offset(0, 2),
             ),
           ],
@@ -72,18 +68,18 @@ class TripTabBar extends StatelessWidget {
             },
             child: Container(
               padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
+                horizontal: 12,
+                vertical: 8,
               ),
               child: Text(
                 title,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: isSelected 
-                      ? const Color(0xFF1565C0) // Dark blue text when selected
+                      ? const Color.fromARGB(255, 6, 7, 7) 
                       : const Color(0xFF757575), // Light black/gray text when not selected
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  fontSize: 13,
                 ),
               ),
             ),

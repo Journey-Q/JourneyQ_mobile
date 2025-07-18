@@ -4,7 +4,7 @@ import 'package:journeyq/features/join_trip/pages/chat/chat_app_bar.dart';
 import 'package:journeyq/features/join_trip/pages/chat/chat_message_bubble.dart';
 import 'package:journeyq/features/join_trip/pages/chat/chat_date_divider.dart';
 import 'package:journeyq/features/join_trip/pages/chat/chat_input_bar.dart';
-import 'package:journeyq/features/join_trip/pages/chat/chat_attachment_options.dart';
+import 'package:journeyq/features/join_trip/pages/chat/chat_gallery_screen.dart';
 
 class GroupChatScreen extends StatefulWidget {
   final String groupId;
@@ -72,13 +72,16 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     });
   }
 
-  void _showAttachmentOptions() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  void _navigateToGallery() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChatGalleryScreen(
+          groupId: widget.groupId,
+          groupName: widget.groupName,
+          members: List<Map<String, dynamic>>.from(_groupData['members'] ?? []),
+        ),
       ),
-      builder: (context) => const ChatAttachmentOptions(),
     );
   }
 
@@ -101,6 +104,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         members: List<Map<String, dynamic>>.from(_groupData['members'] ?? []),
         isCreator: _groupData['isCreator'] ?? false,
         createdDate: _groupData['createdDate'] ?? 'Unknown',
+        onGalleryPressed: _navigateToGallery,
       ),
       body: Column(
         children: [
@@ -130,7 +134,6 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
             isTyping: _isTyping,
             onTextChanged: _onTextChanged,
             onSendMessage: _sendMessage,
-            onShowAttachmentOptions: _showAttachmentOptions,
           ),
         ],
       ),

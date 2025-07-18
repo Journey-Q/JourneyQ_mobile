@@ -34,7 +34,7 @@ class _JoinRequestsTabState extends State<JoinRequestsTab> {
                 child: GestureDetector(
                   onTap: () => setState(() => _showReceivedRequests = true),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
                       color: _showReceivedRequests ? AppTheme.lightTheme.colorScheme.secondary : null,
                       borderRadius: BorderRadius.circular(12),
@@ -64,7 +64,7 @@ class _JoinRequestsTabState extends State<JoinRequestsTab> {
                 child: GestureDetector(
                   onTap: () => setState(() => _showReceivedRequests = false),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
                       color: !_showReceivedRequests ? AppTheme.lightTheme.colorScheme.secondary : null,
                       borderRadius: BorderRadius.circular(12),
@@ -167,7 +167,7 @@ class _JoinRequestsTabState extends State<JoinRequestsTab> {
                               'Join ${request['trip']}',
                               style: TextStyle(
                                 color: Colors.blue[700],
-                                fontSize: 14,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),

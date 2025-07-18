@@ -16,130 +16,130 @@ class _ProfilePageState extends State<ProfilePage> {
   bool isSubscribed = false;
   String selectedTab = 'posts'; // 'posts', 'bucketlist', 'liked'
 
-  // Enhanced posts data with travel destination information
+  // Enhanced posts data with Sri Lankan travel destination information
   List<Map<String, dynamic>> userPosts = [
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
+      'imageUrl': 'assets/images/mirissa_beach.jpg',
       'likes': 142,
       'comments': 23,
       'isLiked': false,
       'isSaved': false,
-      'caption': 'Breathtaking mountain views at sunrise! Nature never fails to amaze me 🏔️',
-      'location': 'Swiss Alps',
-      'destination': 'Swiss Alps, Switzerland',
-      'description': 'Majestic mountain range with stunning alpine scenery',
+      'caption': 'Paradise found in Mirissa! Crystal clear waters and golden beaches 🏖️',
+      'location': 'Mirissa Beach',
+      'destination': 'Mirissa Beach, Southern Province',
+      'description': 'Stunning crescent-shaped beach famous for whale watching and surfing',
       'timestamp': '2 hours ago',
       'isVisited': true,
       'visitDate': '2024-06-15',
     },
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400',
+      'imageUrl': 'assets/images/ella_viewpoint.jpg',
       'likes': 89,
       'comments': 12,
       'isLiked': true,
       'isSaved': false,
-      'caption': 'Lost in the beauty of this forest trail 🌲',
-      'location': 'Black Forest, Germany',
-      'destination': 'Black Forest, Germany',
-      'description': 'Dense woodland region famous for its scenic beauty',
+      'caption': 'Lost in the misty mountains of Ella! Nature at its finest 🌲',
+      'location': 'Ella',
+      'destination': 'Ella, Uva Province',
+      'description': 'Picturesque hill station with tea plantations and stunning viewpoints',
       'timestamp': '5 hours ago',
       'isVisited': true,
       'visitDate': '2024-06-10',
     },
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400',
+      'imageUrl': 'assets/images/sigiriya_rock.jpg',
       'likes': 256,
       'comments': 45,
       'isLiked': false,
       'isSaved': true,
-      'caption': 'Golden hour magic ✨ The perfect end to an incredible day',
-      'location': 'Yosemite National Park',
-      'destination': 'Yosemite National Park, USA',
-      'description': 'Iconic national park with waterfalls and granite cliffs',
+      'caption': 'Golden hour magic at Sigiriya! Ancient fortress rising from the jungle ✨',
+      'location': 'Sigiriya',
+      'destination': 'Sigiriya Rock Fortress, Central Province',
+      'description': '5th-century rock fortress and UNESCO World Heritage site',
       'timestamp': '1 day ago',
       'isVisited': true,
       'visitDate': '2024-06-08',
     },
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=400',
+      'imageUrl': 'assets/images/horton_plains.jpg',
       'likes': 78,
       'comments': 8,
       'isLiked': false,
       'isSaved': false,
-      'caption': 'Adventure awaits in every corner 🎒',
-      'location': 'Banff National Park',
-      'destination': 'Banff National Park, Canada',
-      'description': 'Stunning Canadian Rockies wilderness and lakes',
+      'caption': 'Adventure awaits in Horton Plains! Edge of the world views 🎒',
+      'location': 'Horton Plains',
+      'destination': 'Horton Plains National Park, Central Province',
+      'description': 'High-altitude plateau with dramatic cliff formations and endemic wildlife',
       'timestamp': '2 days ago',
       'isVisited': true,
       'visitDate': '2024-06-05',
     },
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=400',
+      'imageUrl': 'assets/images/adams_peak.jpg',
       'likes': 167,
       'comments': 31,
       'isLiked': true,
       'isSaved': false,
-      'caption': 'Ocean waves and endless horizons 🌊',
-      'location': 'Maldives',
-      'destination': 'Maldives Islands',
-      'description': 'Tropical paradise with crystal clear waters',
+      'caption': 'Sunrise over Adams Peak! Spiritual journey to the top 🌅',
+      'location': 'Adams Peak',
+      'destination': 'Sri Pada (Adams Peak), Sabaragamuwa Province',
+      'description': 'Sacred mountain and pilgrimage site with breathtaking sunrise views',
       'timestamp': '3 days ago',
       'isVisited': true,
       'visitDate': '2024-06-01',
     },
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=400',
+      'imageUrl': 'assets/images/yala_national_park.jpg',
       'likes': 134,
       'comments': 19,
       'isLiked': false,
       'isSaved': true,
-      'caption': 'Camping under the stars never gets old ⭐',
-      'location': 'Joshua Tree National Park',
-      'destination': 'Joshua Tree National Park, USA',
-      'description': 'Desert landscape with unique Joshua trees',
+      'caption': 'Camping under the stars in Yala! Wildlife paradise 🦎',
+      'location': 'Yala National Park',
+      'destination': 'Yala National Park, Southern Province',
+      'description': 'Premier wildlife destination famous for leopards and diverse ecosystems',
       'timestamp': '4 days ago',
       'isVisited': true,
       'visitDate': '2024-05-28',
     },
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=400',
+      'imageUrl': 'assets/images/galle_fort.jpg',
       'likes': 203,
       'comments': 27,
       'isLiked': false,
       'isSaved': false,
-      'caption': 'Every sunset is a promise of a new dawn 🌅',
-      'location': 'Santorini, Greece',
-      'destination': 'Santorini, Greece',
-      'description': 'Beautiful Greek island with white-washed buildings',
+      'caption': 'Every sunset is magical in Galle! Colonial charm meets ocean views 🌅',
+      'location': 'Galle Fort',
+      'destination': 'Galle Fort, Southern Province',
+      'description': 'Historic Dutch colonial fort with cobblestone streets and ocean views',
       'timestamp': '5 days ago',
       'isVisited': true,
       'visitDate': '2024-05-25',
     },
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=400',
+      'imageUrl': 'assets/images/kandy_temple.jpeg',
       'likes': 92,
       'comments': 15,
       'isLiked': true,
       'isSaved': false,
-      'caption': 'Exploring hidden gems off the beaten path 🗺️',
-      'location': 'Iceland',
-      'destination': 'Reykjavik, Iceland',
-      'description': 'Land of fire and ice with stunning landscapes',
+      'caption': 'Exploring the cultural heart of Kandy! Temple of the Tooth 🏛️',
+      'location': 'Kandy',
+      'destination': 'Kandy, Central Province',
+      'description': 'Ancient royal capital and spiritual center with the sacred Temple of the Tooth',
       'timestamp': '1 week ago',
       'isVisited': true,
       'visitDate': '2024-05-20',
     },
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?w=400',
+      'imageUrl': 'assets/images/nuwara_eliya.jpeg',
       'likes': 118,
       'comments': 21,
       'isLiked': false,
       'isSaved': true,
-      'caption': 'The journey is the destination 🚗',
-      'location': 'Route 66, USA',
-      'destination': 'Route 66, USA',
-      'description': 'Historic highway across the American Southwest',
+      'caption': 'The journey through tea country is magical! Nuwara Eliya vibes 🚂',
+      'location': 'Nuwara Eliya',
+      'destination': 'Nuwara Eliya, Central Province',
+      'description': 'Cool climate hill station known as "Little England" with tea plantations',
       'timestamp': '1 week ago',
       'isVisited': true,
       'visitDate': '2024-05-15',
@@ -150,11 +150,11 @@ class _ProfilePageState extends State<ProfilePage> {
   final Map<String, dynamic> userData = {
     'name': 'Samantha Fernando',
     'username': 'samantha_travels',
-    'bio': 'Travel enthusiast | Exploring the world 🌍\n✈️ 47 countries visited\n📸 Capturing moments',
+    'bio': 'Travel enthusiast | Exploring Sri Lanka 🇱🇰\n✈️ 8 districts visited',
     'posts': 9,
     'followers': 5,
     'following': 4,
-    'profileImage': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+    'profileImage': 'assets/images/profile_picture.jpg',
     'isVerified': true,
     'level': 'Explorer',
     'joinDate': 'March 2022',
@@ -173,7 +173,6 @@ class _ProfilePageState extends State<ProfilePage> {
               _buildProfileCard(),
               _buildStatsCard(),
               _buildActionButtons(),
-              _buildTabSection(),
               _buildContentSection(),
               const SizedBox(height: 100), // Space for bottom navigation
             ],
@@ -222,8 +221,6 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           const Spacer(),
-          _buildHeaderButton(Icons.add_circle_outline, _showPostOptions),
-          const SizedBox(width: 8),
           _buildHeaderButton(Icons.settings_outlined, () => context.push('/profile/settings')),
         ],
       ),
@@ -253,7 +250,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildProfileCard() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -267,67 +264,66 @@ class _ProfilePageState extends State<ProfilePage> {
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Stack(
+          Column(
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF0088cc), Color(0xFF00B894)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF0088cc).withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                padding: const EdgeInsets.all(3),
-                child: CircleAvatar(
-                  radius: 45,
-                  backgroundColor: Colors.white,
-                  child: CircleAvatar(
-                    radius: 42,
+              Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 45,
                     backgroundImage: userData['profileImage'] != null
-                        ? NetworkImage(userData['profileImage'])
+                        ? AssetImage(userData['profileImage'])
                         : null,
                     backgroundColor: Colors.grey[200],
                     child: userData['profileImage'] == null
                         ? const Icon(Icons.person, size: 40, color: Colors.grey)
                         : null,
                   ),
-                ),
+                  if (isSubscribed)
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFFD700),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.star, color: Colors.white, size: 16),
+                      ),
+                    ),
+                ],
               ),
-              if (isSubscribed)
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFFD700),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.star, color: Colors.white, size: 16),
-                  ),
+              const SizedBox(height: 12),
+              // Subscribe button with reduced vertical size
+              Container(
+                height: 28, // Set fixed height
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    gradient: LinearGradient(
+                      colors: isSubscribed
+                          ? [const Color(0xFFFFD700), const Color(0xFFFF6B6B)]
+                          : [const Color(0xFF0088cc), Color(0xFF0088cc).withOpacity(0.8)],
+                    )
                 ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: GestureDetector(
-                  onTap: _changeProfilePicture,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0088cc),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
+                child: ElevatedButton.icon(
+                  onPressed: _handleSubscribe,
+                  icon: Icon(isSubscribed ? Icons.star : Icons.star_outline, size: 12),
+                  label: Text(isSubscribed ? 'Premium' : 'Subscribe'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    child: const Icon(Icons.camera_alt, color: Colors.white, size: 14),
+                    textStyle: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    minimumSize: const Size(0, 28),
                   ),
                 ),
               ),
@@ -376,20 +372,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     fontSize: 14,
                     height: 1.4,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.calendar_today, size: 14, color: Color(0xFF636E72)),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Joined ${userData['joinDate']}',
-                      style: const TextStyle(
-                        color: Color(0xFF636E72),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -525,26 +507,20 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
-                gradient: LinearGradient(
-                  colors: isSubscribed
-                      ? [const Color(0xFFFFD700), const Color(0xFFFF6B6B)]
-                      : [const Color(0xFF0088cc), Color(0xFF0088cc).withOpacity(0.8)],
-                ),
                 boxShadow: [
                   BoxShadow(
-                    color: (isSubscribed ? const Color(0xFFFFD700) : const Color(0xFF0088cc))
-                        .withOpacity(0.3),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
               child: ElevatedButton.icon(
-                onPressed: _handleSubscribe,
-                icon: Icon(isSubscribed ? Icons.star : Icons.star_outline, size: 18),
-                label: Text(isSubscribed ? 'Premium' : 'Subscribe'),
+                onPressed: _navigateToBucketList,
+                icon: const Icon(Icons.bookmark, size: 18),
+                label: const Text('Bucket List'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
+                  backgroundColor: const Color(0xFF0088cc),
                   foregroundColor: Colors.white,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -578,7 +554,6 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Row(
         children: [
           _buildTabItem('posts', 'Posts', Icons.grid_view),
-          _buildTabItem('bucketlist', 'Bucket List', Icons.bookmark),
         ],
       ),
     );
@@ -619,14 +594,24 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildContentSection() {
-    switch (selectedTab) {
-      case 'posts':
-        return _buildPostsGrid();
-      case 'bucketlist':
-        return _buildBucketListView();
-      default:
-        return _buildPostsGrid();
-    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // "My Posts" title
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: const Text(
+            'My Posts',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2D3436),
+            ),
+          ),
+        ),
+        _buildPostsGrid(),
+      ],
+    );
   }
 
   Widget _buildPostsGrid() {
@@ -654,84 +639,22 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Image with visit status
-                Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        topRight: Radius.circular(16),
-                      ),
-                      child: Container(
-                        height: 200,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: NetworkImage(post['imageUrl']),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                // Image without likes and visited label
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                  child: Container(
+                    height: 200,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage(post['imageUrl']),
+                        fit: BoxFit.cover,
                       ),
                     ),
-                    if (post['isVisited'])
-                      Positioned(
-                        top: 12,
-                        right: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF00B894),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.check_circle, color: Colors.white, size: 14),
-                              const SizedBox(width: 4),
-                              const Text(
-                                'Visited',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    // Heart icon for likes
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              post['isLiked'] ? Icons.favorite : Icons.favorite_border,
-                              color: post['isLiked'] ? Colors.red : Colors.white,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              post['likes'].toString(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
                 // Content
                 Padding(
@@ -755,68 +678,29 @@ class _ProfilePageState extends State<ProfilePage> {
                           color: Color(0xFF636E72),
                         ),
                       ),
-                      if (post['isVisited'] && post['visitDate'] != null) ...[
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            const Icon(Icons.calendar_today, size: 14, color: Color(0xFF636E72)),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Visited: ${post['visitDate']}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF636E72),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
                       const SizedBox(height: 12),
-                      // Action buttons
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: ElevatedButton(
-                                onPressed: () => _viewPost(index),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF0088cc),
-                                  foregroundColor: Colors.white,
-                                  elevation: 0,
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'View Journey',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: const Color(0xFF0088cc)),
+                      // Only View Journey button (removed share button)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () => _viewPost(index),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0088cc),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: IconButton(
-                              onPressed: () => _sharePost(index),
-                              icon: const Icon(
-                                Icons.share,
-                                color: Color(0xFF0088cc),
-                                size: 20,
-                              ),
+                          ),
+                          child: const Text(
+                            'View Journey',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
@@ -957,7 +841,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     Container(
                       decoration: BoxDecoration(
                         image: DecorationImage(
-                          image: NetworkImage(post['imageUrl']),
+                          image: AssetImage(post['imageUrl']),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -1036,10 +920,6 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() {
       selectedTab = tabId;
     });
-
-    if (tabId == 'bucketlist') {
-      _navigateToBucketList();
-    }
   }
 
   void _showPostOptions() {
@@ -1375,18 +1255,6 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  void _sharePost(int index) {
-    final post = userPosts[index];
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Sharing ${post['destination']}...'),
-        backgroundColor: const Color(0xFF0088cc),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
