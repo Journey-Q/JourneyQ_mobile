@@ -154,7 +154,7 @@ class _TripGroupsTabState extends State<TripGroupsTab> {
                     radius: 28,
                     backgroundImage: NetworkImage(trip['userImage']!),
                   ),
-                  // Creator/Member Badge
+                  // Creator/Member Badge - Keep the small icon indicators
                   Positioned(
                     bottom: 0,
                     right: 0,
@@ -194,39 +194,15 @@ class _TripGroupsTabState extends State<TripGroupsTab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            trip['title']!,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                        // Status Badge
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isMyGroup ? Colors.orange : const Color(0xFF0088cc),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            isMyGroup ? 'Creator' : 'Member',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
+                    Text(
+                      trip['title']!,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Colors.black87,
+                      ),
                     ),
+                    // Removed the "Creator" and "Member" text badges from here
                   ],
                 ),
               ),

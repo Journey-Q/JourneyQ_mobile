@@ -76,10 +76,10 @@ class TripTabBar extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: isSelected 
-                      ? const Color(0xFF1565C0) // Dark blue text when selected
+                      ? const Color.fromARGB(255, 6, 7, 7) 
                       : const Color(0xFF757575), // Light black/gray text when not selected
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  fontSize: 13,
                 ),
               ),
             ),

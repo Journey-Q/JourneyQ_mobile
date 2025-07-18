@@ -21,6 +21,7 @@ class ChatGalleryScreen extends StatefulWidget {
 class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
   final ImagePicker _picker = ImagePicker();
   List<Map<String, dynamic>> _galleryImages = [];
+  List<XFile> _selectedImages = [];
 
   @override
   void initState() {
@@ -43,7 +44,7 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
         elevation: 1,
         shadowColor: Colors.grey.withOpacity(0.2),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF0088cc)),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -52,7 +53,7 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
             Text(
               '${widget.groupName} Gallery',
               style: const TextStyle(
-                color: Color(0xFF0088cc),
+                color: Colors.black,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
               ),
@@ -71,9 +72,7 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
             icon: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF0088cc), Color(0xFF0088cc)],
-                ),
+                color: const Color.fromARGB(255, 40, 40, 40),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(
@@ -109,7 +108,7 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
             child: Icon(
               Icons.photo_library,
               size: 50,
-              color: Colors.blue[400],
+              color: Colors.black,
             ),
           ),
           const SizedBox(height: 20),
@@ -118,7 +117,7 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Colors.blue[400],
+              color: Colors.black,
             ),
           ),
           const SizedBox(height: 10),
@@ -136,7 +135,7 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
             icon: const Icon(Icons.add_a_photo),
             label: const Text('Add Photo'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0088cc),
+              backgroundColor:  Colors.black,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               shape: RoundedRectangleBorder(
@@ -196,7 +195,7 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
                         ? loadingProgress.cumulativeBytesLoaded /
                             loadingProgress.expectedTotalBytes!
                         : null,
-                    color: const Color(0xFF0088cc),
+                    color: Colors.black,
                     strokeWidth: 3,
                   ),
                 ),
@@ -242,19 +241,17 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF0088cc),
+                color: Colors.black,
               ),
             ),
             const SizedBox(height: 20),
             GestureDetector(
-              onTap: () => _pickImage(ImageSource.gallery),
+              onTap: () => _pickMultipleImages(),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFE0E7FF), Color(0xFFC7D2FE)],
-                  ),
+                  color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(15),
                 ),
                 child: const Row(
@@ -262,8 +259,8 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
                   children: [
                     Icon(
                       Icons.photo_library,
-                      size: 30,
-                      color: Color(0xFF0088cc),
+                      size: 25,
+                      color: Colors.black,
                     ),
                     SizedBox(width: 10),
                     Text(
@@ -271,7 +268,7 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF0088cc),
+                        color: Colors.black,
                       ),
                     ),
                   ],
@@ -285,125 +282,160 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
     );
   }
 
-  void _pickImage(ImageSource source) async {
+  void _pickMultipleImages() async {
     Navigator.pop(context); // Close the bottom sheet
     
     try {
-      final XFile? pickedFile = await _picker.pickImage(
-        source: source,
+      final List<XFile> pickedFiles = await _picker.pickMultiImage(
         maxWidth: 1200,
         maxHeight: 1200,
         imageQuality: 85,
       );
       
-      if (pickedFile != null) {
-        _showAddCaptionDialog(pickedFile.path);
+      if (pickedFiles.isNotEmpty) {
+        setState(() {
+          _selectedImages = pickedFiles;
+        });
+        _showSelectedImagesDialog();
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error picking image: ${e.toString()}'),
+          content: Text('Error picking images: ${e.toString()}'),
           backgroundColor: Colors.red,
         ),
       );
     }
   }
 
-  void _showAddCaptionDialog(String imagePath) {
-    final captionController = TextEditingController();
-    
+  void _showSelectedImagesDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: const Text('Add Caption'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              height: 150,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.grey[300]!),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Selected Photos',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.asset(
-                  imagePath,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
+              const SizedBox(height: 15),
+              Text(
+                '${_selectedImages.length} photo(s) selected',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                height: 200,
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                  ),
+                  itemCount: _selectedImages.length,
+                  itemBuilder: (context, index) {
                     return Container(
-                      color: Colors.grey[200],
-                      child: const Center(
-                        child: Icon(Icons.image, size: 40, color: Colors.grey),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          _selectedImages[index].path,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey[200],
+                              child: const Center(
+                                child: Icon(Icons.image, size: 30, color: Colors.grey),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     );
                   },
                 ),
               ),
-            ),
-            const SizedBox(height: 15),
-            TextField(
-              controller: captionController,
-              decoration: InputDecoration(
-                hintText: 'Write a caption...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                filled: true,
-                fillColor: Colors.grey[100],
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _selectedImages.clear();
+                      });
+                      Navigator.pop(context);
+                    },
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(color: Colors.grey, fontSize: 16),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      _addSelectedImagesToGallery();
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text('Send'),
+                  ),
+                ],
               ),
-              maxLines: 3,
-            ),
-          ],
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF4C6EF5))),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              _addImageToGallery(imagePath, captionController.text);
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4C6EF5),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: const Text('Add Photo'),
-          ),
-        ],
       ),
     );
   }
 
-  void _addImageToGallery(String imagePath, String caption) {
-    final imageData = {
-      'id': 'img_${DateTime.now().millisecondsSinceEpoch}',
-      'url': imagePath,
-      'thumbnail': imagePath,
-      'caption': caption.isNotEmpty ? caption : 'No caption',
-      'uploadedBy': 'You',
-      'uploadedById': 'current_user',
-      'uploadedAt': DateTime.now().toIso8601String(),
-      'userAvatar': 'https://i.pravatar.cc/150?img=1',
-      'groupId': widget.groupId,
-      'likes': 0,
-      'comments': 0,
-    };
+  void _addSelectedImagesToGallery() {
+    for (XFile imageFile in _selectedImages) {
+      final imageData = {
+        'id': 'img_${DateTime.now().millisecondsSinceEpoch}_${_selectedImages.indexOf(imageFile)}',
+        'url': imageFile.path,
+        'thumbnail': imageFile.path,
+        'caption': 'No caption',
+        'uploadedBy': 'You',
+        'uploadedById': 'current_user',
+        'uploadedAt': DateTime.now().toIso8601String(),
+        'userAvatar': 'https://i.pravatar.cc/150?img=1',
+        'groupId': widget.groupId,
+        'likes': 0,
+        'comments': 0,
+      };
 
-    SampleData.addGalleryImage(widget.groupId, imageData);
+      SampleData.addGalleryImage(widget.groupId, imageData);
+    }
     
     _loadGalleryImages();
     
+    setState(() {
+      _selectedImages.clear();
+    });
+    
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Photo added to gallery!'),
+      SnackBar(
+        content: Text('${_selectedImages.length} photo(s) added to gallery!'),
         backgroundColor: Color(0xFF34D399),
         behavior: SnackBarBehavior.floating,
       ),
@@ -419,7 +451,7 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
           Container(
             width: double.infinity,
             height: double.infinity,
-            color: Colors.black, // Set background to solid black
+            color: Colors.black,
             child: InteractiveViewer(
               boundaryMargin: const EdgeInsets.all(0.0),
               minScale: 0.1,
@@ -475,7 +507,7 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
   }
 
   void _showDeleteConfirmation(Map<String, dynamic> image, BuildContext dialogContext) {
-    Navigator.pop(dialogContext); // Close the image detail dialog
+    Navigator.pop(dialogContext);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -512,10 +544,6 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
         ],
       ),
     );
-  }
-
-  void _showDeleteOption(Map<String, dynamic> image) {
-    // This method is no longer needed as delete is handled in _showImageDetail
   }
 
   String _formatDate(String dateString) {
