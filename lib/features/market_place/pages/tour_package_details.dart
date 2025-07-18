@@ -840,26 +840,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                                 color: Colors.grey,
                                 fontSize: 14,
                               ),
-                            ),
-                            const Spacer(),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.shade50,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                packageData['difficulty'] ?? 'Moderate',
-                                style: TextStyle(
-                                  color: Colors.blue.shade700,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
+                            )
                           ],
                         ),
                         const SizedBox(height: 16),
@@ -1325,7 +1306,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF0088cc),
+                          color: Colors.black87,
                           letterSpacing: -0.5,
                         ),
                       ),

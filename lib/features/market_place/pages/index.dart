@@ -23,23 +23,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
   bool showAllAgencies = false;
   bool showAllPackages = false;
 
-  final List<String> sriLankanCities = [
-    'Colombo',
-    'Kandy',
-    'Galle',
-    'Jaffna',
-    'Negombo',
-    'Anuradhapura',
-    'Polonnaruwa',
-    'Sigiriya',
-    'Ella',
-    'Nuwara Eliya',
-    'Trincomalee',
-    'Batticaloa',
-    'Matara',
-    'Hikkaduwa',
-    'Bentota',
-  ];
+
 
   // Updated services - only 3 services with proper navigation
   final List<Map<String, dynamic>> mainServices = [

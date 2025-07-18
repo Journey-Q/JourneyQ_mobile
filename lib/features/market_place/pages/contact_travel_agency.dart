@@ -6,11 +6,11 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
 
 class ContactTravelAgencyPage extends StatefulWidget {
-  final Map<String, dynamic> agency;
+  final String agencyId;
 
   const ContactTravelAgencyPage({
     Key? key,
-    required this.agency,
+    required this.agencyId,
   }) : super(key: key);
 
   @override
@@ -28,6 +28,77 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
   String _selectedService = '';
   int _numberOfPeople = 1;
   bool _isSubmitting = false;
+  Map<String, dynamic>? agency;
+  bool isLoading = true;
+  bool hasError = false;
+
+  // Essential agency data for contact page
+  static final List<Map<String, dynamic>> _agencyDatabase = [
+    {
+      'id': 'agency_001',
+      'name': 'Ceylon Roots',
+      'rating': 4.9,
+      'experience': '15+ Years',
+      'location': 'Colombo 03, Sri Lanka',
+      'contact': '+94 11 234 5678',
+      'email': 'info@ceylonroots.lk',
+      'image': 'assets/images/ceylon_roots.jpg',
+      'backgroundColor': const Color(0xFF8B4513),
+    },
+    {
+      'id': 'agency_002',
+      'name': 'Jetwing Travels',
+      'rating': 4.8,
+      'experience': '20+ Years',
+      'location': 'Colombo 01, Sri Lanka',
+      'contact': '+94 11 345 6789',
+      'email': 'reservations@jetwing.lk',
+      'image': 'assets/images/jetwing.jpg',
+      'backgroundColor': const Color(0xFF228B22),
+    },
+    {
+      'id': 'agency_003',
+      'name': 'Aitken Spence',
+      'rating': 4.7,
+      'experience': '25+ Years',
+      'location': 'Colombo 02, Sri Lanka',
+      'contact': '+94 11 456 7890',
+      'email': 'travel@aitkenspence.lk',
+      'image': 'assets/images/aitken_spence.jpg',
+      'backgroundColor': const Color(0xFF20B2AA),
+    },
+    {
+      'id': 'agency_004',
+      'name': 'Walkers Tours',
+      'rating': 4.6,
+      'experience': '30+ Years',
+      'location': 'Colombo 05, Sri Lanka',
+      'contact': '+94 11 567 8901',
+      'email': 'info@walkerstours.com',
+      'image': 'assets/images/walkers.jpg',
+      'backgroundColor': const Color(0xFF8FBC8F),
+    },
+    {
+      'id': 'agency_005',
+      'name': 'Red Dot Tours',
+      'rating': 4.5,
+      'experience': '12+ Years',
+      'location': 'Colombo 06, Sri Lanka',
+      'contact': '+94 11 678 9012',
+      'email': 'bookings@reddottours.lk',
+      'image': 'assets/images/red_dot.jpeg',
+      'backgroundColor': const Color(0xFF9370DB),
+    },
+  ];
+
+  // Method to get agency by ID
+  Map<String, dynamic>? _getAgencyById(String id) {
+    try {
+      return _agencyDatabase.firstWhere((agency) => agency['id'] == id);
+    } catch (e) {
+      return null;
+    }
+  }
 
   // Default services for all agencies
   List<String> _getDefaultServices() {
@@ -46,10 +117,34 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
   @override
   void initState() {
     super.initState();
-    // Use default services or existing services
-    List<String> availableServices = (widget.agency['services'] as List<dynamic>?)?.cast<String>() ?? _getDefaultServices();
-    if (availableServices.isNotEmpty) {
-      _selectedService = availableServices[0];
+    _loadAgencyData();
+  }
+
+  void _loadAgencyData() {
+    try {
+      // Get agency data by ID
+      final agencyData = _getAgencyById(widget.agencyId);
+      if (agencyData != null) {
+        agency = agencyData;
+        // Use default services or existing services
+        List<String> availableServices = (agency!['services'] as List<dynamic>?)?.cast<String>() ?? _getDefaultServices();
+        if (availableServices.isNotEmpty) {
+          _selectedService = availableServices[0];
+        }
+        setState(() {
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          hasError = true;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        hasError = true;
+        isLoading = false;
+      });
     }
   }
 
@@ -102,7 +197,7 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Chat with ${widget.agency['name']}',
+                'Chat with ${agency!['name']}',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -371,7 +466,7 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Your inquiry has been sent to ${widget.agency['name']}. They will contact you within 24 hours.',
+                'Your inquiry has been sent to ${agency!['name']}. They will contact you within 24 hours.',
                 style: const TextStyle(
                   fontSize: 14,
                   color: Colors.grey,
@@ -412,7 +507,7 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    _buildInquiryDetailRow('Agency', widget.agency['name']),
+                    _buildInquiryDetailRow('Agency', agency!['name']),
                     _buildInquiryDetailRow('Service', _selectedService),
                     _buildInquiryDetailRow('People', '$_numberOfPeople'),
                     if (_travelDateController.text.isNotEmpty)
@@ -519,13 +614,75 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
 
   @override
   Widget build(BuildContext context) {
-    List<String> availableServices = (widget.agency['services'] as List<dynamic>?)?.cast<String>() ?? _getDefaultServices();
+    if (isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          title: const Text('Loading...'),
+          backgroundColor: const Color(0xFF0088cc),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back),
+          ),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (hasError || agency == null) {
+      return Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          title: const Text('Agency Not Found'),
+          backgroundColor: const Color(0xFF0088cc),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back),
+          ),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.grey,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Travel Agency not found',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Agency ID: ${widget.agencyId}',
+                style: const TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Back to Travel Agencies'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    List<String> availableServices = (agency!['services'] as List<dynamic>?)?.cast<String>() ?? _getDefaultServices();
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: Text(
-          'Contact ${widget.agency['name'] ?? 'Travel Agency'}',
+          'Contact ${agency!['name'] ?? 'Travel Agency'}',
           style: const TextStyle(
             fontWeight: FontWeight.w600,
           ),
@@ -580,15 +737,15 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(16),
                           child: Image.asset(
-                            widget.agency['image'] ?? 'assets/images/travel_agency.jpg',
+                            agency!['image'] ?? 'assets/images/travel_agency.jpg',
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [
-                                      widget.agency['backgroundColor'] ?? const Color(0xFF0088cc),
-                                      (widget.agency['backgroundColor'] ?? const Color(0xFF0088cc)).withOpacity(0.8),
+                                      agency!['backgroundColor'] ?? const Color(0xFF0088cc),
+                                      (agency!['backgroundColor'] ?? const Color(0xFF0088cc)).withOpacity(0.8),
                                     ],
                                   ),
                                   borderRadius: BorderRadius.circular(16),
@@ -609,7 +766,7 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              widget.agency['name'] ?? 'Travel Agency',
+                              agency!['name'] ?? 'Travel Agency',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -622,7 +779,7 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                                 const Icon(Icons.star, color: Colors.amber, size: 16),
                                 const SizedBox(width: 4),
                                 Text(
-                                  '${widget.agency['rating'] ?? 4.5}',
+                                  '${agency!['rating'] ?? 4.5}',
                                   style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
@@ -630,7 +787,7 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  '• ${widget.agency['experience'] ?? 'Experienced'}',
+                                  '• ${agency!['experience'] ?? 'Experienced'}',
                                   style: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.grey,
@@ -666,7 +823,7 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                     children: [
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () => _makePhoneCall(widget.agency['contact'] ?? '+94 11 000 0000'),
+                          onPressed: () => _makePhoneCall(agency!['contact'] ?? '+94 11 000 0000'),
                           icon: const Icon(Icons.phone, size: 18),
                           label: const Text('Call Now'),
                           style: ElevatedButton.styleFrom(
@@ -709,14 +866,14 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                     child: Column(
                       children: [
                         GestureDetector(
-                          onTap: () => _copyToClipboard(widget.agency['contact'] ?? '+94 11 000 0000', 'Phone number'),
+                          onTap: () => _copyToClipboard(agency!['contact'] ?? '+94 11 000 0000', 'Phone number'),
                           child: Row(
                             children: [
                               const Icon(Icons.phone, size: 18, color: Color(0xFF0088cc)),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
-                                  widget.agency['contact'] ?? '+94 11 000 0000',
+                                  agency!['contact'] ?? '+94 11 000 0000',
                                   style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
@@ -735,7 +892,7 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                widget.agency['location'] ?? 'Colombo, Sri Lanka',
+                                agency!['location'] ?? 'Colombo, Sri Lanka',
                                 style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
@@ -846,7 +1003,7 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                       style: const TextStyle(
                         fontSize: 16,
                         color: Colors.black87,
-                        fontWeight: FontWeight.normal, // Make it consistent with other fields
+                        fontWeight: FontWeight.normal,
                       ),
                       decoration: InputDecoration(
                         labelText: 'Service Type',
@@ -931,7 +1088,7 @@ class _ContactTravelAgencyPageState extends State<ContactTravelAgencyPage> {
                                           '$_numberOfPeople people',
                                           style: const TextStyle(
                                             fontSize: 16,
-                                            fontWeight: FontWeight.normal, // Changed from w600 to normal
+                                            fontWeight: FontWeight.normal,
                                             color: Colors.black87,
                                           ),
                                         ),

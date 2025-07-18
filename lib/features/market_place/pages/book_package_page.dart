@@ -5,11 +5,11 @@ import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
 class BookPackagePage extends StatefulWidget {
-  final Map<String, dynamic> package;
+  final String packageId;
 
   const BookPackagePage({
     Key? key,
-    required this.package,
+    required this.packageId,
   }) : super(key: key);
 
   @override
@@ -18,6 +18,11 @@ class BookPackagePage extends StatefulWidget {
 
 class _BookPackagePageState extends State<BookPackagePage> {
   final _formKey = GlobalKey<FormState>();
+
+  // Package data
+  Map<String, dynamic>? package;
+  bool isLoading = true;
+  bool hasError = false;
 
   // Booking Details
   DateTime? _selectedDate;
@@ -32,11 +37,98 @@ class _BookPackagePageState extends State<BookPackagePage> {
 
   bool _isSubmitting = false;
 
+  // Essential package data for booking
+  static final List<Map<String, dynamic>> _packageDatabase = [
+    {
+      'id': 'package_001',
+      'title': 'Cultural Triangle Tour',
+      'subtitle': '5 Days • Anuradhapura, Polonnaruwa, Sigiriya',
+      'price': 'LKR 25,000',
+      'duration': '5 Days',
+      'image': 'assets/images/cultural_triangle.jpg',
+      'icon': Icons.account_balance,
+      'backgroundColor': const Color(0xFF8B4513),
+    },
+    {
+      'id': 'package_002',
+      'title': 'Hill Country Adventure',
+      'subtitle': '4 Days • Kandy, Nuwara Eliya, Ella',
+      'price': 'LKR 22,000',
+      'duration': '4 Days',
+      'image': 'assets/images/hill_country.jpg',
+      'icon': Icons.landscape,
+      'backgroundColor': const Color(0xFF228B22),
+    },
+    {
+      'id': 'package_003',
+      'title': 'Southern Coast Explorer',
+      'subtitle': '3 Days • Galle, Hikkaduwa, Mirissa',
+      'price': 'LKR 18,000',
+      'duration': '3 Days',
+      'image': 'assets/images/southern_coast.jpg',
+      'icon': Icons.waves,
+      'backgroundColor': const Color(0xFF20B2AA),
+    },
+    {
+      'id': 'package_004',
+      'title': 'Wildlife Safari Package',
+      'subtitle': '6 Days • Yala, Udawalawe, Minneriya',
+      'price': 'LKR 35,000',
+      'duration': '6 Days',
+      'image': 'assets/images/wildlife_safari.jpg',
+      'icon': Icons.pets,
+      'backgroundColor': const Color(0xFF8FBC8F),
+    },
+    {
+      'id': 'package_005',
+      'title': 'Temple & Heritage Tour',
+      'subtitle': '7 Days • Kandy, Dambulla, Galle',
+      'price': 'LKR 28,000',
+      'duration': '7 Days',
+      'image': 'assets/images/temple_heritage.jpg',
+      'icon': Icons.temple_buddhist,
+      'backgroundColor': const Color(0xFF9370DB),
+    },
+  ];
+
+  // Method to get package by ID
+  Map<String, dynamic>? _getPackageById(String id) {
+    try {
+      return _packageDatabase.firstWhere((package) => package['id'] == id);
+    } catch (e) {
+      return null;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    _loadPackageData();
     // Set default date to 7 days from now
     _selectedDate = DateTime.now().add(const Duration(days: 7));
+  }
+
+  void _loadPackageData() {
+    try {
+      // Get package data by ID
+      final packageData = _getPackageById(widget.packageId);
+      if (packageData != null) {
+        package = packageData;
+        setState(() {
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          hasError = true;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        hasError = true;
+        isLoading = false;
+      });
+    }
   }
 
   @override
@@ -49,8 +141,9 @@ class _BookPackagePageState extends State<BookPackagePage> {
   }
 
   double get _totalPrice {
+    if (package == null) return 0.0;
     final basePrice = double.parse(
-      widget.package['price'].replaceAll('LKR ', '').replaceAll(',', ''),
+      package!['price'].replaceAll('LKR ', '').replaceAll(',', ''),
     );
     return basePrice * (_adults + _children * 0.7); // Children 30% discount
   }
@@ -370,7 +463,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Your booking request for ${widget.package['title']} has been sent to the tour agency. They will contact you within 24 hours to confirm your booking.',
+                'Your booking request for ${package!['title']} has been sent to the tour agency. They will contact you within 24 hours to confirm your booking.',
                 style: const TextStyle(
                   fontSize: 14,
                   color: Colors.grey,
@@ -411,7 +504,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    _buildBookingDetailRow('Package', widget.package['title']),
+                    _buildBookingDetailRow('Package', package!['title']),
                     _buildBookingDetailRow('Date', DateFormat('MMM dd, yyyy').format(_selectedDate!)),
                     _buildBookingDetailRow('Travelers', '${_adults + _children}'),
                     const Divider(),
@@ -515,6 +608,63 @@ class _BookPackagePageState extends State<BookPackagePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          title: const Text('Loading...'),
+          backgroundColor: const Color(0xFF0088cc),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back),
+          ),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (hasError || package == null) {
+      return Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          title: const Text('Package Not Found'),
+          backgroundColor: const Color(0xFF0088cc),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back),
+            color: Colors.white,
+          ),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.grey),
+              const SizedBox(height: 16),
+              const Text(
+                'Tour Package not found',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Package ID: ${widget.packageId}',
+                style: const TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Back to Tour Packages'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -522,6 +672,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
           'Book Package',
           style: TextStyle(
             fontWeight: FontWeight.w600,
+            color: Colors.white
           ),
         ),
         backgroundColor: const Color(0xFF0088cc),
@@ -530,6 +681,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back),
+          color: Colors.white,
         ),
       ),
       body: SingleChildScrollView(
@@ -573,7 +725,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16),
                         child: Image.asset(
-                          widget.package['image'] ?? 'assets/images/default_package.jpg',
+                          package!['image'] ?? 'assets/images/default_package.jpg',
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
@@ -581,13 +733,13 @@ class _BookPackagePageState extends State<BookPackagePage> {
                                 borderRadius: BorderRadius.circular(16),
                                 gradient: LinearGradient(
                                   colors: [
-                                    widget.package['backgroundColor'] ?? const Color(0xFF0088cc),
-                                    (widget.package['backgroundColor'] ?? const Color(0xFF0088cc)).withOpacity(0.8),
+                                    package!['backgroundColor'] ?? const Color(0xFF0088cc),
+                                    (package!['backgroundColor'] ?? const Color(0xFF0088cc)).withOpacity(0.8),
                                   ],
                                 ),
                               ),
                               child: Icon(
-                                widget.package['icon'] ?? Icons.tour,
+                                package!['icon'] ?? Icons.tour,
                                 color: Colors.white,
                                 size: 40,
                               ),
@@ -602,7 +754,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.package['title'],
+                            package!['title'],
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -611,7 +763,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            widget.package['subtitle'],
+                            package!['subtitle'],
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.grey,
@@ -628,7 +780,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
                                   border: Border.all(color: Colors.orange.shade200),
                                 ),
                                 child: Text(
-                                  widget.package['duration'],
+                                  package!['duration'],
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.orange.shade700,
@@ -638,7 +790,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                widget.package['price'],
+                                package!['price'],
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -865,8 +1017,8 @@ class _BookPackagePageState extends State<BookPackagePage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Adults ($_adults × ${widget.package['price']})'),
-                        Text('LKR ${NumberFormat('#,###').format(double.parse(widget.package['price'].replaceAll('LKR ', '').replaceAll(',', '')) * _adults)}'),
+                        Text('Adults ($_adults × ${package!['price']})'),
+                        Text('LKR ${NumberFormat('#,###').format(double.parse(package!['price'].replaceAll('LKR ', '').replaceAll(',', '')) * _adults)}'),
                       ],
                     ),
                     if (_children > 0) ...[
@@ -875,7 +1027,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('Children ($_children × 70%)'),
-                          Text('LKR ${NumberFormat('#,###').format(double.parse(widget.package['price'].replaceAll('LKR ', '').replaceAll(',', '')) * _children * 0.7)}'),
+                          Text('LKR ${NumberFormat('#,###').format(double.parse(package!['price'].replaceAll('LKR ', '').replaceAll(',', '')) * _children * 0.7)}'),
                         ],
                       ),
                     ],

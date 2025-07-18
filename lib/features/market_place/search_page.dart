@@ -41,10 +41,11 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
     'Bentota'
   ];
 
-  // Dummy search results data
+  // Updated dummy search results data with IDs
   final List<Map<String, dynamic>> dummyResults = [
     // Hotels
     {
+      'id': 'hotel_001',
       'name': 'Shangri-La Hotel Colombo',
       'location': 'Colombo',
       'serviceType': 'Hotel',
@@ -54,6 +55,7 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
       'color': primaryColor,
     },
     {
+      'id': 'hotel_002',
       'name': 'Galle Face Hotel',
       'location': 'Colombo',
       'serviceType': 'Hotel',
@@ -63,6 +65,7 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
       'color': primaryColor,
     },
     {
+      'id': 'hotel_003',
       'name': 'Cinnamon Grand Colombo',
       'location': 'Colombo',
       'serviceType': 'Hotel',
@@ -72,6 +75,7 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
       'color': primaryColor,
     },
     {
+      'id': 'hotel_004',
       'name': 'Earl\'s Regency',
       'location': 'Kandy',
       'serviceType': 'Hotel',
@@ -81,6 +85,7 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
       'color': primaryColor,
     },
     {
+      'id': 'hotel_005',
       'name': 'Jetwing Lighthouse',
       'location': 'Galle',
       'serviceType': 'Hotel',
@@ -90,6 +95,7 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
       'color': primaryColor,
     },
     {
+      'id': 'hotel_006',
       'name': 'Grand Hotel Nuwara Eliya',
       'location': 'Nuwara Eliya',
       'serviceType': 'Hotel',
@@ -99,6 +105,7 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
       'color': primaryColor,
     },
     {
+      'id': 'hotel_007',
       'name': 'Ella Rock House',
       'location': 'Ella',
       'serviceType': 'Hotel',
@@ -110,6 +117,7 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
     
     // Travel Agencies
     {
+      'id': 'agency_001',
       'name': 'Ceylon Roots',
       'location': 'Colombo',
       'serviceType': 'Travel Agency',
@@ -119,6 +127,7 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
       'color': primaryColor,
     },
     {
+      'id': 'agency_002',
       'name': 'Jetwing Travels',
       'location': 'Colombo',
       'serviceType': 'Travel Agency',
@@ -128,6 +137,7 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
       'color': primaryColor,
     },
     {
+      'id': 'agency_003',
       'name': 'Aitken Spence',
       'location': 'Colombo',
       'serviceType': 'Travel Agency',
@@ -137,6 +147,7 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
       'color': primaryColor,
     },
     {
+      'id': 'agency_004',
       'name': 'Walkers Tours',
       'location': 'Kandy',
       'serviceType': 'Travel Agency',
@@ -146,6 +157,7 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
       'color': primaryColor,
     },
     {
+      'id': 'agency_005',
       'name': 'Red Dot Tours',
       'location': 'Galle',
       'serviceType': 'Travel Agency',
@@ -155,6 +167,7 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
       'color': primaryColor,
     },
     {
+      'id': 'agency_006',
       'name': 'Nuwara Eliya Travel Co.',
       'location': 'Nuwara Eliya',
       'serviceType': 'Travel Agency',
@@ -164,6 +177,7 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
       'color': primaryColor,
     },
     {
+      'id': 'agency_007',
       'name': 'Ella Adventure Tours',
       'location': 'Ella',
       'serviceType': 'Travel Agency',
@@ -172,71 +186,7 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
       'icon': Icons.directions_car,
       'color': primaryColor,
     },
-    
-    // Tour Guides
-    {
-      'name': 'Saman Perera',
-      'location': 'Colombo',
-      'serviceType': 'Tour Guide',
-      'profileImage': 'assets/images/guide_saman.jpg',
-      'rating': 4.9,
-      'icon': Icons.person_pin_circle,
-      'color': primaryColor,
-    },
-    {
-      'name': 'Nimal Silva',
-      'location': 'Kandy',
-      'serviceType': 'Tour Guide',
-      'profileImage': 'assets/images/guide_nimal.jpg',
-      'rating': 4.8,
-      'icon': Icons.person_pin_circle,
-      'color': primaryColor,
-    },
-    {
-      'name': 'Chamara Fernando',
-      'location': 'Galle',
-      'serviceType': 'Tour Guide',
-      'profileImage': 'assets/images/guide_chamara.jpg',
-      'rating': 4.7,
-      'icon': Icons.person_pin_circle,
-      'color': primaryColor,
-    },
-    {
-      'name': 'Ruwan Jayasinghe',
-      'location': 'Nuwara Eliya',
-      'serviceType': 'Tour Guide',
-      'profileImage': 'assets/images/guide_ruwan.jpg',
-      'rating': 4.6,
-      'icon': Icons.person_pin_circle,
-      'color': primaryColor,
-    },
-    {
-      'name': 'Tharindu Weerasinghe',
-      'location': 'Ella',
-      'serviceType': 'Tour Guide',
-      'profileImage': 'assets/images/guide_tharindu.jpg',
-      'rating': 4.8,
-      'icon': Icons.person_pin_circle,
-      'color': primaryColor,
-    },
-    {
-      'name': 'Kasun Rathnayake',
-      'location': 'Sigiriya',
-      'serviceType': 'Tour Guide',
-      'profileImage': 'assets/images/guide_kasun.jpg',
-      'rating': 4.9,
-      'icon': Icons.person_pin_circle,
-      'color': primaryColor,
-    },
-    {
-      'name': 'Dilan Madushanka',
-      'location': 'Anuradhapura',
-      'serviceType': 'Tour Guide',
-      'profileImage': 'assets/images/guide_dilan.jpg',
-      'rating': 4.7,
-      'icon': Icons.person_pin_circle,
-      'color': primaryColor,
-    },
+  
   ];
 
   @override
@@ -554,7 +504,7 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
-                        vertical: 12,
+                        vertical: 18,
                       ),
                     ),
                     onChanged: (value) {
@@ -936,18 +886,20 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
     );
   }
 
+  // Updated to use ID-based routing instead of passing extra data
   void _handleResultTap(Map<String, dynamic> result) {
     String serviceType = result['serviceType'];
+    String id = result['id'];
     
     switch (serviceType) {
       case 'Hotel':
-        context.push('/marketplace/hotels/details', extra: result);
+        context.push('/marketplace/hotels/details/$id');
         break;
       case 'Travel Agency':
-        context.push('/marketplace/travel_agencies/details', extra: result);
+        context.push('/marketplace/travel_agencies/details/$id');
         break;
       case 'Tour Guide':
-        context.push('/marketplace/tour_guides/details', extra: result);
+        context.push('/marketplace/tour_guides/details/$id');
         break;
       default:
         break;

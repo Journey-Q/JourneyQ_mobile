@@ -45,7 +45,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
     }
   }
 
-  // Comprehensive hotel database with all details
+  // Enhanced hotel database with status system and better UI data
   static final List<Map<String, dynamic>> _hotelDatabase = [
     {
       'id': 'hotel_001',
@@ -80,30 +80,42 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'type': 'Deluxe Ocean View',
           'price': 'LKR 45,000/night',
           'size': '45 sqm',
-          'image': 'assets/images/shangri_la_deluxe.jpg',
+          'bedrooms': 1,
+          'bathrooms': 1,
+          'bedType': 'King Bed',
+          'image': 'assets/images/room_deluxe.jpg',
           'backgroundColor': const Color(0xFF8B4513),
-          'amenities': ['King Bed', 'Ocean View', 'WiFi', 'Minibar', 'Safe', 'Air Conditioning', 'Marble Bathroom', 'Balcony'],
+          'amenities': ['Ocean View', 'WiFi', 'Minibar', 'Safe', 'Air Conditioning', 'Marble Bathroom', 'Balcony'],
           'available': true,
+          'status': 'available',
         },
         {
           'id': 'room_001_exec',
           'type': 'Executive Suite',
           'price': 'LKR 65,000/night',
           'size': '75 sqm',
-          'image': 'assets/images/shangri_la_suite.jpg',
+          'bedrooms': 1,
+          'bathrooms': 1,
+          'bedType': 'King Bed',
+          'image': 'assets/images/room_suite.jpg',
           'backgroundColor': const Color(0xFF20B2AA),
-          'amenities': ['Separate Living Room', 'King Bed', 'City View', 'WiFi', 'Minibar', 'Work Desk', 'Premium Bathroom', 'Executive Lounge Access'],
-          'available': true,
+          'amenities': ['Separate Living Room', 'City View', 'WiFi', 'Minibar', 'Work Desk', 'Premium Bathroom with Bathtub', 'Executive Lounge Access'],
+          'available': false,
+          'status': 'maintenance',
         },
         {
           'id': 'room_001_pres',
           'type': 'Presidential Suite',
           'price': 'LKR 120,000/night',
           'size': '120 sqm',
-          'image': 'assets/images/shangri_la_presidential.jpg',
+          'bedrooms': 2,
+          'bathrooms': 2,
+          'bedType': 'Master Bedroom + Guest Room',
+          'image': 'assets/images/room_presidential.jpg',
           'backgroundColor': const Color(0xFF9370DB),
-          'amenities': ['Master Bedroom', 'Living & Dining Area', 'Panoramic Ocean View', 'Butler Service', 'Premium Amenities', 'Private Balcony'],
+          'amenities': ['Living & Dining Area', 'Panoramic Ocean View', 'Butler Service', 'Premium Amenities', 'Jacuzzi Bathroom'],
           'available': false,
+          'status': 'booked',
         },
       ],
     },
@@ -140,30 +152,42 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'type': 'Heritage Room',
           'price': 'LKR 38,000/night',
           'size': '35 sqm',
-          'image': 'assets/images/galle_face_heritage.jpg',
+          'bedrooms': 1,
+          'bathrooms': 1,
+          'bedType': 'Queen Bed',
+          'image': 'assets/images/room_deluxe.jpg',
           'backgroundColor': const Color(0xFF228B22),
-          'amenities': ['Colonial Decor', 'Queen Bed', 'Garden View', 'WiFi', 'Classic Furnishing', 'Air Conditioning', 'Period Furniture'],
+          'amenities': ['Garden View', 'WiFi', 'Classic Furnishing', 'Air Conditioning', 'Period Bathroom', 'Colonial Decor'],
           'available': true,
+          'status': 'available',
         },
         {
           'id': 'room_002_ocean',
           'type': 'Ocean Suite',
           'price': 'LKR 55,000/night',
           'size': '65 sqm',
-          'image': 'assets/images/galle_face_ocean.jpg',
+          'bedrooms': 1,
+          'bathrooms': 1,
+          'bedType': 'King Bed',
+          'image': 'assets/images/room_suite.jpg',
           'backgroundColor': const Color(0xFF20B2AA),
-          'amenities': ['Ocean Facing', 'King Bed', 'Sitting Area', 'WiFi', 'Period Furniture', 'Premium Bathroom', 'Balcony'],
+          'amenities': ['Ocean Facing', 'Sitting Area', 'WiFi', 'Period Furniture', 'Premium Bathroom', 'Balcony'],
           'available': true,
+          'status': 'available',
         },
         {
           'id': 'room_002_regent',
           'type': 'Regent Suite',
           'price': 'LKR 85,000/night',
           'size': '95 sqm',
-          'image': 'assets/images/galle_face_regent.jpg',
+          'bedrooms': 1,
+          'bathrooms': 2,
+          'bedType': 'King Bed',
+          'image': 'assets/images/room_presidential.jpg',
           'backgroundColor': const Color(0xFF9370DB),
           'amenities': ['Historical Suite', 'Separate Living Room', 'Ocean View', 'Antique Furnishing', 'Butler Service'],
-          'available': true,
+          'available': false,
+          'status': 'maintenance',
         },
       ],
     },
@@ -177,8 +201,8 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
       'contact': '+94 11 249 1437',
       'email': 'reservations@cinnamongrandcolombo.com',
       'openTime': '24/7',
-      'image': 'assets/images/cinnamon_grand.jpg',
-      'mainImage': 'assets/images/cinnamon_grand_main.jpg',
+      'image': 'assets/images/room_presidential.jpg',
+      'mainImage': 'assets/images/cinnamon_grand.jpg',
       'backgroundColor': const Color(0xFF20B2AA),
       'isAvailable': true,
       'description': 'Discover urban sophistication at Cinnamon Grand Colombo. Located in Fort, our hotel combines contemporary design with warm Sri Lankan hospitality, offering premium accommodations and facilities.',
@@ -200,20 +224,28 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'type': 'Superior Room',
           'price': 'LKR 42,000/night',
           'size': '38 sqm',
-          'image': 'assets/images/cinnamon_superior.jpg',
+          'bedrooms': 1,
+          'bathrooms': 1,
+          'bedType': 'King Bed',
+          'image': 'assets/images/room_presidential.jpg',
           'backgroundColor': const Color(0xFF20B2AA),
-          'amenities': ['King Bed', 'City View', 'WiFi', 'Minibar', 'Work Station', 'Air Conditioning', 'Modern Bathroom'],
+          'amenities': ['City View', 'WiFi', 'Minibar', 'Work Station', 'Air Conditioning', 'Modern Bathroom'],
           'available': true,
+          'status': 'available',
         },
         {
           'id': 'room_003_club',
           'type': 'Club Room',
           'price': 'LKR 58,000/night',
           'size': '42 sqm',
-          'image': 'assets/images/cinnamon_club.jpg',
+          'bedrooms': 1,
+          'bathrooms': 1,
+          'bedType': 'King Bed',
+          'image': 'assets/images/room_suite.jpg',
           'backgroundColor': const Color(0xFF8FBC8F),
-          'amenities': ['King Bed', 'Club Lounge Access', 'WiFi', 'Minibar', 'Premium Amenities', 'Complimentary Breakfast'],
-          'available': true,
+          'amenities': ['Club Lounge Access', 'WiFi', 'Minibar', 'Premium Amenities', 'Complimentary Breakfast'],
+          'available': false,
+          'status': 'booked',
         },
       ],
     },
@@ -250,20 +282,28 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'type': 'Guest Room',
           'price': 'LKR 40,000/night',
           'size': '36 sqm',
-          'image': 'assets/images/hilton_guest.jpg',
+          'bedrooms': 1,
+          'bathrooms': 1,
+          'bedType': 'King Bed',
+          'image': 'assets/images/room_suite.jpg',
           'backgroundColor': const Color(0xFF8FBC8F),
-          'amenities': ['King Bed', 'City View', 'WiFi', 'Work Desk', 'Minibar', 'Air Conditioning', 'Modern Bathroom'],
+          'amenities': ['City View', 'WiFi', 'Work Desk', 'Minibar', 'Air Conditioning', 'Walk-in Shower Bathroom'],
           'available': true,
+          'status': 'available',
         },
         {
           'id': 'room_004_exec',
           'type': 'Executive Room',
           'price': 'LKR 55,000/night',
           'size': '40 sqm',
-          'image': 'assets/images/hilton_executive.jpg',
+          'bedrooms': 1,
+          'bathrooms': 1,
+          'bedType': 'King Bed',
+          'image': 'assets/images/room_presidential.jpg',
           'backgroundColor': const Color(0xFF20B2AA),
-          'amenities': ['King Bed', 'Executive Lounge Access', 'WiFi', 'Premium Amenities', 'Complimentary Breakfast', 'Evening Cocktails'],
-          'available': true,
+          'amenities': ['Executive Lounge Access', 'WiFi', 'Premium Amenities', 'Complimentary Breakfast', 'Evening Cocktails', 'Spa Bathroom'],
+          'available': false,
+          'status': 'maintenance',
         },
       ],
     },
@@ -300,30 +340,42 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'type': 'Deluxe Room',
           'price': 'LKR 35,000/night',
           'size': '32 sqm',
-          'image': 'assets/images/taj_deluxe.jpg',
+          'bedrooms': 1,
+          'bathrooms': 1,
+          'bedType': 'King Bed',
+          'image': 'assets/images/room_deluxe.jpg',
           'backgroundColor': const Color(0xFF9370DB),
-          'amenities': ['King Bed', 'Ocean/City View', 'WiFi', 'Minibar', 'Traditional Decor', 'Air Conditioning'],
+          'amenities': ['Ocean/City View', 'WiFi', 'Minibar', 'Traditional Decor', 'Air Conditioning'],
           'available': true,
+          'status': 'available',
         },
         {
           'id': 'room_005_luxury',
           'type': 'Luxury Room',
           'price': 'LKR 48,000/night',
           'size': '38 sqm',
-          'image': 'assets/images/taj_luxury.jpg',
+          'bedrooms': 1,
+          'bathrooms': 1,
+          'bedType': 'King Bed',
+          'image': 'assets/images/room_presidential.jpg',
           'backgroundColor': const Color(0xFF20B2AA),
-          'amenities': ['King Bed', 'Premium Ocean View', 'WiFi', 'Premium Amenities', 'Elegant Furnishing', 'Marble Bathroom'],
+          'amenities': ['Premium Ocean View', 'WiFi', 'Premium Amenities', 'Elegant Furnishing', 'Marble Bathroom'],
           'available': true,
+          'status': 'available',
         },
         {
           'id': 'room_005_suite',
           'type': 'Taj Club Suite',
           'price': 'LKR 75,000/night',
           'size': '68 sqm',
-          'image': 'assets/images/taj_suite.jpg',
+          'bedrooms': 1,
+          'bathrooms': 2,
+          'bedType': 'King Bed',
+          'image': 'assets/images/room_suite.jpg',
           'backgroundColor': const Color(0xFF8B4513),
           'amenities': ['Separate Living Area', 'Ocean View', 'Club Benefits', 'Butler Service', 'Premium Location'],
           'available': false,
+          'status': 'booked',
         },
       ],
     },
@@ -338,7 +390,45 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
     }
   }
 
+  // Enhanced room card with separate bedroom/bathroom counts
   Widget _buildRoomCard(Map<String, dynamic> room) {
+    // Fix status detection - properly check status field first
+    String status;
+    if (room.containsKey('status') && room['status'] != null) {
+      status = room['status'];
+    } else {
+      // Fallback to available field if status is missing
+      status = (room['available'] == true) ? 'available' : 'booked';
+    }
+    
+    String statusText;
+    Color statusColor;
+
+    switch (status) {
+      case 'available':
+        statusText = 'Available';
+        statusColor = Colors.green;
+        break;
+      case 'maintenance':
+        statusText = 'Maintenance';
+        statusColor = Colors.orange;
+        break;
+      case 'booked':
+        statusText = 'Booked';
+        statusColor = Colors.red;
+        break;
+      default:
+        statusText = 'Available'; // Default fallback
+        statusColor = Colors.green;
+    }
+
+    // Get bedroom and bathroom counts from separate fields
+    int bedrooms = room['bedrooms'] ?? 1;
+    int bathrooms = room['bathrooms'] ?? 1;
+
+    // For maintenance rooms, override available to false
+    bool isAvailable = (status == 'available');
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -399,7 +489,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                       );
                     },
                   ),
-                  // Availability Badge
+                  // Status Badge
                   Positioned(
                     top: 12,
                     right: 12,
@@ -409,11 +499,11 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: room['available'] ? Colors.green : Colors.red,
+                        color: statusColor,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        room['available'] ? 'Available' : 'Booked',
+                        statusText,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
@@ -456,31 +546,99 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                // Room Amenities
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
-                  children: room['amenities'].map<Widget>((amenity) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        amenity,
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.blue.shade700,
-                          fontWeight: FontWeight.w500,
+                
+                // Bedroom & Bathroom Counts Section
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      // Bedrooms
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Icon(Icons.bed, size: 18, color: Colors.grey.shade600),
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '$bedrooms Bedroom${bedrooms > 1 ? 's' : ''}',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey.shade800,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                )
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                    );
-                  }).toList(),
+                      // Vertical divider
+                      Container(
+                        height: 30,
+                        width: 1,
+                        color: Colors.grey.shade300,
+                      ),
+                      const SizedBox(width: 12),
+                      // Bathrooms
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Icon(Icons.bathtub, size: 18, color: Colors.grey.shade600),
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '$bathrooms Bathroom${bathrooms > 1 ? 's' : ''}',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey.shade800,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                )
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(height: 12),
+                
+                // Other Amenities
+                if (room['amenities'] != null && room['amenities'].isNotEmpty)
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: room['amenities'].take(6).map<Widget>((amenity) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          amenity,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.blue.shade700,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -494,7 +652,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: room['available'] ? () {
+                      onPressed: isAvailable ? () {
                         // Navigate to booking page with hotel and room data
                         Navigator.push(
                           context,
@@ -507,13 +665,16 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                         );
                       } : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: room['available'] ? const Color(0xFF0088cc) : Colors.grey,
+                        backgroundColor: isAvailable ? const Color(0xFF0088cc) : Colors.grey,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: Text(room['available'] ? 'Book Now' : 'Not Available'),
+                      child: Text(
+                          isAvailable ? 'Book Now' :
+                          (status == 'maintenance' ? 'Under Maintenance' : 'Not Available')
+                      ),
                     ),
                   ],
                 ),
@@ -603,7 +764,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: Image.asset(
-                hotelData['mainImage'] ?? hotelData['image'],
+                hotelData['image'],
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
@@ -695,7 +856,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Rating and Reviews
+                  // Rating and Reviews (Price removed as in first page)
                   Row(
                     children: [
                       const Icon(
@@ -717,15 +878,6 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                         style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 14,
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        hotelData['price'],
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
                         ),
                       ),
                     ],
@@ -863,9 +1015,13 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                       color: Colors.black,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 8), // Reduced from 16 to 8 as in first page
                   Column(
-                    children: rooms.map((room) => _buildRoomCard(room)).toList(),
+                    children: rooms.asMap().entries.map((entry) {
+                      int index = entry.key;
+                      Map<String, dynamic> room = entry.value;
+                      return _buildRoomCard(room);
+                    }).toList(),
                   ),
                 ],
               ),

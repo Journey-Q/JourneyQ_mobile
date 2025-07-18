@@ -453,53 +453,8 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                         ),
                       ),
                     ),
-                    // Category Badge
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _getCategoryColor(agency['category']),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          agency['category'],
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Availability Status
-                    if (!agency['isAvailable'])
-                      Positioned(
-                        bottom: 12,
-                        right: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.orange,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text(
-                            'Temporarily Unavailable',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
+                    
+      
                   ],
                 ),
               ),
@@ -522,12 +477,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                             color: Colors.black87,
                           ),
                         ),
-                      ),
-                      Icon(
-                        agency['isAvailable'] ? Icons.check_circle : Icons.schedule,
-                        color: agency['isAvailable'] ? Colors.green : Colors.orange,
-                        size: 20,
-                      ),
+                      )
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -546,69 +496,9 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                           ),
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.green.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.green.shade200),
-                        ),
-                        child: Text(
-                          agency['experience'],
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.green.shade700,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
+                      
                     ],
                   ),
-                  const SizedBox(height: 12),
-
-                  // Services (show first 3)
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: (agency['services'] as List)
-                        .take(3)
-                        .map<Widget>((service) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          service,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.blue.shade700,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  if ((agency['services'] as List).length > 3)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        '+${(agency['services'] as List).length - 3} more services',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.blue.shade600,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 12),
 
                   // Vehicle Types and Pricing
                   Container(
@@ -621,25 +511,6 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.directions_car,
-                              color: Colors.grey.shade700,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Vehicles (AC rates for ${standardDistance}km):',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade700,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
                         ...vehicles.take(2).map((vehicle) => Padding(
                           padding: const EdgeInsets.only(bottom: 4),
                           child: Row(
@@ -710,29 +581,10 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                   Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton(
+                        child: ElevatedButton(
                           onPressed: () {
                             _navigateToAgencyDetails(agency['id']);
-                          },
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF0088cc),
-                            side: const BorderSide(color: Color(0xFF0088cc)),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            'View Details',
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: agency['isAvailable'] ? () {
-                            _contactAgency(agency['id']);
-                          } : null,
+                          } ,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: agency['isAvailable'] 
                                 ? const Color(0xFF0088cc) 
@@ -743,7 +595,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                             ),
                           ),
                           child: Text(
-                            agency['isAvailable'] ? 'Contact' : 'Unavailable',
+                            'View Details',
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
@@ -838,24 +690,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
     }
   }
 
-  Color _getCategoryColor(String category) {
-    switch (category.toLowerCase()) {
-      case 'cultural':
-        return Colors.brown;
-      case 'luxury':
-        return Colors.purple;
-      case 'general':
-        return Colors.blue;
-      case 'scenic':
-        return Colors.green;
-      case 'adventure':
-        return Colors.orange;
-      case 'beach':
-        return Colors.teal;
-      default:
-        return Colors.grey;
-    }
-  }
+
 
   @override
   void initState() {
@@ -897,7 +732,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
           _buildIconWithBadge(
             icon: LucideIcons.clipboardList,
             count: orderCount,
-            onTap: () => context.go('/orders'),
+            onTap: () => context.push('/booking_history')
           ),
 
           const SizedBox(width: 10),
@@ -906,7 +741,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
           _buildIconWithBadge(
             icon: LucideIcons.messageCircle,
             count: chatCount,
-            onTap: () => context.go('/messages'),
+            onTap: () => context.push('/market_chat'),
           ),
 
           const SizedBox(width: 16),

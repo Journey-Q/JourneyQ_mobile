@@ -567,84 +567,11 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                           fontSize: 12,
                           color: Colors.grey,
                         ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: _getDifficultyColor(package['difficulty']),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          package['difficulty'],
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
+                      )
                     ],
                   ),
                   const SizedBox(height: 8),
-
-                  // Group Size
-                  Row(
-                    children: [
-                      const Icon(Icons.group, size: 14, color: Colors.grey),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Group size: ${package['groupSize']}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Highlights (show first 4)
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: (package['highlights'] as List)
-                        .take(4)
-                        .map<Widget>((highlight) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          highlight,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.orange.shade700,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  if ((package['highlights'] as List).length > 4)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        '+${(package['highlights'] as List).length - 4} more highlights',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.orange.shade600,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 16),
-
+                  
                   // Price and Book Now
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -833,7 +760,7 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
           _buildIconWithBadge(
             icon: LucideIcons.clipboardList,
             count: orderCount,
-            onTap: () => context.go('/orders'),
+            onTap: () => context.push('/booking_history'),
           ),
 
           const SizedBox(width: 10),
@@ -842,7 +769,7 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
           _buildIconWithBadge(
             icon: LucideIcons.messageCircle,
             count: chatCount,
-            onTap: () => context.go('/messages'),
+            onTap: () => context.push('/market_chat'),
           ),
 
           const SizedBox(width: 16),

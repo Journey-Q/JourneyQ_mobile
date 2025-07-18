@@ -177,34 +177,34 @@ class AppRouter {
         ),
         // Contact Travel Agency Route (without AppWrapper as it's a full-screen contact flow)
         TransitionGoRoute(
-          path: '/marketplace/travel_agencies/contact',
+          path: '/marketplace/travel_agencies/contact/:agencyId',
           builder: (context, state) {
-            final extra = state.extra as Map<String, dynamic>?;
-            if (extra == null) {
-              // If no agency data provided, redirect to travel agencies
+            final agencyId = state.pathParameters['agencyId'];
+            if (agencyId == null) {
+              // If no agency ID provided, redirect to travel agencies
               return AppWrapper(
                 currentRoute: '/marketplace',
                 child: const ViewAllTravelAgenciesPage(),
               );
             }
-            return ContactTravelAgencyPage(agency: extra);
+            return ContactTravelAgencyPage(agencyId: agencyId);
           },
           transitionType: PageTransitionType.none,
         ),
 
         // Book Package Route (without AppWrapper as it's a full-screen booking flow)
         TransitionGoRoute(
-          path: '/marketplace/book_package',
+          path: '/marketplace/book_package/:packageId',
           builder: (context, state) {
-            final extra = state.extra as Map<String, dynamic>?;
-            if (extra == null) {
-              // If no package data provided, redirect to marketplace
+            final packageId = state.pathParameters['packageId'];
+            if (packageId == null) {
+              // If no package ID provided, redirect to tour packages
               return AppWrapper(
                 currentRoute: '/marketplace',
-                child: MarketplacePage(),
+                child: const ViewAllTourPackagesPage(),
               );
             }
-            return BookPackagePage(package: extra);
+            return BookPackagePage(packageId: packageId);
           },
           transitionType: PageTransitionType.none,
         ),

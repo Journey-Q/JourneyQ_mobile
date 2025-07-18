@@ -368,7 +368,7 @@ class _BookingRoomPageState extends State<BookingRoomPage> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    context.go('/marketplace/hotels');
+                    context.push('/marketplace/hotels');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0088cc),
