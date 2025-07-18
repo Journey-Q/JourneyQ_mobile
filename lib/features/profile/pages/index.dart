@@ -19,7 +19,7 @@ class _ProfilePageState extends State<ProfilePage> {
   // Enhanced posts data with Sri Lankan travel destination information
   List<Map<String, dynamic>> userPosts = [
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=400',
+      'imageUrl': 'assets/images/mirissa_beach.jpg',
       'likes': 142,
       'comments': 23,
       'isLiked': false,
@@ -33,7 +33,7 @@ class _ProfilePageState extends State<ProfilePage> {
       'visitDate': '2024-06-15',
     },
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400',
+      'imageUrl': 'assets/images/ella_viewpoint.jpg',
       'likes': 89,
       'comments': 12,
       'isLiked': true,
@@ -47,7 +47,7 @@ class _ProfilePageState extends State<ProfilePage> {
       'visitDate': '2024-06-10',
     },
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400',
+      'imageUrl': 'assets/images/sigiriya_rock.jpg',
       'likes': 256,
       'comments': 45,
       'isLiked': false,
@@ -61,7 +61,7 @@ class _ProfilePageState extends State<ProfilePage> {
       'visitDate': '2024-06-08',
     },
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=400',
+      'imageUrl': 'assets/images/horton_plains.jpg',
       'likes': 78,
       'comments': 8,
       'isLiked': false,
@@ -75,7 +75,7 @@ class _ProfilePageState extends State<ProfilePage> {
       'visitDate': '2024-06-05',
     },
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
+      'imageUrl': 'assets/images/adams_peak.jpg',
       'likes': 167,
       'comments': 31,
       'isLiked': true,
@@ -89,7 +89,7 @@ class _ProfilePageState extends State<ProfilePage> {
       'visitDate': '2024-06-01',
     },
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=400',
+      'imageUrl': 'assets/images/yala_national_park.jpg',
       'likes': 134,
       'comments': 19,
       'isLiked': false,
@@ -103,7 +103,7 @@ class _ProfilePageState extends State<ProfilePage> {
       'visitDate': '2024-05-28',
     },
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=400',
+      'imageUrl': 'assets/images/galle_fort.jpg',
       'likes': 203,
       'comments': 27,
       'isLiked': false,
@@ -117,7 +117,7 @@ class _ProfilePageState extends State<ProfilePage> {
       'visitDate': '2024-05-25',
     },
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1519904981063-b0cf448d479e?w=400',
+      'imageUrl': 'assets/images/kandy_temple.jpeg',
       'likes': 92,
       'comments': 15,
       'isLiked': true,
@@ -131,7 +131,7 @@ class _ProfilePageState extends State<ProfilePage> {
       'visitDate': '2024-05-20',
     },
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?w=400',
+      'imageUrl': 'assets/images/nuwara_eliya.jpeg',
       'likes': 118,
       'comments': 21,
       'isLiked': false,
@@ -154,7 +154,7 @@ class _ProfilePageState extends State<ProfilePage> {
     'posts': 9,
     'followers': 5,
     'following': 4,
-    'profileImage': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+    'profileImage': 'assets/images/profile_picture.jpg',
     'isVerified': true,
     'level': 'Explorer',
     'joinDate': 'March 2022',
@@ -273,7 +273,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   CircleAvatar(
                     radius: 45,
                     backgroundImage: userData['profileImage'] != null
-                        ? NetworkImage(userData['profileImage'])
+                        ? AssetImage(userData['profileImage'])
                         : null,
                     backgroundColor: Colors.grey[200],
                     child: userData['profileImage'] == null
@@ -650,7 +650,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image: NetworkImage(post['imageUrl']),
+                        image: AssetImage(post['imageUrl']),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -841,7 +841,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     Container(
                       decoration: BoxDecoration(
                         image: DecorationImage(
-                          image: NetworkImage(post['imageUrl']),
+                          image: AssetImage(post['imageUrl']),
                           fit: BoxFit.cover,
                         ),
                       ),

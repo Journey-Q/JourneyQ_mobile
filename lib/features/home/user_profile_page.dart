@@ -18,9 +18,7 @@ class UserProfilePage extends StatefulWidget {
   State<UserProfilePage> createState() => _UserProfilePageState();
 }
 
-class _UserProfilePageState extends State<UserProfilePage>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _UserProfilePageState extends State<UserProfilePage> {
   bool _isFollowing = false;
   bool _isOwnProfile = false;
 
@@ -31,7 +29,6 @@ class _UserProfilePageState extends State<UserProfilePage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
     print('UserProfilePage: Loading profile for ${widget.userName} (ID: ${widget.userId})');
     _loadUserProfile();
     _loadUserPosts();
@@ -55,8 +52,8 @@ class _UserProfilePageState extends State<UserProfilePage>
       'id': widget.userId,
       'name': widget.userName,
       'username': '@${widget.userName.toLowerCase().replaceAll(' ', '')}',
-      'bio': 'Travel enthusiast exploring Sri Lanka\'s hidden gems 🇱🇰 | Food lover | Adventure seeker',
-      'location': userData?['location']?.toString().split(' • ')[0] ?? 'Colombo, Sri Lanka',
+      'bio': 'Travel enthusiast exploring hidden gems 🌍 | Food lover | Adventure seeker',
+      'location': userData?['location']?.toString().split(' • ')[0] ?? 'Location',
       'profileImage': userData?['userImage'] ?? 'https://i.pravatar.cc/150?img=25',
       'coverImage': userData?['postImages']?[0] ?? 'assets/images/img1.jpg',
       'followers': 1247,
@@ -65,40 +62,59 @@ class _UserProfilePageState extends State<UserProfilePage>
       'journeys': 23,
       'countries': 12,
       'cities': 45,
-      'joinedDate': 'January 2023',
       'isVerified': true,
-      'badges': ['Explorer', 'Local Guide', 'Photographer'],
+      'badges': ['Explorer', 'Trip Fluencer'],
     };
   }
 
   void _loadUserPosts() {
-    // Filter posts by user - in a real app, this would be an API call
-    _userPosts = post_data
-        .where((post) => post['userName']?.toString() == widget.userName)
-        .toList();
+    // For now, always use mock posts to ensure we have 4 posts
+    _userPosts = [
+      {
+        'id': '1',
+        'location': 'Mirissa Beach, Southern Province',
+        'journeyTitle': 'Stunning crescent-shaped beach famous for whale watching and surfing',
+        'postImages': ['assets/images/mirissa_beach.jpg'],
+      },
+      {
+        'id': '2',
+        'location': 'Ella, Uva Province',
+        'journeyTitle': 'Picturesque hill station with tea plantations and stunning viewpoints',
+        'postImages': ['assets/images/ella_viewpoint.jpg'],
+      },
+      {
+        'id': '3',
+        'location': 'Kandy, Central Province',
+        'journeyTitle': 'Cultural capital with the sacred Temple of the Tooth and beautiful lake',
+        'postImages': ['assets/images/kandy_temple.jpeg'],
+      },
+      {
+        'id': '4',
+        'location': 'Galle Fort, Southern Province',
+        'journeyTitle': 'Historic Dutch colonial fortress with charming cobblestone streets',
+        'postImages': ['assets/images/galle_fort.jpg'],
+      },
+    ];
 
-    // Update profile stats based on actual posts
-    if (_userPosts.isNotEmpty) {
-      _userProfile['posts'] = _userPosts.length;
+    // Update profile stats based on posts
+    _userProfile['posts'] = _userPosts.length;
 
-      // Calculate total likes and comments from user's posts
-      int totalLikes = 0;
-      int totalComments = 0;
+    // Calculate total likes and comments from user's posts
+    int totalLikes = 0;
+    int totalComments = 0;
 
-      for (var post in _userPosts) {
-        totalLikes += (post['likesCount'] as int?) ?? 0;
-        totalComments += (post['commentsCount'] as int?) ?? 0;
-      }
-
-      // You can use these stats in the UI if needed
-      _userProfile['totalLikes'] = totalLikes;
-      _userProfile['totalComments'] = totalComments;
+    for (var post in _userPosts) {
+      totalLikes += (post['likesCount'] as int?) ?? 0;
+      totalComments += (post['commentsCount'] as int?) ?? 0;
     }
+
+    // You can use these stats in the UI if needed
+    _userProfile['totalLikes'] = totalLikes;
+    _userProfile['totalComments'] = totalComments;
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
     super.dispose();
   }
 
@@ -111,8 +127,7 @@ class _UserProfilePageState extends State<UserProfilePage>
           _buildSliverAppBar(),
           _buildProfileInfo(),
           _buildStatsRow(),
-          _buildTabBar(),
-          _buildTabContent(),
+          _buildMyPostsSection(),
         ],
       ),
     );
@@ -130,12 +145,6 @@ class _UserProfilePageState extends State<UserProfilePage>
         icon: const Icon(Icons.arrow_back, color: Colors.black),
         onPressed: () => Navigator.pop(context),
       ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.more_vert, color: Colors.black),
-          onPressed: _showMoreOptions,
-        ),
-      ],
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           color: Colors.white,
@@ -197,9 +206,9 @@ class _UserProfilePageState extends State<UserProfilePage>
                 if (_userProfile['isVerified'] == true) ...[
                   const SizedBox(width: 6),
                   const Icon(
-                    Icons.verified,
-                    color: Colors.blue,
-                    size: 20,
+                    Icons.star,
+                    color: Colors.yellow,
+                    size: 18,
                   ),
                 ],
               ],
@@ -232,34 +241,6 @@ class _UserProfilePageState extends State<UserProfilePage>
                   ),
                 ),
               ),
-
-            const SizedBox(height: 16),
-
-            // Location and Join Date
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 4),
-                Text(
-                  _userProfile['location'],
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 4),
-                Text(
-                  'Joined ${_userProfile['joinedDate']}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
 
             const SizedBox(height: 24),
 
@@ -391,25 +372,75 @@ class _UserProfilePageState extends State<UserProfilePage>
 
   Widget _buildStatsRow() {
     return SliverToBoxAdapter(
-      child: Container(
+      child: _buildStatsCard(),
+    );
+  }
+
+  Widget _buildStatsCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
         color: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _buildStatItem('Posts', _userProfile['posts'].toString()),
-            _buildStatItem('Followers', _formatNumber(_userProfile['followers'])),
-            _buildStatItem('Following', _formatNumber(_userProfile['following'])),
-            _buildStatItem('Journeys', _userProfile['journeys'].toString()),
-          ],
-        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildStatItem(
+            _userProfile['posts'].toString(),
+            'Posts',
+            Icons.photo_library,
+            const Color(0xFF0088cc),
+          ),
+          _buildDivider(),
+          GestureDetector(
+            onTap: () => _navigateToFollowersFollowing('followers'),
+            child: _buildStatItem(
+              _formatNumber(_userProfile['followers']),
+              'Followers',
+              Icons.people,
+              const Color(0xFF00B894),
+            ),
+          ),
+          _buildDivider(),
+          GestureDetector(
+            onTap: () => _navigateToFollowersFollowing('following'),
+            child: _buildStatItem(
+              _userProfile['following'].toString(),
+              'Following',
+              Icons.person_add,
+              const Color(0xFFE17055),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildStatItem(String label, String value) {
+  Widget _buildStatItem(String value, String label, IconData icon, Color iconColor) {
     return Column(
       children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: iconColor.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            icon,
+            size: 22,
+            color: iconColor,
+          ),
+        ),
+        const SizedBox(height: 12),
         Text(
           value,
           style: const TextStyle(
@@ -418,7 +449,7 @@ class _UserProfilePageState extends State<UserProfilePage>
             color: Colors.black87,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Text(
           label,
           style: TextStyle(
@@ -431,143 +462,82 @@ class _UserProfilePageState extends State<UserProfilePage>
     );
   }
 
-  Widget _buildTabBar() {
-    return SliverToBoxAdapter(
-      child: Container(
-        color: Colors.white,
-        child: Column(
-          children: [
-            Container(
-              height: 1,
-              color: Colors.grey[200],
-            ),
-            TabBar(
-              controller: _tabController,
-              labelColor: Colors.blue,
-              unselectedLabelColor: Colors.grey[600],
-              indicatorColor: Colors.blue,
-              indicatorWeight: 2,
-              indicatorSize: TabBarIndicatorSize.tab,
-              tabs: const [
-                Tab(
-                  icon: Icon(Icons.grid_on, size: 20),
-                  text: 'Posts',
-                ),
-                Tab(
-                  icon: Icon(Icons.map, size: 20),
-                  text: 'Journeys',
-                ),
-                Tab(
-                  icon: Icon(Icons.info_outline, size: 20),
-                  text: 'About',
-                ),
-              ],
-            ),
-          ],
-        ),
+  Widget _buildDivider() {
+    return Container(
+      height: 40,
+      width: 1,
+      color: Colors.grey[300],
+    );
+  }
+
+  void _navigateToFollowersFollowing(String type) {
+    // Handle navigation to followers/following page
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Opening $type list'),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
 
-  Widget _buildTabContent() {
-    return SliverFillRemaining(
-      child: TabBarView(
-        controller: _tabController,
+  Widget _buildMyPostsSection() {
+    return SliverToBoxAdapter(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildPostsTab(),
-          _buildJourneysTab(),
-          _buildAboutTab(),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 24, 16, 16),
+            child: Text(
+              'My Posts',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+          _buildPostsList(),
         ],
       ),
     );
   }
 
-  Widget _buildPostsTab() {
+  Widget _buildPostsList() {
     if (_userPosts.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.photo_library_outlined, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
-              'No posts yet',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey,
-                fontWeight: FontWeight.w500,
+      return const Padding(
+        padding: EdgeInsets.all(32),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.photo_library_outlined, size: 64, color: Colors.grey),
+              SizedBox(height: 16),
+              Text(
+                'No posts yet',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'When they share travel posts, they\'ll appear here',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-          ],
+              SizedBox(height: 8),
+              Text(
+                'When they share travel posts, they\'ll appear here',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+            ],
+          ),
         ),
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: _userPosts.length,
       itemBuilder: (context, index) {
         final post = _userPosts[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: TravelPostWidget(
-            postId: post['id']?.toString() ?? '',
-            userName: post['userName']?.toString() ?? '',
-            location: post['location']?.toString() ?? '',
-            userImage: post['userImage']?.toString() ?? '',
-            journeyTitle: post['journeyTitle']?.toString() ?? '',
-            placesVisited: List<String>.from(post['placesVisited'] ?? []),
-            postImages: List<String>.from(post['postImages'] ?? []),
-            likesCount: post['likesCount'] ?? 0,
-            commentsCount: post['commentsCount'] ?? 0,
-            isLiked: post['isLiked'] ?? false,
-            isFollowed: _isFollowing,
-            isBookmarked: false,
-            onLike: () => _handleLike(post),
-            onComment: () => _handleComment(post),
-            onMoreOptions: () => _showPostOptions(post),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildJourneysTab() {
-    // Mock journeys data
-    final journeys = [
-      {
-        'title': 'Cultural Triangle Adventure',
-        'duration': '5 days',
-        'places': 8,
-        'image': 'assets/images/img1.jpg',
-        'date': '2024-01-15',
-      },
-      {
-        'title': 'Southern Coast Explorer',
-        'duration': '3 days',
-        'places': 5,
-        'image': 'assets/images/img12.jpg',
-        'date': '2024-02-20',
-      },
-      {
-        'title': 'Hill Country Tea Trail',
-        'duration': '4 days',
-        'places': 6,
-        'image': 'assets/images/img14.jpg',
-        'date': '2024-03-10',
-      },
-    ];
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: journeys.length,
-      itemBuilder: (context, index) {
-        final journey = journeys[index];
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
@@ -584,29 +554,39 @@ class _UserProfilePageState extends State<UserProfilePage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Post Image
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: Image.asset(
-                  journey['image']?.toString() ?? 'assets/images/img1.jpg',
-                  height: 150,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 150,
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.image, size: 50, color: Colors.grey),
-                    );
-                  },
+                child: AspectRatio(
+                  aspectRatio: 16 / 10,
+                  child: (post['postImages'] != null && (post['postImages'] as List).isNotEmpty)
+                      ? Image.asset(
+                    (post['postImages'] as List)[0],
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.image, size: 50, color: Colors.grey),
+                      );
+                    },
+                  )
+                      : Container(
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.image, size: 50, color: Colors.grey),
+                  ),
                 ),
               ),
+
+              // Post Content
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Location Title
                     Text(
-                      journey['title']?.toString() ?? 'Unknown Journey',
+                      post['location']?.toString() ?? 'Unknown Location',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -614,35 +594,42 @@ class _UserProfilePageState extends State<UserProfilePage>
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(Icons.schedule, size: 16, color: Colors.grey[600]),
-                        const SizedBox(width: 4),
-                        Text(
-                          journey['duration']?.toString() ?? 'Unknown',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${journey['places']?.toString() ?? '0'} places',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
+
+                    // Description
                     Text(
-                      journey['date']?.toString() ?? 'Unknown date',
+                      post['journeyTitle']?.toString() ?? 'Explore this amazing destination',
                       style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[500],
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // View Journey Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // Handle view journey action
+                          print('View journey for post: ${post['id']}');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          'View Journey',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -652,113 +639,6 @@ class _UserProfilePageState extends State<UserProfilePage>
           ),
         );
       },
-    );
-  }
-
-  Widget _buildAboutTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildAboutSection('Travel Stats', [
-            _buildAboutItem(Icons.public, 'Countries Visited', '${_userProfile['countries']}'),
-            _buildAboutItem(Icons.location_city, 'Cities Explored', '${_userProfile['cities']}'),
-            _buildAboutItem(Icons.route, 'Journeys Completed', '${_userProfile['journeys']}'),
-          ]),
-
-          const SizedBox(height: 24),
-
-          _buildAboutSection('Favorite Destinations', [
-            _buildDestinationItem('Sigiriya Rock Fortress', '5 visits'),
-            _buildDestinationItem('Ella', '3 visits'),
-            _buildDestinationItem('Galle Fort', '4 visits'),
-          ]),
-
-          const SizedBox(height: 24),
-
-          _buildAboutSection('Travel Preferences', [
-            _buildAboutItem(Icons.camera_alt, 'Photography', 'Enthusiast'),
-            _buildAboutItem(Icons.hiking, 'Adventure Level', 'Moderate'),
-            _buildAboutItem(Icons.restaurant, 'Food Explorer', 'Local Cuisine'),
-          ]),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAboutSection(String title, List<Widget> items) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 16),
-        ...items,
-      ],
-    );
-  }
-
-  Widget _buildAboutItem(IconData icon, String title, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: Colors.grey[600]),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[700],
-              ),
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDestinationItem(String destination, String visits) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(Icons.place, size: 20, color: Colors.blue[600]),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              destination,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[700],
-              ),
-            ),
-          ),
-          Text(
-            visits,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -899,10 +779,8 @@ class _UserProfilePageState extends State<UserProfilePage>
     switch (badge.toLowerCase()) {
       case 'explorer':
         return Icons.explore;
-      case 'local guide':
-        return Icons.location_on;
-      case 'photographer':
-        return Icons.camera_alt;
+      case 'trip fluencer':
+        return Icons.trending_up;
       default:
         return Icons.emoji_events;
     }
