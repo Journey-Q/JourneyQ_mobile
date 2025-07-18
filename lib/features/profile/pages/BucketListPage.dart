@@ -13,70 +13,70 @@ class _BucketListPageState extends State<BucketListPage> {
   final List<Map<String, dynamic>> bucketListItems = [
     {
       'destination': 'Sigiriya Rock Fortress',
-      'image': 'https://images.unsplash.com/photo-1568632234157-ce7aecd03d0d?w=400',
+      'image': 'assets/images/sigiriya_rock.jpg',
       'isCompleted': true,
       'visitedDate': '2023-08-15',
       'description': 'Ancient rock fortress and UNESCO World Heritage site'
     },
     {
       'destination': 'Nine Arch Bridge, Ella',
-      'image': 'https://images.unsplash.com/photo-1566552881560-0be862a7c445?w=400',
+      'image': 'assets/images/nine_arch_bridge.jpeg',
       'isCompleted': false,
       'visitedDate': null,
       'description': 'Iconic railway bridge surrounded by tea plantations'
     },
     {
       'destination': 'Temple of the Tooth, Kandy',
-      'image': 'https://images.unsplash.com/photo-1605649487212-47bdab064bf4?w=400',
+      'image': 'assets/images/kandy_temple.jpeg',
       'isCompleted': true,
       'visitedDate': '2023-12-20',
       'description': 'Sacred Buddhist temple housing the tooth relic of Buddha'
     },
     {
       'destination': 'Galle Fort',
-      'image': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400',
+      'image': 'assets/images/galle_fort.jpg',
       'isCompleted': false,
       'visitedDate': null,
       'description': 'Historic Dutch colonial fort by the ocean'
     },
     {
       'destination': 'Yala National Park',
-      'image': 'https://images.unsplash.com/photo-1549366021-9f761d040a94?w=400',
+      'image': 'assets/images/yala_national_park.jpg',
       'isCompleted': false,
       'visitedDate': null,
       'description': 'Wildlife safari to spot leopards and elephants'
     },
     {
       'destination': 'Nuwara Eliya Tea Country',
-      'image': 'https://images.unsplash.com/photo-1605649487108-8e1e9eab5a0e?w=400',
+      'image': 'assets/images/nuwara_eliya.jpeg',
       'isCompleted': true,
       'visitedDate': '2023-07-10',
       'description': 'Rolling tea plantations in the hill country'
     },
     {
       'destination': 'Mirissa Beach',
-      'image': 'https://images.unsplash.com/photo-1540979388789-6cee28a1cdc9?w=400',
+      'image': 'assets/images/mirissa_beach.jpg',
       'isCompleted': false,
       'visitedDate': null,
       'description': 'Whale watching and pristine golden beaches'
     },
     {
       'destination': 'Adams Peak (Sri Pada)',
-      'image': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
+      'image': 'assets/images/adams_peak.jpg',
       'isCompleted': false,
       'visitedDate': null,
       'description': 'Sacred mountain pilgrimage and sunrise hike'
     },
     {
       'destination': 'Anuradhapura Ancient City',
-      'image': 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400',
+      'image': 'assets/images/anuradhapura.jpeg',
       'isCompleted': false,
       'visitedDate': null,
       'description': 'Ancient capital with sacred Buddhist sites'
     },
     {
       'destination': 'Arugam Bay',
-      'image': 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400',
+      'image': 'assets/images/arugam_bay.jpg',
       'isCompleted': false,
       'visitedDate': null,
       'description': 'World-class surfing destination on the east coast'
@@ -89,98 +89,98 @@ class _BucketListPageState extends State<BucketListPage> {
     final totalItems = bucketListItems.length;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Travel Bucket List',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        )
-      ),
-      body: Column(
-        children: [
-          // Progress Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            margin: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF33a3dd), Color(0xFF0088cc)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+        appBar: AppBar(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: const Text(
+              'Travel Bucket List',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
               ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.flight_takeoff, color: Colors.white, size: 28),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Trip Planning Progress',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+            )
+        ),
+        body: Column(
+          children: [
+            // Progress Header
+            Container(
+              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF33a3dd), Color(0xFF0088cc)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.directions_bus, color: Colors.white, size: 28),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Trip Planning Progress',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          Text(
-                            '$completedItems of $totalItems destinations visited',
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14,
+                            Text(
+                              '$completedItems of $totalItems destinations visited',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                LinearProgressIndicator(
-                  value: completedItems / totalItems,
-                  backgroundColor: Colors.white30,
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${((completedItems / totalItems) * 100).toInt()}% Complete',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  LinearProgressIndicator(
+                    value: completedItems / totalItems,
+                    backgroundColor: Colors.white30,
+                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${((completedItems / totalItems) * 100).toInt()}% Complete',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
 
-          // Bucket List Items
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: bucketListItems.length,
-              itemBuilder: (context, index) {
-                final item = bucketListItems[index];
-                return _buildBucketListItem(item, index);
-              },
+            // Bucket List Items
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: bucketListItems.length,
+                itemBuilder: (context, index) {
+                  final item = bucketListItems[index];
+                  return _buildBucketListItem(item, index);
+                },
+              ),
             ),
-          ),
-        ],
-      )
+          ],
+        )
     );
   }
 
@@ -211,7 +211,7 @@ class _BucketListPageState extends State<BucketListPage> {
                 decoration: BoxDecoration(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                   image: DecorationImage(
-                    image: NetworkImage(item['image']),
+                    image: AssetImage(item['image']),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -325,7 +325,7 @@ class _BucketListPageState extends State<BucketListPage> {
                       onPressed: () => _shareDestination(item),
                       icon: const Icon(Icons.share, size: 16),
                       label: const Text('Share'),
-                      
+
                     ),
                   ],
                 ),
@@ -347,10 +347,6 @@ class _BucketListPageState extends State<BucketListPage> {
       }
     });
   }
-
-  
-
-  
 
   void _planRoute(Map<String, dynamic> item) {
     ScaffoldMessenger.of(context).showSnackBar(
