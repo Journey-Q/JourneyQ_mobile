@@ -2,7 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:journeyq/shared/components/marketplace_app_bar.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:journeyq/features/market_place/pages/searchbar.dart';
 
 class ViewAllTourPackagesPage extends StatefulWidget {
   const ViewAllTourPackagesPage({Key? key}) : super(key: key);
@@ -12,125 +13,135 @@ class ViewAllTourPackagesPage extends StatefulWidget {
 }
 
 class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
-  final TextEditingController searchController = TextEditingController();
-
-  // Add these two variables:
-  String selectedLocation = 'Colombo';
-
-  final List<String> sriLankanCities = [
-    'Colombo',
-    'Kandy',
-    'Galle',
-    'Jaffna',
-    'Negombo',
-    'Anuradhapura',
-    'Polonnaruwa',
-    'Sigiriya',
-    'Ella',
-    'Nuwara Eliya',
-    'Trincomalee',
-    'Batticaloa',
-    'Matara',
-    'Hikkaduwa',
-    'Bentota'
-  ];
-
-  // Expanded Tour Packages Data
+  // Comprehensive Tour Packages Data with IDs (matching tour package details database)
   final List<Map<String, dynamic>> allTourPackages = [
     {
+      'id': 'package_001',
       'title': 'Cultural Triangle Tour',
       'subtitle': '5 Days • Anuradhapura, Polonnaruwa, Sigiriya',
-      'description': 'Explore ancient kingdoms and UNESCO World Heritage sites in Sri Lanka\'s Cultural Triangle.',
       'price': 'LKR 25,000',
       'originalPrice': 'LKR 30,000',
       'rating': 4.8,
-      'reviews': 124,
+      'reviews': 156,
       'image': 'assets/images/cultural_triangle.jpg',
       'duration': '5 Days',
       'icon': Icons.account_balance,
       'backgroundColor': const Color(0xFF8B4513),
-      'includes': ['Accommodation', 'Meals', 'Transportation', 'Guide'],
-      'highlights': ['Sigiriya Rock', 'Ancient Temples', 'Historical Sites'],
+      'difficulty': 'Moderate',
+      'groupSize': '2-15 people',
       'agency': 'Heritage Tours Lanka',
       'agencyRating': 4.9,
       'agencyLogo': 'assets/images/heritage_tours_logo.png',
+      'agencyEstablished': '2010',
+      'agencyTours': '800+ tours completed',
+      'description': 'Embark on a fascinating journey through Sri Lanka\'s Cultural Triangle, home to ancient kingdoms and UNESCO World Heritage sites.',
+      'includes': ['Accommodation', 'All Meals', 'Transportation', 'Professional Guide', 'Entrance Fees', 'Cultural Performances'],
+      'highlights': ['Sigiriya Rock Fortress', 'Ancient Temples', 'Royal Palace Ruins', 'Buddha Statues', 'Archaeological Sites'],
+      'category': 'Cultural',
+      'isAvailable': true,
     },
     {
+      'id': 'package_002',
       'title': 'Hill Country Adventure',
       'subtitle': '4 Days • Kandy, Nuwara Eliya, Ella',
-      'description': 'Experience the cool climate and stunning landscapes of Sri Lanka\'s hill country.',
       'price': 'LKR 22,000',
-      'originalPrice': 'LKR 28,000',
+      'originalPrice': 'LKR 27,000',
       'rating': 4.9,
-      'reviews': 98,
+      'reviews': 203,
       'image': 'assets/images/hill_country.jpg',
       'duration': '4 Days',
       'icon': Icons.landscape,
       'backgroundColor': const Color(0xFF228B22),
-      'includes': ['Accommodation', 'Meals', 'Transportation', 'Guide'],
-      'highlights': ['Tea Plantations', 'Nine Arch Bridge', 'Little Adam\'s Peak'],
+      'difficulty': 'Easy',
+      'groupSize': '2-12 people',
       'agency': 'Mountain Escape Tours',
-      'agencyRating': 4.7,
+      'agencyRating': 4.8,
       'agencyLogo': 'assets/images/mountain_escape_logo.png',
+      'agencyEstablished': '2012',
+      'agencyTours': '600+ tours completed',
+      'description': 'Escape to the cool, misty hills of Sri Lanka\'s central highlands with stunning landscapes and tea plantations.',
+      'includes': ['Mountain Lodge Stay', 'Meals', 'Train Tickets', 'Guide', 'Tea Factory Visit', 'Nature Walks'],
+      'highlights': ['Tea Plantations', 'Nine Arch Bridge', 'Little Adam\'s Peak', 'Scenic Train Ride', 'Mountain Views'],
+      'category': 'Adventure',
+      'isAvailable': true,
     },
     {
+      'id': 'package_003',
       'title': 'Southern Coast Explorer',
       'subtitle': '3 Days • Galle, Hikkaduwa, Mirissa',
-      'description': 'Discover pristine beaches, historical forts, and marine life along the southern coast.',
       'price': 'LKR 18,000',
-      'originalPrice': 'LKR 24,000',
       'rating': 4.7,
-      'reviews': 156,
+      'reviews': 89,
       'image': 'assets/images/southern_coast.jpg',
       'duration': '3 Days',
       'icon': Icons.waves,
       'backgroundColor': const Color(0xFF20B2AA),
-      'includes': ['Beach Resort', 'Meals', 'Transportation', 'Activities'],
-      'highlights': ['Galle Fort', 'Whale Watching', 'Beach Activities'],
+      'difficulty': 'Easy',
+      'groupSize': '2-20 people',
       'agency': 'Coastal Adventures Sri Lanka',
-      'agencyRating': 4.8,
+      'agencyRating': 4.6,
       'agencyLogo': 'assets/images/coastal_adventures_logo.png',
+      'agencyEstablished': '2015',
+      'agencyTours': '400+ tours completed',
+      'description': 'Discover the pristine beaches and rich maritime heritage of Sri Lanka\'s southern coast.',
+      'includes': ['Beach Resort', 'Meals', 'Transportation', 'Boat Trips', 'Snorkeling Equipment', 'Guide'],
+      'highlights': ['Galle Fort', 'Whale Watching', 'Beach Activities', 'Coral Reefs', 'Sunset Views'],
+      'category': 'Beach',
+      'isAvailable': true,
     },
     {
+      'id': 'package_004',
       'title': 'Wildlife Safari Package',
       'subtitle': '6 Days • Yala, Udawalawe, Minneriya',
-      'description': 'Experience Sri Lanka\'s incredible wildlife in multiple national parks.',
       'price': 'LKR 35,000',
       'originalPrice': 'LKR 42,000',
       'rating': 4.6,
-      'reviews': 89,
+      'reviews': 127,
       'image': 'assets/images/wildlife_safari.jpg',
       'duration': '6 Days',
       'icon': Icons.pets,
       'backgroundColor': const Color(0xFF8FBC8F),
-      'includes': ['Safari Lodge', 'All Meals', 'Safari Jeep', 'Guide'],
-      'highlights': ['Leopard Spotting', 'Elephant Gathering', 'Bird Watching'],
+      'difficulty': 'Moderate',
+      'groupSize': '2-8 people',
       'agency': 'Wild Sri Lanka Safaris',
-      'agencyRating': 4.6,
-      'agencyLogo': 'assets/images/wild_srilanka_logo.png',
+      'agencyRating': 4.7,
+      'agencyLogo': 'assets/images/wild_sri_lanka_logo.png',
+      'agencyEstablished': '2008',
+      'agencyTours': '1000+ tours completed',
+      'description': 'Experience Sri Lanka\'s incredible biodiversity across multiple national parks.',
+      'includes': ['Safari Lodge', 'All Meals', 'Safari Jeep', 'Naturalist Guide', 'Park Fees', 'Binoculars'],
+      'highlights': ['Leopard Spotting', 'Elephant Gathering', 'Bird Watching', 'Night Safari', 'Nature Photography'],
+      'category': 'Wildlife',
+      'isAvailable': true,
     },
     {
+      'id': 'package_005',
       'title': 'Temple & Heritage Tour',
       'subtitle': '7 Days • Kandy, Dambulla, Galle',
-      'description': 'A spiritual journey through Sri Lanka\'s most sacred temples and heritage sites.',
       'price': 'LKR 28,000',
-      'originalPrice': 'LKR 35,000',
       'rating': 4.7,
-      'reviews': 67,
+      'reviews': 94,
       'image': 'assets/images/temple_heritage.jpg',
       'duration': '7 Days',
       'icon': Icons.temple_buddhist,
       'backgroundColor': const Color(0xFF9370DB),
-      'includes': ['Accommodation', 'Vegetarian Meals', 'Transportation', 'Guide'],
-      'highlights': ['Temple of Tooth', 'Cave Temples', 'Meditation Sessions'],
+      'difficulty': 'Easy',
+      'groupSize': '2-16 people',
       'agency': 'Spiritual Journey Tours',
-      'agencyRating': 4.9,
+      'agencyRating': 4.8,
       'agencyLogo': 'assets/images/spiritual_journey_logo.png',
+      'agencyEstablished': '2011',
+      'agencyTours': '700+ tours completed',
+      'description': 'A spiritual and cultural journey through Sri Lanka\'s most sacred temples and heritage sites.',
+      'includes': ['Accommodation', 'Vegetarian Meals', 'Transportation', 'Spiritual Guide', 'Temple Fees', 'Meditation Sessions'],
+      'highlights': ['Temple of Tooth', 'Cave Temples', 'Meditation Sessions', 'Buddhist Culture', 'Ancient Art'],
+      'category': 'Spiritual',
+      'isAvailable': true,
     },
     {
+      'id': 'package_006',
       'title': 'Adventure & Thrills',
       'subtitle': '5 Days • Kitulgala, Ella, Nuwara Eliya',
-      'description': 'Action-packed adventure tour with white water rafting, hiking, and zip-lining.',
       'price': 'LKR 32,000',
       'originalPrice': 'LKR 38,000',
       'rating': 4.5,
@@ -139,16 +150,23 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
       'duration': '5 Days',
       'icon': Icons.sports,
       'backgroundColor': const Color(0xFF4682B4),
-      'includes': ['Adventure Lodge', 'All Meals', 'Equipment', 'Instructor'],
-      'highlights': ['White Water Rafting', 'Zip Lining', 'Rock Climbing'],
+      'difficulty': 'Challenging',
+      'groupSize': '2-10 people',
       'agency': 'Adrenaline Rush Adventures',
       'agencyRating': 4.5,
       'agencyLogo': 'assets/images/adrenaline_rush_logo.png',
+      'agencyEstablished': '2014',
+      'agencyTours': '300+ tours completed',
+      'description': 'Action-packed adventure tour with white water rafting, hiking, and zip-lining.',
+      'includes': ['Adventure Lodge', 'All Meals', 'Equipment', 'Instructor', 'Safety Gear', 'Insurance'],
+      'highlights': ['White Water Rafting', 'Zip Lining', 'Rock Climbing', 'Abseiling', 'Jungle Trekking'],
+      'category': 'Adventure',
+      'isAvailable': true,
     },
     {
+      'id': 'package_007',
       'title': 'Romantic Getaway',
       'subtitle': '4 Days • Bentota, Galle, Mirissa',
-      'description': 'Perfect romantic escape with luxury resorts, sunset dinners, and couple activities.',
       'price': 'LKR 45,000',
       'originalPrice': 'LKR 55,000',
       'rating': 4.8,
@@ -157,16 +175,23 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
       'duration': '4 Days',
       'icon': Icons.favorite,
       'backgroundColor': const Color(0xFFFF69B4),
-      'includes': ['Luxury Resort', 'Candlelight Dinners', 'Spa', 'Private Tours'],
-      'highlights': ['Sunset Cruise', 'Couple Spa', 'Beach Dining'],
+      'difficulty': 'Easy',
+      'groupSize': '2 people',
       'agency': 'Romance Lanka Tours',
       'agencyRating': 4.8,
       'agencyLogo': 'assets/images/romance_lanka_logo.png',
+      'agencyEstablished': '2016',
+      'agencyTours': '200+ tours completed',
+      'description': 'Perfect romantic escape with luxury resorts, sunset dinners, and couple activities.',
+      'includes': ['Luxury Resort', 'Candlelight Dinners', 'Spa', 'Private Tours', 'Champagne', 'Flowers'],
+      'highlights': ['Sunset Cruise', 'Couple Spa', 'Beach Dining', 'Private Beach', 'Photography Session'],
+      'category': 'Romance',
+      'isAvailable': true,
     },
     {
+      'id': 'package_008',
       'title': 'Family Fun Package',
       'subtitle': '6 Days • Colombo, Kandy, Bentota',
-      'description': 'Family-friendly tour with activities suitable for all ages and comfortable accommodations.',
       'price': 'LKR 38,000',
       'originalPrice': 'LKR 45,000',
       'rating': 4.6,
@@ -175,19 +200,82 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
       'duration': '6 Days',
       'icon': Icons.family_restroom,
       'backgroundColor': const Color(0xFF32CD32),
-      'includes': ['Family Rooms', 'Kid-friendly Meals', 'Transportation', 'Activities'],
-      'highlights': ['Zoo Visit', 'Beach Games', 'Cultural Shows'],
+      'difficulty': 'Easy',
+      'groupSize': '2-20 people',
       'agency': 'Family Adventures Lanka',
       'agencyRating': 4.7,
       'agencyLogo': 'assets/images/family_adventures_logo.png',
+      'agencyEstablished': '2013',
+      'agencyTours': '500+ tours completed',
+      'description': 'Family-friendly tour with activities suitable for all ages and comfortable accommodations.',
+      'includes': ['Family Rooms', 'Kid-friendly Meals', 'Transportation', 'Activities', 'Child Care', 'Entertainment'],
+      'highlights': ['Zoo Visit', 'Beach Games', 'Cultural Shows', 'Water Parks', 'Educational Tours'],
+      'category': 'Family',
+      'isAvailable': true,
+    },
+    {
+      'id': 'package_009',
+      'title': 'Photography Expedition',
+      'subtitle': '8 Days • Sigiriya, Ella, Yala, Galle',
+      'price': 'LKR 42,000',
+      'originalPrice': 'LKR 50,000',
+      'rating': 4.7,
+      'reviews': 65,
+      'image': 'assets/images/photography.jpg',
+      'duration': '8 Days',
+      'icon': Icons.camera_alt,
+      'backgroundColor': const Color(0xFF8A2BE2),
+      'difficulty': 'Moderate',
+      'groupSize': '2-8 people',
+      'agency': 'Lens Lanka Photography Tours',
+      'agencyRating': 4.8,
+      'agencyLogo': 'assets/images/lens_lanka_logo.png',
+      'agencyEstablished': '2017',
+      'agencyTours': '150+ tours completed',
+      'description': 'Capture the essence of Sri Lanka through your lens with expert photography guidance.',
+      'includes': ['Photography Guide', 'Equipment Rental', 'Accommodation', 'Meals', 'Transport', 'Editing Workshop'],
+      'highlights': ['Golden Hour Shoots', 'Wildlife Photography', 'Landscape Shots', 'Cultural Portraits', 'Post-processing'],
+      'category': 'Photography',
+      'isAvailable': false,
+    },
+    {
+      'id': 'package_010',
+      'title': 'Ayurveda Wellness Retreat',
+      'subtitle': '10 Days • Bentota, Hikkaduwa',
+      'price': 'LKR 55,000',
+      'rating': 4.9,
+      'reviews': 43,
+      'image': 'assets/images/ayurveda.jpg',
+      'duration': '10 Days',
+      'icon': Icons.healing,
+      'backgroundColor': const Color(0xFF228B22),
+      'difficulty': 'Easy',
+      'groupSize': '1-6 people',
+      'agency': 'Wellness Sri Lanka',
+      'agencyRating': 4.9,
+      'agencyLogo': 'assets/images/wellness_lanka_logo.png',
+      'agencyEstablished': '2009',
+      'agencyTours': '800+ treatments completed',
+      'description': 'Rejuvenate your mind, body, and soul with authentic Ayurvedic treatments and wellness practices.',
+      'includes': ['Ayurveda Resort', 'Consultation', 'Treatments', 'Herbal Meals', 'Yoga Sessions', 'Meditation'],
+      'highlights': ['Panchakarma', 'Herbal Baths', 'Yoga Classes', 'Meditation', 'Organic Meals'],
+      'category': 'Wellness',
+      'isAvailable': true,
     },
   ];
+
+  void _navigateToPackageDetails(String packageId) {
+    context.push('/marketplace/tour_packages/details/$packageId');
+  }
+
+  void _bookPackage(String packageId) {
+    context.push('/marketplace/book_package/$packageId');
+  }
 
   Widget _buildPackageCard(Map<String, dynamic> package) {
     return GestureDetector(
       onTap: () {
-        // Navigate to tour package details page
-        context.push('/marketplace/tour_packages/details', extra: package);
+        _navigateToPackageDetails(package['id']);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
@@ -272,10 +360,33 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                         ),
                       ),
                     ),
+                    // Category Badge
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _getCategoryColor(package['category']),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          package['category'],
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
                     // Discount Badge
                     if (package['originalPrice'] != null)
                       Positioned(
-                        top: 12,
+                        bottom: 12,
                         left: 12,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -296,6 +407,30 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                           ),
                         ),
                       ),
+                    // Availability Status
+                    if (!package['isAvailable'])
+                      Positioned(
+                        bottom: 12,
+                        right: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            'Temporarily Unavailable',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -306,13 +441,24 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    package['title'],
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          package['title'],
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        package['isAvailable'] ? Icons.check_circle : Icons.schedule,
+                        color: package['isAvailable'] ? Colors.green : Colors.orange,
+                        size: 20,
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -397,18 +543,6 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                   ),
                   const SizedBox(height: 8),
 
-                  Text(
-                    package['description'],
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.black87,
-                      height: 1.4,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 12),
-
                   // Rating and Reviews
                   Row(
                     children: [
@@ -433,83 +567,11 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                           fontSize: 12,
                           color: Colors.grey,
                         ),
-                      ),
+                      )
                     ],
                   ),
-                  const SizedBox(height: 12),
-
-                  // Highlights
-                  const Text(
-                    'Highlights:',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: package['highlights'].map<Widget>((highlight) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          highlight,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.orange.shade700,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Includes
-                  const Text(
-                    'Includes:',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: package['includes'].map<Widget>((include) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.green.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          include,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.green.shade700,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 16),
-
+                  const SizedBox(height: 8),
+                  
                   // Price and Book Now
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -529,9 +591,9 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                           Text(
                             package['price'],
                             style: const TextStyle(
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF0088cc),
+                              color: Colors.black,
                             ),
                           ),
                           const Text(
@@ -544,22 +606,19 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                         ],
                       ),
                       ElevatedButton(
-                        onPressed: () {
-                          // Navigate to book package page - prevent event bubbling
-                          context.push('/marketplace/book_package', extra: package);
-                        },
+                        onPressed: package['isAvailable'] ? () {
+                          _navigateToPackageDetails(package['id']);
+                        } : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0088cc),
+                          backgroundColor: package['isAvailable'] 
+                              ? const Color(0xFF0088cc) 
+                              : Colors.grey,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const Text('Book Now'),
+                        child: Text(package['isAvailable'] ? 'View Details' : 'Unavailable'),
                       ),
                     ],
                   ),
@@ -572,15 +631,149 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
     );
   }
 
+  Widget _buildIconWithBadge({
+    required IconData icon,
+    required int count,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(5),
+        margin: const EdgeInsets.only(right: 2),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Icon(icon, size: 28, color: Colors.black87),
+            if (count > 0)
+              Positioned(
+                right: -8,
+                top: -8,
+                child: Container(
+                  constraints: const BoxConstraints(
+                    minWidth: 20,
+                    minHeight: 20,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(
+                    child: Text(
+                      count > 99 ? '99+' : count.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        height: 1.0,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getCategoryColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'cultural':
+        return Colors.brown;
+      case 'adventure':
+        return Colors.green;
+      case 'beach':
+        return Colors.teal;
+      case 'wildlife':
+        return Colors.orange;
+      case 'spiritual':
+        return Colors.purple;
+      case 'romance':
+        return Colors.pink;
+      case 'family':
+        return Colors.blue;
+      case 'photography':
+        return Colors.indigo;
+      case 'wellness':
+        return Colors.lightGreen;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Color _getDifficultyColor(String difficulty) {
+    switch (difficulty.toLowerCase()) {
+      case 'easy':
+        return Colors.green;
+      case 'moderate':
+        return Colors.orange;
+      case 'challenging':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final displayedPackages = allTourPackages;
+
+    // Count variables - replace with your actual state variables
+    int orderCount = 3; // Number of pending orders
+    int chatCount = 7; // Number of unread messages
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: JourneyQAppBar(
-        searchController: searchController,
-        searchHint: 'Search tour packages...',
-        selectedLocation: selectedLocation,
-        sriLankanCities: sriLankanCities,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        foregroundColor: Colors.black87,
+        elevation: 0,
+        titleSpacing: 20,
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.arrow_back, color: Colors.black87, size: 24),
+        ),
+        title: const Text(
+          'Marketplace',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        actions: [
+          // Booking Orders Icon with Badge
+          _buildIconWithBadge(
+            icon: LucideIcons.clipboardList,
+            count: orderCount,
+            onTap: () => context.push('/booking_history'),
+          ),
+
+          const SizedBox(width: 10),
+
+          // Chat Icon with Badge
+          _buildIconWithBadge(
+            icon: LucideIcons.messageCircle,
+            count: chatCount,
+            onTap: () => context.push('/market_chat'),
+          ),
+
+          const SizedBox(width: 16),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -588,68 +781,78 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      // Use GoRouter to navigate back to marketplace
-                      context.go('/marketplace');
-                    },
-                    icon: const Icon(Icons.arrow_back),
-                  ),
-                  const Text(
-                    'All Tour Packages',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
+              // Search Bar
+              SimpleSearchBar(
+                onSearchTap: () {
+                  context.push('/marketplace/search');
+                },
+                placeholder: 'Search tour packages, agencies...',
               ),
-              const SizedBox(height: 20),
+              
+              const SizedBox(height: 24),
 
-              // Filter/Sort Options
+              // Tour Packages Section Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '${allTourPackages.length} packages found',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
+                    'All Tour Packages (${displayedPackages.length})',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
-                  ),
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          // Handle filter
-                        },
-                        icon: const Icon(Icons.filter_list),
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          // Handle sort
-                        },
-                        icon: const Icon(Icons.sort),
-                      ),
-                    ],
-                  ),
+                  )
                 ],
               ),
+              
               const SizedBox(height: 16),
 
-              // Packages List
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: allTourPackages.length,
-                itemBuilder: (context, index) {
-                  return _buildPackageCard(allTourPackages[index]);
-                },
-              ),
+              // Tour Packages List
+              if (displayedPackages.isEmpty)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(40),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No tour packages found',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Try adjusting your search criteria',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: displayedPackages.length,
+                  itemBuilder: (context, index) {
+                    return _buildPackageCard(displayedPackages[index]);
+                  },
+                ),
+                
+              // Add some bottom padding for better scrolling
+              const SizedBox(height: 80),
             ],
           ),
         ),
@@ -659,7 +862,6 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
 
   @override
   void dispose() {
-    searchController.dispose();
     super.dispose();
   }
 }

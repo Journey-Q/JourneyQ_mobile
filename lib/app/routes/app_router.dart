@@ -23,7 +23,7 @@ import 'package:journeyq/features/profile/pages/EditProfilePage.dart';
 import 'package:journeyq/features/profile/pages/PostDetailPage.dart';
 import 'package:journeyq/features/profile/pages/BucketListPage.dart';
 import 'package:journeyq/features/home/user_profile_page.dart';
-// ADD THESE NEW IMPORTS
+// ADD THESE NEW IMPOR
 import 'package:journeyq/features/profile/pages/FollowersFollowingPage.dart';
 import 'package:journeyq/features/profile/pages/PaymentPage.dart';
 import 'package:journeyq/app/app.dart';
@@ -33,6 +33,10 @@ import 'package:journeyq/features/chat/pages/indexpage.dart';
 import 'package:journeyq/features/chat/pages/chatpage.dart';
 import 'package:journeyq/features/journey_view/pages/journey_detail.dart';
 import 'package:journeyq/features/Trip_planner/pages/index.dart';
+import 'package:journeyq/features/market_place/search_page.dart';
+import 'package:journeyq/features/market_place/pages/market_chat.dart';
+import 'package:journeyq/features/market_place/pages/BookingHistoryPage.dart';
+import 'package:journeyq/features/market_place/pages/chat_details.dart';
 
 class AppRouter {
   static GoRouter createRouter(AuthProvider authProvider) {
@@ -98,19 +102,19 @@ class AppRouter {
             currentRoute: '/marketplace',
             child: const ViewAllHotelsPage(),
           ),
-          transitionType: PageTransitionType.none,
+          transitionType: PageTransitionType.slide,
         ),
 
         TransitionGoRoute(
-          path: '/marketplace/hotels/details',
+          path: '/marketplace/hotels/details/:hotelId',
           builder: (context, state) {
-            final extra = state.extra as Map<String, dynamic>?;
+            final hotelId = state.pathParameters['hotelId']!;
             return AppWrapper(
               currentRoute: '/marketplace',
-              child: HotelDetailsPage(hotel: extra),
+              child: HotelDetailsPage(hotelId: hotelId),
             );
           },
-          transitionType: PageTransitionType.none,
+          transitionType: PageTransitionType.slide,
         ),
 
         TransitionGoRoute(
@@ -139,26 +143,18 @@ class AppRouter {
             currentRoute: '/marketplace',
             child: const ViewAllTourPackagesPage(),
           ),
-          transitionType: PageTransitionType.none,
+          transitionType: PageTransitionType.slide,
         ),
-
         TransitionGoRoute(
-          path: '/marketplace/tour_packages/details',
+          path: '/marketplace/tour_packages/details/:packageId',
           builder: (context, state) {
-            final extra = state.extra as Map<String, dynamic>?;
-            if (extra == null) {
-              // If no package data provided, redirect to tour packages
-              return AppWrapper(
-                currentRoute: '/marketplace',
-                child: const ViewAllTourPackagesPage(),
-              );
-            }
+            final packageId = state.pathParameters['packageId']!;
             return AppWrapper(
               currentRoute: '/marketplace',
-              child: TourPackageDetailsPage(package: extra),
+              child: TourPackageDetailsPage(packageId: packageId),
             );
           },
-          transitionType: PageTransitionType.none,
+          transitionType: PageTransitionType.slide,
         ),
 
         TransitionGoRoute(
@@ -167,55 +163,50 @@ class AppRouter {
             currentRoute: '/marketplace',
             child: const ViewAllTravelAgenciesPage(),
           ),
-          transitionType: PageTransitionType.none,
+          transitionType: PageTransitionType.slide,
         ),
 
         TransitionGoRoute(
-          path: '/marketplace/travel_agencies/details',
+          path: '/marketplace/travel_agencies/details/:agencyId',
           builder: (context, state) {
-            final extra = state.extra as Map<String, dynamic>?;
-            if (extra == null) {
-              // If no agency data provided, redirect to travel agencies
-              return AppWrapper(
-                currentRoute: '/marketplace',
-                child: const ViewAllTravelAgenciesPage(),
-              );
-            }
-            return TravelAgencyDetailsPage(agency: extra);
+            final agencyId = state.pathParameters['agencyId']!;
+            return AppWrapper(
+              currentRoute: '/marketplace',
+              child: TravelAgencyDetailsPage(agencyId: agencyId),
+            );
           },
-          transitionType: PageTransitionType.none,
+          transitionType: PageTransitionType.slide,
         ),
-
         // Contact Travel Agency Route (without AppWrapper as it's a full-screen contact flow)
         TransitionGoRoute(
-          path: '/marketplace/travel_agencies/contact',
+          path: '/marketplace/travel_agencies/contact/:agencyId',
           builder: (context, state) {
-            final extra = state.extra as Map<String, dynamic>?;
-            if (extra == null) {
-              // If no agency data provided, redirect to travel agencies
+            final agencyId = state.pathParameters['agencyId'];
+            if (agencyId == null) {
+              // If no agency ID provided, redirect to travel agencies
               return AppWrapper(
                 currentRoute: '/marketplace',
                 child: const ViewAllTravelAgenciesPage(),
               );
             }
-            return ContactTravelAgencyPage(agency: extra);
+            return ContactTravelAgencyPage(agencyId: agencyId);
           },
           transitionType: PageTransitionType.none,
         ),
 
         // Book Package Route (without AppWrapper as it's a full-screen booking flow)
         TransitionGoRoute(
-          path: '/marketplace/book_package',
+          path: '/marketplace/book_package/:packageId',
           builder: (context, state) {
-            final extra = state.extra as Map<String, dynamic>?;
-            if (extra == null) {
-              // If no package data provided, redirect to marketplace
+            final packageId = state.pathParameters['packageId'];
+            if (packageId == null) {
+              // If no package ID provided, redirect to tour packages
               return AppWrapper(
                 currentRoute: '/marketplace',
-                child: MarketplacePage(),
+                child: const ViewAllTourPackagesPage(),
               );
             }
-            return BookPackagePage(package: extra);
+            return BookPackagePage(packageId: packageId);
           },
           transitionType: PageTransitionType.none,
         ),
@@ -245,6 +236,35 @@ class AppRouter {
         TransitionGoRoute(
           path: '/profile/settings',
           builder: (context, state) => const SettingsPage(),
+          transitionType: PageTransitionType.slide,
+        ),
+
+        TransitionGoRoute(
+          path: '/market_chat',
+          builder: (context, state) => const MarketplaceChatPage(),
+          transitionType: PageTransitionType.slide,
+        ),
+
+        TransitionGoRoute(
+          path: '/market_chat/details/:chatId',
+          builder: (context, state) {
+            final chatId = state.pathParameters['chatId']!;
+            final name = state.uri.queryParameters['name'] ?? 'Unknown';
+            final serviceType =
+                state.uri.queryParameters['serviceType'] ?? 'Service';
+
+            return ChatDetailsPage(
+              chatId: chatId,
+              name: name,
+              serviceType: serviceType,
+            );
+          },
+          transitionType: PageTransitionType.slide,
+        ),
+
+        TransitionGoRoute(
+          path: '/booking_history',
+          builder: (context, state) => const BookingHistoryPage(),
           transitionType: PageTransitionType.slide,
         ),
 
@@ -357,7 +377,7 @@ class AppRouter {
 
         TransitionGoRoute(
           path: '/planner',
-          builder: (context, state) => const  TripPlannerPage(),
+          builder: (context, state) => const TripPlannerPage(),
           transitionType: PageTransitionType.slide,
         ),
 
@@ -367,6 +387,12 @@ class AppRouter {
             final journeyId = state.pathParameters['journeyId']!;
             return JourneyDetailsPage(journeyId: journeyId);
           },
+          transitionType: PageTransitionType.slide,
+        ),
+
+        TransitionGoRoute(
+          path: '/marketplace/search',
+          builder: (context, state) => const Market_SearchPage(),
           transitionType: PageTransitionType.slide,
         ),
 

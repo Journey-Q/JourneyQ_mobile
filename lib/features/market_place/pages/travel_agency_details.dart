@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class TravelAgencyDetailsPage extends StatefulWidget {
-  final Map<String, dynamic> agency;
+  final String agencyId;
 
   const TravelAgencyDetailsPage({
     Key? key,
-    required this.agency,
+    required this.agencyId,
   }) : super(key: key);
 
   @override
@@ -16,178 +16,316 @@ class TravelAgencyDetailsPage extends StatefulWidget {
 }
 
 class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
-  late Map<String, dynamic> enhancedAgency;
+  late Map<String, dynamic> agencyData;
+  bool isLoading = true;
+  bool hasError = false;
 
   @override
   void initState() {
     super.initState();
-    enhancedAgency = _enhanceAgencyData(widget.agency);
+    _loadAgencyData();
   }
 
-  Map<String, dynamic> _enhanceAgencyData(Map<String, dynamic> basicAgency) {
-    // Create enhanced agency data with defaults for missing fields
-    Map<String, dynamic> enhanced = Map.from(basicAgency);
+  void _loadAgencyData() {
+    try {
+      // Get agency data by ID
+      final agency = _getAgencyById(widget.agencyId);
+      if (agency != null) {
+        agencyData = agency;
+        setState(() {
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          hasError = true;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        hasError = true;
+        isLoading = false;
+      });
 
-    // Add missing basic fields with defaults
-    enhanced.putIfAbsent('id', () => basicAgency['name']?.toLowerCase()?.replaceAll(' ', '_') ?? 'agency');
-    enhanced.putIfAbsent('location', () => 'Colombo, Sri Lanka');
-    enhanced.putIfAbsent('contact', () => '+94 11 000 0000');
-    enhanced.putIfAbsent('email', () => 'info@${enhanced['id']}.lk');
-    enhanced.putIfAbsent('description', () => 'Welcome to ${basicAgency['name'] ?? 'our travel agency'}! We have been serving customers with ${basicAgency['experience'] ?? 'years of experience'}. Our professional team is dedicated to providing you with the best travel experience in Sri Lanka.');
-
-    // Add vehicles with AC/Non-AC pricing
-    enhanced.putIfAbsent('vehicles', () => _getVehiclesWithACPricing());
-
-    // Add drivers with contact numbers
-    enhanced.putIfAbsent('drivers', () => _getDriversWithContact(basicAgency['name']));
-
-    // Convert experience to "Since YYYY" format
-    enhanced['since'] = _convertExperienceToSince(basicAgency['experience']);
-
-    return enhanced;
-  }
-
-  String _convertExperienceToSince(String? experience) {
-    if (experience == null) return 'Since 2015';
-
-    // Extract years from experience string (e.g., "15+ Years" -> 15)
-    RegExp regex = RegExp(r'(\d+)');
-    Match? match = regex.firstMatch(experience);
-
-    if (match != null) {
-      int years = int.parse(match.group(1)!);
-      int currentYear = DateTime.now().year;
-      int sinceYear = currentYear - years;
-      return 'Since $sinceYear';
-    }
-
-    return 'Since 2015'; // Default fallback
-  }
-
-  List<Map<String, dynamic>> _getVehiclesWithACPricing() {
-    // Check if vehicles already exist in the agency data
-    if (widget.agency.containsKey('vehicles') && widget.agency['vehicles'] != null) {
-      List<Map<String, dynamic>> existingVehicles = List<Map<String, dynamic>>.from(widget.agency['vehicles']);
-      // Enhance existing vehicles with additional data
-      return existingVehicles.map((vehicle) {
-        Map<String, dynamic> enhanced = Map.from(vehicle);
-
-        // Add AC/Non-AC pricing based on vehicle type and existing price
-        int basePrice = enhanced['pricePerKm'] ?? _getBasePriceByType(enhanced['type']);
-        enhanced['acPricePerKm'] = basePrice;
-        enhanced['nonAcPricePerKm'] = (basePrice * 0.8).round(); // Non-AC is 20% cheaper
-
-        // Add seats based on vehicle type
-        enhanced['seats'] = _getSeatsByType(enhanced['type']);
-
-        // Add type-specific features
-        enhanced['features'] = _getFeaturesByType(enhanced['type']);
-
-        return enhanced;
-      }).toList();
-    }
-
-    // Default vehicles if none exist
-    return [
-      {
-        'type': 'Car',
-        'seats': 4,
-        'acPricePerKm': 50,
-        'nonAcPricePerKm': 40,
-        'features': ['Air conditioning', 'Comfortable leather seats', 'GPS navigation', 'Bluetooth music system', 'Phone charging port'],
-      },
-      {
-        'type': 'Van',
-        'seats': 8,
-        'acPricePerKm': 70,
-        'nonAcPricePerKm': 55,
-        'features': ['Climate control AC', 'Spacious 8-seater interior', 'Large luggage compartment', 'Panoramic windows', 'Individual reading lights'],
-      },
-      {
-        'type': 'Bus',
-        'seats': 25,
-        'acPricePerKm': 90,
-        'nonAcPricePerKm': 75,
-        'features': ['Central air conditioning', 'Reclining passenger seats', 'Entertainment system with TV', 'WiFi connectivity', 'Onboard washroom'],
-      },
-    ];
-  }
-
-  int _getBasePriceByType(String? type) {
-    switch (type?.toLowerCase()) {
-      case 'car':
-        return 50;
-      case 'van':
-        return 70;
-      case 'bus':
-      case 'mini bus':
-        return 90;
-      default:
-        return 50;
     }
   }
 
-  int _getSeatsByType(String? type) {
-    switch (type?.toLowerCase()) {
-      case 'car':
-        return 4;
-      case 'van':
-        return 8;
-      case 'bus':
-        return 25;
-      case 'mini bus':
-        return 15;
-      default:
-        return 4;
+  // Comprehensive travel agency database with all details
+  static final List<Map<String, dynamic>> _agencyDatabase = [
+    {
+      'id': 'agency_001',
+      'name': 'Ceylon Roots',
+      'rating': 4.9,
+      'experience': 'since 2010',
+      'location': 'Colombo 03, Sri Lanka',
+      'contact': '+94 11 234 5678',
+      'email': 'info@ceylonroots.lk',
+      'image': 'assets/images/ceylon_roots.jpg',
+      'backgroundColor': const Color(0xFF8B4513),
+      'description': 'Welcome to Ceylon Roots! We have been serving customers with 15+ years of experience in the travel industry. Our professional team is dedicated to providing you with authentic Sri Lankan travel experiences, from cultural tours to adventure expeditions. We pride ourselves on personalized service and deep local knowledge.',
+      'vehicles': [
+        {
+          'type': 'Car',
+          'seats': 4,
+          'acPricePerKm': 55,
+          'nonAcPricePerKm': 45,
+          'features': ['Premium AC', 'Leather seats', 'GPS navigation', 'Bluetooth system', 'Phone charging', 'Complimentary water'],
+        },
+        {
+          'type': 'Van',
+          'seats': 8,
+          'acPricePerKm': 75,
+          'nonAcPricePerKm': 60,
+          'features': ['Climate control AC', 'Spacious 8-seater', 'Large luggage space', 'Panoramic windows', 'Individual lights', 'USB charging ports'],
+        },
+        {
+          'type': 'Mini Bus',
+          'seats': 15,
+          'acPricePerKm': 95,
+          'nonAcPricePerKm': 80,
+          'features': ['Central AC', 'Comfortable seating', 'Entertainment system', 'WiFi connectivity', 'Luggage compartment', 'First aid kit'],
+        },
+      ],
+      'drivers': [
+        {
+          'name': 'Kumara Perera',
+          'experience': '12 years',
+          'languages': ['English', 'Sinhala', 'Tamil', 'German'],
+          'contact': '+94 77 123 4567',
+          'specialization': 'Cultural & Heritage Tours',
+        },
+        {
+          'name': 'Nimal Silva',
+          'experience': '10 years',
+          'languages': ['English', 'Sinhala', 'French'],
+          'contact': '+94 76 234 5678',
+          'specialization': 'Adventure & Wildlife Tours',
+        },
+        {
+          'name': 'Rohan Fernando',
+          'experience': '8 years',
+          'languages': ['English', 'Sinhala', 'Japanese'],
+          'contact': '+94 75 345 6789',
+          'specialization': 'Beach & Coastal Tours',
+        },
+      ],
+    },
+    {
+      'id': 'agency_002',
+      'name': 'Jetwing Travels',
+      'rating': 4.8,
+      'experience': 'since 2005',
+      'location': 'Colombo 01, Sri Lanka',
+      'contact': '+94 11 345 6789',
+      'email': 'reservations@jetwing.lk',
+      'image': 'assets/images/jetwing.jpg',
+      'backgroundColor': const Color(0xFF228B22),
+      'description': 'Jetwing Travels has been a pioneer in Sri Lankan tourism for over 20 years. We offer comprehensive travel solutions with a focus on sustainable tourism and authentic experiences. Our extensive fleet and experienced team ensure memorable journeys across the beautiful island of Sri Lanka.',
+      'vehicles': [
+        {
+          'type': 'Luxury Car',
+          'seats': 4,
+          'acPricePerKm': 65,
+          'nonAcPricePerKm': 50,
+          'features': ['Premium leather', 'Advanced AC', 'GPS & maps', 'Premium audio', 'Wireless charging', 'Refreshments'],
+        },
+        {
+          'type': 'Premium Van',
+          'seats': 8,
+          'acPricePerKm': 85,
+          'nonAcPricePerKm': 70,
+          'features': ['Luxury interior', 'Captain seats', 'Individual AC', 'Entertainment screens', 'Refrigerator', 'WiFi hotspot'],
+        },
+        {
+          'type': 'Coach Bus',
+          'seats': 25,
+          'acPricePerKm': 110,
+          'nonAcPricePerKm': 90,
+          'features': ['Central AC', 'Reclining seats', 'Entertainment system', 'WiFi', 'Onboard washroom', 'Safety equipment'],
+        },
+      ],
+      'drivers': [
+        {
+          'name': 'Prasad Wickramasinghe',
+          'experience': '15 years',
+          'languages': ['English', 'Sinhala', 'Tamil', 'Italian'],
+          'contact': '+94 77 456 7890',
+          'specialization': 'Luxury & Premium Tours',
+        },
+        {
+          'name': 'Chaminda Rathnayake',
+          'experience': '12 years',
+          'languages': ['English', 'Sinhala', 'Spanish'],
+          'contact': '+94 76 567 8901',
+          'specialization': 'Group & Corporate Tours',
+        },
+      ],
+    },
+    {
+      'id': 'agency_003',
+      'name': 'Aitken Spence',
+      'rating': 4.7,
+      'experience': 'since 2015',
+      'location': 'Colombo 02, Sri Lanka',
+      'contact': '+94 11 456 7890',
+      'email': 'travel@aitkenspence.lk',
+      'image': 'assets/images/aitken_spence.jpg',
+      'backgroundColor': const Color(0xFF20B2AA),
+      'description': 'Aitken Spence Travels is one of Sri Lanka\'s most established travel companies with 25+ years of excellence. We provide comprehensive travel services including transportation, accommodation, and guided tours. Our commitment to quality and customer satisfaction has made us a trusted name in Sri Lankan tourism.',
+      'vehicles': [
+        {
+          'type': 'Standard Car',
+          'seats': 4,
+          'acPricePerKm': 50,
+          'nonAcPricePerKm': 40,
+          'features': ['AC system', 'Comfortable seats', 'GPS navigation', 'Music system', 'Phone charging', 'Water bottles'],
+        },
+        {
+          'type': 'Family Van',
+          'seats': 8,
+          'acPricePerKm': 70,
+          'nonAcPricePerKm': 55,
+          'features': ['Family friendly', 'Spacious interior', 'Large windows', 'Safety features', 'Storage space', 'Reading lights'],
+        },
+        {
+          'type': 'Tour Bus',
+          'seats': 20,
+          'acPricePerKm': 90,
+          'nonAcPricePerKm': 75,
+          'features': ['Tour guide system', 'Comfortable seating', 'Large windows', 'AC system', 'Storage areas', 'Emergency equipment'],
+        },
+      ],
+      'drivers': [
+        {
+          'name': 'Sunil Mendis',
+          'experience': '18 years',
+          'languages': ['English', 'Sinhala', 'Tamil', 'Dutch'],
+          'contact': '+94 77 678 9012',
+          'specialization': 'Historical & Cultural Tours',
+        },
+        {
+          'name': 'Ranjith Perera',
+          'experience': '14 years',
+          'languages': ['English', 'Sinhala', 'Hindi'],
+          'contact': '+94 76 789 0123',
+          'specialization': 'Family & Leisure Tours',
+        },
+      ],
+    },
+    {
+      'id': 'agency_004',
+      'name': 'Walkers Tours',
+      'rating': 4.6,
+      'experience': 'since 2013',
+      'location': 'Colombo 05, Sri Lanka',
+      'contact': '+94 11 567 8901',
+      'email': 'info@walkerstours.com',
+      'image': 'assets/images/walkers.jpg',
+      'backgroundColor': const Color(0xFF8FBC8F),
+      'description': 'Walkers Tours is the oldest travel company in Sri Lanka with 30+ years of unmatched experience. We have been crafting memorable travel experiences for generations of travelers. Our extensive knowledge of Sri Lankan destinations and culture ensures authentic and enriching journeys.',
+      'vehicles': [
+        {
+          'type': 'Classic Car',
+          'seats': 4,
+          'acPricePerKm': 48,
+          'nonAcPricePerKm': 38,
+          'features': ['Reliable AC', 'Comfortable ride', 'Local music', 'Basic amenities', 'Safe driving', 'Courteous service'],
+        },
+        {
+          'type': 'Tourist Van',
+          'seats': 10,
+          'acPricePerKm': 68,
+          'nonAcPricePerKm': 54,
+          'features': ['Tourist friendly', 'Multiple windows', 'Spacious design', 'Cultural music', 'Local guides', 'Photo stops'],
+        },
+      ],
+      'drivers': [
+        {
+          'name': 'Bandula Jayasinghe',
+          'experience': '20 years',
+          'languages': ['English', 'Sinhala', 'Tamil', 'Russian'],
+          'contact': '+94 77 890 1234',
+          'specialization': 'Scenic & Nature Tours',
+        },
+        {
+          'name': 'Sarath Gunasekara',
+          'experience': '16 years',
+          'languages': ['English', 'Sinhala', 'Chinese'],
+          'contact': '+94 76 901 2345',
+          'specialization': 'Religious & Pilgrimage Tours',
+        },
+      ],
+    },
+    {
+      'id': 'agency_005',
+      'name': 'Red Dot Tours',
+      'rating': 4.5,
+     'experience': 'since 2014',
+      'location': 'Colombo 06, Sri Lanka',
+      'contact': '+94 11 678 9012',
+      'email': 'bookings@reddottours.lk',
+      'image': 'assets/images/red_dot.jpeg',
+      'backgroundColor': const Color(0xFF9370DB),
+      'description': 'Red Dot Tours is a modern travel agency with 12+ years of innovative service. We specialize in adventure tourism and off-the-beaten-path experiences. Our young and energetic team brings fresh perspectives to Sri Lankan tourism, creating unique and exciting travel adventures.',
+      'vehicles': [
+        {
+          'type': 'Adventure Car',
+          'seats': 4,
+          'acPricePerKm': 52,
+          'nonAcPricePerKm': 42,
+          'features': ['Rugged design', 'Adventure ready', 'GPS tracking', 'Emergency kit', 'Action camera mounts', 'Outdoor gear storage'],
+        },
+        {
+          'type': 'Adventure Van',
+          'seats': 6,
+          'acPricePerKm': 72,
+          'nonAcPricePerKm': 58,
+          'features': ['Off-road capable', 'Equipment storage', 'Safety gear', 'Communication system', 'First aid', 'Adventure guides'],
+        },
+        {
+          'type': 'Group Bus',
+          'seats': 18,
+          'acPricePerKm': 88,
+          'nonAcPricePerKm': 72,
+          'features': ['Group friendly', 'Activity planning', 'Safety briefing area', 'Equipment space', 'Team building setup', 'Adventure maps'],
+        },
+      ],
+      'drivers': [
+        {
+          'name': 'Dilshan Wijeratne',
+          'experience': '8 years',
+          'languages': ['English', 'Sinhala', 'Korean'],
+          'contact': '+94 77 012 3456',
+          'specialization': 'Adventure & Extreme Sports',
+        },
+        {
+          'name': 'Kasun Liyanage',
+          'experience': '6 years',
+          'languages': ['English', 'Sinhala', 'Arabic'],
+          'contact': '+94 76 123 4567',
+          'specialization': 'Youth & Backpacker Tours',
+        },
+      ],
+    },
+  ];
+
+  // Method to get agency by ID
+  Map<String, dynamic>? _getAgencyById(String id) {
+    try {
+      return _agencyDatabase.firstWhere((agency) => agency['id'] == id);
+    } catch (e) {
+      return null;
     }
-  }
-
-  List<String> _getFeaturesByType(String? type) {
-    switch (type?.toLowerCase()) {
-      case 'car':
-        return ['Air conditioning', 'Comfortable leather seats', 'GPS navigation', 'Bluetooth music system', 'Phone charging port'];
-      case 'van':
-        return ['Climate control AC', 'Spacious 8-seater interior', 'Large luggage compartment', 'Panoramic windows', 'Individual reading lights'];
-      case 'bus':
-      case 'mini bus':
-        return ['Central air conditioning', 'Reclining passenger seats', 'Entertainment system with TV', 'WiFi connectivity', 'Onboard washroom'];
-      default:
-        return ['Air conditioning', 'Comfortable seating', 'Professional driver', 'Music system'];
-    }
-  }
-
-  List<Map<String, dynamic>> _getDriversWithContact(String? agencyName) {
-    List<String> firstNames = ['Kumara', 'Nimal', 'Rohan', 'Prasad', 'Chaminda', 'Sunil'];
-    List<String> lastNames = ['Perera', 'Silva', 'Fernando', 'Wickramasinghe', 'Rathnayake', 'Mendis'];
-    List<String> contactNumbers = ['+94 77 123 4567', '+94 76 234 5678', '+94 75 345 6789', '+94 78 456 7890'];
-
-    int nameIndex = agencyName?.length?.remainder(firstNames.length) ?? 0;
-    int contactIndex = agencyName?.length?.remainder(contactNumbers.length) ?? 0;
-
-    return [
-      {
-        'name': '${firstNames[nameIndex]} ${lastNames[nameIndex]}',
-        'experience': '${8 + (agencyName?.length?.remainder(10) ?? 0)} years',
-        'languages': ['English', 'Sinhala', 'Tamil'],
-        'contact': contactNumbers[contactIndex],
-      },
-      {
-        'name': '${firstNames[(nameIndex + 1) % firstNames.length]} ${lastNames[(nameIndex + 1) % lastNames.length]}',
-        'experience': '${6 + (agencyName?.length?.remainder(8) ?? 0)} years',
-        'languages': ['English', 'Sinhala'],
-        'contact': contactNumbers[(contactIndex + 1) % contactNumbers.length],
-      },
-    ];
   }
 
   void _contactAgency() {
-    context.push('/marketplace/travel_agencies/contact', extra: enhancedAgency);
+    context.push('/marketplace/travel_agencies/contact/${widget.agencyId}');
   }
 
   Widget _buildVehicleCard(Map<String, dynamic> vehicle, int index) {
     return Padding(
       padding: EdgeInsets.only(
-        bottom: index == (enhancedAgency['vehicles'] as List).length - 1 ? 0 : 16,
+        bottom: index == (agencyData['vehicles'] as List).length - 1 ? 0 : 16,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,7 +360,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${vehicle['seats'] ?? _getSeatsByType(vehicle['type'])} seats',
+                        '${vehicle['seats']} seats',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade600,
@@ -271,7 +409,8 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'LKR ${((vehicle['acPricePerKm'] ?? vehicle['pricePerKm'] ?? 50) * 50).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} per 50km',
+                        'LKR ${((vehicle['acPricePerKm'] ?? 50) * 1).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} per 1km',
+
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -315,7 +454,8 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'LKR ${((vehicle['nonAcPricePerKm'] ?? ((vehicle['pricePerKm'] ?? 50) * 0.8).round()) * 50).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} per 50km',
+                        'LKR ${((vehicle['nonAcPricePerKm'] ?? 40) * 1).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} per 1km',
+
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -342,7 +482,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
           ),
           const SizedBox(height: 4),
           Text(
-            _getDisplayFeatures(vehicle),
+            (vehicle['features'] as List<String>).join(' • '),
             style: TextStyle(
               fontSize: 13,
               color: Colors.grey.shade700,
@@ -351,7 +491,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
           ),
 
           // Divider line between vehicles
-          if (index < (enhancedAgency['vehicles'] as List).length - 1)
+          if (index < (agencyData['vehicles'] as List).length - 1)
             Padding(
               padding: const EdgeInsets.only(top: 12),
               child: Divider(
@@ -362,22 +502,6 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
         ],
       ),
     );
-  }
-
-  String _getDisplayFeatures(Map<String, dynamic> vehicle) {
-    String vehicleType = (vehicle['type'] ?? 'Car').toLowerCase();
-
-    // Define specific short features for each vehicle type
-    Map<String, List<String>> typeFeatures = {
-      'car': ['AC', 'GPS', 'Bluetooth', 'USB Charging', 'Leather Seats'],
-      'van': ['Climate Control', '8-Seater', 'Large Storage', 'Panoramic View', 'Reading Lights'],
-      'bus': ['Central AC', 'Reclining Seats', 'Entertainment', 'WiFi', 'Washroom'],
-    };
-
-    // Get features based on vehicle type
-    List<String> features = typeFeatures[vehicleType] ?? typeFeatures['car']!;
-
-    return features.join(' • ');
   }
 
   Widget _buildDriverCard(Map<String, dynamic> driver) {
@@ -430,6 +554,15 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                         color: Colors.grey.shade600,
                       ),
                     ),
+                    if (driver['specialization'] != null)
+                      Text(
+                        'Specializes in: ${driver['specialization']}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue.shade600,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -440,11 +573,13 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
             children: [
               const Icon(Icons.language, size: 16, color: Colors.grey),
               const SizedBox(width: 4),
-              Text(
-                'Languages: ${(driver['languages'] as List<dynamic>? ?? ['English', 'Sinhala']).join(', ')}',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
+              Expanded(
+                child: Text(
+                  'Languages: ${(driver['languages'] as List<dynamic>? ?? ['English', 'Sinhala']).join(', ')}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
                 ),
               ),
             ],
@@ -470,6 +605,64 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          leading: IconButton(
+            onPressed: () => context.pop(),
+            icon: const Icon(Icons.arrow_back),
+          ),
+          title: const Text('Loading...'),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (hasError) {
+      return Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          leading: IconButton(
+            onPressed: () => context.pop(),
+            icon: const Icon(Icons.arrow_back),
+          ),
+          title: const Text('Agency Not Found'),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.grey,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Travel Agency not found',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Agency ID: ${widget.agencyId}',
+                style: const TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => context.pop(),
+                child: const Text('Back to Travel Agencies'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: CustomScrollView(
@@ -481,8 +674,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
             backgroundColor: const Color(0xFF0088cc),
             leading: IconButton(
               onPressed: () {
-                // Use GoRouter to navigate back to marketplace
-                context.go('/marketplace');
+                context.pop();
               },
               icon: const Icon(Icons.arrow_back, color: Colors.white),
             ),
@@ -491,15 +683,15 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                 fit: StackFit.expand,
                 children: [
                   Image.asset(
-                    enhancedAgency['image'] ?? '',
+                    agencyData['image'] ?? '',
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              enhancedAgency['backgroundColor'] ?? Colors.blue,
-                              (enhancedAgency['backgroundColor'] ?? Colors.blue).withOpacity(0.8),
+                              agencyData['backgroundColor'] ?? Colors.blue,
+                              (agencyData['backgroundColor'] ?? Colors.blue).withOpacity(0.8),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -562,7 +754,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                           children: [
                             Expanded(
                               child: Text(
-                                enhancedAgency['name'] ?? 'Travel Agency',
+                                agencyData['name'] ?? 'Travel Agency',
                                 style: const TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
@@ -589,7 +781,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    (enhancedAgency['rating'] ?? 4.0).toString(),
+                                    (agencyData['rating'] ?? 4.0).toString(),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: Colors.orange,
@@ -607,9 +799,11 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                           children: [
                             const Icon(Icons.location_on, size: 18, color: Colors.grey),
                             const SizedBox(width: 8),
-                            Text(
-                              enhancedAgency['location'] ?? 'Colombo, Sri Lanka',
-                              style: const TextStyle(fontSize: 14, color: Colors.grey),
+                            Expanded(
+                              child: Text(
+                                agencyData['location'] ?? 'Colombo, Sri Lanka',
+                                style: const TextStyle(fontSize: 14, color: Colors.grey),
+                              ),
                             ),
                           ],
                         ),
@@ -619,7 +813,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                             const Icon(Icons.phone, size: 18, color: Colors.grey),
                             const SizedBox(width: 8),
                             Text(
-                              enhancedAgency['contact'] ?? '+94 11 000 0000',
+                              agencyData['contact'] ?? '+94 11 000 0000',
                               style: const TextStyle(fontSize: 14, color: Colors.grey),
                             ),
                           ],
@@ -629,9 +823,11 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                           children: [
                             const Icon(Icons.email, size: 18, color: Colors.grey),
                             const SizedBox(width: 8),
-                            Text(
-                              enhancedAgency['email'] ?? 'info@agency.lk',
-                              style: const TextStyle(fontSize: 14, color: Colors.grey),
+                            Expanded(
+                              child: Text(
+                                agencyData['email'] ?? 'info@agency.lk',
+                                style: const TextStyle(fontSize: 14, color: Colors.grey),
+                              ),
                             ),
                           ],
                         ),
@@ -641,7 +837,8 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                             const Icon(Icons.calendar_today, size: 18, color: Colors.grey),
                             const SizedBox(width: 8),
                             Text(
-                              enhancedAgency['since'] ?? 'Since 2015',
+                              agencyData['experience'] ?? 'Years of Experience',
+
                               style: const TextStyle(fontSize: 14, color: Colors.grey),
                             ),
                           ],
@@ -680,7 +877,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          enhancedAgency['description'] ?? 'Welcome to our travel agency!',
+                          agencyData['description'] ?? 'Welcome to our travel agency!',
                           style: const TextStyle(
                             fontSize: 16,
                             color: Colors.black54,
@@ -719,9 +916,9 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                             color: Colors.black87,
                           ),
                         ),
-                        const SizedBox(height: 8), // Reduced to match About Us
+                        const SizedBox(height: 8),
                         Column(
-                          children: (enhancedAgency['vehicles'] as List).asMap().entries.map((entry) {
+                          children: (agencyData['vehicles'] as List).asMap().entries.map((entry) {
                             int index = entry.key;
                             Map<String, dynamic> vehicle = entry.value;
                             return _buildVehicleCard(vehicle, index);
@@ -759,14 +956,14 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                             color: Colors.black87,
                           ),
                         ),
-                        const SizedBox(height: 8), // Reduced to match About Us
+                        const SizedBox(height: 8),
                         Column(
-                          children: (enhancedAgency['drivers'] as List).asMap().entries.map((entry) {
+                          children: (agencyData['drivers'] as List).asMap().entries.map((entry) {
                             int index = entry.key;
                             Map<String, dynamic> driver = entry.value;
                             return Padding(
                               padding: EdgeInsets.only(
-                                bottom: index == (enhancedAgency['drivers'] as List).length - 1 ? 0 : 12,
+                                bottom: index == (agencyData['drivers'] as List).length - 1 ? 0 : 12,
                               ),
                               child: _buildDriverCard(driver),
                             );
