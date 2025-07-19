@@ -5,6 +5,7 @@ import 'package:journeyq/features/create_trip/pages/add_place.dart';
 import 'package:journeyq/shared/widgets/dialog/show_dialog.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
+import 'dart:ui';
 
 class CreateTripPage extends StatefulWidget {
   const CreateTripPage({Key? key}) : super(key: key);
@@ -24,11 +25,10 @@ class _CreateTripPageState extends State<CreateTripPage> {
 
   // Background images for carousel
   final List<String> _backgroundImages = [
-    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80',
-    'https://images.unsplash.com/photo-1488646953014-85cb44e25828?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2335&q=80',
-    'https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2274&q=80',
-    'https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2080&q=80',
-    'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2532&q=80',
+    'assets/images/img13.jpg',
+    'assets/images/img14.jpg',
+    'assets/images/img15.jpg',
+    'assets/images/img5.jpg',
   ];
 
   // Trip basic details
@@ -49,7 +49,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
 
   // Loading states
   bool _isLoading = false;
-  String _loadingMessage = 'Creating your trip...';
+  String _loadingMessage = 'posting your journey...';
 
   // Transportation options
   List<String> _availableTransports = [
@@ -260,7 +260,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
   void _publishTrip() async {
     setState(() {
       _isLoading = true;
-      _loadingMessage = 'Publishing your amazing trip...';
+      _loadingMessage = 'Publishing your journey...';
     });
 
     try {
@@ -282,25 +282,31 @@ class _CreateTripPageState extends State<CreateTripPage> {
         _isLoading = false;
       });
 
-      SnackBarService.showSuccess(context, 'Trip published successfully!');
+      SnackBarService.showSuccess(context, 'journey published successfully!');
       context.go('/home');
     } catch (error) {
       setState(() {
         _isLoading = false;
       });
 
-      SnackBarService.showError(context, 'Failed to publish trip: $error');
+      SnackBarService.showError(context, 'Failed to publish journey: $error');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Check if keyboard is visible
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final isKeyboardVisible = keyboardHeight > 0;
+
     return Scaffold(
       backgroundColor: Colors.white,
+      // FIXED: Set to false to prevent automatic resizing
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text(
           _currentStep == 0
-              ? 'Create New Journey'
+              ? 'Post New Journey'
               : _currentStep == 1
               ? 'Recommendations'
               : _currentStep == 2
@@ -319,7 +325,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
         centerTitle: _currentStep == 0,
         leading: _currentStep > 0
             ? IconButton(
-                icon: const Icon(Icons.arrow_back, size: 28),
+                icon: const Icon(Icons.arrow_back_ios_rounded),
                 onPressed: _previousStep,
               )
             : null,
@@ -330,35 +336,39 @@ class _CreateTripPageState extends State<CreateTripPage> {
           message: _loadingMessage,
           child: Column(
             children: [
-              // Progress indicator
-              Container(
-                color: const Color(0xFFF8FAFC),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 30,
-                  vertical: 0,
+              // Progress indicator - FIXED: Hide when keyboard is visible
+              if (!isKeyboardVisible)
+                Container(
+                  color: const Color(0xFFF8FAFC),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 30,
+                    vertical: 0,
+                  ),
+                  child: Center(
+                    child: StepProgressIndicator(
+                      currentStep: _currentStep,
+                      totalSteps: _totalSteps,
+                    ),
+                  ),
                 ),
-                child: Center(
-                  child: StepProgressIndicator(
-                    currentStep: _currentStep,
-                    totalSteps: _totalSteps,
+              // Page content - FIXED: Adjust bottom padding when keyboard is visible
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: keyboardHeight),
+                  child: PageView(
+                    controller: _pageController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      _buildBasicDetailsStep(),
+                      _buildRecommendationsStep(),
+                      _buildBudgetStep(),
+                      _buildTravelTipsStep(),
+                    ],
                   ),
                 ),
               ),
-              // Page content
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    _buildBasicDetailsStep(),
-                    _buildRecommendationsStep(),
-                    _buildBudgetStep(),
-                    _buildTravelTipsStep(),
-                  ],
-                ),
-              ),
-              // Bottom button
-              _buildBottomButton(),
+              // Bottom button - FIXED: Hide when keyboard is visible
+              if (!isKeyboardVisible) _buildBottomButton(),
             ],
           ),
         ),
@@ -369,7 +379,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
   Widget _buildBottomButton() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(6.0),
       child: _buildStepButtons(),
     );
   }
@@ -575,337 +585,373 @@ class _CreateTripPageState extends State<CreateTripPage> {
   }
 
   Widget _buildBasicDetailsStep() {
-  final screenHeight = MediaQuery.of(context).size.height;
-  final safeAreaHeight = MediaQuery.of(context).padding.top + MediaQuery.of(context).padding.bottom;
-  final availableHeight = screenHeight - safeAreaHeight - 200; 
-  final carouselHeight = availableHeight * 0.725; 
+    final screenHeight = MediaQuery.of(context).size.height;
+    final safeAreaHeight = MediaQuery.of(context).padding.top + MediaQuery.of(context).padding.bottom;
+    final availableHeight = screenHeight - safeAreaHeight - 200; 
+    final carouselHeight = availableHeight * 0.76; 
 
-  return Form(
-    key: _formKey,
-    child: Column(
-      children: [
-        // Carousel Header with Background Images and Overlaid Trip Title
-        SizedBox(
-          height: carouselHeight,
-          child: Stack(
-            children: [
-              // Image Carousel
-              PageView.builder(
-                controller: _carouselController,
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentCarouselIndex = index;
-                  });
-                },
-                itemCount: _backgroundImages.length,
-                itemBuilder: (context, index) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: NetworkImage(_backgroundImages[index]),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    child: Container(
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          // Carousel Header with Background Images and Overlaid Trip Title
+          SizedBox(
+            height: carouselHeight,
+            child: Stack(
+              children: [
+                // Image Carousel - FIXED to use AssetImage
+                PageView.builder(
+                  controller: _carouselController,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentCarouselIndex = index;
+                    });
+                  },
+                  itemCount: _backgroundImages.length,
+                  itemBuilder: (context, index) {
+                    return Container(
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.black.withOpacity(0.2),
-                            Colors.black.withOpacity(0.4),
-                            Colors.black.withOpacity(0.8),
-                          ],
+                        image: DecorationImage(
+                          // FIXED: Changed from NetworkImage to AssetImage
+                          image: AssetImage(_backgroundImages[index]),
+                          fit: BoxFit.cover,
+                          // Add error handling for asset images
+                          onError: (exception, stackTrace) {
+                            debugPrint('Error loading image: ${_backgroundImages[index]}');
+                          },
                         ),
                       ),
-                    ),
-                  );
-                },
-              ),
-
-              // Header Content
-              Positioned(
-                top: 200,
-                left: 24,
-                right: 24,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Main title
-                    const Text(
-                      'Tell us about your trip',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: -0.5,
-                        shadows: [
-                          Shadow(
-                            offset: Offset(0, 2),
-                            blurRadius: 4,
-                            color: Colors.black45,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withOpacity(0.2),
+                              Colors.black.withOpacity(0.4),
+                              Colors.black.withOpacity(0.8),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // Subtitle
-                    const Text(
-                      'Share your travel experience and help others discover amazing destinations',
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: Colors.white,
-                        height: 1.4,
-                        fontWeight: FontWeight.w400,
-                        shadows: [
-                          Shadow(
-                            offset: Offset(0, 1),
-                            blurRadius: 3,
-                            color: Colors.black45,
-                          ),
-                        ],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                    );
+                  },
                 ),
-              ),
 
-              // Trip Title Field Overlay - Bottom of carousel
-              Positioned(
-                bottom: 20,
-                left: 24,
-                right: 24,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
+                // Header Content
+                Positioned(
+                  top: 200,
+                  left: 24,
+                  right: 24,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Main title
+                      const Text(
+                        'Tell us about your trip',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: -0.5,
+                          shadows: [
+                            Shadow(
+                              offset: Offset(0, 2),
+                              blurRadius: 4,
+                              color: Colors.black45,
+                            ),
+                          ],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Subtitle
+                      const Text(
+                        'Share your travel experience and help others discover amazing destinations',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                          height: 1.4,
+                          fontWeight: FontWeight.w400,
+                          shadows: [
+                            Shadow(
+                              offset: Offset(0, 1),
+                              blurRadius: 3,
+                              color: Colors.black45,
+                            ),
+                          ],
+                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.95),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                          width: 1,
+                ),
+
+                // Trip Title Field Overlay - Bottom of carousel with Glassy Effect
+                Positioned(
+                  bottom: 40,
+                  left: 24,
+                  right: 24,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.25),
+                          blurRadius: 30,
+                          offset: const Offset(0, 15),
+                          spreadRadius: 0,
                         ),
-                      ),
-                      child: TextFormField(
-                        controller: _tripTitleController,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF2D3748),
+                        BoxShadow(
+                          color: Colors.white.withOpacity(0.1),
+                          blurRadius: 1,
+                          offset: const Offset(0, 1),
+                          spreadRadius: 0,
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a trip title';
-                          }
-                          return null;
-                        },
-                        decoration: InputDecoration(
-                          hintText: 'Enter your amazing trip title...',
-                          hintStyle: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.withOpacity(0.7),
-                            fontWeight: FontWeight.w500,
-                          ),
-                          prefixIcon: Container(
-                            margin: const EdgeInsets.all(16),
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF33a3dd), Color(0xFF0088cc)],
-                              ),
-                              borderRadius: BorderRadius.circular(12),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.3),
+                              width: 1.5,
                             ),
-                            child: const Icon(
-                              Icons.auto_awesome,
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Colors.white.withOpacity(0.25),
+                                Colors.white.withOpacity(0.1),
+                              ],
+                            ),
+                          ),
+                          child: TextFormField(
+                            controller: _tripTitleController,
+                            cursorColor: Colors.white,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
                               color: Colors.white,
-                              size: 18,
                             ),
-                          ),
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          errorBorder: InputBorder.none,
-                          focusedErrorBorder: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 18,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter a trip title';
+                              }
+                              return null;
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'Enter your amazing trip title...',
+                              hintStyle: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white.withOpacity(0.7),
+                                fontWeight: FontWeight.w500,
+                              ),
+                              errorStyle: const TextStyle(
+                                color: Colors.redAccent,
+                                fontWeight: FontWeight.w500,
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(0, 1),
+                                    blurRadius: 3,
+                                    color: Colors.black45,
+                                  ),
+                                ],
+                              ),
+                              prefixIcon: Container(
+                                margin: const EdgeInsets.all(16),
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.auto_awesome,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              errorBorder: InputBorder.none,
+                              focusedErrorBorder: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 18,
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
 
-        // Duration Counter Below Carousel
-        Expanded(
-          child: Container(
-              padding: const EdgeInsets.all(12), // Reduced padding
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDurationCounter(),
-                ],
-              ),
-            ),
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _buildDurationCounter() {
-  return Container(
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(16),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Label    
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6), // Reduced padding
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0088cc).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ))
-            ],
-          ),
-      
-
-        // Counter Widget
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2), // Reduced padding
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Decrease Button
-                GestureDetector(
-                  onTap: () {
-                    if (_selectedDays > 1) {
-                      setState(() {
-                        _selectedDays--;
-                      });
-                    }
-                  },
-                  child: Container(
-                    width: 36, // Reduced size
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: _selectedDays > 1
-                          ? const Color(0xFF0088cc)
-                          : Colors.grey.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: _selectedDays > 1
-                          ? [
-                              BoxShadow(
-                                color: const Color(0xFF0088cc).withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: Icon(
-                      Icons.remove,
-                      color: _selectedDays > 1 ? Colors.white : Colors.grey,
-                      size: 20, // Reduced icon size
-                    ),
-                  ),
-                ),
-
-                // Days Display
-                Column(
-                  children: [
-                    Text(
-                      '$_selectedDays',
-                      style: const TextStyle(
-                        fontSize: 28, // Slightly reduced font size
-                        fontWeight: FontWeight.w800,
-                        color: Colors.black87,
-                        height: 1,
-                      ),
-                    ),
-                    Text(
-                      _selectedDays == 1 ? 'Day' : 'Days',
-                      style: TextStyle(
-                        fontSize: 12, // Reduced font size
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey.withOpacity(0.8),
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Increase Button
-                GestureDetector(
-                  onTap: () {
-                    if (_selectedDays < 30) {
-                      // Max 30 days
-                      setState(() {
-                        _selectedDays++;
-                      });
-                    }
-                  },
-                  child: Container(
-                    width: 36, // Reduced size
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: _selectedDays < 30
-                          ? const Color(0xFF0088cc)
-                          : Colors.grey.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: _selectedDays < 30
-                          ? [
-                              BoxShadow(
-                                color: const Color(0xFF0088cc).withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: Icon(
-                      Icons.add,
-                      color: _selectedDays < 30 ? Colors.white : Colors.grey,
-                      size: 20, // Reduced icon size
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
 
- 
+          // Duration Counter Below Carousel
+          Expanded(
+            child: Container(
+                padding: const EdgeInsets.all(8), // Reduced padding
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildDurationCounter(),
+                  ],
+                ),
+              ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDurationCounter() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Label    
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6), // Reduced padding
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0088cc).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ))
+              ],
+            ),
+        
+
+          // Counter Widget
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2), // Reduced padding
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Decrease Button
+                  GestureDetector(
+                    onTap: () {
+                      if (_selectedDays > 1) {
+                        setState(() {
+                          _selectedDays--;
+                        });
+                      }
+                    },
+                    child: Container(
+                      width: 36, // Reduced size
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: _selectedDays > 1
+                            ? const Color(0xFF0088cc)
+                            : Colors.grey.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: _selectedDays > 1
+                            ? [
+                                BoxShadow(
+                                  color: const Color(0xFF0088cc).withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Icon(
+                        Icons.remove,
+                        color: _selectedDays > 1 ? Colors.white : Colors.grey,
+                        size: 20, // Reduced icon size
+                      ),
+                    ),
+                  ),
+
+                  // Days Display
+                  Column(
+                    children: [
+                      Text(
+                        '$_selectedDays',
+                        style: const TextStyle(
+                          fontSize: 28, // Slightly reduced font size
+                          fontWeight: FontWeight.w800,
+                          color: Colors.black87,
+                          height: 1,
+                        ),
+                      ),
+                      Text(
+                        _selectedDays == 1 ? 'Day' : 'Days',
+                        style: TextStyle(
+                          fontSize: 12, // Reduced font size
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey.withOpacity(0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // Increase Button
+                  GestureDetector(
+                    onTap: () {
+                      if (_selectedDays < 30) {
+                        // Max 30 days
+                        setState(() {
+                          _selectedDays++;
+                        });
+                      }
+                    },
+                    child: Container(
+                      width: 36, // Reduced size
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: _selectedDays < 30
+                            ? const Color(0xFF0088cc)
+                            : Colors.grey.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: _selectedDays < 30
+                            ? [
+                                BoxShadow(
+                                  color: const Color(0xFF0088cc).withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Icon(
+                        Icons.add,
+                        color: _selectedDays < 30 ? Colors.white : Colors.grey,
+                        size: 20, // Reduced icon size
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildRecommendationsStep() {
     return SingleChildScrollView(
@@ -1073,19 +1119,19 @@ Widget _buildDurationCounter() {
               ),
               const SizedBox(width: 12),
               SizedBox(
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: onAdd,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0088cc),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                  ),
-                  child: const Icon(Icons.add, color: Colors.white),
-                ),
-              ),
+  height: 28,
+  width: 28, // make it square
+  child: ElevatedButton(
+    onPressed: onAdd,
+    style: ElevatedButton.styleFrom(
+      backgroundColor: const Color(0xFF0088cc),
+      shape: const CircleBorder(), // make it round
+      padding: EdgeInsets.zero, // remove extra padding so icon is centered nicely
+    ),
+    child: const Icon(Icons.add, color: Colors.white),
+  ),
+),
+
             ],
           ),
 

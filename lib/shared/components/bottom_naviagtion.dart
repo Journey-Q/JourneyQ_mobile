@@ -11,35 +11,35 @@ class CustomBottomNavigation extends StatelessWidget {
     this.onPageChanged,
   });
 
-  // Define navigation items with their routes and icons
+  // Define navigation items with attractive icons
   static const List<BottomNavItem> _navItems = [
     BottomNavItem(
       icon: Icons.home_outlined,
-      activeIcon: Icons.home,
+      activeIcon: Icons.home_rounded,
       label: 'Home',
       route: '/home',
     ),
     BottomNavItem(
-      icon: Icons.store_outlined,
-      activeIcon: Icons.store,
+      icon: Icons.storefront_outlined,
+      activeIcon: Icons.storefront_rounded,
       label: 'Marketplace',
       route: '/marketplace',
     ),
     BottomNavItem(
-      icon: Icons.add_circle_outline,
+      icon: Icons.add_circle_outlined,
       activeIcon: Icons.add_circle,
       label: 'Create',
       route: '/create',
     ),
     BottomNavItem(
       icon: Icons.group_add_outlined,
-      activeIcon: Icons.group_add,
+      activeIcon: Icons.group_add_rounded,
       label: 'Join Trip',
       route: '/join_trip',
     ),
     BottomNavItem(
-      icon: Icons.person_outline,
-      activeIcon: Icons.person,
+      icon: Icons.person_outline_rounded,
+      activeIcon: Icons.person_rounded,
       label: 'Profile',
       route: '/profile',
     ),
@@ -54,17 +54,18 @@ class CustomBottomNavigation extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.black.withOpacity(0.08),
             spreadRadius: 1,
-            blurRadius: 10,
-            offset: const Offset(0, -2),
+            blurRadius: 12,
+            offset: const Offset(0, -3),
           ),
         ],
       ),
       child: SafeArea(
+        top: false, // Don't add top padding
         child: Container(
-          height: 65,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          height: 60,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: _navItems.asMap().entries.map((entry) {
@@ -93,27 +94,46 @@ class CustomBottomNavigation extends StatelessWidget {
     required VoidCallback onTap,
     required ThemeData theme,
   }) {
-    final color = isActive ? Colors.black87 : Colors.black87;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isActive ? item.activeIcon : item.icon,
-              color: color,
-              size: 28,
-            ),
-          ],
+    final primaryColor = theme.primaryColor;
+    final activeColor = isActive ? primaryColor : Colors.black87;
+    
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.all(6),
+                decoration: isActive
+                    ? BoxDecoration(
+                        color: primaryColor.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      )
+                    : null,
+                child: Icon(
+                  isActive ? item.activeIcon : item.icon,
+                  color: activeColor,
+                  size: 24,
+                ),
+              ),
+              
+            ],
+          ),
         ),
       ),
     );
   }
 
   void _handleNavigation(BuildContext context, int index) {
+    // Unfocus any text fields to hide keyboard
+    FocusScope.of(context).unfocus();
+    
     // Call the callback if provided
     if (onPageChanged != null) {
       onPageChanged!(index);
@@ -168,7 +188,7 @@ class CustomBottomNavigation extends StatelessWidget {
   static int get itemCount => _navItems.length;
 }
 
-// Data class for navigation items (unchanged)
+// Data class for navigation items
 class BottomNavItem {
   final IconData icon;
   final IconData activeIcon;
