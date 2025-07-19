@@ -67,13 +67,9 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
         'Infinity Pool',
         'CHI Spa',
         'Free WiFi',
-        'Multiple Restaurants',
-        'Fitness Center',
-        'Business Center',
         'Concierge Service',
         '24h Room Service',
-        'Valet Parking',
-        'Airport Shuttle'
+        'Valet Parking'
       ],
       'rooms': [
         {
@@ -89,9 +85,8 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'amenities': [
             'Full Board',
             'Ocean View',
-            'WiFi',
+            'Free WiFi',
             'Minibar',
-            'Safe',
             'Air Conditioning',
             'Marble Bathroom',
             'Balcony'
@@ -113,11 +108,9 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
             'All-Inclusive',
             'Separate Living Room',
             'City View',
-            'WiFi',
+            'Free WiFi',
             'Minibar',
-            'Work Desk',
-            'Premium Bathroom with Bathtub',
-            'Executive Lounge Access'
+            'Premium Bathroom with Bathtub'
           ],
           'available': false,
           'status': 'maintenance',
@@ -136,7 +129,6 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
             'Half Board',
             'Living & Dining Area',
             'Panoramic Ocean View',
-            'Butler Service',
             'Premium Amenities',
             'Jacuzzi Bathroom'
           ],
@@ -164,8 +156,6 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
         'Heritage Pool',
         'Spa Ceylon',
         'Free WiFi',
-        'Sea Spray Restaurant',
-        'Fitness Center',
         'Bed and Breakfast',
         'Concierge Service',
         'Room Service',
@@ -186,7 +176,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'amenities': [
             'Room Only',
             'Garden View',
-            'WiFi',
+            'Free WiFi',
             'Classic Furnishing',
             'Air Conditioning',
             'Period Bathroom',
@@ -209,7 +199,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
             'Bed and Breakfast',
             'Ocean Facing',
             'Sitting Area',
-            'WiFi',
+            'Free WiFi',
             'Period Furniture',
             'Premium Bathroom',
             'Balcony'
@@ -228,11 +218,10 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'image': 'assets/images/room_presidential.jpg',
           'backgroundColor': const Color(0xFF9370DB),
           'amenities': [
-            'Historical Suite',
+            'Sitting Area',
             'Separate Living Room',
             'Ocean View',
             'Antique Furnishing',
-            'Butler Service',
             'Full Board'
           ],
           'available': false,
@@ -260,9 +249,6 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
         'Red Spa',
         'Free WiFi',
         'Full Board',
-        'Fitness Center',
-        'Business Center',
-        'Concierge Service',
         'Room Service',
         'Shopping Arcade',
         'Event Facilities'
@@ -280,9 +266,8 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'backgroundColor': const Color(0xFF20B2AA),
           'amenities': [
             'City View',
-            'WiFi',
+            'Free WiFi',
             'Minibar',
-            'Work Station',
             'Air Conditioning',
             'Modern Bathroom',
             'Full Board'
@@ -302,10 +287,10 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'backgroundColor': const Color(0xFF8FBC8F),
           'amenities': [
             'Club Lounge Access',
-            'WiFi',
+            'Free WiFi',
             'Minibar',
             'Premium Amenities',
-            'Complimentary Breakfast',
+            'Spa ceylon',
             'All-Inclusive'
           ],
           'available': false,
@@ -333,12 +318,8 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
         'eforea Spa',
         'Free WiFi',
         'Graze Kitchen',
-        'Executive Lounge',
-        'Business Center',
         'Half Board',
-        'Concierge Service',
         'Room Service',
-        'Fitness Center',
         'Event Spaces'
       ],
       'rooms': [
@@ -354,8 +335,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'backgroundColor': const Color(0xFF8FBC8F),
           'amenities': [
             'City View',
-            'WiFi',
-            'Work Desk',
+            'Free WiFi',
             'Minibar',
             'Air Conditioning',
             'Walk-in Shower Bathroom',
@@ -375,10 +355,8 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'image': 'assets/images/room_presidential.jpg',
           'backgroundColor': const Color(0xFF20B2AA),
           'amenities': [
-            'Executive Lounge Access',
-            'WiFi',
+            'Free WiFi',
             'Premium Amenities',
-            'Complimentary Breakfast',
             'Evening Cocktails',
             'Spa Bathroom',
             'Bed and Breakfast'
@@ -407,9 +385,6 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
         'Ocean Pool',
         'Jiva Spa',
         'Free WiFi',
-        'Golden Dragon Restaurant',
-        'Fitness Center',
-        'Business Center',
         'Half Board',
         'Concierge Service',
         'Room Service',
@@ -429,7 +404,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'backgroundColor': const Color(0xFF9370DB),
           'amenities': [
             'Ocean/City View',
-            'WiFi',
+            'Free WiFi',
             'Minibar',
             'Traditional Decor',
             'Air Conditioning',
@@ -450,7 +425,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'backgroundColor': const Color(0xFF20B2AA),
           'amenities': [
             'Premium Ocean View',
-            'WiFi',
+            'Free WiFi',
             'Premium Amenities',
             'Elegant Furnishing',
             'Marble Bathroom',
