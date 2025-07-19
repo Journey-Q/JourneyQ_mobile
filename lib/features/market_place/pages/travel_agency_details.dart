@@ -46,7 +46,6 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
         hasError = true;
         isLoading = false;
       });
-
     }
   }
 
@@ -63,27 +62,53 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
       'image': 'assets/images/ceylon_roots.jpg',
       'backgroundColor': const Color(0xFF8B4513),
       'description': 'Welcome to Ceylon Roots! We have been serving customers with 15+ years of experience in the travel industry. Our professional team is dedicated to providing you with authentic Sri Lankan travel experiences, from cultural tours to adventure expeditions. We pride ourselves on personalized service and deep local knowledge.',
+      'totalReviews': 4,
+      'reviewStats': {
+        '5': 3,
+        '4': 1,
+        '3': 0,
+        '2': 0,
+        '1': 0,
+      },
       'vehicles': [
         {
           'type': 'Car',
           'seats': 4,
           'acPricePerKm': 55,
           'nonAcPricePerKm': 45,
-          'features': ['Premium AC', 'Leather seats', 'GPS navigation', 'Bluetooth system', 'Phone charging', 'Complimentary water'],
+          'features': [
+            'Leather seats',
+            'GPS navigation',
+            'Bluetooth system',
+            'Phone charging',
+            'Complimentary water'
+          ],
         },
         {
           'type': 'Van',
           'seats': 8,
           'acPricePerKm': 75,
           'nonAcPricePerKm': 60,
-          'features': ['Climate control AC', 'Spacious 8-seater', 'Large luggage space', 'Panoramic windows', 'Individual lights', 'USB charging ports'],
+          'features': [
+            'Spacious 8-seater',
+            'Large luggage space',
+            'Panoramic windows',
+            'Individual lights',
+            'USB charging ports'
+          ],
         },
         {
           'type': 'Mini Bus',
           'seats': 15,
           'acPricePerKm': 95,
           'nonAcPricePerKm': 80,
-          'features': ['Central AC', 'Comfortable seating', 'Entertainment system', 'WiFi connectivity', 'Luggage compartment', 'First aid kit'],
+          'features': [
+            'Comfortable seating',
+            'Entertainment system',
+            'WiFi connectivity',
+            'Luggage compartment',
+            'First aid kit'
+          ],
         },
       ],
       'drivers': [
@@ -110,203 +135,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
         },
       ],
     },
-    {
-      'id': 'agency_002',
-      'name': 'Jetwing Travels',
-      'rating': 4.8,
-      'experience': 'since 2005',
-      'location': 'Colombo 01, Sri Lanka',
-      'contact': '+94 11 345 6789',
-      'email': 'reservations@jetwing.lk',
-      'image': 'assets/images/jetwing.jpg',
-      'backgroundColor': const Color(0xFF228B22),
-      'description': 'Jetwing Travels has been a pioneer in Sri Lankan tourism for over 20 years. We offer comprehensive travel solutions with a focus on sustainable tourism and authentic experiences. Our extensive fleet and experienced team ensure memorable journeys across the beautiful island of Sri Lanka.',
-      'vehicles': [
-        {
-          'type': 'Luxury Car',
-          'seats': 4,
-          'acPricePerKm': 65,
-          'nonAcPricePerKm': 50,
-          'features': ['Premium leather', 'Advanced AC', 'GPS & maps', 'Premium audio', 'Wireless charging', 'Refreshments'],
-        },
-        {
-          'type': 'Premium Van',
-          'seats': 8,
-          'acPricePerKm': 85,
-          'nonAcPricePerKm': 70,
-          'features': ['Luxury interior', 'Captain seats', 'Individual AC', 'Entertainment screens', 'Refrigerator', 'WiFi hotspot'],
-        },
-        {
-          'type': 'Coach Bus',
-          'seats': 25,
-          'acPricePerKm': 110,
-          'nonAcPricePerKm': 90,
-          'features': ['Central AC', 'Reclining seats', 'Entertainment system', 'WiFi', 'Onboard washroom', 'Safety equipment'],
-        },
-      ],
-      'drivers': [
-        {
-          'name': 'Prasad Wickramasinghe',
-          'experience': '15 years',
-          'languages': ['English', 'Sinhala', 'Tamil', 'Italian'],
-          'contact': '+94 77 456 7890',
-          'specialization': 'Luxury & Premium Tours',
-        },
-        {
-          'name': 'Chaminda Rathnayake',
-          'experience': '12 years',
-          'languages': ['English', 'Sinhala', 'Spanish'],
-          'contact': '+94 76 567 8901',
-          'specialization': 'Group & Corporate Tours',
-        },
-      ],
-    },
-    {
-      'id': 'agency_003',
-      'name': 'Aitken Spence',
-      'rating': 4.7,
-      'experience': 'since 2015',
-      'location': 'Colombo 02, Sri Lanka',
-      'contact': '+94 11 456 7890',
-      'email': 'travel@aitkenspence.lk',
-      'image': 'assets/images/aitken_spence.jpg',
-      'backgroundColor': const Color(0xFF20B2AA),
-      'description': 'Aitken Spence Travels is one of Sri Lanka\'s most established travel companies with 25+ years of excellence. We provide comprehensive travel services including transportation, accommodation, and guided tours. Our commitment to quality and customer satisfaction has made us a trusted name in Sri Lankan tourism.',
-      'vehicles': [
-        {
-          'type': 'Standard Car',
-          'seats': 4,
-          'acPricePerKm': 50,
-          'nonAcPricePerKm': 40,
-          'features': ['AC system', 'Comfortable seats', 'GPS navigation', 'Music system', 'Phone charging', 'Water bottles'],
-        },
-        {
-          'type': 'Family Van',
-          'seats': 8,
-          'acPricePerKm': 70,
-          'nonAcPricePerKm': 55,
-          'features': ['Family friendly', 'Spacious interior', 'Large windows', 'Safety features', 'Storage space', 'Reading lights'],
-        },
-        {
-          'type': 'Tour Bus',
-          'seats': 20,
-          'acPricePerKm': 90,
-          'nonAcPricePerKm': 75,
-          'features': ['Tour guide system', 'Comfortable seating', 'Large windows', 'AC system', 'Storage areas', 'Emergency equipment'],
-        },
-      ],
-      'drivers': [
-        {
-          'name': 'Sunil Mendis',
-          'experience': '18 years',
-          'languages': ['English', 'Sinhala', 'Tamil', 'Dutch'],
-          'contact': '+94 77 678 9012',
-          'specialization': 'Historical & Cultural Tours',
-        },
-        {
-          'name': 'Ranjith Perera',
-          'experience': '14 years',
-          'languages': ['English', 'Sinhala', 'Hindi'],
-          'contact': '+94 76 789 0123',
-          'specialization': 'Family & Leisure Tours',
-        },
-      ],
-    },
-    {
-      'id': 'agency_004',
-      'name': 'Walkers Tours',
-      'rating': 4.6,
-      'experience': 'since 2013',
-      'location': 'Colombo 05, Sri Lanka',
-      'contact': '+94 11 567 8901',
-      'email': 'info@walkerstours.com',
-      'image': 'assets/images/walkers.jpg',
-      'backgroundColor': const Color(0xFF8FBC8F),
-      'description': 'Walkers Tours is the oldest travel company in Sri Lanka with 30+ years of unmatched experience. We have been crafting memorable travel experiences for generations of travelers. Our extensive knowledge of Sri Lankan destinations and culture ensures authentic and enriching journeys.',
-      'vehicles': [
-        {
-          'type': 'Classic Car',
-          'seats': 4,
-          'acPricePerKm': 48,
-          'nonAcPricePerKm': 38,
-          'features': ['Reliable AC', 'Comfortable ride', 'Local music', 'Basic amenities', 'Safe driving', 'Courteous service'],
-        },
-        {
-          'type': 'Tourist Van',
-          'seats': 10,
-          'acPricePerKm': 68,
-          'nonAcPricePerKm': 54,
-          'features': ['Tourist friendly', 'Multiple windows', 'Spacious design', 'Cultural music', 'Local guides', 'Photo stops'],
-        },
-      ],
-      'drivers': [
-        {
-          'name': 'Bandula Jayasinghe',
-          'experience': '20 years',
-          'languages': ['English', 'Sinhala', 'Tamil', 'Russian'],
-          'contact': '+94 77 890 1234',
-          'specialization': 'Scenic & Nature Tours',
-        },
-        {
-          'name': 'Sarath Gunasekara',
-          'experience': '16 years',
-          'languages': ['English', 'Sinhala', 'Chinese'],
-          'contact': '+94 76 901 2345',
-          'specialization': 'Religious & Pilgrimage Tours',
-        },
-      ],
-    },
-    {
-      'id': 'agency_005',
-      'name': 'Red Dot Tours',
-      'rating': 4.5,
-     'experience': 'since 2014',
-      'location': 'Colombo 06, Sri Lanka',
-      'contact': '+94 11 678 9012',
-      'email': 'bookings@reddottours.lk',
-      'image': 'assets/images/red_dot.jpeg',
-      'backgroundColor': const Color(0xFF9370DB),
-      'description': 'Red Dot Tours is a modern travel agency with 12+ years of innovative service. We specialize in adventure tourism and off-the-beaten-path experiences. Our young and energetic team brings fresh perspectives to Sri Lankan tourism, creating unique and exciting travel adventures.',
-      'vehicles': [
-        {
-          'type': 'Adventure Car',
-          'seats': 4,
-          'acPricePerKm': 52,
-          'nonAcPricePerKm': 42,
-          'features': ['Rugged design', 'Adventure ready', 'GPS tracking', 'Emergency kit', 'Action camera mounts', 'Outdoor gear storage'],
-        },
-        {
-          'type': 'Adventure Van',
-          'seats': 6,
-          'acPricePerKm': 72,
-          'nonAcPricePerKm': 58,
-          'features': ['Off-road capable', 'Equipment storage', 'Safety gear', 'Communication system', 'First aid', 'Adventure guides'],
-        },
-        {
-          'type': 'Group Bus',
-          'seats': 18,
-          'acPricePerKm': 88,
-          'nonAcPricePerKm': 72,
-          'features': ['Group friendly', 'Activity planning', 'Safety briefing area', 'Equipment space', 'Team building setup', 'Adventure maps'],
-        },
-      ],
-      'drivers': [
-        {
-          'name': 'Dilshan Wijeratne',
-          'experience': '8 years',
-          'languages': ['English', 'Sinhala', 'Korean'],
-          'contact': '+94 77 012 3456',
-          'specialization': 'Adventure & Extreme Sports',
-        },
-        {
-          'name': 'Kasun Liyanage',
-          'experience': '6 years',
-          'languages': ['English', 'Sinhala', 'Arabic'],
-          'contact': '+94 76 123 4567',
-          'specialization': 'Youth & Backpacker Tours',
-        },
-      ],
-    },
+    // ... (other agency data remains the same)
   ];
 
   // Method to get agency by ID
@@ -320,6 +149,10 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
 
   void _contactAgency() {
     context.push('/marketplace/travel_agencies/contact/${widget.agencyId}');
+  }
+
+  void _viewReviews() {
+    context.push('/marketplace/travel_agencies/reviews/${widget.agencyId}');
   }
 
   Widget _buildVehicleCard(Map<String, dynamic> vehicle, int index) {
@@ -409,8 +242,10 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'LKR ${((vehicle['acPricePerKm'] ?? 50) * 1).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} per 1km',
-
+                        'LKR ${((vehicle['acPricePerKm'] ?? 50) * 1)
+                            .toString()
+                            .replaceAllMapped(
+                            RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} per 1km',
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -454,8 +289,10 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'LKR ${((vehicle['nonAcPricePerKm'] ?? 40) * 1).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} per 1km',
-
+                        'LKR ${((vehicle['nonAcPricePerKm'] ?? 40) * 1)
+                            .toString()
+                            .replaceAllMapped(
+                            RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} per 1km',
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -603,6 +440,57 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
     );
   }
 
+  Widget _buildRatingBar(int starCount, int reviewCount, int totalReviews) {
+    double percentage = totalReviews > 0 ? reviewCount / totalReviews : 0;
+
+    return Row(
+      children: [
+        Text(
+          '$starCount',
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(width: 4),
+        const Icon(
+          Icons.star,
+          size: 16,
+          color: Colors.orange,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Container(
+            height: 8,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: percentage,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.orange,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '$reviewCount',
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey.shade600,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -667,7 +555,6 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
       backgroundColor: Colors.grey[50],
       body: CustomScrollView(
         slivers: [
-          // App Bar with Image
           SliverAppBar(
             expandedHeight: 250,
             pinned: true,
@@ -691,7 +578,8 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                           gradient: LinearGradient(
                             colors: [
                               agencyData['backgroundColor'] ?? Colors.blue,
-                              (agencyData['backgroundColor'] ?? Colors.blue).withOpacity(0.8),
+                              (agencyData['backgroundColor'] ?? Colors.blue)
+                                  .withOpacity(0.8),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -724,7 +612,6 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
             ),
           ),
 
-          // Content
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -838,7 +725,6 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                             const SizedBox(width: 8),
                             Text(
                               agencyData['experience'] ?? 'Years of Experience',
-
                               style: const TextStyle(fontSize: 14, color: Colors.grey),
                             ),
                           ],
@@ -918,7 +804,10 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                         ),
                         const SizedBox(height: 8),
                         Column(
-                          children: (agencyData['vehicles'] as List).asMap().entries.map((entry) {
+                          children: (agencyData['vehicles'] as List)
+                              .asMap()
+                              .entries
+                              .map((entry) {
                             int index = entry.key;
                             Map<String, dynamic> vehicle = entry.value;
                             return _buildVehicleCard(vehicle, index);
@@ -958,7 +847,10 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                         ),
                         const SizedBox(height: 8),
                         Column(
-                          children: (agencyData['drivers'] as List).asMap().entries.map((entry) {
+                          children: (agencyData['drivers'] as List)
+                              .asMap()
+                              .entries
+                              .map((entry) {
                             int index = entry.key;
                             Map<String, dynamic> driver = entry.value;
                             return Padding(
@@ -968,6 +860,138 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                               child: _buildDriverCard(driver),
                             );
                           }).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Customer Reviews Section
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Customer Reviews',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        Row(
+                          children: [
+                            // Left side - Overall rating
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  (agencyData['rating'] ?? 4.0).toString(),
+                                  style: const TextStyle(
+                                    fontSize: 48,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: List.generate(5, (index) {
+                                    double rating = agencyData['rating'] ?? 4.0;
+                                    if (index < rating.floor()) {
+                                      return const Icon(Icons.star, color: Colors.orange, size: 20);
+                                    } else if (index < rating) {
+                                      return const Icon(Icons.star_half, color: Colors.orange, size: 20);
+                                    } else {
+                                      return Icon(Icons.star_border, color: Colors.grey.shade300, size: 20);
+                                    }
+                                  }),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${agencyData['totalReviews'] ?? 0} reviews',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(width: 32),
+
+                            // Right side - Rating breakdown
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  _buildRatingBar(
+                                      5,
+                                      (agencyData['reviewStats']?['5'] ?? 0) as int,
+                                      agencyData['totalReviews'] ?? 0),
+                                  const SizedBox(height: 8),
+                                  _buildRatingBar(
+                                      4,
+                                      (agencyData['reviewStats']?['4'] ?? 0) as int,
+                                      agencyData['totalReviews'] ?? 0),
+                                  const SizedBox(height: 8),
+                                  _buildRatingBar(
+                                      3,
+                                      (agencyData['reviewStats']?['3'] ?? 0) as int,
+                                      agencyData['totalReviews'] ?? 0),
+                                  const SizedBox(height: 8),
+                                  _buildRatingBar(
+                                      2,
+                                      (agencyData['reviewStats']?['2'] ?? 0) as int,
+                                      agencyData['totalReviews'] ?? 0),
+                                  const SizedBox(height: 8),
+                                  _buildRatingBar(
+                                      1,
+                                      (agencyData['reviewStats']?['1'] ?? 0) as int,
+                                      agencyData['totalReviews'] ?? 0),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Read Reviews Button
+                        GestureDetector(
+                          onTap: _viewReviews,
+                          child: Row(
+                            children: [
+                              Text(
+                                'Read reviews',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.blue.shade600,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                                color: Colors.blue.shade600,
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),

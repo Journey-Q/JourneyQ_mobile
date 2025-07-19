@@ -83,7 +83,6 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'image': 'assets/images/room_deluxe.jpg',
           'backgroundColor': const Color(0xFF8B4513),
           'amenities': [
-            'Full Board',
             'Ocean View',
             'Free WiFi',
             'Minibar',
@@ -105,7 +104,6 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'image': 'assets/images/room_suite.jpg',
           'backgroundColor': const Color(0xFF20B2AA),
           'amenities': [
-            'All-Inclusive',
             'Separate Living Room',
             'City View',
             'Free WiFi',
@@ -126,11 +124,11 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'image': 'assets/images/room_presidential.jpg',
           'backgroundColor': const Color(0xFF9370DB),
           'amenities': [
-            'Half Board',
             'Living & Dining Area',
             'Panoramic Ocean View',
             'Premium Amenities',
-            'Jacuzzi Bathroom'
+            'Jacuzzi Bathroom',
+            'Free WiFi'
           ],
           'available': false,
           'status': 'booked',
@@ -156,7 +154,6 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
         'Heritage Pool',
         'Spa Ceylon',
         'Free WiFi',
-        'Bed and Breakfast',
         'Concierge Service',
         'Room Service',
         'Valet Parking',
@@ -174,7 +171,6 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'image': 'assets/images/room_deluxe.jpg',
           'backgroundColor': const Color(0xFF228B22),
           'amenities': [
-            'Room Only',
             'Garden View',
             'Free WiFi',
             'Classic Furnishing',
@@ -196,7 +192,6 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'image': 'assets/images/room_suite.jpg',
           'backgroundColor': const Color(0xFF20B2AA),
           'amenities': [
-            'Bed and Breakfast',
             'Ocean Facing',
             'Sitting Area',
             'Free WiFi',
@@ -222,7 +217,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
             'Separate Living Room',
             'Ocean View',
             'Antique Furnishing',
-            'Full Board'
+            'Free WiFi'
           ],
           'available': false,
           'status': 'maintenance',
@@ -248,7 +243,6 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
         'Rooftop Pool',
         'Red Spa',
         'Free WiFi',
-        'Full Board',
         'Room Service',
         'Shopping Arcade',
         'Event Facilities'
@@ -269,8 +263,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
             'Free WiFi',
             'Minibar',
             'Air Conditioning',
-            'Modern Bathroom',
-            'Full Board'
+            'Modern Bathroom'
           ],
           'available': true,
           'status': 'available',
@@ -290,8 +283,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
             'Free WiFi',
             'Minibar',
             'Premium Amenities',
-            'Spa ceylon',
-            'All-Inclusive'
+            'Spa ceylon'
           ],
           'available': false,
           'status': 'booked',
@@ -318,7 +310,6 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
         'eforea Spa',
         'Free WiFi',
         'Graze Kitchen',
-        'Half Board',
         'Room Service',
         'Event Spaces'
       ],
@@ -338,8 +329,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
             'Free WiFi',
             'Minibar',
             'Air Conditioning',
-            'Walk-in Shower Bathroom',
-            'Half Board'
+            'Walk-in Shower Bathroom'
           ],
           'available': true,
           'status': 'available',
@@ -358,8 +348,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
             'Free WiFi',
             'Premium Amenities',
             'Evening Cocktails',
-            'Spa Bathroom',
-            'Bed and Breakfast'
+            'Spa Bathroom'
           ],
           'available': false,
           'status': 'maintenance',
@@ -385,7 +374,6 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
         'Ocean Pool',
         'Jiva Spa',
         'Free WiFi',
-        'Half Board',
         'Concierge Service',
         'Room Service',
         'Cultural Experiences',
@@ -407,8 +395,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
             'Free WiFi',
             'Minibar',
             'Traditional Decor',
-            'Air Conditioning',
-            'Full Board'
+            'Air Conditioning'
           ],
           'available': true,
           'status': 'available',
@@ -428,8 +415,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
             'Free WiFi',
             'Premium Amenities',
             'Elegant Furnishing',
-            'Marble Bathroom',
-            'All-Inclusive'
+            'Marble Bathroom'
           ],
           'available': true,
           'status': 'available',
@@ -449,8 +435,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
             'Ocean View',
             'Club Benefits',
             'Butler Service',
-            'Premium Location',
-            'All-Inclusive'
+            'Premium Location'
           ],
           'available': false,
           'status': 'booked',

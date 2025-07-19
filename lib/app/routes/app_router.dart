@@ -13,6 +13,7 @@ import 'package:journeyq/features/market_place/pages/tour_package_details.dart';
 import 'package:journeyq/features/market_place/pages/book_package_page.dart';
 import 'package:journeyq/features/market_place/pages/viewall_travelling_agency.dart';
 import 'package:journeyq/features/market_place/pages/travel_agency_details.dart';
+import 'package:journeyq/features/market_place/pages/travel_agency_reviews.dart';
 import 'package:journeyq/features/market_place/pages/contact_travel_agency.dart';
 import 'package:journeyq/features/join_trip/pages/index.dart';
 import 'package:journeyq/features/create_trip/pages/index.dart';
@@ -205,6 +206,18 @@ class AppRouter {
             return AppWrapper(
               currentRoute: '/marketplace',
               child: TravelAgencyDetailsPage(agencyId: agencyId),
+            );
+          },
+          transitionType: PageTransitionType.slide,
+        ),
+
+        TransitionGoRoute(
+          path: '/marketplace/travel_agencies/reviews/:agencyId',
+          builder: (context, state) {
+            final agencyId = state.pathParameters['agencyId']!;
+            return AppWrapper(
+              currentRoute: '/marketplace',
+              child: TravelAgencyReviewsPage(agencyId: agencyId),
             );
           },
           transitionType: PageTransitionType.slide,
