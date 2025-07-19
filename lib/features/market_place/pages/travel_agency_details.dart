@@ -467,7 +467,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
               color: Colors.grey.shade200,
               borderRadius: BorderRadius.circular(4),
             ),
-            child: FractionallySizedBox(
+            child: percentage > 0 ? FractionallySizedBox(
               alignment: Alignment.centerLeft,
               widthFactor: percentage,
               child: Container(
@@ -476,7 +476,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
-            ),
+            ) : const SizedBox.shrink(),
           ),
         ),
         const SizedBox(width: 8),
@@ -941,28 +941,28 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                                 children: [
                                   _buildRatingBar(
                                       5,
-                                      (agencyData['reviewStats']?['5'] ?? 0) as int,
-                                      agencyData['totalReviews'] ?? 0),
+                                      (agencyData['reviewStats']?['5'] ?? 3) as int,
+                                      agencyData['totalReviews'] ?? 4),
                                   const SizedBox(height: 8),
                                   _buildRatingBar(
                                       4,
-                                      (agencyData['reviewStats']?['4'] ?? 0) as int,
-                                      agencyData['totalReviews'] ?? 0),
+                                      (agencyData['reviewStats']?['4'] ?? 1) as int,
+                                      agencyData['totalReviews'] ?? 4),
                                   const SizedBox(height: 8),
                                   _buildRatingBar(
                                       3,
                                       (agencyData['reviewStats']?['3'] ?? 0) as int,
-                                      agencyData['totalReviews'] ?? 0),
+                                      agencyData['totalReviews'] ?? 4),
                                   const SizedBox(height: 8),
                                   _buildRatingBar(
                                       2,
                                       (agencyData['reviewStats']?['2'] ?? 0) as int,
-                                      agencyData['totalReviews'] ?? 0),
+                                      agencyData['totalReviews'] ?? 4),
                                   const SizedBox(height: 8),
                                   _buildRatingBar(
                                       1,
                                       (agencyData['reviewStats']?['1'] ?? 0) as int,
-                                      agencyData['totalReviews'] ?? 0),
+                                      agencyData['totalReviews'] ?? 4),
                                 ],
                               ),
                             ),
