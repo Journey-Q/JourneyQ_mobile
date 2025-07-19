@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:journeyq/features/join_trip/pages/widget.dart';
 import 'package:journeyq/features/join_trip/pages/common/trip_form_widget.dart';
+import 'package:journeyq/features/join_trip/pages/common/day_itinerary_widget.dart';
 
 class TripDetailsWidget extends StatelessWidget {
   final Map<String, dynamic> tripData;
@@ -136,6 +137,12 @@ class TripDetailsWidget extends StatelessWidget {
             // Description Card (Always visible)
             _buildDescriptionCard(),
             const SizedBox(height: 24),
+
+            // Day-by-Day Itinerary Card (Always visible if exists)
+            if (_hasItinerary()) ...[
+              _buildItineraryCard(),
+              const SizedBox(height: 24),
+            ],
 
             // Advanced Details (Only for group members)
             if (isGroupMember) ...[
@@ -412,6 +419,109 @@ class TripDetailsWidget extends StatelessWidget {
     );
   }
 
+  Widget _buildItineraryCard() {
+    final itinerary = tripData['dayByDayItinerary'] as List<Map<String, dynamic>>? ?? [];
+    final durationText = tripData['duration'] ?? '';
+    int totalDays = 0;
+    
+    // Extract total days from duration
+    if (durationText.isNotEmpty) {
+      final match = RegExp(r'(\d+)').firstMatch(durationText.toLowerCase());
+      if (match != null) {
+        totalDays = int.parse(match.group(1)!);
+      }
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.calendar_view_day,
+                color: Color(0xFF0088cc),
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Day-by-Day Itinerary',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0088cc).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${itinerary.length}/${totalDays > 0 ? totalDays : '?'} days planned',
+                  style: const TextStyle(
+                    color: Color(0xFF0088cc),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          if (itinerary.isEmpty)
+            Container(
+              height: 100,
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.calendar_today, color: Colors.grey[400], size: 32),
+                    const SizedBox(height: 8),
+                    Text(
+                      'No day-by-day itinerary added',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            DayItineraryWidget(
+              initialItinerary: itinerary,
+              totalDays: totalDays > 0 ? totalDays : itinerary.length,
+              isReadOnly: true,
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildGroupDetailsCard() {
     return Container(
       padding: const EdgeInsets.all(24),
@@ -546,49 +656,49 @@ class TripDetailsWidget extends StatelessWidget {
   }
 
   Widget _buildBudgetDetailsCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(24),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.1),
+          spreadRadius: 1,
+          blurRadius: 10,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Budget Details',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
           ),
+        ),
+        const SizedBox(height: 20),
+        if (tripData['travelBudget'] != null && tripData['travelBudget'].toString().isNotEmpty)
+          _buildDetailRow('Travel Budget', '\$${tripData['travelBudget']}', Icons.flight),
+        if (tripData['foodBudget'] != null && tripData['foodBudget'].toString().isNotEmpty)
+          _buildDetailRow('Food Budget', '\$${tripData['foodBudget']}', Icons.restaurant),
+        if (tripData['hotelBudget'] != null && tripData['hotelBudget'].toString().isNotEmpty)
+          _buildDetailRow('Hotel Budget', '\$${tripData['hotelBudget']}', Icons.hotel),
+        if (tripData['otherBudget'] != null && tripData['otherBudget'].toString().isNotEmpty)
+          _buildDetailRow('Other Expenses', '\$${tripData['otherBudget']}', Icons.more_horiz),
+        if (_getTotalBudget() > 0) ...[
+          const Divider(),
+          _buildDetailRow('Total Budget', '\$${_getTotalBudget()}', Icons.attach_money),
         ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Budget Details',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 20),
-          if (tripData['travelBudget'] != null && tripData['travelBudget'].isNotEmpty)
-            _buildDetailRow('Travel Budget', '\$${tripData['travelBudget']}', Icons.flight),
-          if (tripData['foodBudget'] != null && tripData['foodBudget'].isNotEmpty)
-            _buildDetailRow('Food Budget', '\$${tripData['foodBudget']}', Icons.restaurant),
-          if (tripData['hotelBudget'] != null && tripData['hotelBudget'].isNotEmpty)
-            _buildDetailRow('Hotel Budget', '\$${tripData['hotelBudget']}', Icons.hotel),
-          if (tripData['otherBudget'] != null && tripData['otherBudget'].isNotEmpty)
-            _buildDetailRow('Other Expenses', '\$${tripData['otherBudget']}', Icons.more_horiz),
-          if (_getTotalBudget() > 0) ...[
-            const Divider(),
-            _buildDetailRow('Total Budget', '\${_getTotalBudget()}', Icons.attach_money),
-          ],
-        ],
-      ),
-    );
-  }
+      ],
+    ),
+  );
+}
 
   Widget _buildMeetingPointCard() {
     return Container(
@@ -673,6 +783,11 @@ class TripDetailsWidget extends StatelessWidget {
   }
 
   // Helper methods
+  bool _hasItinerary() {
+    final itinerary = tripData['dayByDayItinerary'];
+    return itinerary != null && itinerary is List && itinerary.isNotEmpty;
+  }
+
   bool _hasGroupDetails() {
     return tripData['maxMembers'] != null || tripData['currentMembers'] != null;
   }

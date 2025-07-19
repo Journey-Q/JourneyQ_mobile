@@ -3,72 +3,134 @@ class SampleData {
   static List<Map<String, dynamic>> createdTripForms = [
     {
       'id': 'form_1',
-      'title': 'Himalayan Trek',
-      'destination': 'Everest Base Camp, Nepal',
+      'title': 'Kandy Heritage Tour',
+      'destination': 'Kandy, Sri Lanka',
       'startDate': 'September 10, 2025',
-      'endDate': 'September 24, 2025',
-      'duration': '14 days',
-      'maxMembers': '8',
-      'difficulty': 'Hard',
-      'tripType': 'Adventure',
-      'description': 'Epic 14-day trekking adventure in the Himalayas. We\'ll hike to Everest Base Camp, experience Sherpa culture, and witness breathtaking mountain views. For experienced hikers only!',
+      'endDate': 'September 12, 2025',
+      'duration': '3 days',
+      'maxMembers': '6',
+      'difficulty': 'Easy',
+      'tripType': 'Cultural',
+      'description': 'Explore the beautiful hill capital of Sri Lanka! Visit the sacred Temple of the Tooth, enjoy scenic lake views, and experience traditional Kandyan culture. Perfect for culture enthusiasts and families.',
       'status': 'Active',
-      'requestCount': '15',
+      'requestCount': '12',
       'createdDate': 'May 15, 2025',
-      'budget': '\$2,500',
+      'budget': 'LKR 25,000',
       'budgetType': 'Per Person',
-      'meetingPoint': 'Kathmandu Airport',
-      'activities': ['Hiking', 'Mountain Climbing', 'Photography', 'Cultural Tours'],
-      'travelBudget': '1000',
-      'foodBudget': '500',
-      'hotelBudget': '800',
-      'otherBudget': '200',
+      'meetingPoint': 'Kandy Railway Station',
+      'activities': ['Temple Visits', 'Cultural Shows', 'Lake Walks', 'Shopping'],
+      'travelBudget': '8000',
+      'foodBudget': '10000',
+      'hotelBudget': '15000',
+      'otherBudget': '5000',
+      'dayByDayItinerary': [
+        {
+          'day': 1,
+          'places': ['Temple of the Tooth', 'Kandy Lake', 'Royal Palace'],
+          'accommodation': 'Hotel Suisse Kandy',
+          'restaurants': ['White House Restaurant', 'Devon Restaurant'],
+          'activities': ['Temple visit', 'Evening cultural show', 'Lake walk'],
+          'notes': 'Arrive in Kandy, visit sacred temple, enjoy cultural evening'
+        },
+        {
+          'day': 2,
+          'places': ['Peradeniya Botanical Gardens', 'Pinnawala Elephant Orphanage'],
+          'accommodation': 'Hotel Suisse Kandy',
+          'restaurants': ['Elephant Park Restaurant', 'Garden Cafe'],
+          'activities': ['Garden tour', 'Elephant feeding', 'Nature photography'],
+          'notes': 'Full day with nature and wildlife experiences'
+        },
+        {
+          'day': 3,
+          'places': ['Bahirawakanda Temple', 'Kandy Market'],
+          'accommodation': 'Day trip',
+          'restaurants': ['Local food stalls', 'Kandy Muslim Hotel'],
+          'activities': ['Temple visit', 'Shopping', 'Local food tasting'],
+          'notes': 'Morning temple visit, shopping for souvenirs'
+        }
+      ],
     },
     {
       'id': 'form_2',
-      'title': 'Bali Beach Paradise',
-      'destination': 'Bali, Indonesia',
+      'title': 'Nuwara Eliya Hill Country',
+      'destination': 'Nuwara Eliya, Sri Lanka',
       'startDate': 'November 5, 2025',
-      'endDate': 'November 12, 2025',
-      'duration': '7 days',
-      'maxMembers': '6',
-      'difficulty': 'Easy',
-      'tripType': 'Relaxation',
-      'description': 'A relaxing week in Bali with beautiful beaches, temples, and amazing food. Perfect for those looking to unwind and enjoy tropical paradise.',
+      'endDate': 'November 8, 2025',
+      'duration': '4 days',
+      'maxMembers': '8',
+      'difficulty': 'Moderate',
+      'tripType': 'Adventure',
+      'description': 'Experience the cool climate and stunning landscapes of "Little England". Visit tea plantations, enjoy strawberry farms, and explore beautiful colonial architecture.',
       'status': 'Draft',
       'requestCount': '8',
       'createdDate': 'Jun 10, 2025',
-      'budget': '\$1,200',
+      'budget': 'LKR 35,000',
       'budgetType': 'Per Person',
-      'meetingPoint': 'Bali International Airport',
-      'activities': ['Beach Activities', 'Surfing', 'Temple Visits', 'Spa & Wellness'],
-      'travelBudget': '400',
-      'foodBudget': '300',
-      'hotelBudget': '400',
-      'otherBudget': '100',
+      'meetingPoint': 'Nanu Oya Railway Station',
+      'activities': ['Tea Plantation Tours', 'Hiking', 'Photography', 'Strawberry Picking'],
+      'travelBudget': '12000',
+      'foodBudget': '15000',
+      'hotelBudget': '20000',
+      'otherBudget': '8000',
+      'dayByDayItinerary': [
+        {
+          'day': 1,
+          'places': ['Pedro Tea Estate', 'Lake Gregory'],
+          'accommodation': 'Grand Hotel Nuwara Eliya',
+          'restaurants': ['Grand Hotel Restaurant', 'Milano Restaurant'],
+          'activities': ['Tea factory tour', 'Lake boating', 'Evening stroll'],
+          'notes': 'Arrive and explore tea culture and beautiful lake'
+        },
+        {
+          'day': 2,
+          'places': ['Horton Plains National Park', 'World\'s End'],
+          'accommodation': 'Grand Hotel Nuwara Eliya',
+          'restaurants': ['Park cafe', 'Local restaurants'],
+          'activities': ['Early morning hike', 'Wildlife spotting', 'Photography'],
+          'notes': 'Early start for Horton Plains adventure'
+        }
+      ],
     },
     {
       'id': 'form_3',
-      'title': 'European Road Trip',
-      'destination': 'Multiple Cities, Europe',
+      'title': 'Galle Fort Explorer',
+      'destination': 'Galle, Sri Lanka',
       'startDate': 'August 1, 2025',
-      'endDate': 'August 21, 2025',
-      'duration': '21 days',
-      'maxMembers': '4',
-      'difficulty': 'Moderate',
+      'endDate': 'August 3, 2025',
+      'duration': '3 days',
+      'maxMembers': '5',
+      'difficulty': 'Easy',
       'tripType': 'Cultural',
-      'description': 'Epic 3-week road trip across Europe visiting Paris, Rome, Barcelona, and Amsterdam. Experience diverse cultures, food, and history.',
+      'description': 'Discover the historic Galle Fort, a UNESCO World Heritage site. Walk along ancient ramparts, explore colonial architecture, and enjoy beautiful coastal views.',
       'status': 'Active',
-      'requestCount': '23',
+      'requestCount': '15',
       'createdDate': 'Apr 20, 2025',
-      'budget': '\$3,500',
+      'budget': 'LKR 28,000',
       'budgetType': 'Per Person',
-      'meetingPoint': 'Paris Charles de Gaulle Airport',
-      'activities': ['Road Trip', 'Sightseeing', 'Food Tours', 'Museums'],
-      'travelBudget': '1500',
-      'foodBudget': '800',
-      'hotelBudget': '1000',
-      'otherBudget': '200',
+      'meetingPoint': 'Galle Bus Station',
+      'activities': ['Fort Walking', 'Beach Activities', 'Museums', 'Shopping'],
+      'travelBudget': '8000',
+      'foodBudget': '12000',
+      'hotelBudget': '15000',
+      'otherBudget': '3000',
+      'dayByDayItinerary': [
+        {
+          'day': 1,
+          'places': ['Galle Fort', 'Dutch Reformed Church', 'Maritime Museum'],
+          'accommodation': 'Fort Printers Hotel',
+          'restaurants': ['Pedlar\'s Inn Cafe', 'Fortaleza Restaurant'],
+          'activities': ['Fort exploration', 'Museum visits', 'Sunset walk'],
+          'notes': 'Explore the historic fort and its colonial heritage'
+        },
+        {
+          'day': 2,
+          'places': ['Unawatuna Beach', 'Japanese Peace Pagoda'],
+          'accommodation': 'Fort Printers Hotel',
+          'restaurants': ['Beach restaurants', 'Kingfisher Restaurant'],
+          'activities': ['Beach relaxation', 'Snorkeling', 'Pagoda visit'],
+          'notes': 'Beach day with spiritual and relaxation activities'
+        }
+      ],
     },
   ];
 
@@ -76,88 +138,126 @@ class SampleData {
   static List<Map<String, dynamic>> joinedTrips = [
     {
       'id': 'group_1',
-      'userName': 'Alex Johnson',
-      'location': 'Tokyo, Japan',
-      'userImage': 'https://i.pravatar.cc/150?img=8',
-      'postImage': 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-      'title': 'Tokyo Adventure',
-      'description': 'Join us for an amazing 7-day adventure through Tokyo! We\'ll explore traditional temples, modern districts, try amazing food, and experience the culture. Perfect for first-time visitors to Japan.',
+      'userName': 'Kasun Perera',
+      'location': 'Sigiriya, Sri Lanka',
+      'userImage': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+      'postImage': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800',
+      'title': 'Sigiriya Rock Adventure',
+      'description': 'Climb the ancient Sigiriya Rock Fortress and explore Dambulla Cave Temples. Experience Sri Lanka\'s cultural triangle with amazing historical sites and breathtaking views.',
       'date': '2025-06-01',
-      'lastMessage': 'Planning the itinerary!',
+      'lastMessage': 'Early morning climb planned!',
       'lastTime': '2:30 PM',
       'isOnline': true,
       'unreadCount': 3,
-      'memberCount': 5,
-      'duration': '7 days',
+      'memberCount': 6,
+      'duration': '2 days',
       'isCreator': false,
       'createdDate': 'Jun 20, 2025',
+      'destination': 'Sigiriya, Sri Lanka',
+      'startDate': 'July 15, 2025',
+      'endDate': 'July 16, 2025',
+      'tripType': 'Adventure',
+      'dayByDayItinerary': [
+        {
+          'day': 1,
+          'places': ['Sigiriya Rock Fortress', 'Sigiriya Museum'],
+          'accommodation': 'Sigiriya Village Hotel',
+          'restaurants': ['Rithu Restaurant', 'Sigiri Restaurant'],
+          'activities': ['Rock climbing', 'Museum visit', 'Sunset viewing'],
+          'notes': 'Early morning climb to avoid heat and crowds'
+        },
+        {
+          'day': 2,
+          'places': ['Dambulla Cave Temple', 'Minneriya National Park'],
+          'accommodation': 'Day trip',
+          'restaurants': ['Dambulla restaurants', 'Safari lodge'],
+          'activities': ['Temple exploration', 'Elephant safari', 'Cave paintings'],
+          'notes': 'Cultural sites and wildlife experience'
+        }
+      ],
       'members': [
         {
           'id': 'user_1',
-          'name': 'Alex Johnson',
-          'avatar': 'https://i.pravatar.cc/150?img=8',
+          'name': 'Kasun Perera',
+          'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
           'role': 'Creator',
         },
         {
           'id': 'current_user',
           'name': 'You',
-          'avatar': 'https://i.pravatar.cc/150?img=1',
+          'avatar': 'https://images.unsplash.com/photo-1494790108755-2616b332c2e0?w=150',
           'role': 'Member',
         },
         {
           'id': 'user_3',
-          'name': 'Maria Rodriguez',
-          'avatar': 'https://i.pravatar.cc/150?img=5',
+          'name': 'Nimali Silva',
+          'avatar': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
           'role': 'Member',
         },
         {
           'id': 'user_4',
-          'name': 'John Smith',
-          'avatar': 'https://i.pravatar.cc/150?img=12',
-          'role': 'Member',
-        },
-        {
-          'id': 'user_5',
-          'name': 'Emma Wilson',
-          'avatar': 'https://i.pravatar.cc/150?img=16',
+          'name': 'Rohan Fernando',
+          'avatar': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
           'role': 'Member',
         },
       ],
     },
     {
       'id': 'group_2',
-      'userName': 'Maria Rodriguez',
-      'location': 'Barcelona, Spain',
-      'userImage': 'https://i.pravatar.cc/150?img=5',
-      'postImage': 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-      'title': 'Paris Getaway',
-      'description': 'A romantic 4-day getaway to the City of Light. We\'ll visit the Eiffel Tower, Louvre Museum, walk along the Seine, and enjoy French cuisine. Perfect for culture lovers!',
+      'userName': 'Priya Jayawardena',
+      'location': 'Ella, Sri Lanka',
+      'userImage': 'https://images.unsplash.com/photo-1494790108755-2616b332c2e0?w=150',
+      'postImage': 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800',
+      'title': 'Ella Hill Country Trek',
+      'description': 'Explore the stunning hill country of Ella. Hike to Little Adam\'s Peak, visit Nine Arch Bridge, and enjoy train rides through tea plantations.',
       'date': '2025-07-15',
-      'lastMessage': 'See you tomorrow!',
+      'lastMessage': 'Train tickets booked!',
       'lastTime': '11:15 AM',
       'isOnline': false,
       'unreadCount': 0,
-      'memberCount': 3,
-      'duration': '4 days',
+      'memberCount': 4,
+      'duration': '3 days',
       'isCreator': false,
       'createdDate': 'Jun 25, 2025',
+      'destination': 'Ella, Sri Lanka',
+      'startDate': 'August 5, 2025',
+      'endDate': 'August 7, 2025',
+      'tripType': 'Adventure',
+      'dayByDayItinerary': [
+        {
+          'day': 1,
+          'places': ['Nine Arch Bridge', 'Little Adam\'s Peak'],
+          'accommodation': 'Ella Mount Heaven',
+          'restaurants': ['Cafe Chill', 'Dream Cafe'],
+          'activities': ['Bridge photography', 'Easy hike', 'Sunset viewing'],
+          'notes': 'Arrive by train and explore famous landmarks'
+        },
+        {
+          'day': 2,
+          'places': ['Ella Rock', 'Ravana Falls'],
+          'accommodation': 'Ella Mount Heaven',
+          'restaurants': ['Matey Hut', 'AK Ristorante'],
+          'activities': ['Challenging hike', 'Waterfall visit', 'Swimming'],
+          'notes': 'Adventure day with hiking and waterfalls'
+        }
+      ],
       'members': [
         {
           'id': 'user_2',
-          'name': 'Maria Rodriguez',
-          'avatar': 'https://i.pravatar.cc/150?img=5',
+          'name': 'Priya Jayawardena',
+          'avatar': 'https://images.unsplash.com/photo-1494790108755-2616b332c2e0?w=150',
           'role': 'Creator',
         },
         {
           'id': 'current_user',
           'name': 'You',
-          'avatar': 'https://i.pravatar.cc/150?img=1',
+          'avatar': 'https://images.unsplash.com/photo-1494790108755-2616b332c2e0?w=150',
           'role': 'Member',
         },
         {
           'id': 'user_6',
-          'name': 'Sarah Lee',
-          'avatar': 'https://i.pravatar.cc/150?img=15',
+          'name': 'Tharaka Rathnayake',
+          'avatar': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
           'role': 'Member',
         },
       ],
@@ -169,66 +269,91 @@ class SampleData {
     {
       'id': 'group_3',
       'userName': 'You',
-      'location': 'Nepal',
-      'userImage': 'https://i.pravatar.cc/150?img=12',
-      'postImage': 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-      'title': 'Himalayan Trek',
-      'description': 'Epic 14-day trekking adventure in the Himalayas. We\'ll hike to Everest Base Camp, experience Sherpa culture, and witness breathtaking mountain views. For experienced hikers only!',
+      'location': 'Kandy, Sri Lanka',
+      'userImage': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=150',
+      'postImage': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800',
+      'title': 'Kandy Heritage Tour',
+      'description': 'Explore the beautiful hill capital of Sri Lanka! Visit the sacred Temple of the Tooth, enjoy scenic lake views, and experience traditional Kandyan culture.',
       'date': '2025-08-10',
-      'lastMessage': 'Let\'s finalize the plan.',
+      'lastMessage': 'Cultural show tickets confirmed!',
       'lastTime': 'Yesterday',
-      'memberCount': 8,
-      'duration': '14 days',
+      'memberCount': 6,
+      'duration': '3 days',
       'status': 'Active',
       'isCreator': true,
       'createdDate': 'May 15, 2025',
+      'destination': 'Kandy, Sri Lanka',
+      'startDate': 'September 10, 2025',
+      'endDate': 'September 12, 2025',
+      'tripType': 'Cultural',
+      'activities': ['Temple Visits', 'Cultural Shows', 'Lake Walks', 'Shopping'],
+      'travelBudget': '8000',
+      'foodBudget': '10000',
+      'hotelBudget': '15000',
+      'otherBudget': '5000',
+      'maxMembers': '6',
+      'meetingPoint': 'Kandy Railway Station',
+      'dayByDayItinerary': [
+        {
+          'day': 1,
+          'places': ['Temple of the Tooth', 'Kandy Lake', 'Royal Palace'],
+          'accommodation': 'Hotel Suisse Kandy',
+          'restaurants': ['White House Restaurant', 'Devon Restaurant'],
+          'activities': ['Temple visit', 'Evening cultural show', 'Lake walk'],
+          'notes': 'Arrive in Kandy, visit sacred temple, enjoy cultural evening'
+        },
+        {
+          'day': 2,
+          'places': ['Peradeniya Botanical Gardens', 'Pinnawala Elephant Orphanage'],
+          'accommodation': 'Hotel Suisse Kandy',
+          'restaurants': ['Elephant Park Restaurant', 'Garden Cafe'],
+          'activities': ['Garden tour', 'Elephant feeding', 'Nature photography'],
+          'notes': 'Full day with nature and wildlife experiences'
+        },
+        {
+          'day': 3,
+          'places': ['Bahirawakanda Temple', 'Kandy Market'],
+          'accommodation': 'Day trip',
+          'restaurants': ['Local food stalls', 'Kandy Muslim Hotel'],
+          'activities': ['Temple visit', 'Shopping', 'Local food tasting'],
+          'notes': 'Morning temple visit, shopping for souvenirs'
+        }
+      ],
       'members': [
         {
           'id': 'current_user',
           'name': 'You',
-          'avatar': 'https://i.pravatar.cc/150?img=1',
+          'avatar': 'https://images.unsplash.com/photo-1494790108755-2616b332c2e0?w=150',
           'role': 'Creator',
         },
         {
           'id': 'user_7',
-          'name': 'Alex Johnson',
-          'avatar': 'https://i.pravatar.cc/150?img=8',
+          'name': 'Kasun Perera',
+          'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
           'role': 'Admin',
         },
         {
           'id': 'user_8',
-          'name': 'Sarah Lee',
-          'avatar': 'https://i.pravatar.cc/150?img=15',
+          'name': 'Nimali Silva',
+          'avatar': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
           'role': 'Member',
         },
         {
           'id': 'user_9',
-          'name': 'Mike Chen',
-          'avatar': 'https://i.pravatar.cc/150?img=10',
+          'name': 'Rohan Fernando',
+          'avatar': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
           'role': 'Member',
         },
         {
           'id': 'user_10',
-          'name': 'Lisa Park',
-          'avatar': 'https://i.pravatar.cc/150?img=14',
+          'name': 'Priya Jayawardena',
+          'avatar': 'https://images.unsplash.com/photo-1494790108755-2616b332c2e0?w=150',
           'role': 'Member',
         },
         {
           'id': 'user_11',
-          'name': 'David Kim',
-          'avatar': 'https://i.pravatar.cc/150?img=18',
-          'role': 'Member',
-        },
-        {
-          'id': 'user_12',
-          'name': 'Anna White',
-          'avatar': 'https://i.pravatar.cc/150?img=20',
-          'role': 'Member',
-        },
-        {
-          'id': 'user_13',
-          'name': 'Tom Brown',
-          'avatar': 'https://i.pravatar.cc/150?img=22',
+          'name': 'Tharaka Rathnayake',
+          'avatar': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
           'role': 'Member',
         },
       ],
@@ -238,27 +363,27 @@ class SampleData {
   // Join Requests Data (Received by me for my trips)
   static List<Map<String, dynamic>> pendingRequests = [
     {
-      'name': 'Alex Johnson',
-      'trip': 'Himalayan Trek',
-      'email': 'alex.johnson@example.com',
+      'name': 'Kasun Perera',
+      'trip': 'Kandy Heritage Tour',
+      'email': 'kasun.perera@gmail.com',
       'joinDate': '2025-01-01',
       'tripDate': '2025-08-10',
-      'tripLocation': 'Nepal',
+      'tripLocation': 'Kandy, Sri Lanka',
       'requestTimestamp': '2025-06-26 10:00 AM',
-      'userImage': 'https://i.pravatar.cc/150?img=8',
-      'experience': 'Intermediate hiker',
+      'userImage': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+      'experience': 'Local guide with cultural knowledge',
       'age': 28,
     },
     {
-      'name': 'Sara Lee',
-      'trip': 'Himalayan Trek',
-      'email': 'sara.lee@example.com',
+      'name': 'Nimali Silva',
+      'trip': 'Kandy Heritage Tour',
+      'email': 'nimali.silva@gmail.com',
       'joinDate': '2025-02-15',
       'tripDate': '2025-08-10',
-      'tripLocation': 'Nepal',
+      'tripLocation': 'Kandy, Sri Lanka',
       'requestTimestamp': '2025-06-26 11:30 AM',
-      'userImage': 'https://i.pravatar.cc/150?img=15',
-      'experience': 'Beginner',
+      'userImage': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
+      'experience': 'Photography enthusiast',
       'age': 24,
     },
   ];
@@ -266,65 +391,65 @@ class SampleData {
   // Sent Requests Data (My requests to other trips)
   static List<Map<String, dynamic>> sentRequests = [
     {
-      'tripName': 'Safari Adventure',
-      'creatorName': 'John Safari',
-      'tripImage': 'https://i.pravatar.cc/150?img=20',
+      'tripName': 'Yala Safari Adventure',
+      'creatorName': 'Samantha Wickramasinghe',
+      'tripImage': 'https://images.unsplash.com/photo-1549366021-9f761d040a94?w=150',
       'status': 'Pending',
       'sentTime': '2 days ago',
       'tripDate': '2025-09-15',
-      'location': 'Kenya',
+      'location': 'Yala National Park',
     },
     {
-      'tripName': 'European Road Trip',
-      'creatorName': 'Emma Travel',
-      'tripImage': 'https://i.pravatar.cc/150?img=25',
+      'tripName': 'Mirissa Whale Watching',
+      'creatorName': 'Chaminda Perera',
+      'tripImage': 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=150',
       'status': 'Accepted',
       'sentTime': '1 week ago',
       'tripDate': '2025-10-01',
-      'location': 'Europe',
+      'location': 'Mirissa, Sri Lanka',
     },
     {
-      'tripName': 'Beach Paradise',
-      'creatorName': 'Mike Ocean',
-      'tripImage': 'https://i.pravatar.cc/150?img=30',
+      'tripName': 'Anuradhapura Ancient City',
+      'creatorName': 'Dilshan Fernando',
+      'tripImage': 'https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=150',
       'status': 'Rejected',
       'sentTime': '2 weeks ago',
       'tripDate': '2025-08-20',
-      'location': 'Maldives',
+      'location': 'Anuradhapura, Sri Lanka',
     },
   ];
 
   // Chat Messages Data
   static List<Map<String, dynamic>> chatMessages = [
     {
-      'sender': 'Alex Johnson',
-      'text': 'Hey everyone! Are we still meeting at 9 AM tomorrow?',
+      'sender': 'Kasun Perera',
+      'text': 'Ayubowan everyone! Ready for our Kandy adventure tomorrow?',
       'time': '2:30 PM',
       'date': 'Jun 27, 2025',
-      'avatar': 'https://i.pravatar.cc/150?img=8',
+      'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
       'isMe': false,
       'messageType': 'text'
     },
     {
       'sender': 'You',
-      'text': 'Yes! I\'ll be at the station by 8:45 AM',
+      'text': 'Yes! Already packed and excited to visit Temple of the Tooth 🙏',
       'time': '2:32 PM',
       'date': 'Jun 27, 2025',
       'isMe': true,
       'messageType': 'text'
     },
     {
-      'sender': 'Maria Rodriguez',
-      'text': 'Perfect! I\'ll bring some snacks for the journey 🥪',
+      'sender': 'Nimali Silva',
+      'text': 'I brought my camera for the cultural show tonight! 📸',
       'time': '2:35 PM',
       'date': 'Jun 27, 2025',
-      'avatar': 'https://i.pravatar.cc/150?img=5',
+      'avatar': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
       'isMe': false,
       'messageType': 'text'
     },
     {
       'sender': 'You',
-      'text': 'That sounds amazing! Can\'t wait 🎉',
+      'text': 'Perfect! Can\'t wait to experience Kandyan culture together! 🎭',
       'time': '2:36 PM',
       'date': 'Jun 27, 2025',
       'isMe': true,
@@ -332,257 +457,196 @@ class SampleData {
     },
   ];
 
-  // Gallery Images Data (NEW!)
+  // Gallery Images Data with Sri Lankan locations
   static Map<String, List<Map<String, dynamic>>> galleryImages = {
     'group_1': [
       {
         'id': 'img_1_1',
-        'url': 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        'thumbnail': 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-        'caption': 'Beautiful Tokyo sunset from our hotel room! 🌅',
-        'uploadedBy': 'Alex Johnson',
+        'url': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800',
+        'thumbnail': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400',
+        'caption': 'Amazing view from Sigiriya Rock! 🏔️',
+        'uploadedBy': 'Kasun Perera',
         'uploadedById': 'user_1',
         'uploadedAt': '2025-06-27T14:30:00Z',
-        'userAvatar': 'https://i.pravatar.cc/150?img=8',
+        'userAvatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
         'groupId': 'group_1',
         'likes': 12,
         'comments': 3,
       },
       {
         'id': 'img_1_2',
-        'url': 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        'thumbnail': 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-        'caption': 'Amazing street food in Shibuya! Best takoyaki ever 🐙',
+        'url': 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800',
+        'thumbnail': 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400',
+        'caption': 'Beautiful ancient frescoes at Sigiriya! 🎨',
         'uploadedBy': 'You',
         'uploadedById': 'current_user',
         'uploadedAt': '2025-06-27T12:15:00Z',
-        'userAvatar': 'https://i.pravatar.cc/150?img=1',
+        'userAvatar': 'https://images.unsplash.com/photo-1494790108755-2616b332c2e0?w=150',
         'groupId': 'group_1',
         'likes': 8,
         'comments': 2,
-      },
-      {
-        'id': 'img_1_3',
-        'url': 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        'thumbnail': 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-        'caption': 'Traditional temple visit - so peaceful and spiritual ⛩️',
-        'uploadedBy': 'Maria Rodriguez',
-        'uploadedById': 'user_3',
-        'uploadedAt': '2025-06-27T10:45:00Z',
-        'userAvatar': 'https://i.pravatar.cc/150?img=5',
-        'groupId': 'group_1',
-        'likes': 15,
-        'comments': 5,
-      },
-      {
-        'id': 'img_1_4',
-        'url': 'https://images.unsplash.com/photo-1480796927426-f609979314bd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        'thumbnail': 'https://images.unsplash.com/photo-1480796927426-f609979314bd?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-        'caption': 'Group photo at Tokyo Tower! Amazing views 🗼',
-        'uploadedBy': 'John Smith',
-        'uploadedById': 'user_4',
-        'uploadedAt': '2025-06-26T18:20:00Z',
-        'userAvatar': 'https://i.pravatar.cc/150?img=12',
-        'groupId': 'group_1',
-        'likes': 20,
-        'comments': 7,
-      },
-      {
-        'id': 'img_1_5',
-        'url': 'https://images.unsplash.com/photo-1542640244-7e672d6cef4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        'thumbnail': 'https://images.unsplash.com/photo-1542640244-7e672d6cef4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-        'caption': 'Cherry blossom season is magical! Perfect timing 🌸',
-        'uploadedBy': 'Emma Wilson',
-        'uploadedById': 'user_5',
-        'uploadedAt': '2025-06-26T16:10:00Z',
-        'userAvatar': 'https://i.pravatar.cc/150?img=16',
-        'groupId': 'group_1',
-        'likes': 25,
-        'comments': 9,
-      },
-      {
-        'id': 'img_1_6',
-        'url': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        'thumbnail': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-        'caption': 'Delicious ramen at 2 AM - best meal ever! 🍜',
-        'uploadedBy': 'You',
-        'uploadedById': 'current_user',
-        'uploadedAt': '2025-06-26T13:30:00Z',
-        'userAvatar': 'https://i.pravatar.cc/150?img=1',
-        'groupId': 'group_1',
-        'likes': 18,
-        'comments': 4,
       },
     ],
     'group_2': [
       {
         'id': 'img_2_1',
-        'url': 'https://images.unsplash.com/photo-1431274172761-fca41d930114?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        'thumbnail': 'https://images.unsplash.com/photo-1431274172761-fca41d930114?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-        'caption': 'Eiffel Tower at night - absolutely breathtaking! ✨',
-        'uploadedBy': 'Maria Rodriguez',
+        'url': 'https://images.unsplash.com/photo-1566133568781-d0293023926a?w=800',
+        'thumbnail': 'https://images.unsplash.com/photo-1566133568781-d0293023926a?w=400',
+        'caption': 'Nine Arch Bridge - architectural marvel! 🌉',
+        'uploadedBy': 'Priya Jayawardena',
         'uploadedById': 'user_2',
         'uploadedAt': '2025-06-25T20:30:00Z',
-        'userAvatar': 'https://i.pravatar.cc/150?img=5',
+        'userAvatar': 'https://images.unsplash.com/photo-1494790108755-2616b332c2e0?w=150',
         'groupId': 'group_2',
         'likes': 22,
         'comments': 6,
-      },
-      {
-        'id': 'img_2_2',
-        'url': 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        'thumbnail': 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-        'caption': 'Louvre Museum - culture overload in the best way! 🎨',
-        'uploadedBy': 'You',
-        'uploadedById': 'current_user',
-        'uploadedAt': '2025-06-25T14:15:00Z',
-        'userAvatar': 'https://i.pravatar.cc/150?img=1',
-        'groupId': 'group_2',
-        'likes': 16,
-        'comments': 3,
-      },
-      {
-        'id': 'img_2_3',
-        'url': 'https://images.unsplash.com/photo-1502602898536-47ad22581b52?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        'thumbnail': 'https://images.unsplash.com/photo-1502602898536-47ad22581b52?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-        'caption': 'Seine River cruise - Paris from the water 🚢',
-        'uploadedBy': 'Sarah Lee',
-        'uploadedById': 'user_6',
-        'uploadedAt': '2025-06-25T11:45:00Z',
-        'userAvatar': 'https://i.pravatar.cc/150?img=15',
-        'groupId': 'group_2',
-        'likes': 14,
-        'comments': 2,
       },
     ],
     'group_3': [
       {
         'id': 'img_3_1',
-        'url': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        'thumbnail': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-        'caption': 'Everest Base Camp - we made it! Incredible journey 🏔️',
+        'url': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800',
+        'thumbnail': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400',
+        'caption': 'Temple of the Tooth - spiritual journey! 🙏',
         'uploadedBy': 'You',
         'uploadedById': 'current_user',
         'uploadedAt': '2025-06-24T09:30:00Z',
-        'userAvatar': 'https://i.pravatar.cc/150?img=1',
+        'userAvatar': 'https://images.unsplash.com/photo-1494790108755-2616b332c2e0?w=150',
         'groupId': 'group_3',
         'likes': 35,
         'comments': 12,
       },
-      {
-        'id': 'img_3_2',
-        'url': 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        'thumbnail': 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-        'caption': 'Sherpa village - learning about local culture 🏘️',
-        'uploadedBy': 'Alex Johnson',
-        'uploadedById': 'user_7',
-        'uploadedAt': '2025-06-23T15:20:00Z',
-        'userAvatar': 'https://i.pravatar.cc/150?img=8',
-        'groupId': 'group_3',
-        'likes': 28,
-        'comments': 8,
-      },
-      {
-        'id': 'img_3_3',
-        'url': 'https://images.unsplash.com/photo-1464822759844-d150baec93c5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        'thumbnail': 'https://images.unsplash.com/photo-1464822759844-d150baec93c5?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-        'caption': 'Mountain sunrise - worth every step of the trek 🌄',
-        'uploadedBy': 'Sarah Lee',
-        'uploadedById': 'user_8',
-        'uploadedAt': '2025-06-23T06:15:00Z',
-        'userAvatar': 'https://i.pravatar.cc/150?img=15',
-        'groupId': 'group_3',
-        'likes': 42,
-        'comments': 15,
-      },
-      {
-        'id': 'img_3_4',
-        'url': 'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-        'thumbnail': 'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
-        'caption': 'Prayer flags in the wind - spiritual moment 🙏',
-        'uploadedBy': 'Mike Chen',
-        'uploadedById': 'user_9',
-        'uploadedAt': '2025-06-22T12:40:00Z',
-        'userAvatar': 'https://i.pravatar.cc/150?img=10',
-        'groupId': 'group_3',
-        'likes': 31,
-        'comments': 9,
-      },
     ],
   };
 
-  // Home Page Posts Data
+  // Home Page Posts Data with Sri Lankan locations
   static List<Map<String, String>> homePosts = [
     {
-      'userName': 'Alex Johnson',
-      'location': 'Tokyo, Japan • 2 hours ago',
-      'userImage': 'https://i.pravatar.cc/150?img=8',
-      'postImage': 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      'userName': 'Kasun Perera',
+      'location': 'Sigiriya, Sri Lanka • 2 hours ago',
+      'userImage': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+      'postImage': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800',
     },
     {
-      'userName': 'Maria Rodriguez',
-      'location': 'Barcelona, Spain • 5 hours ago',
-      'userImage': 'https://i.pravatar.cc/150?img=5',
-      'postImage': 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+      'userName': 'Nimali Silva',
+      'location': 'Ella, Sri Lanka • 5 hours ago',
+      'userImage': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
+      'postImage': 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800',
     },
     {
-      'userName': 'John Smith',
-      'location': 'Paris, France • 1 day ago',
-      'userImage': 'https://i.pravatar.cc/150?img=12',
-      'postImage': 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+      'userName': 'Priya Jayawardena',
+      'location': 'Galle Fort, Sri Lanka • 1 day ago',
+      'userImage': 'https://images.unsplash.com/photo-1494790108755-2616b332c2e0?w=150',
+      'postImage': 'https://images.unsplash.com/photo-1566133568781-d0293023926a?w=800',
     },
     {
-      'userName': 'Emma Wilson',
-      'location': 'New York, USA • 2 days ago',
-      'userImage': 'https://i.pravatar.cc/150?img=16',
-      'postImage': 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+      'userName': 'Rohan Fernando',
+      'location': 'Nuwara Eliya, Sri Lanka • 2 days ago',
+      'userImage': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+      'postImage': 'https://images.unsplash.com/photo-1549366021-9f761d040a94?w=800',
     },
   ];
 
-  // Trip Types and Difficulties for create form
+  // Sri Lankan Trip Types and Difficulties
   static const List<String> tripTypes = [
-    'Adventure',
-    'Relaxation',
-    'Cultural',
-    'Wildlife',
-    'Photography',
-    'Backpacking',
+    'Cultural Heritage',
+    'Hill Country Adventure',
+    'Beach & Coastal',
+    'Wildlife Safari',
+    'Tea Plantation Tour',
+    'Ancient Cities',
+    'Spiritual Journey',
   ];
 
   static const List<String> difficulties = [
     'Easy',
     'Moderate',
-    'Hard',
-    'Extreme',
+    'Challenging',
+    'Adventure',
   ];
 
-  // Activities for trip creation/editing
+  // Sri Lankan Activities
   static const List<String> activities = [
-    'Hiking',
-    'Mountain Climbing',
-    'Beach Activities',
-    'Surfing',
-    'Photography',
-    'Cultural Tours',
-    'Food Tours',
-    'Museums',
-    'Wildlife Safari',
-    'Sightseeing',
-    'Road Trip',
     'Temple Visits',
-    'Spa & Wellness',
-    'Nightlife',
-    'Shopping',
-    'Local Experiences',
+    'Cultural Shows',
+    'Tea Plantation Tours',
+    'Wildlife Safari',
+    'Beach Activities',
+    'Hiking & Trekking',
+    'Photography',
+    'Local Food Tasting',
+    'Train Journeys',
+    'Elephant Experiences',
+    'Whale Watching',
+    'Waterfall Visits',
+    'Shopping for Gems',
+    'Ayurvedic Spa',
+    'Traditional Crafts',
+    'Cricket Watching',
   ];
 
-  // Budget Types for trip creation/editing
+  // Budget Types
   static const List<String> budgetTypes = [
-    'Per Person',
-    'Total Budget',
+    'Per Person (LKR)',
+    'Total Budget (LKR)',
     'Shared Cost',
     'Individual Cost',
   ];
+
+  // Rest of the helper methods remain the same...
+  // [Include all the existing helper methods from the original file]
+
+  // Budget Expense Data for Sri Lankan groups
+  static Map<String, Map<String, Map<String, double>>> groupBudgetData = {
+    'group_1': { // Sigiriya Rock Adventure
+      'current_user': {
+        'travel': 15000.0, // Bus/train to Sigiriya
+        'food': 8000.0,    // Local restaurants
+        'hotel': 12000.0,  // Sigiriya Village Hotel
+        'other': 5000.0,   // Entrance fees, guides
+      },
+      'user_1': { // Kasun Perera
+        'travel': 10000.0, // Local transport
+        'food': 12000.0,   // Meals and snacks
+        'hotel': 0.0,      // Didn't pay hotel
+        'other': 8000.0,   // Activities, souvenirs
+      },
+    },
+    'group_2': { // Ella Hill Country Trek
+      'current_user': {
+        'travel': 8000.0,  // Train tickets to Ella
+        'food': 6000.0,    // Cafe meals
+        'hotel': 10000.0,  // Ella Mount Heaven
+        'other': 4000.0,   // Hiking gear, photos
+      },
+      'user_2': { // Priya Jayawardena
+        'travel': 7000.0,  // Bus transport
+        'food': 8000.0,    // Restaurant meals
+        'hotel': 10000.0,  // Hotel share
+        'other': 3000.0,   // Shopping, souvenirs
+      },
+    },
+    'group_3': { // Kandy Heritage Tour
+      'current_user': {
+        'travel': 8000.0,  // Transport to Kandy
+        'food': 10000.0,   // Traditional meals
+        'hotel': 15000.0,  // Hotel Suisse Kandy
+        'other': 5000.0,   // Cultural show, shopping
+      },
+      'user_7': { // Kasun Perera
+        'travel': 6000.0,  // Local transport
+        'food': 8000.0,    // Food expenses
+        'hotel': 15000.0,  // Hotel payment
+        'other': 7000.0,   // Temple donations, gifts
+      },
+      'user_8': { // Nimali Silva
+        'travel': 5000.0,  // Short distance travel
+        'food': 12000.0,   // Premium dining
+        'hotel': 0.0,      // Stayed with relatives
+        'other': 6000.0,   // Photography equipment
+      },
+    },
+  };
 
   // Helper method to get group details by ID
   static Map<String, dynamic>? getGroupById(String groupId) {
@@ -603,30 +667,42 @@ class SampleData {
 
   // Helper method to get trip details for group details page
   static Map<String, String> getTripDetails(String groupId) {
+    final group = getGroupById(groupId);
+    if (group != null) {
+      return {
+        'destination': group['destination'] ?? 'Unknown',
+        'startDate': group['startDate'] ?? 'TBD',
+        'endDate': group['endDate'] ?? 'TBD',
+        'budget': group['budget'] ?? 'TBD',
+        'tripType': group['tripType'] ?? 'Cultural Heritage',
+      };
+    }
+    
+    // Fallback for legacy data
     switch (groupId) {
       case 'group_1':
         return {
-          'destination': 'Tokyo, Japan',
+          'destination': 'Sigiriya, Sri Lanka',
           'startDate': 'July 15, 2025',
-          'endDate': 'July 22, 2025',
-          'budget': '\$1,200 per person',
-          'tripType': 'Adventure',
+          'endDate': 'July 16, 2025',
+          'budget': 'LKR 20,000 per person',
+          'tripType': 'Cultural Heritage',
         };
       case 'group_2':
         return {
-          'destination': 'Paris, France',
+          'destination': 'Ella, Sri Lanka',
           'startDate': 'August 5, 2025',
-          'endDate': 'August 9, 2025',
-          'budget': '\$800 per person',
-          'tripType': 'Cultural',
+          'endDate': 'August 7, 2025',
+          'budget': 'LKR 15,000 per person',
+          'tripType': 'Hill Country Adventure',
         };
       case 'group_3':
         return {
-          'destination': 'Everest Base Camp, Nepal',
+          'destination': 'Kandy, Sri Lanka',
           'startDate': 'September 10, 2025',
-          'endDate': 'September 24, 2025',
-          'budget': '\$2,500 per person',
-          'tripType': 'Adventure',
+          'endDate': 'September 12, 2025',
+          'budget': 'LKR 25,000 per person',
+          'tripType': 'Cultural Heritage',
         };
       default:
         return {
@@ -634,7 +710,7 @@ class SampleData {
           'startDate': 'TBD',
           'endDate': 'TBD',
           'budget': 'TBD',
-          'tripType': 'Adventure',
+          'tripType': 'Cultural Heritage',
         };
     }
   }
@@ -695,44 +771,6 @@ class SampleData {
     return [];
   }
 
-  // Helper method to update image caption
-  // static void updateImageCaption(String groupId, String imageId, String newCaption) {
-  //   final images = galleryImages[groupId];
-  //   if (images != null) {
-  //     for (var image in images) {
-  //       if (image['id'] == imageId) {
-  //         image['caption'] = newCaption;
-  //         break;
-  //       }
-  //     }
-  //   }
-  // }
-
-  // Helper method to like/unlike an image
-  // static void toggleImageLike(String groupId, String imageId, String userId) {
-  //   final images = galleryImages[groupId];
-  //   if (images != null) {
-  //     for (var image in images) {
-  //       if (image['id'] == imageId) {
-  //         // Initialize likes list if it doesn't exist
-  //         image['likedBy'] ??= <String>[];
-  //         List<String> likedBy = List<String>.from(image['likedBy']);
-          
-  //         if (likedBy.contains(userId)) {
-  //           likedBy.remove(userId);
-  //           image['likes'] = (image['likes'] ?? 0) - 1;
-  //         } else {
-  //           likedBy.add(userId);
-  //           image['likes'] = (image['likes'] ?? 0) + 1;
-  //         }
-          
-  //         image['likedBy'] = likedBy;
-  //         break;
-  //       }
-  //     }
-  //   }
-  // }
-
   // Helper method to get gallery stats for a group
   static Map<String, dynamic> getGalleryStats(String groupId) {
     final images = galleryImages[groupId] ?? [];
@@ -756,4 +794,64 @@ class SampleData {
           : null,
     };
   }
+
+  // Helper method to get budget data for a specific group
+  static Map<String, Map<String, double>>? getGroupBudgetData(String groupId) {
+    return groupBudgetData[groupId];
+  }
+
+  // Helper method to get expense details for a member
+  static List<Map<String, dynamic>> getMemberExpenseDetails(String groupId, String memberId) {
+    return expenseDetails[groupId]?[memberId] ?? [];
+  }
+
+  // Helper method to get total expense for a member in a group
+  static double getMemberTotalExpense(String groupId, String memberId) {
+    final expenses = groupBudgetData[groupId]?[memberId];
+    if (expenses == null) return 0.0;
+    return expenses.values.fold(0.0, (sum, expense) => sum + expense);
+  }
+
+  // Helper method to get category expense for a member
+  static double getMemberCategoryExpense(String groupId, String memberId, String category) {
+    return groupBudgetData[groupId]?[memberId]?[category] ?? 0.0;
+  }
+
+  // Helper method to update member expense
+  static void updateMemberExpense(String groupId, String memberId, String category, double amount) {
+    if (groupBudgetData[groupId] == null) {
+      groupBudgetData[groupId] = {};
+    }
+    if (groupBudgetData[groupId]![memberId] == null) {
+      groupBudgetData[groupId]![memberId] = {
+        'travel': 0.0,
+        'food': 0.0,
+        'hotel': 0.0,
+        'other': 0.0,
+      };
+    }
+    groupBudgetData[groupId]![memberId]![category] = amount;
+  }
+
+  // Expense descriptions for better context
+  static Map<String, Map<String, List<Map<String, dynamic>>>> expenseDetails = {
+    'group_1': {
+      'current_user': [
+        {'category': 'travel', 'description': 'Bus ticket to Sigiriya', 'amount': 15000.0, 'date': '2025-06-01'},
+        {'category': 'food', 'description': 'Lunch at Sigiriya restaurant', 'amount': 3000.0, 'date': '2025-06-02'},
+        {'category': 'food', 'description': 'Traditional rice & curry', 'amount': 5000.0, 'date': '2025-06-03'},
+        {'category': 'hotel', 'description': 'Sigiriya Village Hotel 2 nights', 'amount': 12000.0, 'date': '2025-06-01'},
+        {'category': 'other', 'description': 'Entrance fees & guide', 'amount': 5000.0, 'date': '2025-06-02'},
+      ],
+    },
+    'group_3': {
+      'current_user': [
+        {'category': 'travel', 'description': 'Train to Kandy', 'amount': 8000.0, 'date': '2025-06-01'},
+        {'category': 'food', 'description': 'Traditional Kandyan meal', 'amount': 4000.0, 'date': '2025-06-02'},
+        {'category': 'food', 'description': 'Tea and snacks', 'amount': 6000.0, 'date': '2025-06-03'},
+        {'category': 'hotel', 'description': 'Hotel Suisse Kandy 3 nights', 'amount': 15000.0, 'date': '2025-06-01'},
+        {'category': 'other', 'description': 'Cultural show tickets', 'amount': 5000.0, 'date': '2025-06-02'},
+      ],
+    },
+  };
 }

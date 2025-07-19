@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:journeyq/features/join_trip/pages/data.dart';
 import 'package:journeyq/features/join_trip/pages/widget.dart';
+import 'package:journeyq/features/join_trip/pages/common/day_itinerary_widget.dart';
 
 enum TripFormMode { create, edit, view }
 
@@ -49,6 +50,8 @@ class _TripFormWidgetState extends State<TripFormWidget> {
   // Form state
   late String _selectedTripType;
   late List<String> _selectedActivities;
+  late List<Map<String, dynamic>> _dayByDayItinerary;
+  int _calculatedDays = 0;
   bool _isLoading = false;
   
   bool get _isReadOnly => widget.mode == TripFormMode.view;
@@ -101,6 +104,16 @@ class _TripFormWidgetState extends State<TripFormWidget> {
     } else {
       _selectedActivities = <String>[];
     }
+
+    // Initialize day-by-day itinerary
+    if (data['dayByDayItinerary'] != null && data['dayByDayItinerary'] is List) {
+      _dayByDayItinerary = List<Map<String, dynamic>>.from(data['dayByDayItinerary']);
+    } else {
+      _dayByDayItinerary = <Map<String, dynamic>>[];
+    }
+
+    // Calculate days from duration or dates
+    _calculateDaysFromDuration();
   }
 
   String _validateAndSetDropdownValue(dynamic value, List<String> validOptions, String defaultValue) {
@@ -116,6 +129,22 @@ class _TripFormWidgetState extends State<TripFormWidget> {
     
     print('Warning: Dropdown value "$stringValue" not found in options. Using default: $defaultValue');
     return defaultValue;
+  }
+
+  void _calculateDaysFromDuration() {
+    // Try to extract days from duration string
+    final durationText = _durationController.text.toLowerCase();
+    if (durationText.contains('day')) {
+      final match = RegExp(r'(\d+)').firstMatch(durationText);
+      if (match != null) {
+        _calculatedDays = int.parse(match.group(1)!);
+      }
+    }
+    
+    // If no days calculated, try from dates
+    if (_calculatedDays == 0) {
+      _calculateDuration();
+    }
   }
 
   @override
@@ -186,6 +215,7 @@ class _TripFormWidgetState extends State<TripFormWidget> {
         final difference = endDate.difference(startDate).inDays + 1;
         setState(() {
           _durationController.text = '$difference ${difference == 1 ? 'day' : 'days'}';
+          _calculatedDays = difference;
         });
       } catch (e) {
         print('Error calculating duration: $e');
@@ -371,6 +401,12 @@ class _TripFormWidgetState extends State<TripFormWidget> {
     );
   }
 
+  void _onItineraryChanged(List<Map<String, dynamic>> updatedItinerary) {
+    setState(() {
+      _dayByDayItinerary = updatedItinerary;
+    });
+  }
+
   void _submitForm() async {
     if (_isReadOnly) return;
     
@@ -388,6 +424,7 @@ class _TripFormWidgetState extends State<TripFormWidget> {
         'duration': _durationController.text,
         'tripType': _selectedTripType,
         'description': _descriptionController.text,
+        'dayByDayItinerary': _dayByDayItinerary, // Always include itinerary
       };
 
       // Advanced data (only if user is group member)
@@ -481,7 +518,6 @@ class _TripFormWidgetState extends State<TripFormWidget> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        // Removed actions - using bottom button instead
       ),
       body: Form(
         key: _formKey,
@@ -684,6 +720,59 @@ class _TripFormWidgetState extends State<TripFormWidget> {
                   }
                 },
               ),
+
+              const SizedBox(height: 24),
+
+              // Day-by-Day Itinerary Section (Always visible as optional)
+              _buildSectionHeader('Day-by-Day Itinerary (Optional)'),
+              const SizedBox(height: 8),
+              
+              Text(
+                _calculatedDays > 0 
+                    ? 'Plan your $_calculatedDays-day trip day by day. You can add plans for any days you want.'
+                    : 'Add your trip dates to enable day-by-day planning.',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              if (_calculatedDays > 0)
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey[200]!),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: DayItineraryWidget(
+                      initialItinerary: _dayByDayItinerary,
+                      totalDays: _calculatedDays,
+                      isReadOnly: _isReadOnly,
+                      onItineraryChanged: _onItineraryChanged,
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[200]!),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Select trip dates to enable day-by-day planning',
+                      style: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
 
               // Advanced Options (Only for group members)
               if (_showAdvancedOptions) ...[

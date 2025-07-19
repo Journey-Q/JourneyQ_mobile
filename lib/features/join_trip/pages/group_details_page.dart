@@ -45,7 +45,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
     // Try to find corresponding trip form data
     final groupData = SampleData.getGroupById(widget.groupId);
     if (groupData != null) {
-      // Convert group data to trip form format with all member-accessible fields
+      // Convert group data to trip form format with ONLY basic fields
       _tripFormData = {
         'title': groupData['title'] ?? widget.groupName,
         'destination': _tripDetails['destination'],
@@ -53,15 +53,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
         'endDate': _tripDetails['endDate'],
         'tripType': _tripDetails['tripType'],
         'description': widget.description,
-        'duration': groupData['duration'] ?? '7 days',
-        'maxMembers': widget.members.length,
-        'currentMembers': widget.members.length,
-        'meetingPoint': 'TBD',
-        'activities': <String>[],
-        'travelBudget': '',
-        'foodBudget': '',
-        'hotelBudget': '',
-        'otherBudget': '',
+        'duration': groupData['duration'] ?? '3 days',
         'status': 'Active',
         'createdDate': widget.createdDate,
       };
@@ -74,124 +66,285 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
     super.dispose();
   }
 
+  String _getLocationBasedImage() {
+    final destination = _tripDetails['destination']?.toLowerCase() ?? '';
+    
+    if (destination.contains('kandy')) {
+      return 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=400&fit=crop';
+    } else if (destination.contains('ella')) {
+      return 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=400&fit=crop';
+    } else if (destination.contains('sigiriya')) {
+      return 'https://images.unsplash.com/photo-1566133568781-d0293023926a?w=800&h=400&fit=crop';
+    } else if (destination.contains('galle')) {
+      return 'https://images.unsplash.com/photo-1549366021-9f761d040a94?w=800&h=400&fit=crop';
+    } else if (destination.contains('nuwara eliya')) {
+      return 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=400&fit=crop';
+    } else {
+      return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          widget.isCreator ? 'Manage Group' : 'Group Details',
-          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          if (widget.isCreator)
-            TextButton(
-              onPressed: () {
-                if (_isEditing) {
-                  _saveChanges();
-                } else {
-                  setState(() {
-                    _isEditing = true;
-                  });
-                }
-              },
-              child: Text(
-                _isEditing ? 'Save' : 'Edit',
-                style: const TextStyle(
-                  color: Color(0xFF0088cc),
-                  fontWeight: FontWeight.bold,
-                ),
+      body: CustomScrollView(
+        slivers: [
+          // Custom App Bar with Landscape Image
+          SliverAppBar(
+            expandedHeight: 280.0,
+            floating: false,
+            pinned: true,
+            backgroundColor: Colors.white,
+            elevation: 0,
+            leading: Container(
+              margin: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
               ),
             ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Group Profile Section
-            _buildGroupProfileSection(),
-            const SizedBox(height: 24),
-            
-            // Trip Details Section with View/Edit (Now accessible to all members)
-            _buildTripDetailsSection(),
-            const SizedBox(height: 24),
-            
-            // Members Section
-            _buildMembersSection(),
-            const SizedBox(height: 24),
-            
-            // Leave/Delete Group Button
-            _buildActionButton(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGroupProfileSection() {
-    return Center(
-      child: Column(
-        children: [
-          Stack(
-            children: [
-              CircleAvatar(
-                radius: 50,
-                backgroundImage: NetworkImage(widget.groupImage),
-              ),
-              if (widget.isCreator && _isEditing)
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: GestureDetector(
-                    onTap: _changeGroupImage,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF0088cc),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.camera_alt,
+            actions: [
+              if (widget.isCreator)
+                Container(
+                  margin: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: TextButton(
+                    onPressed: () {
+                      if (_isEditing) {
+                        _saveChanges();
+                      } else {
+                        setState(() {
+                          _isEditing = true;
+                        });
+                      }
+                    },
+                    child: Text(
+                      _isEditing ? 'Save' : 'Edit',
+                      style: const TextStyle(
                         color: Colors.white,
-                        size: 16,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                 ),
             ],
-          ),
-          const SizedBox(height: 16),
-          if (_isEditing && widget.isCreator)
-            TextField(
-              controller: _groupNameController,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-              textAlign: TextAlign.center,
-              decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
-                hintText: 'Group Name',
-              ),
-            )
-          else
-            Text(
-              widget.groupName,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Landscape Background Image
+                  ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(24),
+                      bottomRight: Radius.circular(24),
+                    ),
+                    child: Image.network(
+                      _getLocationBasedImage(),
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey[300],
+                          child: const Icon(
+                            Icons.landscape,
+                            size: 80,
+                            color: Colors.grey,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  // Gradient Overlay
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(24),
+                        bottomRight: Radius.circular(24),
+                      ),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.7),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Content Overlay
+                  Positioned(
+                    bottom: 40,
+                    left: 20,
+                    right: 20,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Group Profile Image - Rounded Square
+                        Center(
+                          child: Stack(
+                            children: [
+                              Container(
+                                width: 100,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20), // Rounded square
+                                  border: Border.all(color: Colors.white, width: 3),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.3),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 5),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(17),
+                                  child: Image.network(
+                                    _getLocationBasedImage(),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        color: Colors.grey[300],
+                                        child: const Icon(
+                                          Icons.location_on,
+                                          size: 40,
+                                          color: Colors.grey,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              if (widget.isCreator && _isEditing)
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: GestureDetector(
+                                    onTap: _changeGroupImage,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF0088cc),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: Colors.white, width: 2),
+                                      ),
+                                      child: const Icon(
+                                        Icons.camera_alt,
+                                        color: Colors.white,
+                                        size: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Group Name
+                        Center(
+                          child: _isEditing && widget.isCreator
+                              ? Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.9),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: TextField(
+                                    controller: _groupNameController,
+                                    style: const TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    decoration: const InputDecoration(
+                                      border: InputBorder.none,
+                                      hintText: 'Group Name',
+                                    ),
+                                  ),
+                                )
+                              : Text(
+                                  widget.groupName,
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    shadows: [
+                                      Shadow(
+                                        offset: Offset(0, 2),
+                                        blurRadius: 4,
+                                        color: Colors.black54,
+                                      ),
+                                    ],
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Location
+                        Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.9),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.location_on,
+                                  size: 16,
+                                  color: Color(0xFF0088cc),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _tripDetails['destination'] ?? 'Sri Lanka',
+                                  style: const TextStyle(
+                                    color: Colors.black87,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
+          ),
+          // Content
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Trip Details Section
+                  _buildTripDetailsSection(),
+                  const SizedBox(height: 24),
+                  
+                  // Members Section
+                  _buildMembersSection(),
+                  const SizedBox(height: 24),
+                  
+                  // Leave/Delete Group Button
+                  _buildActionButton(),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -202,7 +355,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20), // Rounded square design
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -227,61 +380,109 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
               ),
               Row(
                 children: [
-                  TextButton.icon(
-                    onPressed: _viewTripDetails,
-                    icon: const Icon(Icons.visibility, size: 18),
-                    label: const Text('View'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFF0088cc),
-                    ),
+                  _buildActionChip(
+                    icon: Icons.visibility,
+                    label: 'View',
+                    onTap: _viewTripDetails,
+                    color: const Color(0xFF0088cc),
                   ),
-                  // All group members can edit trip details now
-                  TextButton.icon(
-                    onPressed: _editTripDetails,
-                    icon: const Icon(Icons.edit, size: 18),
-                    label: const Text('Edit'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFF0088cc),
-                    ),
+                  const SizedBox(width: 8),
+                  _buildActionChip(
+                    icon: Icons.edit,
+                    label: 'Edit',
+                    onTap: _editTripDetails,
+                    color: Colors.orange,
                   ),
                 ],
               ),
             ],
           ),
           const SizedBox(height: 16),
-          _buildDetailRow('Destination', _tripDetails['destination']!),
-          _buildDetailRow('Start Date', _tripDetails['startDate']!),
-          _buildDetailRow('End Date', _tripDetails['endDate']!),
-          _buildDetailRow('Budget', _tripDetails['budget']!),
-          _buildDetailRow('Trip Type', _tripDetails['tripType']!),
+          _buildDetailRow('Destination', _tripDetails['destination']!, Icons.location_on),
+          _buildDetailRow('Start Date', _tripDetails['startDate']!, Icons.calendar_today),
+          _buildDetailRow('End Date', _tripDetails['endDate']!, Icons.calendar_month),
+          _buildDetailRow('Budget', _tripDetails['budget']!, Icons.account_balance_wallet),
+          _buildDetailRow('Trip Type', _tripDetails['tripType']!, Icons.category),
         ],
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildActionChip({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    required Color color,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, IconData icon) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14,
-              ),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0088cc).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10), // Rounded square
+            ),
+            child: Icon(
+              icon,
+              size: 18,
+              color: const Color(0xFF0088cc),
             ),
           ),
+          const SizedBox(width: 16),
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -294,7 +495,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20), // Rounded square design
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -318,13 +519,11 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
                 ),
               ),
               if (widget.isCreator)
-                TextButton.icon(
-                  onPressed: _addMember,
-                  icon: const Icon(Icons.person_add, size: 18),
-                  label: const Text('Add'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: const Color(0xFF0088cc),
-                  ),
+                _buildActionChip(
+                  icon: Icons.person_add,
+                  label: 'Add',
+                  onTap: _addMember,
+                  color: Colors.green,
                 ),
             ],
           ),
@@ -336,34 +535,46 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
   }
 
   Widget _buildMemberTile(Map<String, dynamic> member) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(16), // Rounded square design
+        border: Border.all(color: Colors.grey[200]!),
+      ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundImage: NetworkImage(member['avatar']),
+          // Member Avatar - Rounded Square
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12), // Rounded square
+              border: Border.all(color: Colors.grey[300]!, width: 1),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(11),
+              child: Image.network(
+                member['avatar'],
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.person, size: 24, color: Colors.grey),
+                  );
+                },
+              ),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  member['name'],
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                ),
-                Text(
-                  member['role'] ?? 'Member',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                  ),
-                ),
-              ],
+            child: Text(
+              member['name'],
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
             ),
           ),
           if (widget.isCreator && member['id'] != 'current_user')
@@ -378,14 +589,33 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
               itemBuilder: (context) => [
                 const PopupMenuItem(
                   value: 'admin',
-                  child: Text('Make Admin'),
+                  child: Row(
+                    children: [
+                      Icon(Icons.admin_panel_settings, size: 16),
+                      SizedBox(width: 8),
+                      Text('Make Admin'),
+                    ],
+                  ),
                 ),
                 const PopupMenuItem(
                   value: 'remove',
-                  child: Text('Remove from Group'),
+                  child: Row(
+                    children: [
+                      Icon(Icons.person_remove, size: 16, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Remove', style: TextStyle(color: Colors.red)),
+                    ],
+                  ),
                 ),
               ],
-              child: const Icon(Icons.more_vert, color: Colors.grey),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.more_vert, size: 16, color: Colors.grey),
+              ),
             ),
         ],
       ),
@@ -397,7 +627,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20), // Rounded square design
         border: Border.all(color: Colors.red.withOpacity(0.3)),
         boxShadow: [
           BoxShadow(
@@ -411,20 +641,28 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           onTap: widget.isCreator ? _deleteGroup : _leaveGroup,
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  widget.isCreator ? Icons.delete : Icons.exit_to_app,
-                  color: Colors.red,
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    widget.isCreator ? Icons.delete : Icons.exit_to_app,
+                    color: Colors.red,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  widget.isCreator ? 'Delete Group' : 'Leave',
+                  widget.isCreator ? 'Delete Group' : 'Leave Group',
                   style: const TextStyle(
                     color: Colors.red,
                     fontWeight: FontWeight.w600,
@@ -449,7 +687,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
             tripData: _tripFormData!,
             customTitle: '${widget.groupName} - Trip Details',
             showEditButton: false,
-            isGroupMember: true, // All group members can see advanced details
+            isGroupMember: false,
           ),
           fullscreenDialog: true,
         ),
@@ -465,17 +703,16 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
           builder: (context) => TripFormWidget(
             mode: TripFormMode.edit,
             initialData: _tripFormData,
-            isGroupMember: true, // Show all advanced options for group members
+            isGroupMember: false,
             customTitle: 'Edit ${widget.groupName} Trip',
             onSubmit: (updatedData) {
               setState(() {
                 _tripFormData = updatedData;
-                // Update trip details for display
                 _tripDetails = {
                   'destination': updatedData['destination'] ?? _tripDetails['destination']!,
                   'startDate': updatedData['startDate'] ?? _tripDetails['startDate']!,
                   'endDate': updatedData['endDate'] ?? _tripDetails['endDate']!,
-                  'budget': _calculateDisplayBudget(updatedData),
+                  'budget': 'Not specified',
                   'tripType': updatedData['tripType'] ?? _tripDetails['tripType']!,
                 };
               });
@@ -487,39 +724,97 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
     }
   }
 
-  String _calculateDisplayBudget(Map<String, dynamic> data) {
-    int total = 0;
-    
-    if (data['travelBudget'] != null && data['travelBudget'].toString().isNotEmpty) {
-      total += int.tryParse(data['travelBudget'].toString()) ?? 0;
-    }
-    if (data['foodBudget'] != null && data['foodBudget'].toString().isNotEmpty) {
-      total += int.tryParse(data['foodBudget'].toString()) ?? 0;
-    }
-    if (data['hotelBudget'] != null && data['hotelBudget'].toString().isNotEmpty) {
-      total += int.tryParse(data['hotelBudget'].toString()) ?? 0;
-    }
-    if (data['otherBudget'] != null && data['otherBudget'].toString().isNotEmpty) {
-      total += int.tryParse(data['otherBudget'].toString()) ?? 0;
-    }
-    
-    return total > 0 ? '\${total} total' : 'Not specified';
-  }
-
   // Helper methods
   void _changeGroupImage() {
-    print('Change group image');
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Change Group Image',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildImageOption('Camera', Icons.camera_alt, () {
+                  Navigator.pop(context);
+                  // Implement camera functionality
+                }),
+                _buildImageOption('Gallery', Icons.photo_library, () {
+                  Navigator.pop(context);
+                  // Implement gallery functionality
+                }),
+                _buildImageOption('Default', Icons.landscape, () {
+                  Navigator.pop(context);
+                  // Set default location-based image
+                }),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageOption(String label, IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: const Color(0xFF0088cc).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(15), // Rounded square
+            ),
+            child: Icon(icon, color: const Color(0xFF0088cc), size: 30),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
+    );
   }
 
   void _saveChanges() {
     setState(() {
       _isEditing = false;
     });
-    print('Saving changes...');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Group details saved successfully!'),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   void _addMember() {
-    // Show follower selection for adding members
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -546,6 +841,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Remove Member'),
         content: Text('Are you sure you want to remove ${member['name']} from the group?'),
         actions: [
@@ -575,6 +871,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Make Admin'),
         content: Text('Make ${member['name']} an admin of this group?'),
         actions: [
@@ -604,8 +901,11 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Delete Group'),
-        content: const Text('Are you sure you want to delete this group? This action cannot be undone. All trip details and member data will be lost.'),
+        content: const Text(
+          'Are you sure you want to delete this group? This action cannot be undone. All trip details and member data will be lost.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -634,8 +934,11 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Leave Group'),
-        content: const Text('Are you sure you want to leave this group? You will lose access to all trip details and group chats.'),
+        content: const Text(
+          'Are you sure you want to leave this group? You will lose access to all trip details and group chats.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -679,37 +982,42 @@ class FollowerSelectionSheet extends StatefulWidget {
 class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
   List<Map<String, dynamic>> _selectedFollowers = [];
   
-  // Sample followers data (excluding current group members)
+  // Sample Sri Lankan followers data
   final List<Map<String, dynamic>> _followers = [
     {
       'id': 'follower_7',
-      'name': 'David Kim',
-      'avatar': 'https://i.pravatar.cc/150?img=18',
+      'name': 'Tharaka Rathnayake',
+      'avatar': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
       'isOnline': true,
+      'location': 'Colombo',
     },
     {
       'id': 'follower_8',
-      'name': 'Anna White',
-      'avatar': 'https://i.pravatar.cc/150?img=20',
+      'name': 'Sanduni Perera',
+      'avatar': 'https://images.unsplash.com/photo-1494790108755-2616b332c2e0?w=150',
       'isOnline': false,
+      'location': 'Galle',
     },
     {
       'id': 'follower_9',
-      'name': 'Tom Brown',
-      'avatar': 'https://i.pravatar.cc/150?img=22',
+      'name': 'Chaminda Silva',
+      'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
       'isOnline': true,
+      'location': 'Kandy',
     },
     {
       'id': 'follower_10',
-      'name': 'Lisa Park',
-      'avatar': 'https://i.pravatar.cc/150?img=14',
+      'name': 'Malika Fernando',
+      'avatar': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
       'isOnline': false,
+      'location': 'Nuwara Eliya',
     },
     {
       'id': 'follower_11',
-      'name': 'James Wilson',
-      'avatar': 'https://i.pravatar.cc/150?img=25',
+      'name': 'Dinesh Wickramasinghe',
+      'avatar': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
       'isOnline': true,
+      'location': 'Sigiriya',
     },
   ];
 
@@ -718,6 +1026,10 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
       padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       child: Column(
         children: [
           Container(
@@ -754,7 +1066,7 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16), // Rounded square
                 border: Border.all(color: Colors.blue[100]!),
               ),
               child: Row(
@@ -789,7 +1101,7 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
                   margin: const EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
                     color: isSelected ? Colors.blue[50] : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16), // Rounded square
                     border: Border.all(
                       color: isSelected ? Colors.blue[200]! : Colors.grey[200]!,
                     ),
@@ -810,9 +1122,27 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
                       children: [
                         Stack(
                           children: [
-                            CircleAvatar(
-                              radius: 20,
-                              backgroundImage: NetworkImage(follower['avatar']),
+                            // Avatar - Rounded Square
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10), // Rounded square
+                                border: Border.all(color: Colors.grey[300]!, width: 1),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(9),
+                                child: Image.network(
+                                  follower['avatar'],
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: Colors.grey[300],
+                                      child: const Icon(Icons.person, size: 20, color: Colors.grey),
+                                    );
+                                  },
+                                ),
+                              ),
                             ),
                             if (follower['isOnline'])
                               Positioned(
@@ -832,24 +1162,12 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                follower['name'],
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              Text(
-                                follower['isOnline'] ? 'Online' : 'Offline',
-                                style: TextStyle(
-                                  color: follower['isOnline'] ? Colors.green : Colors.grey[500],
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
+                          child: Text(
+                            follower['name'],
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
                           ),
                         ),
                       ],
@@ -869,6 +1187,9 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
                   onPressed: () => Navigator.pop(context),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16), // Rounded square
+                    ),
                   ),
                   child: const Text('Cancel'),
                 ),
@@ -882,6 +1203,9 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0088cc),
                     padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16), // Rounded square
+                    ),
                   ),
                   child: Text(
                     _selectedFollowers.isEmpty 

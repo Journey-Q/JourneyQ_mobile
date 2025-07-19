@@ -10,6 +10,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool isCreator;
   final String createdDate;
   final VoidCallback? onGalleryPressed;
+  final VoidCallback? onBudgetPressed;
 
   const ChatAppBar({
     super.key,
@@ -21,6 +22,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.isCreator,
     required this.createdDate,
     this.onGalleryPressed,
+    this.onBudgetPressed,
   });
 
   @override
@@ -38,9 +40,27 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
           children: [
             Stack(
               children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundImage: NetworkImage(userImage),
+                // Profile image as rounded square
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10), // Rounded square
+                    border: Border.all(color: Colors.grey[300]!, width: 1),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(9),
+                    child: Image.network(
+                      userImage,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.person, size: 20, color: Colors.grey),
+                        );
+                      },
+                    ),
+                  ),
                 ),
                 Positioned(
                   bottom: 0,
@@ -59,31 +79,47 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    groupName,
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  // Text(
-                  //   '${members.length} members • Online',
-                  //   style: TextStyle(
-                  //     color: Colors.green[600],
-                  //     fontSize: 12,
-                  //   ),
-                  // ),
-                ],
+              child: Text(
+                groupName,
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
             ),
           ],
         ),
       ),
       actions: [
+        // Budget Icon
+        Container(
+          margin: const EdgeInsets.only(right: 5),
+          child: IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 40, 40, 40),
+                borderRadius: BorderRadius.circular(12), // Rounded rectangle
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.account_balance_wallet,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+            onPressed: onBudgetPressed,
+            tooltip: 'Group Budget',
+          ),
+        ),
+        
         // Gallery Icon
         Container(
           margin: const EdgeInsets.only(right: 8),
@@ -92,7 +128,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: const Color.fromARGB(255, 40, 40, 40),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12), // Rounded rectangle
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFF0088cc).withOpacity(0.3),
