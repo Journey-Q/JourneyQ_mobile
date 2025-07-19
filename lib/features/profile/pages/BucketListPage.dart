@@ -92,6 +92,7 @@ class _BucketListPageState extends State<BucketListPage> {
         backgroundColor: Colors.white,
         appBar: AppBar(
             backgroundColor: Colors.white,
+            surfaceTintColor: Colors.transparent,
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -319,14 +320,7 @@ class _BucketListPageState extends State<BucketListPage> {
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton.icon(
-                      onPressed: () => _shareDestination(item),
-                      icon: const Icon(Icons.share, size: 16),
-                      label: const Text('Share'),
-
-                    ),
+                    )
                   ],
                 ),
               ],
