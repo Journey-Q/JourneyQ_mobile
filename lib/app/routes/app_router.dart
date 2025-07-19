@@ -6,6 +6,7 @@ import 'package:journeyq/features/market_place/pages/index.dart';
 import 'package:journeyq/features/market_place/pages/BookingHistoryPage.dart';
 import 'package:journeyq/features/market_place/pages/viewall_hotels.dart';
 import 'package:journeyq/features/market_place/pages/hotel_details.dart';
+import 'package:journeyq/features/market_place/pages/room_details.dart';
 import 'package:journeyq/features/market_place/pages/booking_room.dart';
 import 'package:journeyq/features/market_place/pages/viewall_tour_packages.dart';
 import 'package:journeyq/features/market_place/pages/tour_package_details.dart';
@@ -112,6 +113,37 @@ class AppRouter {
             return AppWrapper(
               currentRoute: '/marketplace',
               child: HotelDetailsPage(hotelId: hotelId),
+            );
+          },
+          transitionType: PageTransitionType.slide,
+        ),
+
+        TransitionGoRoute(
+          path: '/marketplace/hotels/room_details',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            if (extra == null) {
+              // If no room data provided, redirect to hotels
+              return AppWrapper(
+                currentRoute: '/marketplace',
+                child: const ViewAllHotelsPage(),
+              );
+            }
+
+            final hotel = extra['hotel'] as Map<String, dynamic>?;
+            final room = extra['room'] as Map<String, dynamic>?;
+
+            if (hotel == null || room == null) {
+              // If incomplete data, redirect to hotels
+              return AppWrapper(
+                currentRoute: '/marketplace',
+                child: const ViewAllHotelsPage(),
+              );
+            }
+
+            return AppWrapper(
+              currentRoute: '/marketplace',
+              child: RoomDetailsPage(hotel: hotel, room: room),
             );
           },
           transitionType: PageTransitionType.slide,

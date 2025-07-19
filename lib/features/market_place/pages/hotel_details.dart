@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'booking_room.dart';
-
-
+import 'room_details.dart';
 
 class HotelDetailsPage extends StatefulWidget {
   final String hotelId;
@@ -87,7 +86,16 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'bedType': 'King Bed',
           'image': 'assets/images/room_deluxe.jpg',
           'backgroundColor': const Color(0xFF8B4513),
-          'amenities': ['Ocean View', 'WiFi', 'Minibar', 'Safe', 'Air Conditioning', 'Marble Bathroom', 'Balcony'],
+          'amenities': [
+            'Full Board',
+            'Ocean View',
+            'WiFi',
+            'Minibar',
+            'Safe',
+            'Air Conditioning',
+            'Marble Bathroom',
+            'Balcony'
+          ],
           'available': true,
           'status': 'available',
         },
@@ -101,7 +109,16 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'bedType': 'King Bed',
           'image': 'assets/images/room_suite.jpg',
           'backgroundColor': const Color(0xFF20B2AA),
-          'amenities': ['Separate Living Room', 'City View', 'WiFi', 'Minibar', 'Work Desk', 'Premium Bathroom with Bathtub', 'Executive Lounge Access'],
+          'amenities': [
+            'All-Inclusive',
+            'Separate Living Room',
+            'City View',
+            'WiFi',
+            'Minibar',
+            'Work Desk',
+            'Premium Bathroom with Bathtub',
+            'Executive Lounge Access'
+          ],
           'available': false,
           'status': 'maintenance',
         },
@@ -115,7 +132,14 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'bedType': 'Master Bedroom + Guest Room',
           'image': 'assets/images/room_presidential.jpg',
           'backgroundColor': const Color(0xFF9370DB),
-          'amenities': ['Living & Dining Area', 'Panoramic Ocean View', 'Butler Service', 'Premium Amenities', 'Jacuzzi Bathroom'],
+          'amenities': [
+            'Half Board',
+            'Living & Dining Area',
+            'Panoramic Ocean View',
+            'Butler Service',
+            'Premium Amenities',
+            'Jacuzzi Bathroom'
+          ],
           'available': false,
           'status': 'booked',
         },
@@ -142,7 +166,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
         'Free WiFi',
         'Sea Spray Restaurant',
         'Fitness Center',
-        'Heritage Tours',
+        'Bed and Breakfast',
         'Concierge Service',
         'Room Service',
         'Valet Parking',
@@ -159,7 +183,15 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'bedType': 'Queen Bed',
           'image': 'assets/images/room_deluxe.jpg',
           'backgroundColor': const Color(0xFF228B22),
-          'amenities': ['Garden View', 'WiFi', 'Classic Furnishing', 'Air Conditioning', 'Period Bathroom', 'Colonial Decor'],
+          'amenities': [
+            'Room Only',
+            'Garden View',
+            'WiFi',
+            'Classic Furnishing',
+            'Air Conditioning',
+            'Period Bathroom',
+            'Colonial Decor'
+          ],
           'available': true,
           'status': 'available',
         },
@@ -173,7 +205,15 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'bedType': 'King Bed',
           'image': 'assets/images/room_suite.jpg',
           'backgroundColor': const Color(0xFF20B2AA),
-          'amenities': ['Ocean Facing', 'Sitting Area', 'WiFi', 'Period Furniture', 'Premium Bathroom', 'Balcony'],
+          'amenities': [
+            'Bed and Breakfast',
+            'Ocean Facing',
+            'Sitting Area',
+            'WiFi',
+            'Period Furniture',
+            'Premium Bathroom',
+            'Balcony'
+          ],
           'available': true,
           'status': 'available',
         },
@@ -187,7 +227,14 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'bedType': 'King Bed',
           'image': 'assets/images/room_presidential.jpg',
           'backgroundColor': const Color(0xFF9370DB),
-          'amenities': ['Historical Suite', 'Separate Living Room', 'Ocean View', 'Antique Furnishing', 'Butler Service'],
+          'amenities': [
+            'Historical Suite',
+            'Separate Living Room',
+            'Ocean View',
+            'Antique Furnishing',
+            'Butler Service',
+            'Full Board'
+          ],
           'available': false,
           'status': 'maintenance',
         },
@@ -212,7 +259,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
         'Rooftop Pool',
         'Red Spa',
         'Free WiFi',
-        'Nuga Gama Restaurant',
+        'Full Board',
         'Fitness Center',
         'Business Center',
         'Concierge Service',
@@ -231,7 +278,15 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'bedType': 'King Bed',
           'image': 'assets/images/room_presidential.jpg',
           'backgroundColor': const Color(0xFF20B2AA),
-          'amenities': ['City View', 'WiFi', 'Minibar', 'Work Station', 'Air Conditioning', 'Modern Bathroom'],
+          'amenities': [
+            'City View',
+            'WiFi',
+            'Minibar',
+            'Work Station',
+            'Air Conditioning',
+            'Modern Bathroom',
+            'Full Board'
+          ],
           'available': true,
           'status': 'available',
         },
@@ -245,7 +300,14 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'bedType': 'King Bed',
           'image': 'assets/images/room_suite.jpg',
           'backgroundColor': const Color(0xFF8FBC8F),
-          'amenities': ['Club Lounge Access', 'WiFi', 'Minibar', 'Premium Amenities', 'Complimentary Breakfast'],
+          'amenities': [
+            'Club Lounge Access',
+            'WiFi',
+            'Minibar',
+            'Premium Amenities',
+            'Complimentary Breakfast',
+            'All-Inclusive'
+          ],
           'available': false,
           'status': 'booked',
         },
@@ -273,6 +335,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
         'Graze Kitchen',
         'Executive Lounge',
         'Business Center',
+        'Half Board',
         'Concierge Service',
         'Room Service',
         'Fitness Center',
@@ -289,7 +352,15 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'bedType': 'King Bed',
           'image': 'assets/images/room_suite.jpg',
           'backgroundColor': const Color(0xFF8FBC8F),
-          'amenities': ['City View', 'WiFi', 'Work Desk', 'Minibar', 'Air Conditioning', 'Walk-in Shower Bathroom'],
+          'amenities': [
+            'City View',
+            'WiFi',
+            'Work Desk',
+            'Minibar',
+            'Air Conditioning',
+            'Walk-in Shower Bathroom',
+            'Half Board'
+          ],
           'available': true,
           'status': 'available',
         },
@@ -303,7 +374,15 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'bedType': 'King Bed',
           'image': 'assets/images/room_presidential.jpg',
           'backgroundColor': const Color(0xFF20B2AA),
-          'amenities': ['Executive Lounge Access', 'WiFi', 'Premium Amenities', 'Complimentary Breakfast', 'Evening Cocktails', 'Spa Bathroom'],
+          'amenities': [
+            'Executive Lounge Access',
+            'WiFi',
+            'Premium Amenities',
+            'Complimentary Breakfast',
+            'Evening Cocktails',
+            'Spa Bathroom',
+            'Bed and Breakfast'
+          ],
           'available': false,
           'status': 'maintenance',
         },
@@ -331,6 +410,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
         'Golden Dragon Restaurant',
         'Fitness Center',
         'Business Center',
+        'Half Board',
         'Concierge Service',
         'Room Service',
         'Cultural Experiences',
@@ -347,7 +427,14 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'bedType': 'King Bed',
           'image': 'assets/images/room_deluxe.jpg',
           'backgroundColor': const Color(0xFF9370DB),
-          'amenities': ['Ocean/City View', 'WiFi', 'Minibar', 'Traditional Decor', 'Air Conditioning'],
+          'amenities': [
+            'Ocean/City View',
+            'WiFi',
+            'Minibar',
+            'Traditional Decor',
+            'Air Conditioning',
+            'Full Board'
+          ],
           'available': true,
           'status': 'available',
         },
@@ -361,7 +448,14 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'bedType': 'King Bed',
           'image': 'assets/images/room_presidential.jpg',
           'backgroundColor': const Color(0xFF20B2AA),
-          'amenities': ['Premium Ocean View', 'WiFi', 'Premium Amenities', 'Elegant Furnishing', 'Marble Bathroom'],
+          'amenities': [
+            'Premium Ocean View',
+            'WiFi',
+            'Premium Amenities',
+            'Elegant Furnishing',
+            'Marble Bathroom',
+            'All-Inclusive'
+          ],
           'available': true,
           'status': 'available',
         },
@@ -375,7 +469,14 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           'bedType': 'King Bed',
           'image': 'assets/images/room_suite.jpg',
           'backgroundColor': const Color(0xFF8B4513),
-          'amenities': ['Separate Living Area', 'Ocean View', 'Club Benefits', 'Butler Service', 'Premium Location'],
+          'amenities': [
+            'Separate Living Area',
+            'Ocean View',
+            'Club Benefits',
+            'Butler Service',
+            'Premium Location',
+            'All-Inclusive'
+          ],
           'available': false,
           'status': 'booked',
         },
@@ -390,7 +491,6 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
     } catch (e) {
       return null;
     }
-
   }
 
   // Enhanced room card with separate bedroom/bathroom counts
@@ -403,12 +503,11 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
       // Fallback to available field if status is missing
       status = (room['available'] == true) ? 'available' : 'booked';
     }
-    
+
     String statusText;
     Color statusColor;
 
     switch (status) {
-
       case 'available':
         statusText = 'Available';
         statusColor = Colors.green;
@@ -429,9 +528,6 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
     // Get bedroom and bathroom counts from separate fields
     int bedrooms = room['bedrooms'] ?? 1;
     int bathrooms = room['bathrooms'] ?? 1;
-
-    // For maintenance rooms, override available to false
-    bool isAvailable = (status == 'available');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -550,7 +646,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                
+
                 // Bedroom & Bathroom Counts Section
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -616,28 +712,32 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                
+
                 // Other Amenities
                 if (room['amenities'] != null && room['amenities'].isNotEmpty)
                   Wrap(
                     spacing: 6,
                     runSpacing: 4,
-                    children: room['amenities'].take(6).map<Widget>((amenity) {
+                    children: room['amenities'].map<Widget>((amenity) {
+                      // Special styling for meal plan options
+                      bool isMealPlan = ['Full Board', 'Half Board', 'Bed and Breakfast', 'All-Inclusive', 'Room Only'].contains(amenity);
+
                       return Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 6,
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
+                          color: isMealPlan ? Colors.orange.shade50 : Colors.blue.shade50,
                           borderRadius: BorderRadius.circular(8),
+                          border: isMealPlan ? Border.all(color: Colors.orange.shade300) : null,
                         ),
                         child: Text(
                           amenity,
                           style: TextStyle(
                             fontSize: 10,
-                            color: Colors.blue.shade700,
-                            fontWeight: FontWeight.w500,
+                            color: isMealPlan ? Colors.orange.shade700 : Colors.blue.shade700,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       );
@@ -656,30 +756,26 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: isAvailable ? () {
-                        // Navigate to booking page with hotel and room data
+                      onPressed: () {
+                        // Navigate to room details page
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => BookingRoomPage(
+                            builder: (context) => RoomDetailsPage(
                               hotel: hotelData,
                               room: room,
                             ),
                           ),
                         );
-                      } : null,
+                      },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isAvailable ? const Color(0xFF0088cc) : Colors.grey,
+                        backgroundColor: const Color(0xFF0088cc),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: Text(
-                          isAvailable ? 'Book Now' :
-                          (status == 'maintenance' ? 'Under Maintenance' : 'Not Available')
-
-                      ),
+                      child: const Text('View Details'),
                     ),
                   ],
                 ),
@@ -1019,7 +1115,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                       color: Colors.black,
                     ),
                   ),
-                  const SizedBox(height: 8), // Reduced from 16 to 8 as in first page
+                  const SizedBox(height: 8),
                   Column(
                     children: rooms.asMap().entries.map((entry) {
                       int index = entry.key;
@@ -1035,4 +1131,4 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
       ),
     );
   }
-}
+  }
