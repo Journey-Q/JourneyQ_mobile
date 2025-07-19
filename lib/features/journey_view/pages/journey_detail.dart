@@ -20,6 +20,45 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   final PageController _placesPageController = PageController();
   int _currentPlaceIndex = 0;
 
+  // Interaction state variables
+  bool _isLiked = false;
+  bool _isBookmarked = false;
+  int _likesCount = 125; // Sample data
+  int _commentsCount = 32; // Sample data
+  List<Map<String, dynamic>> _comments = [
+    {
+      'id': '1',
+      'userName': 'Sarah Johnson',
+      'userImage': '',
+      'comment': 'Amazing journey! Thanks for sharing these wonderful places.',
+      'timeAgo': '2h',
+      'likesCount': 5,
+      'isLiked': false,
+      'replies': [
+        {
+          'id': '1_1',
+          'userName': 'Travel Explorer',
+          'userImage': '',
+          'comment': 'Thank you! Glad you found it helpful.',
+          'timeAgo': '1h',
+          'likesCount': 2,
+          'isLiked': false,
+          'replies': [],
+        }
+      ],
+    },
+    {
+      'id': '2',
+      'userName': 'Mike Chen',
+      'userImage': '',
+      'comment': 'I\'ve been to Kandy too! Such a beautiful place. Your photos captured it perfectly.',
+      'timeAgo': '5h',
+      'likesCount': 8,
+      'isLiked': false,
+      'replies': [],
+    },
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -62,6 +101,7 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
                   _buildRecommendationsSection(),
                   _buildTipsSection(),
                   _buildBudgetBreakdown(),
+                  _buildInteractionSection(), // New interaction section
                   const SizedBox(height: 10), // Bottom padding
                 ],
               ),
@@ -143,6 +183,24 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+
+                    const SizedBox(width: 18),
+
+                    Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.blue[600],
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Text(
+                'Follow',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
                   ],
                 ),
               ],
@@ -153,7 +211,6 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
     ),
   );
 }
-
 
 Widget _buildImage(String imagePath) {
   // Check if it's an asset image (starts with 'assets/') or network URL
@@ -616,50 +673,95 @@ Widget _buildImage(String imagePath) {
   }
 
   Widget _buildTipsSection() {
-    final tips = journeyData!['tips'] as List<String>;
-
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Travel Tips',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          ...tips.map((tip) {
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.all(12),
+  final tips = journeyData!['tips'] as List<String>;
+  return Container(
+    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.04),
+          spreadRadius: 0,
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header with icon
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue[200]!),
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    LucideIcons.lightbulb,
-                    size: 18,
-                    color: Colors.blue[700],
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
+              child: Icon(
+                Icons.lightbulb_outline,
+                color: Colors.green[600],
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Travel Tips',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        
+        // Tips list
+        ...tips.asMap().entries.map((entry) {
+          final index = entry.key;
+          final tip = entry.value;
+          final isLast = index == tips.length - 1;
+          
+          return Container(
+            margin: EdgeInsets.only(bottom: isLast ? 0 : 16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Tip content
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.grey[200]!,
+                        width: 1,
+                      ),
+                    ),
                     child: Text(
                       tip,
-                      style: const TextStyle(fontSize: 14, height: 1.4),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        height: 1.5,
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
                   ),
-                ],
-              ),
-            );
-          }).toList(),
-        ],
-      ),
-    );
-  }
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ],
+    ),
+  );
+}
 
   Widget _buildBudgetBreakdown() {
     final breakdown = journeyData!['budgetBreakdown'] as Map<String, dynamic>;
@@ -738,6 +840,160 @@ Widget _buildImage(String imagePath) {
     );
   }
 
+  // New interaction section
+ // Replace your _buildInteractionSection() method with this improved version:
+
+// Replace your _buildInteractionSection() method with this improved version:
+
+Widget _buildInteractionSection() {
+  return Container(
+    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.04),
+          spreadRadius: 0,
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+       
+        
+        // Divider
+        Container(
+          height: 1,
+          color: Colors.grey[200],
+        ),
+        
+        const SizedBox(height: 14),
+        
+        // Action buttons - Icons only with counts
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            // Like Button
+            _buildIconButton(
+              icon: _isLiked ? Icons.favorite : Icons.favorite_border,
+              count: _likesCount,
+              isActive: _isLiked,
+              activeColor: Colors.red,
+              onTap: _handleLike,
+            ),
+            
+            // Comment Button
+            _buildIconButton(
+              icon: LucideIcons.messageCircle,
+              count: _commentsCount,
+              isActive: false,
+              activeColor: Colors.blue[600]!,
+              onTap: _handleComment,
+            ),
+            
+            // Save Button
+            _buildIconButton(
+              icon: _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+              count: null, // No count for save
+              isActive: _isBookmarked,
+              activeColor: Colors.amber[700]!,
+              onTap: _handleSave,
+            ),
+            
+            
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+// Helper method for icon buttons with counts
+Widget _buildIconButton({
+  required IconData icon,
+  required int? count,
+  required bool isActive,
+  required Color activeColor,
+  required VoidCallback onTap,
+}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 20,
+            color: isActive ? activeColor : Colors.grey[600],
+          ),
+          if (count != null && count > 0) ...[
+            const SizedBox(width: 6),
+            Text(
+              count.toString(),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: isActive ? activeColor : Colors.grey[700],
+              ),
+            ),
+          ],
+        ],
+      ),
+    ),
+  );
+}
+
+
+
+  // Interaction handlers
+  void _handleLike() {
+    setState(() {
+      _isLiked = !_isLiked;
+      if (_isLiked) {
+        _likesCount++;
+      } else {
+        _likesCount--;
+      }
+    });
+  }
+
+  void _handleComment() {
+    _showCommentsBottomSheet(
+      context,
+      postId: widget.journeyId,
+      comments: _comments,
+      postOwnerName: journeyData!['authorName'],
+      onCommentsUpdated: () {
+        setState(() {
+          // Count total comments including replies
+          int totalComments = 0;
+          for (var comment in _comments) {
+            totalComments++; // Count the main comment
+            if (comment['replies'] != null) {
+              totalComments += (comment['replies'] as List).length; // Count replies
+            }
+          }
+          _commentsCount = totalComments;
+        });
+      },
+    );
+  }
+
+  void _handleSave() {
+    setState(() {
+      _isBookmarked = !_isBookmarked;
+    });
+
+  }
+
   String _capitalize(String text) {
     return text[0].toUpperCase() + text.substring(1);
   }
@@ -803,5 +1059,460 @@ Widget _buildImage(String imagePath) {
         ),
       ),
     );
+  }
+
+  // Comments Bottom Sheet Method
+  void _showCommentsBottomSheet(
+    BuildContext context, {
+    required String postId,
+    required List<Map<String, dynamic>> comments,
+    required String postOwnerName,
+    VoidCallback? onCommentsUpdated,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _CommentsBottomSheet(
+        postId: postId,
+        comments: comments,
+        postOwnerName: postOwnerName,
+        onCommentsUpdated: onCommentsUpdated,
+      ),
+    );
+  }
+}
+
+// Comments Bottom Sheet Widget
+class _CommentsBottomSheet extends StatefulWidget {
+  final String postId;
+  final List<Map<String, dynamic>> comments;
+  final String postOwnerName;
+  final VoidCallback? onCommentsUpdated;
+
+  const _CommentsBottomSheet({
+    required this.postId,
+    required this.comments,
+    required this.postOwnerName,
+    this.onCommentsUpdated,
+  });
+
+  @override
+  State<_CommentsBottomSheet> createState() => _CommentsBottomSheetState();
+}
+
+class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
+  final TextEditingController _commentController = TextEditingController();
+  final FocusNode _commentFocusNode = FocusNode();
+  String? _replyingTo;
+  String? _replyingToCommentId;
+  late List<Map<String, dynamic>> _comments;
+
+  @override
+  void initState() {
+    super.initState();
+    _comments = List.from(widget.comments);
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    _commentFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.6,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          // Header
+          _buildHeader(),
+
+          // Comments List
+          Expanded(child: _buildCommentsList()),
+
+          // Comment Input
+          _buildCommentInput(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Comments',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close),
+                color: Colors.grey[600],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCommentsList() {
+    if (_comments.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              'No comments yet',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Be the first to comment!',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: _comments.length,
+      itemBuilder: (context, index) {
+        final comment = _comments[index];
+        return _buildCommentItem(comment, false);
+      },
+    );
+  }
+
+  Widget _buildCommentItem(Map<String, dynamic> comment, bool isReply) {
+    return Container(
+      margin: EdgeInsets.only(left: isReply ? 40 : 0, bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // User Avatar
+              CircleAvatar(
+                radius: isReply ? 14 : 16,
+                backgroundImage:
+                    comment['userImage'] != null &&
+                        comment['userImage'].isNotEmpty
+                    ? NetworkImage(comment['userImage'])
+                    : null,
+                backgroundColor: Colors.grey[300],
+                child:
+                    comment['userImage'] == null || comment['userImage'].isEmpty
+                    ? Icon(
+                        Icons.person,
+                        color: Colors.grey[600],
+                        size: isReply ? 16 : 20,
+                      )
+                    : null,
+              ),
+              const SizedBox(width: 12),
+
+              // Comment Content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Username and Comment
+                    RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: comment['userName'],
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const TextSpan(text: ' '),
+                          TextSpan(
+                            text: comment['comment'],
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Actions Row
+                    Row(
+                      children: [
+                        Text(
+                          comment['timeAgo'],
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        if (comment['likesCount'] > 0) ...[
+                          Text(
+                            '${comment['likesCount']} likes',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                        ],
+                        if (!isReply) ...[
+                          GestureDetector(
+                            onTap: () =>
+                                _startReply(comment['userName'], comment['id']),
+                            child: Text(
+                              'Reply',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Like Button
+              GestureDetector(
+                onTap: () => _toggleCommentLike(comment),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    comment['isLiked'] ? Icons.favorite : Icons.favorite_border,
+                    size: 16,
+                    color: comment['isLiked'] ? Colors.red : Colors.grey[600],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // Replies
+          if (!isReply &&
+              comment['replies'] != null &&
+              comment['replies'].isNotEmpty) ...[
+            const SizedBox(height: 8),
+            ...comment['replies']
+                .map<Widget>((reply) => _buildCommentItem(reply, true))
+                .toList(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCommentInput() {
+    return Container(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 12,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 12,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey[200]!)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Reply indicator
+          if (_replyingTo != null) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Replying to $_replyingTo',
+                      style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: _cancelReply,
+                    child: Icon(Icons.close, size: 16, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+
+          // Input Row
+          Row(
+            children: [
+              // User Avatar
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: Colors.grey[300],
+                child: Icon(Icons.person, color: Colors.grey[600], size: 20),
+              ),
+              const SizedBox(width: 12),
+
+              // Text Input
+              Expanded(
+                child: TextField(
+                  controller: _commentController,
+                  focusNode: _commentFocusNode,
+                  decoration: InputDecoration(
+                    hintText: _replyingTo != null
+                        ? 'Reply...'
+                        : 'Add a comment...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: const BorderSide(color: Colors.blue),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    suffixIcon: _commentController.text.isNotEmpty
+                        ? IconButton(
+                            onPressed: _postComment,
+                            icon: const Icon(Icons.send, color: Colors.blue),
+                          )
+                        : null,
+                  ),
+                  maxLines: null,
+                  textCapitalization: TextCapitalization.sentences,
+                  onChanged: (text) {
+                    setState(() {}); // Update send button visibility
+                  },
+                  onSubmitted: (text) {
+                    if (text.trim().isNotEmpty) {
+                      _postComment();
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _startReply(String userName, String commentId) {
+    setState(() {
+      _replyingTo = userName;
+      _replyingToCommentId = commentId;
+    });
+    _commentFocusNode.requestFocus();
+  }
+
+  void _cancelReply() {
+    setState(() {
+      _replyingTo = null;
+      _replyingToCommentId = null;
+    });
+  }
+
+  void _postComment() {
+    final commentText = _commentController.text.trim();
+    if (commentText.isEmpty) return;
+
+    final newComment = {
+      'id': 'new_${DateTime.now().millisecondsSinceEpoch}',
+      'userName': 'You', // Replace with actual user name
+      'userImage': '', // Replace with actual user image
+      'comment': commentText,
+      'timeAgo': 'now',
+      'likesCount': 0,
+      'isLiked': false,
+      'replies': [],
+    };
+
+    setState(() {
+      if (_replyingTo != null && _replyingToCommentId != null) {
+        // Add as reply
+        final commentIndex = _comments.indexWhere(
+          (c) => c['id'] == _replyingToCommentId,
+        );
+        if (commentIndex != -1) {
+          _comments[commentIndex]['replies'].add(newComment);
+        }
+      } else {
+        // Add as new comment
+        _comments.insert(0, newComment);
+      }
+
+      _commentController.clear();
+      _cancelReply();
+    });
+
+    // Hide keyboard
+    _commentFocusNode.unfocus();
+
+    // Notify parent of update
+    widget.onCommentsUpdated?.call();
+  }
+
+  void _toggleCommentLike(Map<String, dynamic> comment) {
+    setState(() {
+      comment['isLiked'] = !comment['isLiked'];
+      if (comment['isLiked']) {
+        comment['likesCount']++;
+      } else {
+        comment['likesCount']--;
+      }
+    });
   }
 }

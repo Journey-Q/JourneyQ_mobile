@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 
 class TravelPostWidget extends StatefulWidget {
@@ -12,8 +11,6 @@ class TravelPostWidget extends StatefulWidget {
   final List<String> postImages;
   final int likesCount;
   final int commentsCount;
-  final VoidCallback? onLike;
-  final VoidCallback? onComment;
   final VoidCallback? onMoreOptions;
   final bool isFollowed;
   final bool isBookmarked;
@@ -30,8 +27,6 @@ class TravelPostWidget extends StatefulWidget {
     required this.postImages,
     required this.likesCount,
     required this.commentsCount,
-    this.onLike,
-    this.onComment,
     this.onMoreOptions,
     this.isFollowed = false,
     this.isBookmarked = false,
@@ -45,15 +40,11 @@ class TravelPostWidget extends StatefulWidget {
 class _TravelPostWidgetState extends State<TravelPostWidget> {
   final PageController _pageController = PageController();
   int _currentImageIndex = 0;
-  late bool _isLiked;
-  late bool _isBookmarked;
   late bool _isFollowed;
 
   @override
   void initState() {
     super.initState();
-    _isLiked = widget.isLiked;
-    _isBookmarked = widget.isBookmarked;
     _isFollowed = widget.isFollowed;
   }
 
@@ -66,24 +57,6 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
   // Handle "View Journey" button tap
   void _onViewJourney() {
     context.push('/journey/${widget.postId}');
-  }
-
-  // Handle save to bucket list
-  void _onSavePost() {
-    setState(() {
-      _isBookmarked = !_isBookmarked;
-    });
-
-    // Show feedback to user
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _isBookmarked ? 'Post saved to bucket list' : 'Post removed from bucket list',
-        ),
-        duration: const Duration(seconds: 2),
-        backgroundColor: _isBookmarked ? Colors.green : Colors.grey[600],
-      ),
-    );
   }
 
   @override
@@ -106,14 +79,13 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
           // Places Visited
           _buildPlacesVisited(),
 
-          // Image Carousel
+          // Image Carousel with View Journey Button Overlay
           if (widget.postImages.isNotEmpty) _buildImageCarousel(),
 
           // Image Dots Indicator
           if (widget.postImages.length > 1) _buildDotsIndicator(),
 
-          // Action Buttons
-          _buildActionButtons(),
+          const SizedBox(height: 12),
         ],
       ),
     );
@@ -127,7 +99,6 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
           // Make profile picture clickable
           GestureDetector(
             onTap: () {
-              // Navigate to user profile using GoRouter
               context.push('/user-profile/${widget.postId}/${Uri.encodeComponent(widget.userName)}');
             },
             child: CircleAvatar(
@@ -150,7 +121,6 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
                 // Make username clickable
                 GestureDetector(
                   onTap: () {
-                    // Navigate to user profile using GoRouter
                     context.push('/user-profile/${widget.postId}/${Uri.encodeComponent(widget.userName)}');
                   },
                   child: Text(
@@ -169,49 +139,7 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
             ),
           ),
 
-          // Follow Button with onTap
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _isFollowed = !_isFollowed;
-              });
-
-              // Show feedback
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    _isFollowed ? 'Following ${widget.userName}' : 'Unfollowed ${widget.userName}',
-                  ),
-                  duration: const Duration(seconds: 2),
-                  backgroundColor: _isFollowed ? Colors.blue : Colors.grey[300],
-                ),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color:  Colors.grey[300],
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                _isFollowed ? 'Following' : 'Follow',
-                style: TextStyle(
-                  color: _isFollowed ? Colors.blue[800] : Colors.black87,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 2),
-
-          // More Options Button
-          IconButton(
-            onPressed: widget.onMoreOptions,
-            icon: const Icon(Icons.more_horiz),
-            color: Colors.grey[600],
-          ),
+          
         ],
       ),
     );
@@ -228,6 +156,8 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
           height: 0.75,
           fontSize: 18,
         ),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }
@@ -288,28 +218,61 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
   Widget _buildImageCarousel() {
     return SizedBox(
       height: 250,
-      child: PageView.builder(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() {
-            _currentImageIndex = index;
-          });
-        },
-        itemCount: widget.postImages.length,
-        itemBuilder: (context, index) {
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 0),
-            child: ClipRRect(
-              child: _buildImage(widget.postImages[index]),
+      child: Stack(
+        children: [
+          PageView.builder(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                _currentImageIndex = index;
+              });
+            },
+            itemCount: widget.postImages.length,
+            itemBuilder: (context, index) {
+              return GestureDetector(
+                onTap: _onViewJourney,
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 0),
+                  child: ClipRRect(
+                    child: _buildImage(widget.postImages[index]),
+                  ),
+                ),
+              );
+            },
+          ),
+          // View Journey Button Overlay
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: GestureDetector(
+              onTap: _onViewJourney,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue[400]!, Colors.blue[600]!],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Text(
+                  'View Journey',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildImage(String imagePath) {
-    // Check if it's an asset image (starts with 'assets/') or network URL
     if (imagePath.startsWith('assets/')) {
       return Image.asset(
         imagePath,
@@ -334,7 +297,6 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
         },
       );
     } else if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-      // Network image
       return Image.network(
         imagePath,
         fit: BoxFit.cover,
@@ -346,7 +308,7 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
               child: CircularProgressIndicator(
                 value: loadingProgress.expectedTotalBytes != null
                     ? loadingProgress.cumulativeBytesLoaded /
-                    loadingProgress.expectedTotalBytes!
+                        loadingProgress.expectedTotalBytes!
                     : null,
                 strokeWidth: 3,
                 color: Colors.blue[400],
@@ -374,9 +336,8 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
         },
       );
     } else {
-      // Assume it's an asset image without 'assets/' prefix
       return Image.asset(
-        'assets/images/$imagePath', // Adjust path as needed
+        'assets/images/$imagePath',
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
           return Container(
@@ -407,7 +368,7 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: List.generate(
           widget.postImages.length,
-              (index) => AnimatedContainer(
+          (index) => AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             margin: const EdgeInsets.symmetric(horizontal: 3),
             height: 8,
@@ -420,102 +381,6 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildActionButtons() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      child: Row(
-        children: [
-          // Like Button
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _isLiked = !_isLiked;
-              });
-              widget.onLike?.call();
-            },
-            child: Row(
-              children: [
-                Icon(
-                  _isLiked ? Icons.favorite : Icons.favorite_border,
-                  color: _isLiked ? Colors.red : Colors.black,
-                  size: 24,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '${widget.likesCount + (_isLiked ? 1 : 0)}',
-                  style: const TextStyle(
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 16),
-
-          // Comment Button
-          GestureDetector(
-            onTap: widget.onComment,
-            child: Row(
-              children: [
-                Icon(LucideIcons.messageCircle, color: Colors.black, size: 24),
-                const SizedBox(width: 4),
-                Text(
-                  '${widget.commentsCount}',
-                  style: const TextStyle(
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 16),
-
-          // Save to Bucket List Button
-          GestureDetector(
-            onTap: _onSavePost,
-            child: Icon(
-              _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-              color: _isBookmarked ? Colors.blue : Colors.black,
-              size: 24,
-            ),
-          ),
-
-          const Spacer(),
-
-          // View Journey Button
-          GestureDetector(
-            onTap: _onViewJourney,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blue[400]!, Colors.blue[600]!],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Text(
-                'View Journey',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
