@@ -409,6 +409,11 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
   Widget _buildAmenitiesSection() {
     final amenities = widget.room['amenities'] as List<dynamic>;
 
+    // Filter out meal plan options from amenities
+    final filteredAmenities = amenities.where((amenity) =>
+    !['Full Board', 'Half Board', 'Bed and Breakfast', 'All-Inclusive', 'Room Only'].contains(amenity)
+    ).toList();
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -438,19 +443,16 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
           Wrap(
             spacing: 12,
             runSpacing: 12,
-            children: amenities.map<Widget>((amenity) {
-              // Special styling for meal plan options
-              bool isMealPlan = ['Full Board', 'Half Board', 'Bed and Breakfast', 'All-Inclusive', 'Room Only'].contains(amenity);
-
+            children: filteredAmenities.map<Widget>((amenity) {
               return Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: isMealPlan ? Colors.blue.shade50 : Colors.grey.shade50,
+                  color: Colors.grey.shade50,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: isMealPlan ? Colors.blue.shade200 : Colors.grey.shade200),
+                  border: Border.all(color: Colors.grey.shade200),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -458,14 +460,14 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
                     Icon(
                       _getAmenityIcon(amenity),
                       size: 16,
-                      color: isMealPlan ? Colors.blue.shade600 : Colors.grey.shade600,
+                      color: Colors.grey.shade600,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       amenity,
                       style: TextStyle(
                         fontSize: 14,
-                        color: isMealPlan ? Colors.blue.shade700 : Colors.grey.shade800,
+                        color: Colors.grey.shade800,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -477,208 +479,6 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
         ],
       ),
     );
-  }
-
-  Widget _buildFoodDetailsSection() {
-    final amenities = widget.room['amenities'] as List<dynamic>;
-
-    // Find the meal plan from room amenities
-    String? mealPlan;
-    for (String amenity in amenities) {
-      if (['Full Board', 'Half Board', 'Bed and Breakfast', 'All-Inclusive', 'Room Only'].contains(amenity)) {
-        mealPlan = amenity;
-        break;
-      }
-    }
-
-    if (mealPlan == null) return Container(); // Don't show section if no meal plan found
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.restaurant, size: 24, color: Colors.blue.shade700),
-              const SizedBox(width: 8),
-              Text(
-                'Meal Plan Details',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Meal Plan Header
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.blue.shade200),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.local_dining, size: 20, color: Colors.blue.shade700),
-                const SizedBox(width: 8),
-                Text(
-                  mealPlan!,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue.shade700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Meal Plan Details
-          ..._getMealPlanDetails(mealPlan).map((detail) =>
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      detail['included'] ? Icons.check_circle : Icons.cancel,
-                      size: 16,
-                      color: detail['included'] ? Colors.green : Colors.red,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            detail['title'],
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          if (detail['description'] != null)
-                            Text(
-                              detail['description'],
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ).toList(),
-
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.info_outline, size: 16, color: Colors.green.shade700),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    _getMealPlanNote(mealPlan),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.green.shade700,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Map<String, dynamic>> _getMealPlanDetails(String mealPlan) {
-    switch (mealPlan) {
-      case 'Room Only':
-        return [
-          {'title': 'Breakfast', 'included': false, 'description': 'Available for purchase at hotel restaurant'},
-          {'title': 'Lunch', 'included': false, 'description': 'Available for purchase at hotel restaurant'},
-          {'title': 'Dinner', 'included': false, 'description': 'Available for purchase at hotel restaurant'},
-          {'title': 'Beverages', 'included': false, 'description': 'Minibar and restaurant beverages at extra cost'},
-        ];
-      case 'Bed and Breakfast':
-        return [
-          {'title': 'Breakfast', 'included': true, 'description': 'Daily breakfast buffet included'},
-          {'title': 'Lunch', 'included': false, 'description': 'Available for purchase at hotel restaurant'},
-          {'title': 'Dinner', 'included': false, 'description': 'Available for purchase at hotel restaurant'},
-          {'title': 'Beverages', 'included': false, 'description': 'Complimentary tea/coffee, other beverages at extra cost'},
-        ];
-      case 'Half Board':
-        return [
-          {'title': 'Breakfast', 'included': true, 'description': 'Daily breakfast buffet included'},
-          {'title': 'Lunch', 'included': false, 'description': 'Available for purchase at hotel restaurant'},
-          {'title': 'Dinner', 'included': true, 'description': 'Daily dinner at hotel restaurant included'},
-          {'title': 'Beverages', 'included': false, 'description': 'Complimentary tea/coffee, other beverages at extra cost'},
-        ];
-      case 'Full Board':
-        return [
-          {'title': 'Breakfast', 'included': true, 'description': 'Daily breakfast buffet included'},
-          {'title': 'Lunch', 'included': true, 'description': 'Daily lunch at hotel restaurant included'},
-          {'title': 'Dinner', 'included': true, 'description': 'Daily dinner at hotel restaurant included'},
-          {'title': 'Beverages', 'included': false, 'description': 'Complimentary tea/coffee, other beverages at extra cost'},
-        ];
-      case 'All-Inclusive':
-        return [
-          {'title': 'Breakfast', 'included': true, 'description': 'Daily breakfast buffet included'},
-          {'title': 'Lunch', 'included': true, 'description': 'Daily lunch at hotel restaurant included'},
-          {'title': 'Dinner', 'included': true, 'description': 'Daily dinner at hotel restaurant included'},
-          {'title': 'Beverages', 'included': true, 'description': 'House beverages, soft drinks, and selected alcoholic drinks'},
-          {'title': 'Snacks', 'included': true, 'description': 'Afternoon snacks and light refreshments'},
-        ];
-      default:
-        return [];
-    }
-  }
-
-  String _getMealPlanNote(String mealPlan) {
-    switch (mealPlan) {
-      case 'Room Only':
-        return 'This rate includes accommodation only. All meals and beverages are available for purchase at the hotel\'s restaurants and bars.';
-      case 'Bed and Breakfast':
-        return 'Breakfast is served daily from 6:30 AM to 10:30 AM at the hotel restaurant. Special dietary requirements can be accommodated.';
-      case 'Half Board':
-        return 'Breakfast (6:30-10:30 AM) and dinner (7:00-10:00 PM) are included. Lunch and beverages are available for purchase.';
-      case 'Full Board':
-        return 'All three meals are included: breakfast (6:30-10:30 AM), lunch (12:00-3:00 PM), and dinner (7:00-10:00 PM).';
-      case 'All-Inclusive':
-        return 'All meals, snacks, and selected beverages are included. Premium brands and room service may incur additional charges.';
-      default:
-        return '';
-    }
   }
 
   IconData _getAmenityIcon(String amenity) {
@@ -711,12 +511,6 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
         return Icons.weekend;
       case 'butler service':
         return Icons.room_service;
-      case 'full board':
-      case 'half board':
-      case 'bed and breakfast':
-      case 'all-inclusive':
-      case 'room only':
-        return Icons.restaurant;
       default:
         return Icons.star;
     }
@@ -798,7 +592,7 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Taxes and fees included',
+            'Room only - Meal plans available during booking',
             style: TextStyle(
               fontSize: 12,
               color: Colors.grey.shade600,
@@ -911,10 +705,6 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
 
             // Room Amenities
             _buildAmenitiesSection(),
-            const SizedBox(height: 20),
-
-            // Food Details Section
-            _buildFoodDetailsSection(),
             const SizedBox(height: 20),
 
             // Pricing and Booking Section
