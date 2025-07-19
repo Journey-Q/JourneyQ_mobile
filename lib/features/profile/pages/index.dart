@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:journeyq/shared/components/bottom_naviagtion.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:io';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -220,6 +218,37 @@ class _ProfilePageState extends State<ProfilePage> {
               ],
             ),
           ),
+          const SizedBox(width: 20),
+          Container(
+                height: 34, // Set fixed height
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    gradient: LinearGradient(
+                      colors: isSubscribed
+                          ? [const Color(0xFFFFD700), const Color(0xFFFF6B6B)]
+                          : [const Color(0xFF0088cc), Color(0xFF0088cc).withOpacity(0.8)],
+                    )
+                ),
+                child: ElevatedButton.icon(
+                  onPressed: _handleSubscribe,
+                  icon: Icon(isSubscribed ? Icons.star : Icons.star_outline, size: 12),
+                  label: Text(isSubscribed ? 'Premium' : 'Subscribe'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    minimumSize: const Size(0, 28),
+                  ),
+                ),
+              ),
           const Spacer(),
           _buildHeaderButton(Icons.settings_outlined, () => context.push('/profile/settings')),
         ],
@@ -294,39 +323,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                 ],
-              ),
-              const SizedBox(height: 12),
-              // Subscribe button with reduced vertical size
-              Container(
-                height: 28, // Set fixed height
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(14),
-                    gradient: LinearGradient(
-                      colors: isSubscribed
-                          ? [const Color(0xFFFFD700), const Color(0xFFFF6B6B)]
-                          : [const Color(0xFF0088cc), Color(0xFF0088cc).withOpacity(0.8)],
-                    )
-                ),
-                child: ElevatedButton.icon(
-                  onPressed: _handleSubscribe,
-                  icon: Icon(isSubscribed ? Icons.star : Icons.star_outline, size: 12),
-                  label: Text(isSubscribed ? 'Premium' : 'Subscribe'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    textStyle: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    minimumSize: const Size(0, 28),
-                  ),
-                ),
-              ),
+              )
             ],
           ),
           const SizedBox(width: 20),
