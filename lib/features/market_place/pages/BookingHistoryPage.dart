@@ -11,17 +11,8 @@ class BookingHistoryPage extends StatefulWidget {
 class _BookingHistoryPageState extends State<BookingHistoryPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  String selectedStatus = 'All';
   String selectedMonth = 'All Months';
   String selectedYear = '2025';
-
-  final List<String> statusOptions = [
-    'All',
-    'Confirmed',
-    'Completed',
-    'Cancelled',
-    'Pending'
-  ];
 
   final List<String> monthOptions = [
     'All Months',
@@ -160,15 +151,12 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
 
   List<Map<String, dynamic>> getFilteredBookings() {
     return bookingHistory.where((booking) {
-      bool statusMatch = selectedStatus == 'All' ||
-          booking['status'] == selectedStatus;
-
       bool monthMatch = selectedMonth == 'All Months' ||
           _getMonthName(booking['bookedDate'].month) == selectedMonth;
 
       bool yearMatch = booking['bookedDate'].year.toString() == selectedYear;
 
-      return statusMatch && monthMatch && yearMatch;
+      return monthMatch && yearMatch;
     }).toList();
   }
 
@@ -176,6 +164,26 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
     List<Map<String, dynamic>> filtered = getFilteredBookings();
     if (type == 'All') return filtered;
     return filtered.where((booking) => booking['type'] == type).toList();
+  }
+
+  // Group bookings by status within a service type
+  Map<String, List<Map<String, dynamic>>> getBookingsGroupedByStatus(String type) {
+    List<Map<String, dynamic>> bookings = getBookingsByType(type);
+    Map<String, List<Map<String, dynamic>>> grouped = {
+      'Confirmed': [],
+      'Completed': [],
+      'Pending': [],
+      'Cancelled': [],
+    };
+
+    for (var booking in bookings) {
+      String status = booking['status'];
+      if (grouped.containsKey(status)) {
+        grouped[status]!.add(booking);
+      }
+    }
+
+    return grouped;
   }
 
   String _getMonthName(int month) {
@@ -224,15 +232,6 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
             children: [
               Expanded(
                 child: _buildDropdown(
-                  'Status',
-                  selectedStatus,
-                  statusOptions,
-                      (value) => setState(() => selectedStatus = value!),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildDropdown(
                   'Month',
                   selectedMonth,
                   monthOptions,
@@ -248,6 +247,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
                       (value) => setState(() => selectedYear = value!),
                 ),
               ),
+              const Expanded(child: SizedBox()),
             ],
           ),
         ],
@@ -595,6 +595,128 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
           size: size,
         );
       }),
+    );
+  }
+
+  // Build grouped bookings list with status sections
+  Widget _buildGroupedBookingsList(String type) {
+    Map<String, List<Map<String, dynamic>>> groupedBookings = getBookingsGroupedByStatus(type);
+
+    // Check if there are any bookings at all
+    bool hasAnyBookings = groupedBookings.values.any((list) => list.isNotEmpty);
+
+    if (!hasAnyBookings) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.history,
+              size: 80,
+              color: Colors.grey.shade300,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No bookings found',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey.shade500,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Your booking history will appear here',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade400,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      children: [
+        // Confirmed Bookings Section
+        if (groupedBookings['Confirmed']!.isNotEmpty) ...[
+          _buildStatusSectionHeader('Confirmed', groupedBookings['Confirmed']!.length, Colors.blue),
+          ...groupedBookings['Confirmed']!.map((booking) => _buildBookingCard(booking)),
+          const SizedBox(height: 16),
+        ],
+
+        // Pending Bookings Section
+        if (groupedBookings['Pending']!.isNotEmpty) ...[
+          _buildStatusSectionHeader('Pending', groupedBookings['Pending']!.length, Colors.orange),
+          ...groupedBookings['Pending']!.map((booking) => _buildBookingCard(booking)),
+          const SizedBox(height: 16),
+        ],
+
+        // Completed Bookings Section
+        if (groupedBookings['Completed']!.isNotEmpty) ...[
+          _buildStatusSectionHeader('Completed', groupedBookings['Completed']!.length, Colors.green),
+          ...groupedBookings['Completed']!.map((booking) => _buildBookingCard(booking)),
+          const SizedBox(height: 16),
+        ],
+
+        // Cancelled Bookings Section
+        if (groupedBookings['Cancelled']!.isNotEmpty) ...[
+          _buildStatusSectionHeader('Cancelled', groupedBookings['Cancelled']!.length, Colors.red),
+          ...groupedBookings['Cancelled']!.map((booking) => _buildBookingCard(booking)),
+          const SizedBox(height: 16),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildStatusSectionHeader(String status, int count, Color color) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            '$status Bookings',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: color.withOpacity(0.8),
+            ),
+          ),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              count.toString(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1108,57 +1230,15 @@ class _BookingHistoryPageState extends State<BookingHistoryPage>
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildBookingList(getBookingsByType('All')),
-                _buildBookingList(getBookingsByType('Hotel')),
-                _buildBookingList(getBookingsByType('Tour Package')),
-                _buildBookingList(getBookingsByType('Travel Agency')),
+                _buildGroupedBookingsList('All'),
+                _buildGroupedBookingsList('Hotel'),
+                _buildGroupedBookingsList('Tour Package'),
+                _buildGroupedBookingsList('Travel Agency'),
               ],
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildBookingList(List<Map<String, dynamic>> bookings) {
-    if (bookings.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.history,
-              size: 80,
-              color: Colors.grey.shade300,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No bookings found',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey.shade500,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Your booking history will appear here',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade400,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: bookings.length,
-      itemBuilder: (context, index) {
-        return _buildBookingCard(bookings[index]);
-      },
     );
   }
 }
