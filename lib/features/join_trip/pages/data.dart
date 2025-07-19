@@ -23,6 +23,32 @@ class SampleData {
       'foodBudget': '500',
       'hotelBudget': '800',
       'otherBudget': '200',
+      'dayByDayItinerary': [
+        {
+          'day': 1,
+          'places': ['Kathmandu Airport', 'Thamel District'],
+          'accommodation': 'Hotel Kathmandu Guest House',
+          'restaurants': ['Fire & Ice Pizzeria', 'OR2K Restaurant'],
+          'activities': ['Airport pickup', 'City exploration', 'Gear check'],
+          'notes': 'Arrive in Kathmandu, check gear, explore Thamel area'
+        },
+        {
+          'day': 2,
+          'places': ['Lukla Airport', 'Phakding'],
+          'accommodation': 'Mountain Lodge Phakding',
+          'restaurants': ['Lodge dining hall'],
+          'activities': ['Flight to Lukla', 'First day trekking'],
+          'notes': 'Early morning flight to Lukla, begin trek to Phakding'
+        },
+        {
+          'day': 3,
+          'places': ['Namche Bazaar'],
+          'accommodation': 'Namche Hotel',
+          'restaurants': ['Cafe Danphe', 'Hermann Helmers Bakery'],
+          'activities': ['Trekking', 'Market visit'],
+          'notes': 'Trek to Namche Bazaar, the gateway to Everest'
+        }
+      ],
     },
     {
       'id': 'form_2',
@@ -46,6 +72,24 @@ class SampleData {
       'foodBudget': '300',
       'hotelBudget': '400',
       'otherBudget': '100',
+      'dayByDayItinerary': [
+        {
+          'day': 1,
+          'places': ['Ngurah Rai Airport', 'Seminyak Beach'],
+          'accommodation': 'The Legian Bali',
+          'restaurants': ['La Plancha', 'Merah Putih'],
+          'activities': ['Airport transfer', 'Beach sunset', 'Welcome dinner'],
+          'notes': 'Arrival day - relax and enjoy the sunset at Seminyak'
+        },
+        {
+          'day': 2,
+          'places': ['Tanah Lot Temple', 'Canggu Beach'],
+          'accommodation': 'The Legian Bali',
+          'restaurants': ['Old Mans', 'Echo Beach House'],
+          'activities': ['Temple visit', 'Surfing lessons', 'Beach club'],
+          'notes': 'Visit iconic Tanah Lot temple and try surfing at Canggu'
+        }
+      ],
     },
     {
       'id': 'form_3',
@@ -69,6 +113,32 @@ class SampleData {
       'foodBudget': '800',
       'hotelBudget': '1000',
       'otherBudget': '200',
+      'dayByDayItinerary': [
+        {
+          'day': 1,
+          'places': ['Charles de Gaulle Airport', 'Champs-Élysées', 'Eiffel Tower'],
+          'accommodation': 'Hotel Des Grands Boulevards',
+          'restaurants': ['Le Grand Véfour', 'Breizh Café'],
+          'activities': ['Airport pickup', 'City tour', 'Seine river cruise'],
+          'notes': 'Arrive in Paris, pick up rental car, explore the City of Light'
+        },
+        {
+          'day': 2,
+          'places': ['Louvre Museum', 'Notre Dame', 'Montmartre'],
+          'accommodation': 'Hotel Des Grands Boulevards',
+          'restaurants': ['Le Comptoir Relais', 'Pierre Hermé'],
+          'activities': ['Museum visit', 'Cathedral tour', 'Artist district walk'],
+          'notes': 'Full day exploring Parisian culture and art'
+        },
+        {
+          'day': 7,
+          'places': ['Highway to Rome', 'Tuscany countryside'],
+          'accommodation': 'Hotel Artemide Rome',
+          'restaurants': ['Roadside trattorias'],
+          'activities': ['Scenic drive', 'Wine tasting', 'Photo stops'],
+          'notes': 'Drive through beautiful Tuscany on way to Rome'
+        }
+      ],
     },
   ];
 
@@ -91,6 +161,36 @@ class SampleData {
       'duration': '7 days',
       'isCreator': false,
       'createdDate': 'Jun 20, 2025',
+      'destination': 'Tokyo, Japan',
+      'startDate': 'July 15, 2025',
+      'endDate': 'July 22, 2025',
+      'tripType': 'Adventure',
+      'dayByDayItinerary': [
+        {
+          'day': 1,
+          'places': ['Shibuya Crossing', 'Harajuku', 'Meiji Shrine'],
+          'accommodation': 'Park Hyatt Tokyo',
+          'restaurants': ['Sukiyabashi Jiro', 'Ramen Yokocho'],
+          'activities': ['City exploration', 'Temple visit', 'Shopping'],
+          'notes': 'First day exploring modern Tokyo and traditional shrines'
+        },
+        {
+          'day': 2,
+          'places': ['Tsukiji Fish Market', 'Ginza', 'Tokyo Tower'],
+          'accommodation': 'Park Hyatt Tokyo',
+          'restaurants': ['Tsukiji sushi stalls', 'Ginza restaurants'],
+          'activities': ['Fresh sushi breakfast', 'Luxury shopping', 'City views'],
+          'notes': 'Experience the famous fish market and upscale Ginza district'
+        },
+        {
+          'day': 3,
+          'places': ['Asakusa', 'Senso-ji Temple', 'Tokyo Skytree'],
+          'accommodation': 'Park Hyatt Tokyo',
+          'restaurants': ['Traditional tempura houses', 'Street food stalls'],
+          'activities': ['Temple prayers', 'Traditional crafts', 'Sky views'],
+          'notes': 'Discover traditional Tokyo in historic Asakusa'
+        }
+      ],
       'members': [
         {
           'id': 'user_1',
@@ -141,6 +241,28 @@ class SampleData {
       'duration': '4 days',
       'isCreator': false,
       'createdDate': 'Jun 25, 2025',
+      'destination': 'Paris, France',
+      'startDate': 'August 5, 2025',
+      'endDate': 'August 9, 2025',
+      'tripType': 'Cultural',
+      'dayByDayItinerary': [
+        {
+          'day': 1,
+          'places': ['Eiffel Tower', 'Champs-Élysées', 'Arc de Triomphe'],
+          'accommodation': 'Hotel Plaza Athénée',
+          'restaurants': ['Le Jules Verne', 'Ladurée'],
+          'activities': ['Tower visit', 'Shopping', 'Monument viewing'],
+          'notes': 'Classic Paris landmarks and iconic shopping street'
+        },
+        {
+          'day': 2,
+          'places': ['Louvre Museum', 'Tuileries Garden', 'Place Vendôme'],
+          'accommodation': 'Hotel Plaza Athénée',
+          'restaurants': ['Le Grand Véfour', 'Angelina'],
+          'activities': ['Art appreciation', 'Garden stroll', 'Luxury district'],
+          'notes': 'Immerse in world-class art and French garden beauty'
+        }
+      ],
       'members': [
         {
           'id': 'user_2',
@@ -182,6 +304,59 @@ class SampleData {
       'status': 'Active',
       'isCreator': true,
       'createdDate': 'May 15, 2025',
+      'destination': 'Everest Base Camp, Nepal',
+      'startDate': 'September 10, 2025',
+      'endDate': 'September 24, 2025',
+      'tripType': 'Adventure',
+      'activities': ['Hiking', 'Mountain Climbing', 'Photography', 'Cultural Tours'],
+      'travelBudget': '1000',
+      'foodBudget': '500',
+      'hotelBudget': '800',
+      'otherBudget': '200',
+      'maxMembers': '8',
+      'meetingPoint': 'Kathmandu Airport',
+      'dayByDayItinerary': [
+        {
+          'day': 1,
+          'places': ['Kathmandu Airport', 'Thamel District'],
+          'accommodation': 'Hotel Kathmandu Guest House',
+          'restaurants': ['Fire & Ice Pizzeria', 'OR2K Restaurant'],
+          'activities': ['Airport pickup', 'City exploration', 'Gear check'],
+          'notes': 'Arrive in Kathmandu, check gear, explore Thamel area'
+        },
+        {
+          'day': 2,
+          'places': ['Lukla Airport', 'Phakding'],
+          'accommodation': 'Mountain Lodge Phakding',
+          'restaurants': ['Lodge dining hall'],
+          'activities': ['Flight to Lukla', 'First day trekking'],
+          'notes': 'Early morning flight to Lukla, begin trek to Phakding'
+        },
+        {
+          'day': 3,
+          'places': ['Namche Bazaar'],
+          'accommodation': 'Namche Hotel',
+          'restaurants': ['Cafe Danphe', 'Hermann Helmers Bakery'],
+          'activities': ['Trekking', 'Market visit'],
+          'notes': 'Trek to Namche Bazaar, the gateway to Everest'
+        },
+        {
+          'day': 4,
+          'places': ['Tengboche Monastery'],
+          'accommodation': 'Tengboche Monastery Lodge',
+          'restaurants': ['Monastery dining hall'],
+          'activities': ['Monastery visit', 'Mountain views', 'Meditation'],
+          'notes': 'Visit famous Buddhist monastery with stunning Everest views'
+        },
+        {
+          'day': 12,
+          'places': ['Everest Base Camp'],
+          'accommodation': 'Base Camp tents',
+          'restaurants': ['Expedition cooking'],
+          'activities': ['Summit celebration', 'Photography', 'Team bonding'],
+          'notes': 'Finally reach Everest Base Camp - incredible achievement!'
+        }
+      ],
       'members': [
         {
           'id': 'current_user',
@@ -332,7 +507,7 @@ class SampleData {
     },
   ];
 
-  // Gallery Images Data (NEW!)
+  // Gallery Images Data
   static Map<String, List<Map<String, dynamic>>> galleryImages = {
     'group_1': [
       {
@@ -603,6 +778,18 @@ class SampleData {
 
   // Helper method to get trip details for group details page
   static Map<String, String> getTripDetails(String groupId) {
+    final group = getGroupById(groupId);
+    if (group != null) {
+      return {
+        'destination': group['destination'] ?? 'Unknown',
+        'startDate': group['startDate'] ?? 'TBD',
+        'endDate': group['endDate'] ?? 'TBD',
+        'budget': group['budget'] ?? 'TBD',
+        'tripType': group['tripType'] ?? 'Adventure',
+      };
+    }
+    
+    // Fallback for legacy data
     switch (groupId) {
       case 'group_1':
         return {
@@ -695,44 +882,6 @@ class SampleData {
     return [];
   }
 
-  // Helper method to update image caption
-  // static void updateImageCaption(String groupId, String imageId, String newCaption) {
-  //   final images = galleryImages[groupId];
-  //   if (images != null) {
-  //     for (var image in images) {
-  //       if (image['id'] == imageId) {
-  //         image['caption'] = newCaption;
-  //         break;
-  //       }
-  //     }
-  //   }
-  // }
-
-  // Helper method to like/unlike an image
-  // static void toggleImageLike(String groupId, String imageId, String userId) {
-  //   final images = galleryImages[groupId];
-  //   if (images != null) {
-  //     for (var image in images) {
-  //       if (image['id'] == imageId) {
-  //         // Initialize likes list if it doesn't exist
-  //         image['likedBy'] ??= <String>[];
-  //         List<String> likedBy = List<String>.from(image['likedBy']);
-          
-  //         if (likedBy.contains(userId)) {
-  //           likedBy.remove(userId);
-  //           image['likes'] = (image['likes'] ?? 0) - 1;
-  //         } else {
-  //           likedBy.add(userId);
-  //           image['likes'] = (image['likes'] ?? 0) + 1;
-  //         }
-          
-  //         image['likedBy'] = likedBy;
-  //         break;
-  //       }
-  //     }
-  //   }
-  // }
-
   // Helper method to get gallery stats for a group
   static Map<String, dynamic> getGalleryStats(String groupId) {
     final images = galleryImages[groupId] ?? [];
@@ -755,5 +904,169 @@ class SampleData {
           ? imagesByUser.entries.reduce((a, b) => a.value > b.value ? a : b).key
           : null,
     };
+  }
+
+  // Budget Expense Data for different groups
+  static Map<String, Map<String, Map<String, double>>> groupBudgetData = {
+    'group_1': { // Tokyo Adventure
+      'current_user': {
+        'travel': 850.0, // Flight tickets
+        'food': 320.0,   // Sushi dinner, street food
+        'hotel': 600.0,  // Hotel booking for 3 nights
+        'other': 180.0,  // Shopping, metro passes
+      },
+      'user_1': { // Alex Johnson
+        'travel': 200.0, // Local transport
+        'food': 480.0,   // Restaurant meals, breakfast
+        'hotel': 0.0,    // Didn't pay hotel
+        'other': 250.0,  // Activities, souvenirs
+      },
+      'user_3': { // Maria Rodriguez
+        'travel': 0.0,   // Didn't pay travel
+        'food': 560.0,   // Groceries, lunch for group
+        'hotel': 600.0,  // Shared hotel payment
+        'other': 90.0,   // Temple entrance fees
+      },
+      'user_4': { // John Smith
+        'travel': 150.0, // Taxi rides
+        'food': 290.0,   // Convenience store, drinks
+        'hotel': 600.0,  // Hotel payment
+        'other': 380.0,  // Entertainment, arcade
+      },
+      'user_5': { // Emma Wilson
+        'travel': 300.0, // JR Pass
+        'food': 410.0,   // Ramen, cafes
+        'hotel': 0.0,    // Stayed with friend
+        'other': 120.0,  // Gifts, photos
+      },
+    },
+    'group_2': { // Paris Getaway
+      'current_user': {
+        'travel': 450.0, // Eurostar tickets
+        'food': 280.0,   // Cafe meals
+        'hotel': 350.0,  // Airbnb payment
+        'other': 150.0,  // Museum tickets
+      },
+      'user_2': { // Maria Rodriguez
+        'travel': 200.0, // Metro passes
+        'food': 380.0,   // Groceries, bakery
+        'hotel': 350.0,  // Airbnb split
+        'other': 90.0,   // Louvre tickets
+      },
+      'user_6': { // Sarah Lee
+        'travel': 120.0, // Bus tickets
+        'food': 420.0,   // Restaurant dinners
+        'hotel': 0.0,    // Stayed with family
+        'other': 200.0,  // Shopping, perfume
+      },
+    },
+    'group_3': { // Himalayan Trek
+      'current_user': {
+        'travel': 1200.0, // Flight to Kathmandu
+        'food': 180.0,    // Trail meals
+        'hotel': 450.0,   // Teahouse stays
+        'other': 320.0,   // Guide tips, gear
+      },
+      'user_7': { // Alex Johnson
+        'travel': 800.0,  // Different flight
+        'food': 250.0,    // Energy bars, water
+        'hotel': 450.0,   // Teahouse payment
+        'other': 180.0,   // Permits, photos
+      },
+      'user_8': { // Sarah Lee
+        'travel': 0.0,    // Local trekker
+        'food': 420.0,    // Cooked for group
+        'hotel': 300.0,   // Cheaper accommodation
+        'other': 150.0,   // Local transport
+      },
+      'user_9': { // Mike Chen
+        'travel': 950.0,  // Premium flight
+        'food': 320.0,    // Restaurant in Kathmandu
+        'hotel': 600.0,   // Better rooms
+        'other': 280.0,   // Equipment rental
+      },
+      'user_10': { // Lisa Park
+        'travel': 200.0,  // Bus from India
+        'food': 180.0,    // Simple trail food
+        'hotel': 200.0,   // Budget lodges
+        'other': 90.0,    // Basic supplies
+      },
+      'user_11': { // David Kim
+        'travel': 1100.0, // International flight
+        'food': 380.0,    // Special dietary needs
+        'hotel': 450.0,   // Standard teahouses
+        'other': 220.0,   // Camera equipment
+      },
+      'user_12': { // Anna White
+        'travel': 300.0,  // Domestic connection
+        'food': 290.0,    // Trail snacks
+        'hotel': 350.0,   // Shared rooms
+        'other': 160.0,   // Medical supplies
+      },
+      'user_13': { // Tom Brown
+        'travel': 650.0,  // Regional flight
+        'food': 340.0,    // Protein supplements
+        'hotel': 400.0,   // Private rooms
+        'other': 250.0,   // Professional gear
+      },
+    },
+  };
+
+  // Expense descriptions for better context
+  static Map<String, Map<String, List<Map<String, dynamic>>>> expenseDetails = {
+    'group_1': {
+      'current_user': [
+        {'category': 'travel', 'description': 'Round trip flight Tokyo', 'amount': 850.0, 'date': '2025-06-01'},
+        {'category': 'food', 'description': 'Sushi dinner at Tsukiji', 'amount': 120.0, 'date': '2025-06-02'},
+        {'category': 'food', 'description': 'Street food & drinks', 'amount': 200.0, 'date': '2025-06-03'},
+        {'category': 'hotel', 'description': 'Hotel Shibuya 3 nights', 'amount': 600.0, 'date': '2025-06-01'},
+        {'category': 'other', 'description': 'Shopping & metro passes', 'amount': 180.0, 'date': '2025-06-02'},
+      ],
+      'user_1': [
+        {'category': 'travel', 'description': 'Local JR trains', 'amount': 200.0, 'date': '2025-06-02'},
+        {'category': 'food', 'description': 'Group breakfast', 'amount': 280.0, 'date': '2025-06-02'},
+        {'category': 'food', 'description': 'Convenience store', 'amount': 200.0, 'date': '2025-06-03'},
+        {'category': 'other', 'description': 'Souvenirs & activities', 'amount': 250.0, 'date': '2025-06-03'},
+      ],
+    },
+    // Add more detailed expenses as needed
+  };
+
+  // Helper method to get budget data for a specific group
+  static Map<String, Map<String, double>>? getGroupBudgetData(String groupId) {
+    return groupBudgetData[groupId];
+  }
+
+  // Helper method to get expense details for a member
+  static List<Map<String, dynamic>> getMemberExpenseDetails(String groupId, String memberId) {
+    return expenseDetails[groupId]?[memberId] ?? [];
+  }
+
+  // Helper method to get total expense for a member in a group
+  static double getMemberTotalExpense(String groupId, String memberId) {
+    final expenses = groupBudgetData[groupId]?[memberId];
+    if (expenses == null) return 0.0;
+    return expenses.values.fold(0.0, (sum, expense) => sum + expense);
+  }
+
+  // Helper method to get category expense for a member
+  static double getMemberCategoryExpense(String groupId, String memberId, String category) {
+    return groupBudgetData[groupId]?[memberId]?[category] ?? 0.0;
+  }
+
+  // Helper method to update member expense
+  static void updateMemberExpense(String groupId, String memberId, String category, double amount) {
+    if (groupBudgetData[groupId] == null) {
+      groupBudgetData[groupId] = {};
+    }
+    if (groupBudgetData[groupId]![memberId] == null) {
+      groupBudgetData[groupId]![memberId] = {
+        'travel': 0.0,
+        'food': 0.0,
+        'hotel': 0.0,
+        'other': 0.0,
+      };
+    }
+    groupBudgetData[groupId]![memberId]![category] = amount;
   }
 }

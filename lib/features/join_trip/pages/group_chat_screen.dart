@@ -5,6 +5,7 @@ import 'package:journeyq/features/join_trip/pages/chat/chat_message_bubble.dart'
 import 'package:journeyq/features/join_trip/pages/chat/chat_date_divider.dart';
 import 'package:journeyq/features/join_trip/pages/chat/chat_input_bar.dart';
 import 'package:journeyq/features/join_trip/pages/chat/chat_gallery_screen.dart';
+import 'package:journeyq/features/join_trip/pages/chat/budget_tracker_screen.dart';
 
 class GroupChatScreen extends StatefulWidget {
   final String groupId;
@@ -85,6 +86,19 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     );
   }
 
+  void _navigateToBudget() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BudgetTrackerScreen(
+          groupId: widget.groupId,
+          groupName: widget.groupName,
+          members: List<Map<String, dynamic>>.from(_groupData['members'] ?? []),
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _messageController.dispose();
@@ -105,6 +119,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         isCreator: _groupData['isCreator'] ?? false,
         createdDate: _groupData['createdDate'] ?? 'Unknown',
         onGalleryPressed: _navigateToGallery,
+        onBudgetPressed: _navigateToBudget,
       ),
       body: Column(
         children: [

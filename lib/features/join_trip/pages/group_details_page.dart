@@ -45,7 +45,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
     // Try to find corresponding trip form data
     final groupData = SampleData.getGroupById(widget.groupId);
     if (groupData != null) {
-      // Convert group data to trip form format with all member-accessible fields
+      // Convert group data to trip form format with ONLY basic fields
       _tripFormData = {
         'title': groupData['title'] ?? widget.groupName,
         'destination': _tripDetails['destination'],
@@ -54,16 +54,14 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
         'tripType': _tripDetails['tripType'],
         'description': widget.description,
         'duration': groupData['duration'] ?? '7 days',
-        'maxMembers': widget.members.length,
-        'currentMembers': widget.members.length,
-        'meetingPoint': 'TBD',
-        'activities': <String>[],
-        'travelBudget': '',
-        'foodBudget': '',
-        'hotelBudget': '',
-        'otherBudget': '',
         'status': 'Active',
         'createdDate': widget.createdDate,
+        // Removed all advanced options:
+        // - maxMembers
+        // - currentMembers
+        // - meetingPoint
+        // - activities
+        // - budget fields (travelBudget, foodBudget, hotelBudget, otherBudget)
       };
     }
   }
@@ -120,7 +118,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
             _buildGroupProfileSection(),
             const SizedBox(height: 24),
             
-            // Trip Details Section with View/Edit (Now accessible to all members)
+            // Trip Details Section with View/Edit (Now with basic options only)
             _buildTripDetailsSection(),
             const SizedBox(height: 24),
             
@@ -235,7 +233,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
                       foregroundColor: const Color(0xFF0088cc),
                     ),
                   ),
-                  // All group members can edit trip details now
+                  // All group members can edit trip details (but only basic details)
                   TextButton.icon(
                     onPressed: _editTripDetails,
                     icon: const Icon(Icons.edit, size: 18),
@@ -449,7 +447,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
             tripData: _tripFormData!,
             customTitle: '${widget.groupName} - Trip Details',
             showEditButton: false,
-            isGroupMember: true, // All group members can see advanced details
+            isGroupMember: false, // Changed to false to show only basic details
           ),
           fullscreenDialog: true,
         ),
@@ -457,54 +455,35 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
     }
   }
 
-  void _editTripDetails() {
-    if (_tripFormData != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => TripFormWidget(
-            mode: TripFormMode.edit,
-            initialData: _tripFormData,
-            isGroupMember: true, // Show all advanced options for group members
-            customTitle: 'Edit ${widget.groupName} Trip',
-            onSubmit: (updatedData) {
-              setState(() {
-                _tripFormData = updatedData;
-                // Update trip details for display
-                _tripDetails = {
-                  'destination': updatedData['destination'] ?? _tripDetails['destination']!,
-                  'startDate': updatedData['startDate'] ?? _tripDetails['startDate']!,
-                  'endDate': updatedData['endDate'] ?? _tripDetails['endDate']!,
-                  'budget': _calculateDisplayBudget(updatedData),
-                  'tripType': updatedData['tripType'] ?? _tripDetails['tripType']!,
-                };
-              });
-            },
-          ),
-          fullscreenDialog: true,
+void _editTripDetails() {
+  if (_tripFormData != null) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TripFormWidget(
+          mode: TripFormMode.edit,
+          initialData: _tripFormData,
+          isGroupMember: false, // ALWAYS false - only basic options for group trip editing
+          customTitle: 'Edit ${widget.groupName} Trip',
+          onSubmit: (updatedData) {
+            setState(() {
+              _tripFormData = updatedData;
+              // Update trip details for display (only basic fields)
+              _tripDetails = {
+                'destination': updatedData['destination'] ?? _tripDetails['destination']!,
+                'startDate': updatedData['startDate'] ?? _tripDetails['startDate']!,
+                'endDate': updatedData['endDate'] ?? _tripDetails['endDate']!,
+                'budget': 'Not specified', // Simplified since we removed budget calculations
+                'tripType': updatedData['tripType'] ?? _tripDetails['tripType']!,
+              };
+            });
+          },
         ),
-      );
-    }
+        fullscreenDialog: true,
+      ),
+    );
   }
-
-  String _calculateDisplayBudget(Map<String, dynamic> data) {
-    int total = 0;
-    
-    if (data['travelBudget'] != null && data['travelBudget'].toString().isNotEmpty) {
-      total += int.tryParse(data['travelBudget'].toString()) ?? 0;
-    }
-    if (data['foodBudget'] != null && data['foodBudget'].toString().isNotEmpty) {
-      total += int.tryParse(data['foodBudget'].toString()) ?? 0;
-    }
-    if (data['hotelBudget'] != null && data['hotelBudget'].toString().isNotEmpty) {
-      total += int.tryParse(data['hotelBudget'].toString()) ?? 0;
-    }
-    if (data['otherBudget'] != null && data['otherBudget'].toString().isNotEmpty) {
-      total += int.tryParse(data['otherBudget'].toString()) ?? 0;
-    }
-    
-    return total > 0 ? '\${total} total' : 'Not specified';
-  }
+}
 
   // Helper methods
   void _changeGroupImage() {

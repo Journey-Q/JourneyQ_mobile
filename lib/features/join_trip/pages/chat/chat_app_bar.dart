@@ -10,6 +10,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool isCreator;
   final String createdDate;
   final VoidCallback? onGalleryPressed;
+  final VoidCallback? onBudgetPressed;
 
   const ChatAppBar({
     super.key,
@@ -21,6 +22,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.isCreator,
     required this.createdDate,
     this.onGalleryPressed,
+    this.onBudgetPressed,
   });
 
   @override
@@ -84,6 +86,34 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       actions: [
+        // Budget Icon
+        Container(
+          margin: const EdgeInsets.only(right: 5),
+          child: IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 40, 40, 40),
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.account_balance_wallet,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+            onPressed: onBudgetPressed,
+            tooltip: 'Group Budget',
+          ),
+        ),
+        
         // Gallery Icon
         Container(
           margin: const EdgeInsets.only(right: 8),
