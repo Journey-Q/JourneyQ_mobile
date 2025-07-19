@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:journeyq/data/repositories/auth_repositories/auth_repository.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -88,7 +89,11 @@ class _SettingsPageState extends State<SettingsPage> {
 
             // Logout Section
             ListTile(
-              leading: const Icon(Icons.logout_outlined, color: Colors.red, size: 24),
+              leading: const Icon(
+                Icons.logout_outlined,
+                color: Colors.red,
+                size: 24,
+              ),
               title: const Text(
                 'Log Out',
                 style: TextStyle(
@@ -113,11 +118,11 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _buildSettingItem(
-      IconData icon,
-      String title,
-      String subtitle, {
-        required VoidCallback onTap,
-      }) {
+    IconData icon,
+    String title,
+    String subtitle, {
+    required VoidCallback onTap,
+  }) {
     return ListTile(
       leading: Icon(icon, color: Colors.black, size: 24),
       title: Text(
@@ -130,10 +135,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
       subtitle: Text(
         subtitle,
-        style: const TextStyle(
-          color: Colors.grey,
-          fontSize: 13,
-        ),
+        style: const TextStyle(color: Colors.grey, fontSize: 13),
       ),
       trailing: const Icon(
         Icons.arrow_forward_ios,
@@ -159,15 +161,10 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: const Text(
           'Log Out',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
         ),
         content: const Text(
           'Are you sure you want to log out of your account?',
@@ -176,28 +173,16 @@ class _SettingsPageState extends State<SettingsPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Colors.grey),
-            ),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
+            onPressed: () async {
               Navigator.pop(context); // Go back to profile
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Logged out successfully'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              await AuthRepository.clearTokens();
             },
             child: const Text(
               'Log Out',
-              style: TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
             ),
           ),
         ],

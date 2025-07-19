@@ -13,7 +13,7 @@ class ApiService {
 
     _dio = Dio(
       BaseOptions(
-        baseUrl: 'https://api.yourapp.com',
+        baseUrl: 'https://socialmediaservice-production.up.railway.app',
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
       ),

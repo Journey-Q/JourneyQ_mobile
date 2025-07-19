@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:journeyq/core/services/api_service.dart';
+import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:journeyq/core/errors/exception.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:journeyq/data/models/user_model/user_model.dart';
 
 class AuthRepository {
+
+  static final authProvider = AuthProvider();
+   
   // Login with email and password
   static Future<Map<String, dynamic>> login(
     String email,
@@ -15,6 +21,12 @@ class AuthRepository {
         '/auth/login',
         data: {'email': email, 'password': password},
       );
+
+      // Save the complete auth response data
+      if (response.data != null) {
+        await saveAuthResponse(response.data);
+      }
+
       return response.data;
     } on AppException catch (e) {
       rethrow;
@@ -25,14 +37,23 @@ class AuthRepository {
 
   // Login with Google/social
   static Future<Map<String, dynamic>> loginWithGoogle(
+    GoogleSignInAccount googleUser,
   ) async {
     try {
       final response = await ApiService.post(
-        '/auth/google-login',
+        '/auth/oauth',
         data: {
-          // Google credentials would go here
+          'name': googleUser.displayName ?? '',
+          'email': googleUser.email,
+          'photourl': googleUser.photoUrl ?? '',
         },
       );
+
+      // Save the complete auth response data
+      if (response.data != null) {
+        await saveAuthResponse(response.data);
+      }
+
       return response.data;
     } on AppException catch (e) {
       rethrow;
@@ -46,18 +67,18 @@ class AuthRepository {
     String name,
     String email,
     String password,
-    String confirmPassword,
   ) async {
     try {
       final response = await ApiService.post(
         '/auth/register',
-        data: {
-          'name': name,
-          'email': email,
-          'password': password,
-          'password_confirmation': confirmPassword,
-        },
+        data: {'name': name, 'email': email, 'password': password},
       );
+
+      // Save the complete auth response data
+      if (response.data != null) {
+        await saveAuthResponse(response.data);
+      }
+
       return response.data;
     } on AppException catch (e) {
       rethrow;
@@ -70,6 +91,8 @@ class AuthRepository {
   static Future<void> logout() async {
     try {
       await ApiService.post('/auth/logout');
+      // Clear all stored auth data
+      await clearTokens();
     } on AppException catch (e) {
       rethrow;
     } catch (e) {
@@ -78,14 +101,18 @@ class AuthRepository {
   }
 
   // Refresh authentication token
-  static Future<Map<String, dynamic>> refreshToken(
-    String refreshToken,
-  ) async {
+  static Future<Map<String, dynamic>> refreshToken(String refreshToken) async {
     try {
       final response = await ApiService.post(
         '/auth/access',
         data: {'refresh_token': refreshToken},
       );
+
+      // Save the refreshed auth response data
+      if (response.data != null) {
+        await saveAuthResponse(response.data);
+      }
+
       return response.data;
     } on AppException catch (e) {
       rethrow;
@@ -132,6 +159,12 @@ class AuthRepository {
       if (bio != null) data['bio'] = bio;
 
       final response = await ApiService.put('/user/profile', data: data);
+
+      // Update cached user data if profile update is successful
+      if (response.data != null && response.data['user'] != null) {
+        await cacheUserData(response.data['user']);
+      }
+
       return response.data;
     } on AppException catch (e) {
       rethrow;
@@ -140,15 +173,71 @@ class AuthRepository {
     }
   }
 
-  // Token management helper methods
-  static Future<void> saveTokens(
-    String accessToken,
-    String refreshToken,
+  // Save complete AuthResponse according to DTO structure
+  static Future<void> saveAuthResponse(
+    Map<String, dynamic> authResponse,
   ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
+
+      // Save access token to SharedPreferences
+      if (authResponse['accessToken'] != null) {
+        await prefs.setString('access_token', authResponse['accessToken']);
+      }
+
+      // Save token type (default to "Bearer" if not provided)
+      final tokenType = authResponse['tokenType'] ?? 'Bearer';
+      await prefs.setString('token_type', tokenType);
+
+      // Save expiration time
+      if (authResponse['expiresIn'] != null) {
+        // Calculate absolute expiration time
+        final expiresIn = authResponse['expiresIn'] as int;
+        final expirationTime =
+            DateTime.now().millisecondsSinceEpoch + (expiresIn * 1000);
+        await prefs.setInt('token_expires_at', expirationTime);
+        await prefs.setInt('expires_in', expiresIn);
+      }
+
+      // Save user data to SharedPreferences
+      if (authResponse['user'] != null) {
+        await prefs.setString('user_data', jsonEncode(authResponse['user']));
+      }
+
+      // ===== NEW: Update AuthProvider =====
+     
+
+      // Set access token in AuthProvider
+      if (authResponse['accessToken'] != null) {
+        authProvider.accessToken = authResponse['accessToken'];
+      }
+
+      // Set user data in AuthProvider
+      if (authResponse['user'] != null) {
+        try {
+          final userModel = User.fromJson(authResponse['user']);
+          authProvider.setUser(userModel);
+        } catch (e) {
+          // If User model creation fails, still set authenticated status
+          print('Failed to create User model: $e');
+          authProvider.setStatus(AuthStatus.authenticated);
+        }
+      } else {
+        // No user data but token exists, set authenticated status
+        authProvider.setStatus(AuthStatus.authenticated);
+      }
+    } catch (e) {
+      // If something fails, set error status in AuthProvider
+      authProvider.setError('Failed to save auth response: ${e.toString()}');
+      throw Exception('Failed to save auth response: ${e.toString()}');
+    }
+  }
+
+  // Legacy method - kept for backward compatibility
+  static Future<void> saveTokens(String accessToken) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
       await prefs.setString('access_token', accessToken);
-      await prefs.setString('refresh_token', refreshToken);
     } catch (e) {
       throw Exception('Failed to save tokens: ${e.toString()}');
     }
@@ -158,8 +247,14 @@ class AuthRepository {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('access_token');
+      await prefs.remove('token_type');
+      await prefs.remove('expires_in');
+      await prefs.remove('token_expires_at');
       await prefs.remove('refresh_token');
       await prefs.remove('user_data');
+      authProvider.setStatus(AuthStatus.unauthenticated);
+      
+
     } catch (e) {
       throw Exception('Failed to clear tokens: ${e.toString()}');
     }
@@ -174,10 +269,71 @@ class AuthRepository {
     }
   }
 
-  static Future<String?> getRefreshToken() async {
+  // Get token type
+  static Future<String?> getTokenType() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getString('refresh_token');
+      return prefs.getString('token_type') ?? 'Bearer';
+    } catch (e) {
+      return 'Bearer';
+    }
+  }
+
+  // Get expiration time in seconds
+  static Future<int?> getExpiresIn() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getInt('expires_in');
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Check if token is expired
+  static Future<bool> isTokenExpired() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final expirationTime = prefs.getInt('token_expires_at');
+
+      if (expirationTime == null) return true;
+
+      final currentTime = DateTime.now().millisecondsSinceEpoch;
+      return currentTime >= expirationTime;
+    } catch (e) {
+      return true;
+    }
+  }
+
+  // Get complete auth data
+  static Future<Map<String, dynamic>?> getAuthData() async {
+    try {
+      final accessToken = await getAccessToken();
+      final tokenType = await getTokenType();
+      final expiresIn = await getExpiresIn();
+      final userData = await getCachedUserData();
+
+      if (accessToken == null) return null;
+
+      return {
+        'accessToken': accessToken,
+        'tokenType': tokenType,
+        'expiresIn': expiresIn,
+        'user': userData,
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Get formatted authorization header
+  static Future<String?> getAuthorizationHeader() async {
+    try {
+      final accessToken = await getAccessToken();
+      final tokenType = await getTokenType();
+
+      if (accessToken == null) return null;
+
+      return '$tokenType $accessToken';
     } catch (e) {
       return null;
     }

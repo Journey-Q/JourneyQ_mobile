@@ -41,36 +41,51 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      final result = await AuthRepository.login(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
-
-      // Success - show success message
-      SnackBarService.showSuccess(
-        context,
-        "Login Successful! Welcome back!",
-      );
-
-      if (mounted) {
-        authProvider.setStatus(AuthStatus.authenticated);
-        context.go('/home');
-      }
-    } on AppException catch (e) {
-      ErrorHandler.handleError(context, e);
-    } catch (e) {
-      ErrorHandler.handleError(context, e is AppException? e :Exception());
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+  if (!_formKey.currentState!.validate()) return;
+  
+  setState(() => _isLoading = true);
+  
+  try {
+    final result = await AuthRepository.login(
+      _emailController.text.trim(),
+      _passwordController.text,
+    );
+    
+    // Verify login was successful and contains required data
+    if (result == null || result['accessToken'] == null) {
+      throw Exception('Login failed: Invalid response from server');
+    }
+    
+    // Get user data for personalized welcome message
+    final userData = result['user'];
+    final userName = userData != null ? userData['name'] : null;
+    
+    // Success - show success message with user name if available
+    SnackBarService.showSuccess(
+      context,
+      userName != null 
+        ? "Login Successful! Welcome back, $userName!"
+        : "Login Successful! Welcome back!",
+    );
+    
+    if (mounted) {
+      authProvider.setStatus(AuthStatus.authenticated);
+      context.go('/home');
+    }
+    
+  } catch (e) {
+    // Use existing ErrorHandler pattern
+    if (mounted) {
+      ErrorHandler.handleError(context, e is Exception ? e : Exception(e.toString()));
+      setState(() => _isLoading = false);
+    }
+  } finally {
+    // Only reset loading state if we're still mounted and haven't already reset it
+    if (mounted && _isLoading) {
+      setState(() => _isLoading = false);
     }
   }
+}
 
   Future<void> _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
