@@ -780,7 +780,7 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF0088cc),
+                  color: Colors.black,
                 ),
               ),
               const SizedBox(width: 8),
@@ -862,20 +862,8 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              // Add to favorites functionality
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Added to favorites'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
-            icon: const Icon(Icons.favorite_border, color: Colors.black87),
-          ),
-        ],
+        actions: [], // Remove the IconButton by setting actions to an empty list
+
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
