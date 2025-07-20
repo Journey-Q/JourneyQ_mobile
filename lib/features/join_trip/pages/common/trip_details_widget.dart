@@ -466,22 +466,6 @@ class TripDetailsWidget extends StatelessWidget {
                   color: Colors.black87,
                 ),
               ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0088cc).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${itinerary.length}/${totalDays > 0 ? totalDays : '?'} days planned',
-                  style: const TextStyle(
-                    color: Color(0xFF0088cc),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 16),

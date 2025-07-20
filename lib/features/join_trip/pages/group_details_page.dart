@@ -68,7 +68,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
 
   String _getLocationBasedImage() {
     final destination = _tripDetails['destination']?.toLowerCase() ?? '';
-    
+
     if (destination.contains('kandy')) {
       return 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=400&fit=crop';
     } else if (destination.contains('ella')) {
@@ -92,7 +92,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
         slivers: [
           // Custom App Bar with Landscape Image
           SliverAppBar(
-            expandedHeight: 280.0,
+            expandedHeight: 320.0,
             floating: false,
             pinned: true,
             backgroundColor: Colors.white,
@@ -140,183 +140,117 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Landscape Background Image
-                  ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(24),
-                      bottomRight: Radius.circular(24),
-                    ),
-                    child: Image.network(
-                      _getLocationBasedImage(),
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.grey[300],
-                          child: const Icon(
-                            Icons.landscape,
-                            size: 80,
-                            color: Colors.grey,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  // Gradient Overlay
+                  // Solid Color Background (no landscape image)
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: const BorderRadius.only(
                         bottomLeft: Radius.circular(24),
                         bottomRight: Radius.circular(24),
                       ),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.7),
-                        ],
-                      ),
+                      color: Colors.grey[100], // Light background color
                     ),
                   ),
-                  // Content Overlay
+                  
+                  // Content Overlay - Profile Picture and Name Only
                   Positioned(
                     bottom: 40,
                     left: 20,
                     right: 20,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // Group Profile Image - Rounded Square
-                        Center(
-                          child: Stack(
-                            children: [
-                              Container(
-                                width: 100,
-                                height: 100,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(20), // Rounded square
-                                  border: Border.all(color: Colors.white, width: 3),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.3),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
+                        // Full-width Rounded Rectangle Profile Picture with increased length
+                        Stack(
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              height: 150, // Increased length
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12), // Rounded rectangle
+                                border: Border.all(color: Colors.grey[300]!, width: 3),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(11),
+                                child: Image.network(
+                                  _getLocationBasedImage(),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: Colors.grey[300],
+                                      child: const Icon(
+                                        Icons.location_on,
+                                        size: 40,
+                                        color: Colors.grey,
+                                      ),
+                                    );
+                                  },
                                 ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(17),
-                                  child: Image.network(
-                                    _getLocationBasedImage(),
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        color: Colors.grey[300],
-                                        child: const Icon(
-                                          Icons.location_on,
-                                          size: 40,
-                                          color: Colors.grey,
-                                        ),
-                                      );
-                                    },
+                              ),
+                            ),
+                            if (widget.isCreator && _isEditing)
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: GestureDetector(
+                                  onTap: _changeGroupImage,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF0088cc),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white, width: 2),
+                                    ),
+                                    child: const Icon(
+                                      Icons.camera_alt,
+                                      color: Colors.white,
+                                      size: 14,
+                                    ),
                                   ),
                                 ),
                               ),
-                              if (widget.isCreator && _isEditing)
-                                Positioned(
-                                  bottom: 0,
-                                  right: 0,
-                                  child: GestureDetector(
-                                    onTap: _changeGroupImage,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF0088cc),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(color: Colors.white, width: 2),
-                                      ),
-                                      child: const Icon(
-                                        Icons.camera_alt,
-                                        color: Colors.white,
-                                        size: 14,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
+                          ],
                         ),
                         const SizedBox(height: 16),
-                        // Group Name
-                        Center(
-                          child: _isEditing && widget.isCreator
-                              ? Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.9),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: TextField(
-                                    controller: _groupNameController,
-                                    style: const TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                    decoration: const InputDecoration(
-                                      border: InputBorder.none,
-                                      hintText: 'Group Name',
-                                    ),
-                                  ),
-                                )
-                              : Text(
-                                  widget.groupName,
+                        
+                        // Group Name Below Picture
+                        _isEditing && widget.isCreator
+                            ? Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.grey[300]!),
+                                ),
+                                child: TextField(
+                                  controller: _groupNameController,
                                   style: const TextStyle(
-                                    fontSize: 24,
+                                    fontSize: 20,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    shadows: [
-                                      Shadow(
-                                        offset: Offset(0, 2),
-                                        blurRadius: 4,
-                                        color: Colors.black54,
-                                      ),
-                                    ],
+                                    color: Colors.black,
                                   ),
                                   textAlign: TextAlign.center,
-                                ),
-                        ),
-                        const SizedBox(height: 8),
-                        // Location
-                        Center(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.9),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.location_on,
-                                  size: 16,
-                                  color: Color(0xFF0088cc),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  _tripDetails['destination'] ?? 'Sri Lanka',
-                                  style: const TextStyle(
-                                    color: Colors.black87,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
+                                  decoration: const InputDecoration(
+                                    border: InputBorder.none,
+                                    hintText: 'Group Name',
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
-                        ),
+                              )
+                            : Text(
+                                widget.groupName,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
                       ],
                     ),
                   ),
@@ -324,6 +258,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
               ),
             ),
           ),
+          
           // Content
           SliverToBoxAdapter(
             child: Padding(
@@ -334,11 +269,11 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
                   // Trip Details Section
                   _buildTripDetailsSection(),
                   const SizedBox(height: 24),
-                  
+
                   // Members Section
                   _buildMembersSection(),
                   const SizedBox(height: 24),
-                  
+
                   // Leave/Delete Group Button
                   _buildActionButton(),
                 ],
@@ -373,10 +308,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
             children: [
               const Text(
                 'Trip Details',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               Row(
                 children: [
@@ -398,11 +330,31 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
             ],
           ),
           const SizedBox(height: 16),
-          _buildDetailRow('Destination', _tripDetails['destination']!, Icons.location_on),
-          _buildDetailRow('Start Date', _tripDetails['startDate']!, Icons.calendar_today),
-          _buildDetailRow('End Date', _tripDetails['endDate']!, Icons.calendar_month),
-          _buildDetailRow('Budget', _tripDetails['budget']!, Icons.account_balance_wallet),
-          _buildDetailRow('Trip Type', _tripDetails['tripType']!, Icons.category),
+          _buildDetailRow(
+            'Destination',
+            _tripDetails['destination']!,
+            Icons.location_on,
+          ),
+          _buildDetailRow(
+            'Start Date',
+            _tripDetails['startDate']!,
+            Icons.calendar_today,
+          ),
+          _buildDetailRow(
+            'End Date',
+            _tripDetails['endDate']!,
+            Icons.calendar_month,
+          ),
+          _buildDetailRow(
+            'Budget',
+            _tripDetails['budget']!,
+            Icons.account_balance_wallet,
+          ),
+          _buildDetailRow(
+            'Trip Type',
+            _tripDetails['tripType']!,
+            Icons.category,
+          ),
         ],
       ),
     );
@@ -454,11 +406,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
               color: const Color(0xFF0088cc).withOpacity(0.1),
               borderRadius: BorderRadius.circular(10), // Rounded square
             ),
-            child: Icon(
-              icon,
-              size: 18,
-              color: const Color(0xFF0088cc),
-            ),
+            child: Icon(icon, size: 18, color: const Color(0xFF0088cc)),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -561,7 +509,11 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     color: Colors.grey[300],
-                    child: const Icon(Icons.person, size: 24, color: Colors.grey),
+                    child: const Icon(
+                      Icons.person,
+                      size: 24,
+                      color: Colors.grey,
+                    ),
                   );
                 },
               ),
@@ -571,10 +523,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
           Expanded(
             child: Text(
               member['name'],
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
             ),
           ),
           if (widget.isCreator && member['id'] != 'current_user')
@@ -582,21 +531,9 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
               onSelected: (value) {
                 if (value == 'remove') {
                   _removeMember(member);
-                } else if (value == 'admin') {
-                  _makeAdmin(member);
                 }
               },
               itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'admin',
-                  child: Row(
-                    children: [
-                      Icon(Icons.admin_panel_settings, size: 16),
-                      SizedBox(width: 8),
-                      Text('Make Admin'),
-                    ],
-                  ),
-                ),
                 const PopupMenuItem(
                   value: 'remove',
                   child: Row(
@@ -614,7 +551,11 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
                   color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.more_vert, size: 16, color: Colors.grey),
+                child: const Icon(
+                  Icons.more_vert,
+                  size: 16,
+                  color: Colors.grey,
+                ),
               ),
             ),
         ],
@@ -709,11 +650,15 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
               setState(() {
                 _tripFormData = updatedData;
                 _tripDetails = {
-                  'destination': updatedData['destination'] ?? _tripDetails['destination']!,
-                  'startDate': updatedData['startDate'] ?? _tripDetails['startDate']!,
+                  'destination':
+                      updatedData['destination'] ??
+                      _tripDetails['destination']!,
+                  'startDate':
+                      updatedData['startDate'] ?? _tripDetails['startDate']!,
                   'endDate': updatedData['endDate'] ?? _tripDetails['endDate']!,
                   'budget': 'Not specified',
-                  'tripType': updatedData['tripType'] ?? _tripDetails['tripType']!,
+                  'tripType':
+                      updatedData['tripType'] ?? _tripDetails['tripType']!,
                 };
               });
             },
@@ -747,10 +692,7 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
             const SizedBox(height: 20),
             const Text(
               'Change Group Image',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             Row(
@@ -827,7 +769,9 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Invitations sent to ${selectedFollowers.length} followers!'),
+              content: Text(
+                'Invitations sent to ${selectedFollowers.length} followers!',
+              ),
               backgroundColor: Colors.green,
               behavior: SnackBarBehavior.floating,
             ),
@@ -843,7 +787,9 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Remove Member'),
-        content: Text('Are you sure you want to remove ${member['name']} from the group?'),
+        content: Text(
+          'Are you sure you want to remove ${member['name']} from the group?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -861,36 +807,6 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
               );
             },
             child: const Text('Remove', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _makeAdmin(Map<String, dynamic> member) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Make Admin'),
-        content: Text('Make ${member['name']} an admin of this group?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${member['name']} is now an admin'),
-                  backgroundColor: Colors.green,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            child: const Text('Make Admin'),
           ),
         ],
       ),
@@ -963,8 +879,6 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
     );
   }
 }
-
-// Follower Selection Sheet Widget (for adding members to group)
 class FollowerSelectionSheet extends StatefulWidget {
   final Map<String, dynamic> tripData;
   final Function(List<Map<String, dynamic>>) onSendRequests;
@@ -981,41 +895,46 @@ class FollowerSelectionSheet extends StatefulWidget {
 
 class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
   List<Map<String, dynamic>> _selectedFollowers = [];
-  
+
   // Sample Sri Lankan followers data
   final List<Map<String, dynamic>> _followers = [
     {
       'id': 'follower_7',
       'name': 'Tharaka Rathnayake',
-      'avatar': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+      'avatar':
+          'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
       'isOnline': true,
       'location': 'Colombo',
     },
     {
       'id': 'follower_8',
       'name': 'Sanduni Perera',
-      'avatar': 'https://images.unsplash.com/photo-1494790108755-2616b332c2e0?w=150',
+      'avatar':
+          'https://images.unsplash.com/photo-1494790108755-2616b332c2e0?w=150',
       'isOnline': false,
       'location': 'Galle',
     },
     {
       'id': 'follower_9',
       'name': 'Chaminda Silva',
-      'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+      'avatar':
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
       'isOnline': true,
       'location': 'Kandy',
     },
     {
       'id': 'follower_10',
       'name': 'Malika Fernando',
-      'avatar': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
+      'avatar':
+          'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
       'isOnline': false,
       'location': 'Nuwara Eliya',
     },
     {
       'id': 'follower_11',
       'name': 'Dinesh Wickramasinghe',
-      'avatar': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+      'avatar':
+          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
       'isOnline': true,
       'location': 'Sigiriya',
     },
@@ -1041,26 +960,20 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
             ),
           ),
           const SizedBox(height: 20),
-          
+
           const Text(
             'Add Members to Group',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          
+
           Text(
             'Select followers to invite to this trip group',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.grey[600], fontSize: 14),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
-          
+
           if (_selectedFollowers.isNotEmpty) ...[
             Container(
               padding: const EdgeInsets.all(12),
@@ -1071,11 +984,7 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
               ),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.people,
-                    color: Color(0xFF0088cc),
-                    size: 20,
-                  ),
+                  const Icon(Icons.people, color: Color(0xFF0088cc), size: 20),
                   const SizedBox(width: 8),
                   Text(
                     '${_selectedFollowers.length} followers selected',
@@ -1089,14 +998,16 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
             ),
             const SizedBox(height: 16),
           ],
-          
+
           Expanded(
             child: ListView.builder(
               itemCount: _followers.length,
               itemBuilder: (context, index) {
                 final follower = _followers[index];
-                final isSelected = _selectedFollowers.any((f) => f['id'] == follower['id']);
-                
+                final isSelected = _selectedFollowers.any(
+                  (f) => f['id'] == follower['id'],
+                );
+
                 return Container(
                   margin: const EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
@@ -1113,7 +1024,9 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
                         if (value ?? false) {
                           _selectedFollowers.add(follower);
                         } else {
-                          _selectedFollowers.removeWhere((f) => f['id'] == follower['id']);
+                          _selectedFollowers.removeWhere(
+                            (f) => f['id'] == follower['id'],
+                          );
                         }
                       });
                     },
@@ -1127,8 +1040,13 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10), // Rounded square
-                                border: Border.all(color: Colors.grey[300]!, width: 1),
+                                borderRadius: BorderRadius.circular(
+                                  10,
+                                ), // Rounded square
+                                border: Border.all(
+                                  color: Colors.grey[300]!,
+                                  width: 1,
+                                ),
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(9),
@@ -1138,7 +1056,11 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
                                   errorBuilder: (context, error, stackTrace) {
                                     return Container(
                                       color: Colors.grey[300],
-                                      child: const Icon(Icons.person, size: 20, color: Colors.grey),
+                                      child: const Icon(
+                                        Icons.person,
+                                        size: 20,
+                                        color: Colors.grey,
+                                      ),
                                     );
                                   },
                                 ),
@@ -1154,7 +1076,10 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
                                   decoration: BoxDecoration(
                                     color: Colors.green,
                                     shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 2),
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 2,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -1177,9 +1102,9 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
               },
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           Row(
             children: [
               Expanded(
@@ -1197,8 +1122,8 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: _selectedFollowers.isEmpty 
-                      ? null 
+                  onPressed: _selectedFollowers.isEmpty
+                      ? null
                       : () => widget.onSendRequests(_selectedFollowers),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0088cc),
@@ -1208,8 +1133,8 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
                     ),
                   ),
                   child: Text(
-                    _selectedFollowers.isEmpty 
-                        ? 'Select Followers' 
+                    _selectedFollowers.isEmpty
+                        ? 'Select Followers'
                         : 'Send Invitations (${_selectedFollowers.length})',
                     style: const TextStyle(color: Colors.white),
                   ),

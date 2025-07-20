@@ -28,17 +28,37 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
   @override
   void initState() {
     super.initState();
-    _itinerary = List.from(widget.initialItinerary);
-    // Don't pre-fill all days, only add them when user clicks Add Day
+    _itinerary = _normalizeItineraryData(List.from(widget.initialItinerary));
+  }
+
+  // Helper method to ensure all list fields are properly typed
+  List<Map<String, dynamic>> _normalizeItineraryData(List<Map<String, dynamic>> data) {
+    return data.map((day) {
+      return {
+        'day': day['day'] ?? 1,
+        'places': _ensureStringList(day['places']),
+        'accommodations': _ensureStringList(day['accommodations'] ?? day['accommodation']),
+        'restaurants': _ensureStringList(day['restaurants']),
+        'notes': day['notes']?.toString() ?? '',
+      };
+    }).toList();
+  }
+
+  List<String> _ensureStringList(dynamic value) {
+    if (value == null) return <String>[];
+    if (value is String && value.isNotEmpty) return [value];
+    if (value is List) {
+      return value.map((item) => item.toString()).where((str) => str.isNotEmpty).toList();
+    }
+    return <String>[];
   }
 
   Map<String, dynamic> _createEmptyDay(int dayNumber) {
     return {
       'day': dayNumber,
       'places': <String>[],
-      'accommodation': '',
+      'accommodations': <String>[],
       'restaurants': <String>[],
-      'activities': <String>[],
       'notes': '',
     };
   }
@@ -53,9 +73,8 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
 
   bool _isDayFilled(Map<String, dynamic> day) {
     return (day['places'] as List).isNotEmpty ||
-           day['accommodation'].toString().isNotEmpty ||
+           (day['accommodations'] as List).isNotEmpty ||
            (day['restaurants'] as List).isNotEmpty ||
-           (day['activities'] as List).isNotEmpty ||
            day['notes'].toString().isNotEmpty;
   }
 
@@ -82,7 +101,7 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
       setState(() {
         _itinerary.add(_createEmptyDay(_itinerary.length + 1));
       });
-      _updateItinerary(); // Notify parent of the change
+      _updateItinerary();
       
       // Navigate to the new day with a small delay to ensure the page is built
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -338,12 +357,9 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
                             const SizedBox(height: 8),
                           ],
                           
-                          if (day['accommodation'].toString().isNotEmpty) ...[
-                            _buildSectionTitle('Accommodation', Icons.hotel),
-                            Text(
-                              day['accommodation'],
-                              style: const TextStyle(fontSize: 13),
-                            ),
+                          if ((day['accommodations'] as List).isNotEmpty) ...[
+                            _buildSectionTitle('Accommodations', Icons.hotel),
+                            _buildTagList(day['accommodations']),
                             const SizedBox(height: 8),
                           ],
                           
@@ -351,11 +367,6 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
                             _buildSectionTitle('Restaurants', Icons.restaurant),
                             _buildTagList(day['restaurants']),
                             const SizedBox(height: 8),
-                          ],
-                          
-                          if ((day['activities'] as List).isNotEmpty) ...[
-                            _buildSectionTitle('Activities', Icons.local_activity),
-                            _buildTagList(day['activities']),
                           ],
                         ],
                       ),
@@ -390,7 +401,6 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
     );
   }
 
-  // Show navigation dots even with single day for better UX
   Widget _buildNavigationDots() {
     if (_itinerary.isEmpty) return const SizedBox.shrink();
     
@@ -424,7 +434,6 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
             _itinerary.length,
             (index) => GestureDetector(
               onTap: () {
-                // Navigate to the selected day
                 _pageController.animateToPage(
                   index,
                   duration: const Duration(milliseconds: 300),
@@ -528,7 +537,7 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
   }
 }
 
-// Day Edit Sheet
+// Day Edit Sheet - Updated to handle data normalization
 class DayEditSheet extends StatefulWidget {
   final Map<String, dynamic> day;
   final bool isReadOnly;
@@ -547,18 +556,35 @@ class DayEditSheet extends StatefulWidget {
 
 class _DayEditSheetState extends State<DayEditSheet> {
   late Map<String, dynamic> _editedDay;
-  final TextEditingController _accommodationController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _newPlaceController = TextEditingController();
+  final TextEditingController _newAccommodationController = TextEditingController();
   final TextEditingController _newRestaurantController = TextEditingController();
-  final TextEditingController _newActivityController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _editedDay = Map.from(widget.day);
-    _accommodationController.text = _editedDay['accommodation'] ?? '';
+    _editedDay = _normalizeDay(Map.from(widget.day));
     _notesController.text = _editedDay['notes'] ?? '';
+  }
+
+  Map<String, dynamic> _normalizeDay(Map<String, dynamic> day) {
+    return {
+      'day': day['day'] ?? 1,
+      'places': _ensureStringList(day['places']),
+      'accommodations': _ensureStringList(day['accommodations'] ?? day['accommodation']),
+      'restaurants': _ensureStringList(day['restaurants']),
+      'notes': day['notes']?.toString() ?? '',
+    };
+  }
+
+  List<String> _ensureStringList(dynamic value) {
+    if (value == null) return <String>[];
+    if (value is String && value.isNotEmpty) return [value];
+    if (value is List) {
+      return value.map((item) => item.toString()).where((str) => str.isNotEmpty).toList();
+    }
+    return <String>[];
   }
 
   void _addItem(String key, String value) {
@@ -576,7 +602,6 @@ class _DayEditSheetState extends State<DayEditSheet> {
   }
 
   void _saveDay() {
-    _editedDay['accommodation'] = _accommodationController.text;
     _editedDay['notes'] = _notesController.text;
     widget.onSave(_editedDay);
     Navigator.pop(context);
@@ -658,12 +683,13 @@ class _DayEditSheetState extends State<DayEditSheet> {
                   
                   const SizedBox(height: 24),
                   
-                  // Accommodation section
-                  _buildTextFieldSection(
-                    'Accommodation',
+                  // Accommodations section
+                  _buildListSection(
+                    'Accommodations',
                     Icons.hotel,
-                    _accommodationController,
-                    'Hotel name or address...',
+                    'accommodations',
+                    _newAccommodationController,
+                    'Add accommodation...',
                   ),
                   
                   const SizedBox(height: 24),
@@ -675,17 +701,6 @@ class _DayEditSheetState extends State<DayEditSheet> {
                     'restaurants',
                     _newRestaurantController,
                     'Add a restaurant...',
-                  ),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Activities section
-                  _buildListSection(
-                    'Activities',
-                    Icons.local_activity,
-                    'activities',
-                    _newActivityController,
-                    'Add an activity...',
                   ),
                   
                   const SizedBox(height: 24),
@@ -846,11 +861,10 @@ class _DayEditSheetState extends State<DayEditSheet> {
 
   @override
   void dispose() {
-    _accommodationController.dispose();
     _notesController.dispose();
     _newPlaceController.dispose();
+    _newAccommodationController.dispose();
     _newRestaurantController.dispose();
-    _newActivityController.dispose();
     super.dispose();
   }
 }

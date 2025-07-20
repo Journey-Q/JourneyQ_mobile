@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:journeyq/features/join_trip/pages/data.dart';
 import 'package:journeyq/features/join_trip/pages/common/trip_details_widget.dart';
 import 'package:journeyq/features/join_trip/pages/common/trip_form_widget.dart';
+import 'package:journeyq/features/join_trip/pages/common/day_itinerary_widget.dart';
 
 class CreatedTripsTab extends StatefulWidget {
   final VoidCallback onCreateTrip;
@@ -19,65 +20,82 @@ class _CreatedTripsTabState extends State<CreatedTripsTab> {
       return _buildEmptyState();
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: SampleData.createdTripForms.length,
-      itemBuilder: (context, index) {
-        final trip = SampleData.createdTripForms[index];
-        return _buildTripCard(trip);
-      },
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.add_location_alt_outlined,
-            size: 80,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No Created Trips',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Start planning your first adventure!',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[500],
-            ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: widget.onCreateTrip,
-            icon: const Icon(Icons.add, color: Colors.white),
-            label: const Text(
-              'Create Your First Trip',
-              style: TextStyle(color: Colors.white),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0088cc),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ],
+    return RefreshIndicator(
+      onRefresh: _refreshTrips,
+      color: const Color(0xFF0088cc),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: SampleData.createdTripForms.length,
+        itemBuilder: (context, index) {
+          final trip = SampleData.createdTripForms[index];
+          return _buildTripCard(trip, index);
+        },
       ),
     );
   }
 
-  Widget _buildTripCard(Map<String, dynamic> trip) {
+  Future<void> _refreshTrips() async {
+    // Simulate refresh delay
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (mounted) {
+      setState(() {
+        // Refresh the state
+      });
+    }
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.add_location_alt_outlined,
+              size: 80,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No Created Trips',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Start planning your first adventure!',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[500],
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: widget.onCreateTrip,
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text(
+                'Create Your First Trip',
+                style: TextStyle(color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0088cc),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTripCard(Map<String, dynamic> trip, int index) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -92,149 +110,150 @@ class _CreatedTripsTabState extends State<CreatedTripsTab> {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header with icon and menu
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with icon and trip name only
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  width: 50,
-                  height: 50,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF0088cc), Color(0xFF00B4DB)],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.grey[200], // Light grey background
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
-                    Icons.location_on,
-                    color: Colors.white,
-                    size: 24,
+                    Icons.luggage,
+                    color: Colors.black, // Black icon
+                    size: 20,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        trip['title'] ?? 'Unknown Trip',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        trip['destination'] ?? 'Unknown Destination',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    trip['title'] ?? 'Unknown Trip',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                PopupMenuButton<String>(
-                  onSelected: (value) => _handleMenuAction(context, value, trip),
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'view_details',
-                      child: Row(
-                        children: [
-                          Icon(Icons.visibility, size: 18),
-                          SizedBox(width: 8),
-                          Text('View Full Details'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'edit_details',
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit, size: 18),
-                          SizedBox(width: 8),
-                          Text('Edit Trip Details'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'send_request',
-                      child: Row(
-                        children: [
-                          Icon(Icons.send, size: 18),
-                          SizedBox(width: 8),
-                          Text('Send Request'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete, size: 18, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('Delete', style: TextStyle(color: Colors.red)),
-                        ],
-                      ),
-                    ),
-                  ],
-                  child: const Icon(Icons.more_vert, color: Colors.grey),
-                ),
               ],
             ),
-          ),
-          
-          // Trip Details (removed budget)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
+            
+            const SizedBox(height: 16),
+            
+            // Trip Details - Only Start Date and Duration
+            _buildDetailRow(
+              Icons.calendar_today,
+              'Start Date',
+              trip['startDate'] ?? 'Not specified',
+            ),
+            const SizedBox(height: 8),
+            _buildDetailRow(
+              Icons.schedule,
+              'Duration',
+              trip['duration'] ?? 'Not specified',
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Action buttons with icons only
+            Row(
               children: [
-                _buildDetailRow(
-                  Icons.calendar_today,
-                  'Start Date',
-                  trip['startDate'] ?? 'Not specified',
+                Expanded(
+                  child: _buildActionButton(
+                    icon: Icons.visibility,
+                    color:  Colors.black,
+                    onPressed: () => _viewTripDetails(context, trip),
+                  ),
                 ),
-                _buildDetailRow(
-                  Icons.schedule,
-                  'Duration',
-                  trip['duration'] ?? 'Not specified',
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildActionButton(
+                    icon: Icons.edit,
+                    color:  Colors.black,
+                    onPressed: () => _editTripDetails(context, trip),
+                  ),
                 ),
-                // Removed budget row from here
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildActionButton(
+                    icon: Icons.send,
+                    color:  Colors.black,
+                    onPressed: () => _showFollowerSelection(context, trip),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildActionButton(
+                    icon: Icons.delete,
+                    color:  Colors.black,
+                    onPressed: () => _deleteTripConfirmation(context, trip, index),
+                  ),
+                ),
               ],
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      height: 40,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1), // Light background color
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3), width: 1), // Colored border
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: onPressed,
+          child: Center(
+            child: Icon(
+              icon, 
+              size: 20, 
+              color: color,
+            ),
           ),
-          
-          const SizedBox(height: 16),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildDetailRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 16,
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: Colors.grey[600],
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '$label: ',
+          style: TextStyle(
             color: Colors.grey[600],
+            fontSize: 14,
           ),
-          const SizedBox(width: 8),
-          Text(
-            '$label: ',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 14,
-            ),
-          ),
-          Text(
+        ),
+        Expanded(
+          child: Text(
             value,
             style: const TextStyle(
               color: Colors.black87,
@@ -242,26 +261,9 @@ class _CreatedTripsTabState extends State<CreatedTripsTab> {
               fontWeight: FontWeight.w500,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
-  }
-
-  void _handleMenuAction(BuildContext context, String action, Map<String, dynamic> trip) {
-    switch (action) {
-      case 'view_details':
-        _viewTripDetails(context, trip);
-        break;
-      case 'edit_details':
-        _editTripDetails(context, trip);
-        break;
-      case 'send_request':
-        _showFollowerSelection(context, trip);
-        break;
-      case 'delete':
-        _deleteTripConfirmation(context, trip);
-        break;
-    }
   }
 
   void _viewTripDetails(BuildContext context, Map<String, dynamic> trip) {
@@ -329,32 +331,130 @@ class _CreatedTripsTabState extends State<CreatedTripsTab> {
     );
   }
 
-  void _deleteTripConfirmation(BuildContext context, Map<String, dynamic> trip) {
+  void _deleteTripConfirmation(BuildContext context, Map<String, dynamic> trip, int index) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Trip'),
-        content: Text('Are you sure you want to delete "${trip['title']}"? This action cannot be undone.'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.warning_rounded,
+                color: Colors.red,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Delete Trip',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Are you sure you want to delete "${trip['title']}"?',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'This action cannot be undone. All trip data will be permanently removed.',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
-          TextButton(
+          const SizedBox(width: 8),
+          ElevatedButton(
             onPressed: () {
               setState(() {
-                SampleData.createdTripForms.removeWhere((t) => t['id'] == trip['id']);
+                SampleData.createdTripForms.removeAt(index);
               });
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('${trip['title']} deleted successfully'),
+                  content: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Icon(
+                          Icons.check_circle,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text('${trip['title']} deleted successfully'),
+                    ],
+                  ),
                   backgroundColor: Colors.red,
                   behavior: SnackBarBehavior.floating,
+                  margin: const EdgeInsets.all(16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  duration: const Duration(seconds: 3),
                 ),
               );
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              elevation: 0,
+            ),
+            child: const Text(
+              'Delete',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -418,18 +518,6 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
       'avatar': 'https://i.pravatar.cc/150?img=10',
       'isOnline': false,
     },
-    {
-      'id': 'follower_7',
-      'name': 'Lisa Park',
-      'avatar': 'https://i.pravatar.cc/150?img=14',
-      'isOnline': true,
-    },
-    {
-      'id': 'follower_8',
-      'name': 'David Kim',
-      'avatar': 'https://i.pravatar.cc/150?img=18',
-      'isOnline': false,
-    },
   ];
 
   @override
@@ -468,23 +556,6 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
           ),
           const SizedBox(height: 20),
           
-          // Search bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search followers...',
-                border: InputBorder.none,
-                prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          
           if (_selectedFollowers.isNotEmpty) ...[
             Container(
               padding: const EdgeInsets.all(12),
@@ -508,55 +579,11 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _selectedFollowers.clear();
-                      });
-                    },
-                    child: const Text(
-                      'Clear All',
-                      style: TextStyle(
-                        color: Color(0xFF0088cc),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
           ],
-          
-          // Select All button
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    setState(() {
-                      if (_selectedFollowers.length == _followers.length) {
-                        _selectedFollowers.clear();
-                      } else {
-                        _selectedFollowers = List.from(_followers);
-                      }
-                    });
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFF0088cc)),
-                  ),
-                  child: Text(
-                    _selectedFollowers.length == _followers.length 
-                        ? 'Deselect All' 
-                        : 'Select All',
-                    style: const TextStyle(color: Color(0xFF0088cc)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
           
           Expanded(
             child: ListView.builder(
@@ -623,7 +650,7 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
                                 ),
                               ),
                               Text(
-                                follower['isOnline'] ? 'Online' : 'Last seen recently',
+                                follower['isOnline'] ? 'Online' : 'Offline',
                                 style: TextStyle(
                                   color: follower['isOnline'] ? Colors.green : Colors.grey[500],
                                   fontSize: 12,
@@ -662,15 +689,12 @@ class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0088cc),
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    disabledBackgroundColor: Colors.grey[300],
                   ),
                   child: Text(
                     _selectedFollowers.isEmpty 
                         ? 'Select Followers' 
                         : 'Send Requests (${_selectedFollowers.length})',
-                    style: TextStyle(
-                      color: _selectedFollowers.isEmpty ? Colors.grey[600] : Colors.white,
-                    ),
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
               ),

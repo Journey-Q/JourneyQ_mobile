@@ -78,16 +78,6 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
     return settlements;
   }
 
-  String _getSettlementText(String memberId, double settlement) {
-    if (settlement.abs() < 0.01) {
-      return 'All settled!';
-    } else if (settlement > 0) {
-      return 'Should receive LKR ${settlement.toStringAsFixed(0)}';
-    } else {
-      return 'Owes LKR ${settlement.abs().toStringAsFixed(0)}';
-    }
-  }
-
   String _getDetailedSettlementText(String memberId, double settlement) {
     if (settlement.abs() < 0.01) {
       return 'All settled! No money exchange needed.';
@@ -127,12 +117,12 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
     final settlements = _calculateSettlements();
     
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF5F7FA),
+        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
@@ -141,88 +131,99 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
             Text(
               '${widget.groupName} Budget',
               style: const TextStyle(
-                color: Colors.black,
+                color: Colors.black87,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
               ),
             ),
             Text(
-              'Total: LKR ${_getTotalGroupExpense().toStringAsFixed(0)}',
+              'Track expenses and settlements',
               style: TextStyle(
                 color: Colors.grey[600],
-                fontSize: 14,
+                fontSize: 13,
+                fontWeight: FontWeight.normal,
               ),
             ),
           ],
         ),
-        actions: [
-          const SizedBox(width: 12),
-        ],
       ),
       body: Column(
         children: [
-          // Summary Card
+          // Professional Summary Card
           Container(
             margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.blue[50],
-              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                colors: [Colors.grey[800]!, Colors.grey[700]!],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
+                  color: Colors.grey.withOpacity(0.3),
                   spreadRadius: 2,
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
-            child: Column(
+            child: Row(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Total Expenses',
-                          style: TextStyle(
-                            color: Colors.black54,
-                            fontSize: 14,
-                          ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Total Expenses',
+                        style: TextStyle(
+                          color: Colors.grey[300],
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
                         ),
-                        Text(
-                          'LKR ${_getTotalGroupExpense().toStringAsFixed(0)}',
-                          style: const TextStyle(
-                            color: Colors.black87,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'LKR ${_getTotalGroupExpense().toStringAsFixed(0)}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        const Text(
-                          'Per Person',
-                          style: TextStyle(
-                            color: Colors.black54,
-                            fontSize: 14,
-                          ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  height: 50,
+                  color: Colors.grey[500],
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'Per Person',
+                        style: TextStyle(
+                          color: Colors.grey[300],
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
                         ),
-                        Text(
-                          'LKR ${_getAverageExpensePerMember().toStringAsFixed(0)}',
-                          style: const TextStyle(
-                            color: Colors.black87,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'LKR ${_getAverageExpensePerMember().toStringAsFixed(0)}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -238,15 +239,17 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
                 final memberId = member['id'];
                 final isExpanded = expandedMembers[memberId] ?? false;
                 final settlement = settlements[memberId] ?? 0.0;
+                final totalSpent = _getTotalExpenseForMember(memberId);
                 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey[200]!, width: 1),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
+                        color: Colors.grey.withOpacity(0.08),
                         spreadRadius: 1,
                         blurRadius: 8,
                         offset: const Offset(0, 2),
@@ -267,70 +270,83 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
                           padding: const EdgeInsets.all(16),
                           child: Row(
                             children: [
-                              CircleAvatar(
-                                radius: 24,
-                                backgroundImage: NetworkImage(member['avatar']),
+                              // Avatar
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.grey[300]!, width: 1),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(11),
+                                  child: Image.network(
+                                    member['avatar'],
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        color: Colors.grey[200],
+                                        child: Icon(
+                                          Icons.person,
+                                          size: 24,
+                                          color: Colors.grey[600],
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
                               ),
                               const SizedBox(width: 16),
+                              
+                              // Name only
                               Expanded(
+                                child: Text(
+                                  member['name'],
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
+                              
+                              // Total spent amount
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.grey[300]!, width: 1),
+                                ),
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Text(
-                                      member['name'],
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Spent: LKR ${_getTotalExpenseForMember(memberId).toStringAsFixed(0)}',
+                                      'Total',
                                       style: TextStyle(
                                         color: Colors.grey[600],
-                                        fontSize: 14,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                     Text(
-                                      _getSettlementText(memberId, settlement),
-                                      style: TextStyle(
-                                        color: settlement > 0 ? Colors.green[600] : 
-                                               settlement < 0 ? Colors.red[600] : Colors.blue[600],
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
+                                      'LKR ${totalSpent.toStringAsFixed(0)}',
+                                      style: const TextStyle(
+                                        color: Colors.black87,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: settlement > 0 ? Colors.green[50] : 
-                                         settlement < 0 ? Colors.red[50] : Colors.blue[50],
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: settlement > 0 ? Colors.green[200]! : 
-                                           settlement < 0 ? Colors.red[200]! : Colors.blue[200]!,
-                                  ),
-                                ),
-                                child: Text(
-                                  settlement > 0 
-                                      ? '+${settlement.abs().toStringAsFixed(0)}'
-                                      : settlement < 0 
-                                          ? '-${settlement.abs().toStringAsFixed(0)}'
-                                          : '0',
-                                  style: TextStyle(
-                                    color: settlement > 0 ? Colors.green[700] : 
-                                           settlement < 0 ? Colors.red[700] : Colors.blue[700],
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
                               const SizedBox(width: 8),
+                              
+                              // Expand/collapse icon
                               Icon(
                                 isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
                                 color: Colors.grey[600],
+                                size: 24,
                               ),
                             ],
                           ),
@@ -339,7 +355,11 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
                       
                       // Expanded Details
                       if (isExpanded) ...[
-                        const Divider(height: 1),
+                        Container(
+                          width: double.infinity,
+                          height: 1,
+                          color: Colors.grey[200],
+                        ),
                         Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
@@ -356,13 +376,17 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
                               const SizedBox(height: 12),
                               
                               // Expense Categories
-                              _buildExpenseRow(memberId, 'Travel', 'travel', Icons.flight, Colors.blue),
-                              _buildExpenseRow(memberId, 'Food', 'food', Icons.restaurant, Colors.orange),
-                              _buildExpenseRow(memberId, 'Hotel', 'hotel', Icons.hotel, Colors.purple),
-                              _buildExpenseRow(memberId, 'Other', 'other', Icons.more_horiz, Colors.grey),
+                              _buildExpenseRow(memberId, 'Travel', 'travel', Icons.flight),
+                              _buildExpenseRow(memberId, 'Food', 'food', Icons.restaurant),
+                              _buildExpenseRow(memberId, 'Hotel', 'hotel', Icons.hotel),
+                              _buildExpenseRow(memberId, 'Other', 'other', Icons.more_horiz),
                               
                               const SizedBox(height: 16),
-                              const Divider(),
+                              Container(
+                                width: double.infinity,
+                                height: 1,
+                                color: Colors.grey[200],
+                              ),
                               const SizedBox(height: 12),
                               
                               // Settlement Details
@@ -379,29 +403,29 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
                               Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: settlement > 0 ? Colors.green[50] : 
-                                         settlement < 0 ? Colors.red[50] : Colors.blue[50],
+                                  color: settlement > 0.01 ? Colors.green[50] : 
+                                         settlement < -0.01 ? Colors.red[50] : Colors.blue[50],
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: settlement > 0 ? Colors.green[200]! : 
-                                           settlement < 0 ? Colors.red[200]! : Colors.blue[200]!,
+                                    color: settlement > 0.01 ? Colors.green[200]! : 
+                                           settlement < -0.01 ? Colors.red[200]! : Colors.blue[200]!,
                                   ),
                                 ),
                                 child: Row(
                                   children: [
                                     Icon(
-                                      settlement > 0 ? Icons.trending_up : 
-                                      settlement < 0 ? Icons.trending_down : Icons.check_circle,
-                                      color: settlement > 0 ? Colors.green[700] : 
-                                             settlement < 0 ? Colors.red[700] : Colors.blue[700],
+                                      settlement > 0.01 ? Icons.trending_up : 
+                                      settlement < -0.01 ? Icons.trending_down : Icons.check_circle,
+                                      color: settlement > 0.01 ? Colors.green[700] : 
+                                             settlement < -0.01 ? Colors.red[700] : Colors.blue[700],
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
                                         _getDetailedSettlementText(memberId, settlement),
                                         style: TextStyle(
-                                          color: settlement > 0 ? Colors.green[700] : 
-                                                 settlement < 0 ? Colors.red[700] : Colors.blue[700],
+                                          color: settlement > 0.01 ? Colors.green[700] : 
+                                                 settlement < -0.01 ? Colors.red[700] : Colors.blue[700],
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
@@ -424,34 +448,53 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
     );
   }
 
-  Widget _buildExpenseRow(String memberId, String category, String key, IconData icon, Color color) {
+  String _getExpenseBreakdownText(String memberId) {
+    final expenses = memberExpenses[memberId]!;
+    List<String> nonZeroExpenses = [];
+    
+    if (expenses['travel']! > 0) nonZeroExpenses.add('Travel');
+    if (expenses['food']! > 0) nonZeroExpenses.add('Food');
+    if (expenses['hotel']! > 0) nonZeroExpenses.add('Hotel');
+    if (expenses['other']! > 0) nonZeroExpenses.add('Other');
+    
+    if (nonZeroExpenses.isEmpty) {
+      return 'No expenses recorded';
+    } else if (nonZeroExpenses.length <= 2) {
+      return nonZeroExpenses.join(', ');
+    } else {
+      return '${nonZeroExpenses.take(2).join(', ')} +${nonZeroExpenses.length - 2} more';
+    }
+  }
+
+  Widget _buildExpenseRow(String memberId, String category, String key, IconData icon) {
     final expense = memberExpenses[memberId]![key]!;
     
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              color: Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[300]!, width: 1),
             ),
-            child: Icon(icon, color: color, size: 20),
+            child: Icon(icon, color: Colors.black87, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               category,
-              style: TextStyle(
+              style: const TextStyle(
                 fontWeight: FontWeight.w600,
-                color: color.withOpacity(0.8),
+                color: Colors.black87,
               ),
             ),
           ),
@@ -462,20 +505,20 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: color.withOpacity(0.3)),
+                border: Border.all(color: Colors.grey[300]!, width: 1),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     'LKR ${expense.toStringAsFixed(0)}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: color,
+                      color: Colors.black87,
                     ),
                   ),
                   const SizedBox(width: 4),
-                  Icon(Icons.edit, size: 14, color: color),
+                  const Icon(Icons.edit, size: 14, color: Colors.black87),
                 ],
               ),
             ),

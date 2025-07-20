@@ -285,7 +285,7 @@ class _JoinRequestsTabState extends State<JoinRequestsTab> {
                         request['tripName']!,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: 14,
                           color: Colors.black87,
                         ),
                       ),
@@ -304,7 +304,7 @@ class _JoinRequestsTabState extends State<JoinRequestsTab> {
                           'Request sent to ${request['creatorName']}',
                           style: TextStyle(
                             color: Colors.green[700],
-                            fontSize: 14,
+                            fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
