@@ -21,7 +21,11 @@ import 'package:journeyq/features/create_trip/pages/index.dart';
 import 'package:journeyq/features/home/pages/home_page.dart';
 import 'route_transistion.dart';
 import 'package:journeyq/features/profile/pages/index.dart';
-import 'package:journeyq/features/profile/pages/SettingsPage.dart';
+import 'package:journeyq/features/profile/pages/Setting/SettingsPage.dart';
+import 'package:journeyq/features/profile/pages/Setting/ChangePasswordPage.dart';
+
+import 'package:journeyq/features/profile/pages/Setting/PointExplainationPage.dart';
+
 import 'package:journeyq/features/profile/pages/EditProfilePage.dart';
 import 'package:journeyq/features/profile/pages/PostDetailPage.dart';
 import 'package:journeyq/features/profile/pages/BucketListPage.dart';
@@ -398,6 +402,16 @@ class AppRouter {
         TransitionGoRoute(
           path: '/profile/bucketlist',
           builder: (context, state) => const BucketListPage(),
+          transitionType: PageTransitionType.slide,
+        ),
+        TransitionGoRoute(
+          path: '/profile/settings/change-password',
+          builder: (context, state) => const ChangePasswordPage(),
+          transitionType: PageTransitionType.slide,
+        ),
+        TransitionGoRoute(
+          path: '/profile/settings/points-explanation',
+          builder: (context, state) => const PointsExplanationPage(),
           transitionType: PageTransitionType.slide,
         ),
 
