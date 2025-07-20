@@ -38,6 +38,8 @@ import 'package:journeyq/features/market_place/search_page.dart';
 import 'package:journeyq/features/market_place/pages/market_chat.dart';
 import 'package:journeyq/features/market_place/pages/BookingHistoryPage.dart';
 import 'package:journeyq/features/market_place/pages/chat_details.dart';
+import 'package:journeyq/features/preference_page/index.dart';
+import 'package:journeyq/features/preference_page/profile_setup.dart';
 
 class AppRouter {
   static GoRouter createRouter(AuthProvider authProvider) {
@@ -46,15 +48,26 @@ class AppRouter {
       refreshListenable: authProvider,
       redirect: (context, state) {
         final authStatus = authProvider.status;
+        final isSetupCompleted = authProvider.isSetupCompleted;
         final isOnLogin =
             state.matchedLocation == '/login' ||
             state.matchedLocation == '/signup';
+        final isOnSetup = state.matchedLocation == '/setup';
 
         if (authStatus == AuthStatus.unauthenticated && !isOnLogin) {
           return '/login';
         }
 
-        if (authStatus == AuthStatus.authenticated && (isOnLogin)) {
+        if (authStatus == AuthStatus.authenticated &&
+            !isSetupCompleted &&
+            !isOnSetup) {
+          return '/setup';
+        }
+
+        // If authenticated and NOT first time user but on login/signup/setup
+        if (authStatus == AuthStatus.authenticated &&
+            isSetupCompleted &&
+            (isOnLogin || isOnSetup)) {
           return '/home';
         }
 
@@ -67,6 +80,13 @@ class AppRouter {
           builder: (context, state) => const SignUpPage(),
           transitionType: PageTransitionType.upDown,
         ),
+
+        TransitionGoRoute(
+          path: '/setup',
+          builder: (context, state) => const CombinedSetupPage(),
+          transitionType: PageTransitionType.upDown,
+        ),
+
 
         TransitionGoRoute(
           path: '/login',
@@ -380,11 +400,10 @@ class AppRouter {
           path: '/user-profile/:userId/:userName',
           builder: (context, state) {
             final userId = state.pathParameters['userId']!;
-            final userName = Uri.decodeComponent(state.pathParameters['userName']!);
-            return UserProfilePage(
-              userId: userId,
-              userName: userName,
+            final userName = Uri.decodeComponent(
+              state.pathParameters['userName']!,
             );
+            return UserProfilePage(userId: userId, userName: userName);
           },
           transitionType: PageTransitionType.slide,
         ),

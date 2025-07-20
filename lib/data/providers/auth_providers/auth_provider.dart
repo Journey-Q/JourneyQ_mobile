@@ -22,10 +22,16 @@ class AuthProvider extends ChangeNotifier {
   String? accessToken;
   String? refreshToken;
   String? errorMessage;
+  
+  // Setup completion tracking
+  bool _isSetupCompleted = false;
+  bool _isInitialized = false;
 
   // Getters
   bool get isAuthenticated => status == AuthStatus.authenticated;
   bool get isLoading => status == AuthStatus.loading;
+  bool get isSetupCompleted => _isSetupCompleted;
+  bool get isInitialized => _isInitialized;
   
   // Additional getter for interceptors
   String? getAccessToken() => accessToken;
@@ -43,13 +49,23 @@ class AuthProvider extends ChangeNotifier {
       if (accessToken != null) {
         // Try to load user data if token exists
         await verifyAndLoadUser();
+        
+        // Check if setup is completed
+        _isSetupCompleted = !(await AuthRepository.isFirstTimeUser());
+        
         setStatus(AuthStatus.authenticated);
       } else {
         setStatus(AuthStatus.unauthenticated);
+        _isSetupCompleted = false;
       }
+      
+      _isInitialized = true;
+      notifyListeners();
     } catch (e) {
       setError('Failed to initialize authentication');
       setStatus(AuthStatus.unauthenticated);
+      _isInitialized = true;
+      notifyListeners();
     }
   }
 
@@ -70,6 +86,7 @@ class AuthProvider extends ChangeNotifier {
     accessToken = null;
     refreshToken = null;
     user = null;
+    _isSetupCompleted = false;
     await AuthRepository.clearTokens();
     setStatus(AuthStatus.unauthenticated);
   }
@@ -83,11 +100,23 @@ class AuthProvider extends ChangeNotifier {
     
     // Save tokens to storage
     await AuthRepository.saveTokens(accessToken);
+    
+    // Check setup status for authenticated user
+    _isSetupCompleted = !(await AuthRepository.isFirstTimeUser());
+    
     setStatus(AuthStatus.authenticated);
   }
 
-  // Method to update tokens (useful for token refresh)
-  
+  // Method to complete setup
+  Future<void> completeSetup() async {
+    try {
+      await AuthRepository.setFirstTimeUser(false);
+      _isSetupCompleted = true;
+      notifyListeners();
+    } catch (e) {
+      setError('Failed to complete setup');
+    }
+  }
 
   void setStatus(AuthStatus newStatus) {
     status = newStatus;

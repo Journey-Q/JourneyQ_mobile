@@ -6,11 +6,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:journeyq/data/models/user_model/user_model.dart';
+import 'package:journeyq/core/storage/localstorage.dart';
 
 class AuthRepository {
-
   static final authProvider = AuthProvider();
-   
+
   // Login with email and password
   static Future<Map<String, dynamic>> login(
     String email,
@@ -33,6 +33,18 @@ class AuthRepository {
     } catch (e) {
       rethrow;
     }
+  }
+
+  static Future<bool> isFirstTimeUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final localStorage = LocalStorage(prefs: prefs);
+    return await localStorage.isFirstTimeUser();
+  }
+
+  static Future<void> setFirstTimeUser(bool isFirstTime) async {
+    final prefs = await SharedPreferences.getInstance();
+    final localStorage = LocalStorage(prefs: prefs);
+    return await localStorage.setFirstTimeUser(isFirstTime);
   }
 
   // Login with Google/social
@@ -205,7 +217,6 @@ class AuthRepository {
       }
 
       // ===== NEW: Update AuthProvider =====
-     
 
       // Set access token in AuthProvider
       if (authResponse['accessToken'] != null) {
@@ -252,9 +263,8 @@ class AuthRepository {
       await prefs.remove('token_expires_at');
       await prefs.remove('refresh_token');
       await prefs.remove('user_data');
+      await prefs.remove('first_time_user');
       authProvider.setStatus(AuthStatus.unauthenticated);
-      
-
     } catch (e) {
       throw Exception('Failed to clear tokens: ${e.toString()}');
     }
