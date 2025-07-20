@@ -35,7 +35,6 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
         'Business Center',
       ],
       'isAvailable': true,
-      'category': 'Luxury',
     },
     {
       'id': 'hotel_002',
@@ -57,7 +56,6 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
         'Heritage Tours',
       ],
       'isAvailable': true,
-      'category': 'Heritage',
     },
     {
       'id': 'hotel_003',
@@ -79,7 +77,6 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
         'Shopping Arcade',
       ],
       'isAvailable': true,
-      'category': 'Business',
     },
     {
       'id': 'hotel_004',
@@ -101,7 +98,6 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
         'Event Spaces',
       ],
       'isAvailable': true,
-      'category': 'Business',
     },
     {
       'id': 'hotel_005',
@@ -123,7 +119,6 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
         'Banquet Halls',
       ],
       'isAvailable': true,
-      'category': 'Luxury',
     }
   ];
 
@@ -231,29 +226,7 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
                         ),
                       ),
                     ),
-                    // Category Badge
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _getCategoryColor(hotel['category']),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          hotel['category'],
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
+
                     // Availability Status
                     if (!hotel['isAvailable'])
                       Positioned(
@@ -350,8 +323,8 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
                     spacing: 8,
                     runSpacing: 4,
                     children: (hotel['amenities'] as List).take(4).map<Widget>((
-                      amenity,
-                    ) {
+                        amenity,
+                        ) {
                       return Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -372,18 +345,7 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
                       );
                     }).toList(),
                   ),
-                  if ((hotel['amenities'] as List).length > 4)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        '+${(hotel['amenities'] as List).length - 4} more amenities',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.blue.shade600,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ),
+
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -400,7 +362,7 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
                             ),
                           ),
                           const Text(
-                            'per night',
+                            '',
                             style: TextStyle(fontSize: 12, color: Colors.grey),
                           ),
                         ],
@@ -408,9 +370,9 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
                       ElevatedButton(
                         onPressed: hotel['isAvailable']
                             ? () {
-                                // Navigate to hotel details page using hotel ID
-                                _navigateToHotelDetails(hotel['id']);
-                              }
+                          // Navigate to hotel details page using hotel ID
+                          _navigateToHotelDetails(hotel['id']);
+                        }
                             : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: hotel['isAvailable']
@@ -487,162 +449,145 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
     );
   }
 
-  Color _getCategoryColor(String category) {
-    switch (category.toLowerCase()) {
-      case 'luxury':
-        return Colors.purple;
-      case 'business':
-        return Colors.blue;
-      case 'heritage':
-        return Colors.brown;
-      case 'beach':
-        return Colors.teal;
-      case 'boutique':
-        return Colors.pink;
-      default:
-        return Colors.grey;
-    }
-  }
-
   @override
   void initState() {
     super.initState();
   }
 
- @override
-Widget build(BuildContext context) {
-  final displayedHotels = allHotels;
+  @override
+  Widget build(BuildContext context) {
+    final displayedHotels = allHotels;
 
-  // Count variables - replace with your actual state variables
-  int orderCount = 3; // Number of pending orders
-  int chatCount = 7; // Number of unread messages
+    // Count variables - replace with your actual state variables
+    int orderCount = 3; // Number of pending orders
+    int chatCount = 7; // Number of unread messages
 
-  return Scaffold(
-    backgroundColor: Colors.grey[50],
-    appBar: AppBar(
-      backgroundColor: Colors.white,
-      surfaceTintColor: Colors.transparent,
-      foregroundColor: Colors.black87,
-      elevation: 0,
-      titleSpacing: 20,
-      leading: IconButton(
-        onPressed: () {
-          Navigator.pop(context);
-        },
-        icon: const Icon(Icons.arrow_back, color: Colors.black87, size: 24),
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        foregroundColor: Colors.black87,
+        elevation: 0,
+        titleSpacing: 20,
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.arrow_back, color: Colors.black87, size: 24),
+        ),
+        title: const Text(
+          'Marketplace',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        actions: [
+          // Booking Orders Icon with Badge
+          _buildIconWithBadge(
+            icon: LucideIcons.clipboardList,
+            count: orderCount,
+            onTap: () => context.push('/booking_history'),
+          ),
+
+          const SizedBox(width: 10),
+
+          // Chat Icon with Badge
+          _buildIconWithBadge(
+            icon: LucideIcons.messageCircle,
+            count: chatCount,
+            onTap: () => context.push('/market_chat'),
+          ),
+
+          const SizedBox(width: 16),
+        ],
       ),
-      title: const Text(
-        'Marketplace',
-        style: TextStyle(
-          color: Colors.black,
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      actions: [
-        // Booking Orders Icon with Badge
-        _buildIconWithBadge(
-          icon: LucideIcons.clipboardList,
-          count: orderCount,
-          onTap: () => context.push('/booking_history'),
-        ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Search Bar - Fixed Layout
+              SimpleSearchBar(
+                onSearchTap: () {
+                  context.push('/marketplace/search');
+                },
+                placeholder: 'Search hotels, agencies, packages...',
+              ),
 
-        const SizedBox(width: 10),
+              const SizedBox(height: 24), // Moved outside Row
 
-        // Chat Icon with Badge
-        _buildIconWithBadge(
-          icon: LucideIcons.messageCircle,
-          count: chatCount,
-          onTap: () => context.push('/market_chat'),
-        ),
+              // Hotels Section Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'All Hotels (${displayedHotels.length})',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  )
+                ],
+              ),
 
-        const SizedBox(width: 16),
-      ],
-    ),
-    body: SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Search Bar - Fixed Layout
-            SimpleSearchBar(
-              onSearchTap: () {
-                context.push('/marketplace/search');
-              },
-              placeholder: 'Search hotels, agencies, packages...',
-            ),
-            
-            const SizedBox(height: 24), // Moved outside Row
+              const SizedBox(height: 16),
 
-            // Hotels Section Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'All Hotels (${displayedHotels.length})',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+              // Hotels List
+              if (displayedHotels.isEmpty)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(40),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No hotels found',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Try adjusting your search criteria',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 )
-              ],
-            ),
-            
-            const SizedBox(height: 16),
-
-            // Hotels List
-            if (displayedHotels.isEmpty)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(40),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.search_off,
-                        size: 64,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No hotels found',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Try adjusting your search criteria',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[500],
-                        ),
-                      ),
-                    ],
-                  ),
+              else
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: displayedHotels.length,
+                  itemBuilder: (context, index) {
+                    return _buildHotelCard(displayedHotels[index]);
+                  },
                 ),
-              )
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: displayedHotels.length,
-                itemBuilder: (context, index) {
-                  return _buildHotelCard(displayedHotels[index]);
-                },
-              ),
-              
-            // Add some bottom padding for better scrolling
-            const SizedBox(height: 80),
-          ],
+
+              // Add some bottom padding for better scrolling
+              const SizedBox(height: 80),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
   @override
   void dispose() {
     super.dispose();

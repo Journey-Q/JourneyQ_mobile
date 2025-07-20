@@ -6,6 +6,7 @@ import 'package:journeyq/features/market_place/pages/index.dart';
 import 'package:journeyq/features/market_place/pages/BookingHistoryPage.dart';
 import 'package:journeyq/features/market_place/pages/viewall_hotels.dart';
 import 'package:journeyq/features/market_place/pages/hotel_details.dart';
+import 'package:journeyq/features/market_place/pages/hotel_reviews.dart';
 import 'package:journeyq/features/market_place/pages/room_details.dart';
 import 'package:journeyq/features/market_place/pages/booking_room.dart';
 import 'package:journeyq/features/market_place/pages/viewall_tour_packages.dart';
@@ -114,6 +115,18 @@ class AppRouter {
             return AppWrapper(
               currentRoute: '/marketplace',
               child: HotelDetailsPage(hotelId: hotelId),
+            );
+          },
+          transitionType: PageTransitionType.slide,
+        ),
+
+        TransitionGoRoute(
+          path: '/marketplace/hotels/reviews/:hotelId',
+          builder: (context, state) {
+            final hotelId = state.pathParameters['hotelId']!;
+            return AppWrapper(
+              currentRoute: '/marketplace',
+              child: HotelReviewsPage(hotelId: hotelId),
             );
           },
           transitionType: PageTransitionType.slide,
