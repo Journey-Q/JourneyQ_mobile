@@ -60,10 +60,11 @@ class TripDetailsWidget extends StatelessWidget {
                 foregroundColor: const Color(0xFF0088cc),
               ),
             ),
-          PopupMenuButton<String>(
-            onSelected: (value) => _handleMenuAction(context, value),
-            itemBuilder: (context) => [
-              if (isGroupMember) ...[
+          // Only show popup menu if user is group member
+          if (isGroupMember)
+            PopupMenuButton<String>(
+              onSelected: (value) => _handleMenuAction(context, value),
+              itemBuilder: (context) => [
                 const PopupMenuItem(
                   value: 'edit_details',
                   child: Row(
@@ -104,20 +105,8 @@ class TripDetailsWidget extends StatelessWidget {
                     ],
                   ),
                 ),
-              ] else ...[
-                const PopupMenuItem(
-                  value: 'view_only',
-                  child: Row(
-                    children: [
-                      Icon(Icons.visibility, size: 18),
-                      SizedBox(width: 8),
-                      Text('View Only'),
-                    ],
-                  ),
-                ),
               ],
-            ],
-          ),
+            ),
           const SizedBox(width: 16),
         ],
       ),
@@ -198,9 +187,6 @@ class TripDetailsWidget extends StatelessWidget {
         break;
       case 'delete':
         _deleteTripConfirmation(context);
-        break;
-      case 'view_only':
-        // Already in view mode
         break;
     }
   }
@@ -466,22 +452,6 @@ class TripDetailsWidget extends StatelessWidget {
                   color: Colors.black87,
                 ),
               ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0088cc).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${itinerary.length}/${totalDays > 0 ? totalDays : '?'} days planned',
-                  style: const TextStyle(
-                    color: Color(0xFF0088cc),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -656,49 +626,49 @@ class TripDetailsWidget extends StatelessWidget {
   }
 
   Widget _buildBudgetDetailsCard() {
-  return Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(24),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.grey.withOpacity(0.1),
-          spreadRadius: 1,
-          blurRadius: 10,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Budget Details',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
-        ),
-        const SizedBox(height: 20),
-        if (tripData['travelBudget'] != null && tripData['travelBudget'].toString().isNotEmpty)
-          _buildDetailRow('Travel Budget', '\$${tripData['travelBudget']}', Icons.flight),
-        if (tripData['foodBudget'] != null && tripData['foodBudget'].toString().isNotEmpty)
-          _buildDetailRow('Food Budget', '\$${tripData['foodBudget']}', Icons.restaurant),
-        if (tripData['hotelBudget'] != null && tripData['hotelBudget'].toString().isNotEmpty)
-          _buildDetailRow('Hotel Budget', '\$${tripData['hotelBudget']}', Icons.hotel),
-        if (tripData['otherBudget'] != null && tripData['otherBudget'].toString().isNotEmpty)
-          _buildDetailRow('Other Expenses', '\$${tripData['otherBudget']}', Icons.more_horiz),
-        if (_getTotalBudget() > 0) ...[
-          const Divider(),
-          _buildDetailRow('Total Budget', '\$${_getTotalBudget()}', Icons.attach_money),
         ],
-      ],
-    ),
-  );
-}
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Budget Details',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 20),
+          if (tripData['travelBudget'] != null && tripData['travelBudget'].toString().isNotEmpty)
+            _buildDetailRow('Travel Budget', '\$${tripData['travelBudget']}', Icons.flight),
+          if (tripData['foodBudget'] != null && tripData['foodBudget'].toString().isNotEmpty)
+            _buildDetailRow('Food Budget', '\$${tripData['foodBudget']}', Icons.restaurant),
+          if (tripData['hotelBudget'] != null && tripData['hotelBudget'].toString().isNotEmpty)
+            _buildDetailRow('Hotel Budget', '\$${tripData['hotelBudget']}', Icons.hotel),
+          if (tripData['otherBudget'] != null && tripData['otherBudget'].toString().isNotEmpty)
+            _buildDetailRow('Other Expenses', '\$${tripData['otherBudget']}', Icons.more_horiz),
+          if (_getTotalBudget() > 0) ...[
+            const Divider(),
+            _buildDetailRow('Total Budget', '\$${_getTotalBudget()}', Icons.attach_money),
+          ],
+        ],
+      ),
+    );
+  }
 
   Widget _buildMeetingPointCard() {
     return Container(
