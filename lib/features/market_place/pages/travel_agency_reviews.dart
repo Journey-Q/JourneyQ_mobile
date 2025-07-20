@@ -458,6 +458,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
     },
   ];
 
+  // Method to get agency by ID
   Map<String, dynamic>? _getAgencyById(String id) {
     try {
       return _agencyDatabase.firstWhere((agency) => agency['id'] == id);
@@ -466,142 +467,95 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
     }
   }
 
+  // Method to get reviews by agency ID
   List<Map<String, dynamic>> _getReviewsByAgencyId(String agencyId) {
     return _reviewsDatabase[agencyId] ?? [];
   }
 
-  Widget _buildRatingStars(int rating) {
-    return Row(
-      children: List.generate(5, (index) {
-        return Icon(
-          index < rating ? Icons.star : Icons.star_border,
-          color: Colors.orange,
-          size: 20,
-        );
-      }),
-    );
-  }
-
   Widget _buildReviewCard(Map<String, dynamic> review) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: Colors.blue.shade100,
-                  child: Text(
-                    review['userAvatar'] ?? 'U',
-                    style: const TextStyle(color: Colors.blue),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              // User Avatar
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: Colors.blue.shade100,
+                child: Text(
+                  review['userAvatar'] ?? 'U',
+                  style: TextStyle(
+                    color: Colors.blue.shade700,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Column(
+              ),
+              const SizedBox(width: 12),
+              // User Name and Date
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      review['userName'] ?? 'Anonymous',
+                      review['userName'] ?? 'Anonymous User',
                       style: const TextStyle(
-                        fontWeight: FontWeight.bold,
                         fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
                       ),
                     ),
                     Text(
-                      review['date'] ?? '',
+                      review['date'] ?? 'Recent',
                       style: TextStyle(
-                        color: Colors.grey.shade600,
                         fontSize: 12,
+                        color: Colors.grey.shade600,
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _buildRatingStars(review['rating'] ?? 5),
-            const SizedBox(height: 12),
-            Text(
-              review['comment'] ?? '',
-              style: const TextStyle(
-                fontSize: 14,
-                height: 1.5,
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRatingSummary() {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  agencyData['name'] ?? 'Travel Agency',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade100,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.star,
-                        color: Colors.orange,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        (agencyData['rating'] ?? 4.0).toString(),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '${agencyData['totalReviews'] ?? 0} reviews',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade600,
+              // Rating Stars
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(5, (index) {
+                  int rating = review['rating'] ?? 5;
+                  return Icon(
+                    index < rating ? Icons.star : Icons.star_border,
+                    size: 16,
+                    color: Colors.orange,
+                  );
+                }),
               ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Review Comment
+          Text(
+            review['comment'] ?? 'Great experience!',
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black87,
+              height: 1.4,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -610,12 +564,14 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
   Widget build(BuildContext context) {
     if (isLoading) {
       return Scaffold(
+        backgroundColor: Colors.grey[50],
         appBar: AppBar(
-          title: const Text('Loading Reviews...'),
+          backgroundColor: Colors.white,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
             onPressed: () => context.pop(),
+            icon: const Icon(Icons.arrow_back),
           ),
+          title: const Text('Loading Reviews...'),
         ),
         body: const Center(
           child: CircularProgressIndicator(),
@@ -625,42 +581,212 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
 
     if (hasError) {
       return Scaffold(
+        backgroundColor: Colors.grey[50],
         appBar: AppBar(
-          title: const Text('Error'),
+          backgroundColor: Colors.white,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
             onPressed: () => context.pop(),
+            icon: const Icon(Icons.arrow_back),
           ),
+          title: const Text('Agency Not Found'),
         ),
-        body: const Center(
-          child: Text('Failed to load reviews'),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.grey,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Travel Agency not found',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Agency ID: ${widget.agencyId}',
+                style: const TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => context.pop(),
+                child: const Text('Back to Agency Details'),
+              ),
+            ],
+          ),
         ),
       );
     }
 
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Customer Reviews'),
+        backgroundColor: Colors.white,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Reviews',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            Text(
+              agencyData['name'] ?? 'Travel Agency',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ],
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildRatingSummary(),
-            const Text(
-              'All Reviews',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+            // Reviews Summary
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    spreadRadius: 1,
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  // Overall Rating
+                  Column(
+                    children: [
+                      Text(
+                        (agencyData['rating'] ?? 4.0).toString(),
+                        style: const TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: List.generate(5, (index) {
+                          double rating = agencyData['rating'] ?? 4.0;
+                          if (index < rating.floor()) {
+                            return const Icon(Icons.star, color: Colors.orange, size: 20);
+                          } else if (index < rating) {
+                            return const Icon(Icons.star_half, color: Colors.orange, size: 20);
+                          } else {
+                            return Icon(Icons.star_border, color: Colors.grey.shade300, size: 20);
+                          }
+                        }),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${reviews.length} reviews',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 24),
+                  // Agency Name and Description
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          agencyData['name'] ?? 'Travel Agency',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Read what our customers have to say about their experience with this travel agency.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 8),
-            ...reviews.map((review) => _buildReviewCard(review)).toList(),
+            const SizedBox(height: 24),
+
+            // Reviews List
+            Text(
+              'Customer Reviews (${reviews.length})',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Reviews
+            Expanded(
+              child: reviews.isEmpty
+                  ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.rate_review_outlined,
+                      size: 64,
+                      color: Colors.grey.shade400,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No reviews yet',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Be the first to share your experience!',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+                  : ListView.builder(
+                itemCount: reviews.length,
+                itemBuilder: (context, index) {
+                  return _buildReviewCard(reviews[index]);
+                },
+              ),
+            ),
           ],
         ),
       ),

@@ -46,6 +46,10 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
     }
   }
 
+  void _viewReviews() {
+    context.push('/marketplace/hotels/reviews/${widget.hotelId}');
+  }
+
   // Enhanced hotel database with status system and better UI data
   static final List<Map<String, dynamic>> _hotelDatabase = [
     {
@@ -54,6 +58,14 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
       'location': 'Galle Face, Colombo',
       'rating': 4.8,
       'reviewCount': 1250,
+      'totalReviews': 12,
+      'reviewStats': {
+        '5': 8,
+        '4': 3,
+        '3': 1,
+        '2': 0,
+        '1': 0,
+      },
       'price': 'LKR 45,000/night',
       'contact': '+94 11 254 4544',
       'email': 'reservations@shangrilahotelcolombo.com',
@@ -141,6 +153,14 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
       'location': 'Galle Face Green, Colombo',
       'rating': 4.5,
       'reviewCount': 980,
+      'totalReviews': 10,
+      'reviewStats': {
+        '5': 6,
+        '4': 3,
+        '3': 1,
+        '2': 0,
+        '1': 0,
+      },
       'price': 'LKR 38,000/night',
       'contact': '+94 11 254 1010',
       'email': 'reservations@gallefacehotel.com',
@@ -230,12 +250,20 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
       'location': 'Fort, Colombo',
       'rating': 4.7,
       'reviewCount': 1100,
+      'totalReviews': 15,
+      'reviewStats': {
+        '5': 10,
+        '4': 4,
+        '3': 1,
+        '2': 0,
+        '1': 0,
+      },
       'price': 'LKR 42,000/night',
       'contact': '+94 11 249 1437',
       'email': 'reservations@cinnamongrandcolombo.com',
       'openTime': '24/7',
-      'image': 'assets/images/room_presidential.jpg',
-      'mainImage': 'assets/images/cinnamon_grand.jpg',
+      'image': 'assets/images/cinnamon_grand.jpg',
+      'mainImage': 'assets/images/cinnamon_grand_main.jpg',
       'backgroundColor': const Color(0xFF20B2AA),
       'isAvailable': true,
       'description': 'Discover urban sophistication at Cinnamon Grand Colombo. Located in Fort, our hotel combines contemporary design with warm Sri Lankan hospitality, offering premium accommodations and facilities.',
@@ -296,6 +324,14 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
       'location': 'Echelon Square, Colombo',
       'rating': 4.6,
       'reviewCount': 890,
+      'totalReviews': 8,
+      'reviewStats': {
+        '5': 5,
+        '4': 2,
+        '3': 1,
+        '2': 0,
+        '1': 0,
+      },
       'price': 'LKR 40,000/night',
       'contact': '+94 11 254 9200',
       'email': 'reservations@hiltoncolombo.com',
@@ -361,6 +397,14 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
       'location': 'Galle Face, Colombo',
       'rating': 4.4,
       'reviewCount': 750,
+      'totalReviews': 6,
+      'reviewStats': {
+        '5': 3,
+        '4': 2,
+        '3': 1,
+        '2': 0,
+        '1': 0,
+      },
       'price': 'LKR 35,000/night',
       'contact': '+94 11 244 6622',
       'email': 'reservations@tajsamudra.com',
@@ -451,6 +495,57 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
     } catch (e) {
       return null;
     }
+  }
+
+  Widget _buildRatingBar(int starCount, int reviewCount, int totalReviews) {
+    double percentage = totalReviews > 0 ? reviewCount / totalReviews : 0;
+
+    return Row(
+      children: [
+        Text(
+          '$starCount',
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(width: 4),
+        const Icon(
+          Icons.star,
+          size: 16,
+          color: Colors.orange,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Container(
+            height: 8,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: percentage,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.orange,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '$reviewCount',
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey.shade600,
+          ),
+        ),
+      ],
+    );
   }
 
   // Enhanced room card with separate bedroom/bathroom counts
@@ -1066,6 +1161,123 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                   ),
                   const SizedBox(height: 32),
 
+                  // Customer Reviews Section
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Customer Reviews',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        Row(
+                          children: [
+                            // Left side - Overall rating
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  (hotelData['rating'] ?? 4.0).toString(),
+                                  style: const TextStyle(
+                                    fontSize: 48,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: List.generate(5, (index) {
+                                    double rating = hotelData['rating'] ?? 4.0;
+                                    if (index < rating.floor()) {
+                                      return const Icon(Icons.star, color: Colors.orange, size: 20);
+                                    } else if (index < rating) {
+                                      return const Icon(Icons.star_half, color: Colors.orange, size: 20);
+                                    } else {
+                                      return Icon(Icons.star_border, color: Colors.grey.shade300, size: 20);
+                                    }
+                                  }),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${hotelData['totalReviews'] ?? 0} reviews',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(width: 32),
+
+                            // Right side - Rating breakdown
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  _buildRatingBar(5, hotelData['reviewStats']['5'] ?? 0, hotelData['totalReviews'] ?? 0),
+                                  const SizedBox(height: 8),
+                                  _buildRatingBar(4, hotelData['reviewStats']['4'] ?? 0, hotelData['totalReviews'] ?? 0),
+                                  const SizedBox(height: 8),
+                                  _buildRatingBar(3, hotelData['reviewStats']['3'] ?? 0, hotelData['totalReviews'] ?? 0),
+                                  const SizedBox(height: 8),
+                                  _buildRatingBar(2, hotelData['reviewStats']['2'] ?? 0, hotelData['totalReviews'] ?? 0),
+                                  const SizedBox(height: 8),
+                                  _buildRatingBar(1, hotelData['reviewStats']['1'] ?? 0, hotelData['totalReviews'] ?? 0),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Read Reviews Button
+                        GestureDetector(
+                          onTap: _viewReviews,
+                          child: Row(
+                            children: [
+                              Text(
+                                'Read reviews',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.blue.shade600,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                                color: Colors.blue.shade600,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
                   // Available Rooms
                   const Text(
                     'Available Rooms',
@@ -1091,4 +1303,4 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
       ),
     );
   }
-  }
+}
