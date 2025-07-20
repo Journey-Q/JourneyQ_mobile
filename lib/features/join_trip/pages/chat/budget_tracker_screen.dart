@@ -28,17 +28,14 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
   }
 
   void _initializeBudgetData() {
-    // Get real expense data from SampleData or initialize with zeros
     final groupBudgetData = SampleData.getGroupBudgetData(widget.groupId);
     
     for (var member in widget.members) {
       String memberId = member['id'];
       
       if (groupBudgetData != null && groupBudgetData[memberId] != null) {
-        // Use real data from SampleData
         memberExpenses[memberId] = Map<String, double>.from(groupBudgetData[memberId]!);
       } else {
-        // Initialize with zeros if no data available
         memberExpenses[memberId] = {
           'travel': 0.0,
           'food': 0.0,
@@ -82,7 +79,6 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
     if (settlement.abs() < 0.01) {
       return 'All settled! No money exchange needed.';
     } else if (settlement > 0) {
-      // Find who owes this person money
       final settlements = _calculateSettlements();
       final debtors = settlements.entries
           .where((entry) => entry.value < 0)
@@ -96,7 +92,6 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
       }
       return 'Should receive LKR ${settlement.toStringAsFixed(0)}';
     } else {
-      // Find who this person should pay
       final settlements = _calculateSettlements();
       final creditors = settlements.entries
           .where((entry) => entry.value > 0)
@@ -112,12 +107,42 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
     }
   }
 
+  Color _getCategoryColor(String category) {
+    switch (category) {
+      case 'travel':
+        return const Color(0xFFE3F2FD); // Light blue
+      case 'food':
+        return const Color(0xFFE8F5E8); // Light green
+      case 'hotel':
+        return const Color(0xFFFFF3E0); // Light orange
+      case 'other':
+        return const Color(0xFFFCE4EC); // Light pink
+      default:
+        return Colors.grey[100]!;
+    }
+  }
+
+  Color _getCategoryIconColor(String category) {
+    switch (category) {
+      case 'travel':
+        return const Color(0xFF1976D2); // Blue
+      case 'food':
+        return const Color(0xFF388E3C); // Green
+      case 'hotel':
+        return const Color(0xFFF57C00); // Orange
+      case 'other':
+        return const Color(0xFFC2185B); // Pink
+      default:
+        return Colors.grey[600]!;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final settlements = _calculateSettlements();
     
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -149,23 +174,19 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
       ),
       body: Column(
         children: [
-          // Professional Summary Card
+          // Summary Card
           Container(
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.grey[800]!, Colors.grey[700]!],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
-                  spreadRadius: 2,
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
+                  color: Colors.black.withOpacity(0.05),
+                  spreadRadius: 0,
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
@@ -178,16 +199,16 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
                       Text(
                         'Total Expenses',
                         style: TextStyle(
-                          color: Colors.grey[300],
+                          color: Colors.grey[600],
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       Text(
                         'LKR ${_getTotalGroupExpense().toStringAsFixed(0)}',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: Colors.black87,
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
                         ),
@@ -198,7 +219,7 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
                 Container(
                   width: 1,
                   height: 50,
-                  color: Colors.grey[500],
+                  color: Colors.grey[300],
                 ),
                 const SizedBox(width: 20),
                 Expanded(
@@ -208,16 +229,16 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
                       Text(
                         'Per Person',
                         style: TextStyle(
-                          color: Colors.grey[300],
+                          color: Colors.grey[600],
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       Text(
                         'LKR ${_getAverageExpensePerMember().toStringAsFixed(0)}',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: Colors.black87,
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
                         ),
@@ -242,44 +263,41 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
                 final totalSpent = _getTotalExpenseForMember(memberId);
                 
                 return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
+                  margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey[200]!, width: 1),
+                    borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withOpacity(0.08),
-                        spreadRadius: 1,
-                        blurRadius: 8,
+                        color: Colors.black.withOpacity(0.05),
+                        spreadRadius: 0,
+                        blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
                     ],
                   ),
                   child: Column(
                     children: [
-                      // Member Header
                       InkWell(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(20),
                         onTap: () {
                           setState(() {
                             expandedMembers[memberId] = !isExpanded;
                           });
                         },
                         child: Padding(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(20),
                           child: Row(
                             children: [
-                              // Avatar
                               Container(
-                                width: 48,
-                                height: 48,
+                                width: 50,
+                                height: 50,
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.grey[300]!, width: 1),
+                                  borderRadius: BorderRadius.circular(15),
+                                  color: Colors.grey[100],
                                 ),
                                 child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(11),
+                                  borderRadius: BorderRadius.circular(15),
                                   child: Image.network(
                                     member['avatar'],
                                     fit: BoxFit.cover,
@@ -288,7 +306,7 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
                                         color: Colors.grey[200],
                                         child: Icon(
                                           Icons.person,
-                                          size: 24,
+                                          size: 28,
                                           color: Colors.grey[600],
                                         ),
                                       );
@@ -298,51 +316,41 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
                               ),
                               const SizedBox(width: 16),
                               
-                              // Name only
                               Expanded(
                                 child: Text(
                                   member['name'],
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                                    fontSize: 18,
                                     color: Colors.black87,
                                   ),
                                 ),
                               ),
                               
-                              // Total spent amount
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.grey[300]!, width: 1),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      'Total',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'Total',
+                                    style: TextStyle(
+                                      color: Colors.grey[500],
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
                                     ),
-                                    Text(
-                                      'LKR ${totalSpent.toStringAsFixed(0)}',
-                                      style: const TextStyle(
-                                        color: Colors.black87,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                      ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'LKR ${totalSpent.toStringAsFixed(0)}',
+                                    style: const TextStyle(
+                                      color: Colors.black87,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 12),
                               
-                              // Expand/collapse icon
                               Icon(
                                 isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
                                 color: Colors.grey[600],
@@ -353,15 +361,14 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
                         ),
                       ),
                       
-                      // Expanded Details
                       if (isExpanded) ...[
                         Container(
                           width: double.infinity,
                           height: 1,
-                          color: Colors.grey[200],
+                          color: Colors.grey[100],
                         ),
                         Padding(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(20),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -369,64 +376,67 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
                                 'Expense Breakdown',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                                  fontSize: 18,
                                   color: Colors.black87,
                                 ),
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 16),
                               
-                              // Expense Categories
                               _buildExpenseRow(memberId, 'Travel', 'travel', Icons.flight),
                               _buildExpenseRow(memberId, 'Food', 'food', Icons.restaurant),
                               _buildExpenseRow(memberId, 'Hotel', 'hotel', Icons.hotel),
                               _buildExpenseRow(memberId, 'Other', 'other', Icons.more_horiz),
                               
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 20),
                               Container(
                                 width: double.infinity,
                                 height: 1,
-                                color: Colors.grey[200],
+                                color: Colors.grey[100],
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 16),
                               
-                              // Settlement Details
                               const Text(
                                 'Settlement Status',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                                  fontSize: 18,
                                   color: Colors.black87,
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 12),
                               
                               Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: settlement > 0.01 ? Colors.green[50] : 
-                                         settlement < -0.01 ? Colors.red[50] : Colors.blue[50],
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: settlement > 0.01 ? Colors.green[200]! : 
-                                           settlement < -0.01 ? Colors.red[200]! : Colors.blue[200]!,
-                                  ),
+                                  color: settlement > 0.01 ? const Color(0xFFE8F5E8) :
+                                          settlement < -0.01 ? const Color(0xFFFFEBEE) : const Color(0xFFE3F2FD),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Row(
                                   children: [
-                                    Icon(
-                                      settlement > 0.01 ? Icons.trending_up : 
-                                      settlement < -0.01 ? Icons.trending_down : Icons.check_circle,
-                                      color: settlement > 0.01 ? Colors.green[700] : 
-                                             settlement < -0.01 ? Colors.red[700] : Colors.blue[700],
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: settlement > 0.01 ? const Color(0xFF4CAF50) :
+                                                settlement < -0.01 ? const Color(0xFFE57373) : const Color(0xFF2196F3),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Icon(
+                                        settlement > 0.01 ? Icons.trending_up :
+                                         settlement < -0.01 ? Icons.trending_down : Icons.check_circle,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
                                         _getDetailedSettlementText(memberId, settlement),
                                         style: TextStyle(
-                                          color: settlement > 0.01 ? Colors.green[700] : 
-                                                 settlement < -0.01 ? Colors.red[700] : Colors.blue[700],
+                                          color: settlement > 0.01 ? const Color(0xFF2E7D32) :
+                                                  settlement < -0.01 ? const Color(0xFFC62828) : const Color(0xFF1565C0),
                                           fontWeight: FontWeight.w600,
+                                          fontSize: 14,
                                         ),
                                       ),
                                     ),
@@ -470,55 +480,54 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
     final expense = memberExpenses[memberId]![key]!;
     
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        color: const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey[300]!, width: 1),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: Colors.black87, size: 20),
+            child: Icon(icon, color: _getCategoryIconColor(key), size: 22),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
             child: Text(
               category,
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 color: Colors.black87,
+                fontSize: 16,
               ),
             ),
           ),
           GestureDetector(
             onTap: () => _editExpense(memberId, key, category, expense),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!, width: 1),
+                color: _getCategoryColor(key),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     'LKR ${expense.toStringAsFixed(0)}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: _getCategoryIconColor(key),
+                      fontSize: 14,
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.edit, size: 14, color: Colors.black87),
+                  const SizedBox(width: 6),
+                  Icon(Icons.edit, size: 16, color: _getCategoryIconColor(key)),
                 ],
               ),
             ),
@@ -534,8 +543,11 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Edit $categoryName Expense'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Edit $categoryName Expense',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -552,7 +564,11 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
                 labelText: '$categoryName Amount',
                 prefixText: 'LKR ',
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(color: Color(0xFF0088cc), width: 2),
                 ),
               ),
             ),
@@ -561,7 +577,10 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: Colors.grey[600]),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -570,14 +589,16 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
                 setState(() {
                   memberExpenses[memberId]![category] = newAmount;
                 });
-                // Update in SampleData as well
                 SampleData.updateMemberExpense(widget.groupId, memberId, category, newAmount);
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('$categoryName expense updated!'),
-                    backgroundColor: Colors.green,
+                    backgroundColor: const Color(0xFF4CAF50),
                     behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 );
               }
@@ -586,7 +607,7 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
               backgroundColor: const Color(0xFF0088cc),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
             child: const Text('Update'),

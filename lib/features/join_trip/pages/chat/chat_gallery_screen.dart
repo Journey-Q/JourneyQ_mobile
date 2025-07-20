@@ -22,6 +22,8 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
   final ImagePicker _picker = ImagePicker();
   List<Map<String, dynamic>> _galleryImages = [];
   List<XFile> _selectedImages = [];
+  Set<String> _selectedForSave = {}; // Track selected images for saving
+  bool _isSelectionMode = false; // Toggle selection mode
 
   @override
   void initState() {
@@ -43,15 +45,27 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
         backgroundColor: Colors.white,
         elevation: 1,
         shadowColor: Colors.grey.withOpacity(0.2),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: _isSelectionMode
+            ? IconButton(
+                icon: const Icon(Icons.close, color: Colors.black),
+                onPressed: () {
+                  setState(() {
+                    _isSelectionMode = false;
+                    _selectedForSave.clear();
+                  });
+                },
+              )
+            : IconButton(
+                icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+                onPressed: () => Navigator.pop(context),
+              ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${widget.groupName} Gallery',
+              _isSelectionMode 
+                  ? 'Select Photos'
+                  : '${widget.groupName} Gallery',
               style: const TextStyle(
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
@@ -59,7 +73,9 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
               ),
             ),
             Text(
-              '${_galleryImages.length} photos',
+              _isSelectionMode
+                  ? '${_selectedForSave.length} selected'
+                  : '${_galleryImages.length} photos',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 14,
@@ -67,28 +83,69 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 40, 40, 40),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.add_a_photo,
-                color: Colors.white,
-                size: 22,
-              ),
-            ),
-            onPressed: _showAddImageOptions,
-          ),
-          const SizedBox(width: 12),
-        ],
+        actions: _isSelectionMode
+            ? [
+                if (_selectedForSave.isNotEmpty)
+                  IconButton(
+                    icon: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF34D399),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.save_alt,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    ),
+                    onPressed: _saveSelectedImages,
+                  ),
+                const SizedBox(width: 12),
+              ]
+            : [
+                if (_galleryImages.isNotEmpty)
+                  IconButton(
+                    icon: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6366F1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.download,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isSelectionMode = true;
+                      });
+                    },
+                  ),
+                IconButton(
+                  icon: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 40, 40, 40),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.add_a_photo,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                  ),
+                  onPressed: _showAddImageOptions,
+                ),
+                const SizedBox(width: 12),
+              ],
       ),
       body: _galleryImages.isEmpty
           ? _buildEmptyState()
           : _buildGalleryGrid(),
+
     );
   }
 
@@ -135,7 +192,7 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
             icon: const Icon(Icons.add_a_photo),
             label: const Text('Add Photo'),
             style: ElevatedButton.styleFrom(
-              backgroundColor:  Colors.black,
+              backgroundColor: Colors.black,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               shape: RoundedRectangleBorder(
@@ -166,11 +223,39 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
   }
 
   Widget _buildImageCard(Map<String, dynamic> image) {
+    final isSelected = _selectedForSave.contains(image['id']);
+    
     return GestureDetector(
-      onTap: () => _showImageDetail(image),
+      onTap: () {
+        if (_isSelectionMode) {
+          setState(() {
+            if (isSelected) {
+              _selectedForSave.remove(image['id']);
+            } else {
+              _selectedForSave.add(image['id']);
+            }
+          });
+        } else {
+          _showImageDetail(image);
+        }
+      },
+      onLongPress: () {
+        if (!_isSelectionMode) {
+          setState(() {
+            _isSelectionMode = true;
+            _selectedForSave.add(image['id']);
+          });
+        }
+      },
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
+          border: _isSelectionMode
+              ? Border.all(
+                  color: isSelected ? const Color(0xFF34D399) : Colors.grey[300]!,
+                  width: isSelected ? 3 : 1,
+                )
+              : null,
           boxShadow: [
             BoxShadow(
               color: Colors.grey.withOpacity(0.15),
@@ -180,40 +265,90 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Image.network(
-            image['url'],
-            fit: BoxFit.cover,
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Container(
-                color: Colors.grey[200],
-                child: Center(
-                  child: CircularProgressIndicator(
-                    value: loadingProgress.expectedTotalBytes != null
-                        ? loadingProgress.cumulativeBytesLoaded /
-                            loadingProgress.expectedTotalBytes!
-                        : null,
-                    color: Colors.black,
-                    strokeWidth: 3,
+        child: Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.network(
+                image['url'],
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    color: Colors.grey[200],
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
+                        color: Colors.black,
+                        strokeWidth: 3,
+                      ),
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[200],
+                    child: const Center(
+                      child: Icon(Icons.error, color: Colors.grey, size: 40),
+                    ),
+                  );
+                },
+              ),
+            ),
+            if (_isSelectionMode)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isSelected ? const Color(0xFF34D399) : Colors.white,
+                    border: Border.all(
+                      color: isSelected ? const Color(0xFF34D399) : Colors.grey,
+                      width: 2,
+                    ),
                   ),
+                  child: isSelected
+                      ? const Icon(
+                          Icons.check,
+                          size: 16,
+                          color: Colors.white,
+                        )
+                      : null,
                 ),
-              );
-            },
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: Colors.grey[200],
-                child: const Center(
-                  child: Icon(Icons.error, color: Colors.grey, size: 40),
-                ),
-              );
-            },
-          ),
+              ),
+          ],
         ),
       ),
     );
   }
+
+  // New method to save selected images (simplified)
+  Future<void> _saveSelectedImages() async {
+    if (_selectedForSave.isEmpty) return;
+
+    setState(() {
+      _isSelectionMode = false;
+      _selectedForSave.clear();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${_selectedForSave.length} photos selected for download!'),
+        backgroundColor: const Color(0xFF34D399),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+
 
   void _showAddImageOptions() {
     showModalBottomSheet(
@@ -505,6 +640,8 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
       ),
     );
   }
+
+
 
   void _showDeleteConfirmation(Map<String, dynamic> image, BuildContext dialogContext) {
     Navigator.pop(dialogContext);

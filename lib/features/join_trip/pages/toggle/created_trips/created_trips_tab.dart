@@ -35,12 +35,9 @@ class _CreatedTripsTabState extends State<CreatedTripsTab> {
   }
 
   Future<void> _refreshTrips() async {
-    // Simulate refresh delay
     await Future.delayed(const Duration(milliseconds: 500));
     if (mounted) {
-      setState(() {
-        // Refresh the state
-      });
+      setState(() {});
     }
   }
 
@@ -115,7 +112,6 @@ class _CreatedTripsTabState extends State<CreatedTripsTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with icon and trip name only
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -123,12 +119,12 @@ class _CreatedTripsTabState extends State<CreatedTripsTab> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.grey[200], // Light grey background
+                    color: Colors.grey[200],
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
                     Icons.luggage,
-                    color: Colors.black, // Black icon
+                    color: Colors.black,
                     size: 20,
                   ),
                 ),
@@ -150,7 +146,6 @@ class _CreatedTripsTabState extends State<CreatedTripsTab> {
             
             const SizedBox(height: 16),
             
-            // Trip Details - Only Start Date and Duration
             _buildDetailRow(
               Icons.calendar_today,
               'Start Date',
@@ -165,13 +160,12 @@ class _CreatedTripsTabState extends State<CreatedTripsTab> {
             
             const SizedBox(height: 16),
             
-            // Action buttons with icons only
             Row(
               children: [
                 Expanded(
                   child: _buildActionButton(
                     icon: Icons.visibility,
-                    color:  Colors.black,
+                    color: Colors.blue,
                     onPressed: () => _viewTripDetails(context, trip),
                   ),
                 ),
@@ -179,7 +173,7 @@ class _CreatedTripsTabState extends State<CreatedTripsTab> {
                 Expanded(
                   child: _buildActionButton(
                     icon: Icons.edit,
-                    color:  Colors.black,
+                    color: Colors.green,
                     onPressed: () => _editTripDetails(context, trip),
                   ),
                 ),
@@ -187,7 +181,7 @@ class _CreatedTripsTabState extends State<CreatedTripsTab> {
                 Expanded(
                   child: _buildActionButton(
                     icon: Icons.send,
-                    color:  Colors.black,
+                    color: Colors.orange,
                     onPressed: () => _showFollowerSelection(context, trip),
                   ),
                 ),
@@ -195,7 +189,7 @@ class _CreatedTripsTabState extends State<CreatedTripsTab> {
                 Expanded(
                   child: _buildActionButton(
                     icon: Icons.delete,
-                    color:  Colors.black,
+                    color: Colors.red,
                     onPressed: () => _deleteTripConfirmation(context, trip, index),
                   ),
                 ),
@@ -215,9 +209,8 @@ class _CreatedTripsTabState extends State<CreatedTripsTab> {
     return Container(
       height: 40,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1), // Light background color
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3), width: 1), // Colored border
       ),
       child: Material(
         color: Colors.transparent,
@@ -226,8 +219,8 @@ class _CreatedTripsTabState extends State<CreatedTripsTab> {
           onTap: onPressed,
           child: Center(
             child: Icon(
-              icon, 
-              size: 20, 
+              icon,
+              size: 20,
               color: color,
             ),
           ),
@@ -275,7 +268,7 @@ class _CreatedTripsTabState extends State<CreatedTripsTab> {
           customTitle: 'Trip Details',
           showEditButton: false,
           showSendRequestButton: false,
-          isGroupMember: false, // Creator but not in group yet
+          isGroupMember: false,
         ),
         fullscreenDialog: true,
       ),
@@ -289,11 +282,10 @@ class _CreatedTripsTabState extends State<CreatedTripsTab> {
         builder: (context) => TripFormWidget(
           mode: TripFormMode.edit,
           initialData: trip,
-          isGroupMember: false, // Creator editing their own trip
+          isGroupMember: false,
           customTitle: 'Edit ${trip['title']}',
           onSubmit: (updatedData) {
             setState(() {
-              // Find and update the trip in the list
               final index = SampleData.createdTripForms.indexWhere(
                 (t) => t['id'] == trip['id']
               );
@@ -480,7 +472,6 @@ class FollowerSelectionSheet extends StatefulWidget {
 class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
   List<Map<String, dynamic>> _selectedFollowers = [];
   
-  // Sample followers data
   final List<Map<String, dynamic>> _followers = [
     {
       'id': 'follower_1',

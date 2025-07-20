@@ -187,12 +187,12 @@ class _JoinRequestsTabState extends State<JoinRequestsTab> {
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: const Color.fromARGB(255, 92, 189, 92),
+                              color: const Color.fromARGB(255, 207, 236, 207),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
                               Icons.check,
-                              color: Colors.white,
+                              color: Colors.green,
                               size: 16,
                             ),
                           ),
@@ -204,12 +204,12 @@ class _JoinRequestsTabState extends State<JoinRequestsTab> {
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: const Color.fromARGB(255, 212, 110, 73),
+                              color: const Color.fromARGB(255, 251, 213, 199),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               Icons.close,
-                              color: Colors.white,
+                              color: Colors.red,
                               size: 16,
                             ),
                           ),

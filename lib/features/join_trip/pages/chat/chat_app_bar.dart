@@ -99,7 +99,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 40, 40, 40),
+                color: Colors.green[50],
                 borderRadius: BorderRadius.circular(12), // Rounded rectangle
                 boxShadow: [
                   BoxShadow(
@@ -109,9 +109,9 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                 ],
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.account_balance_wallet,
-                color: Colors.white,
+                color: Colors.green[700],
                 size: 20,
               ),
             ),
@@ -127,7 +127,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 40, 40, 40),
+                color: const Color(0xFF0088cc).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12), // Rounded rectangle
                 boxShadow: [
                   BoxShadow(
@@ -139,7 +139,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
               child: const Icon(
                 Icons.photo_library,
-                color: Colors.white,
+                color: Color(0xFF0088cc),
                 size: 20,
               ),
             ),
