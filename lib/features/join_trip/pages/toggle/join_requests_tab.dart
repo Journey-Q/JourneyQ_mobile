@@ -270,48 +270,81 @@ class _JoinRequestsTabState extends State<JoinRequestsTab> {
           ),
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
+            child: Column(
               children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundImage: NetworkImage(request['tripImage']!),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                // Top row with cancel button
+                if (request['status'] == 'Pending')
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Text(
-                        request['tripName']!,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          color: Colors.black87,
+                      TextButton(
+                        onPressed: () => _cancelRequest(index),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.red[600],
+                          backgroundColor: Colors.red[50],
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          side: BorderSide(
+                            color: Colors.red[200]!,
+                            width: 1,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      // Highlighted "Request sent to" message
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.green[50],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          'Request sent to ${request['creatorName']}',
+                        child: const Text(
+                          'Cancel',
                           style: TextStyle(
-                            color: Colors.green[700],
                             fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Row(
+                    ],
+                  ),
+                // Main content row
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundImage: NetworkImage(request['tripImage']!),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Text(
+                            request['tripName']!,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          // Highlighted "Request sent to" message
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.green[50],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'Request sent to ${request['creatorName']}',
+                              style: TextStyle(
+                                color: Colors.green[700],
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          // Status container only (removed time)
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
@@ -330,34 +363,11 @@ class _JoinRequestsTabState extends State<JoinRequestsTab> {
                               ),
                             ),
                           ),
-                          const Spacer(),
-                          Text(
-                            request['sentTime']!,
-                            style: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 12,
-                            ),
-                          ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                if (request['status'] == 'Pending')
-                  PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == 'cancel') {
-                        _cancelRequest(index);
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'cancel',
-                        child: Text('Cancel Request'),
-                      ),
-                    ],
-                    child: const Icon(Icons.more_vert, color: Colors.grey),
-                  ),
               ],
             ),
           ),
