@@ -55,7 +55,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
     'agency_001': [
       {
         'id': 'review_001',
-        'userName': 'Sarah Johnson',
+        'userName': 'Sachi Gunasekara',
         'userAvatar': 'S',
         'rating': 5,
         'date': '2 weeks ago',
@@ -63,23 +63,23 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_002',
-        'userName': 'Michael Chen',
-        'userAvatar': 'M',
+        'userName': 'Tharu Senanayake',
+        'userAvatar': 'T',
         'rating': 5,
         'date': '1 month ago',
         'comment': 'Ceylon Roots provided exceptional service during our 7-day tour. Professional drivers, well-maintained vehicles, and great local knowledge. Worth every penny!',
       },
       {
         'id': 'review_003',
-        'userName': 'Emma Williams',
-        'userAvatar': 'E',
+        'userName': 'Kavin Bandara',
+        'userAvatar': 'K',
         'rating': 5,
         'date': '1 month ago',
         'comment': 'Perfect experience from start to finish. The team was very responsive and accommodating to our needs. The van was spacious and perfect for our family trip.',
       },
       {
         'id': 'review_004',
-        'userName': 'David Miller',
+        'userName': 'Dilan Fernando',
         'userAvatar': 'D',
         'rating': 4,
         'date': '2 months ago',
@@ -89,7 +89,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
     'agency_002': [
       {
         'id': 'review_005',
-        'userName': 'Lisa Anderson',
+        'userName': 'Lishani Perera',
         'userAvatar': 'L',
         'rating': 5,
         'date': '1 week ago',
@@ -97,7 +97,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_006',
-        'userName': 'Robert Taylor',
+        'userName': 'Ravindhu Dias',
         'userAvatar': 'R',
         'rating': 5,
         'date': '3 weeks ago',
@@ -105,7 +105,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_007',
-        'userName': 'Maria Rodriguez',
+        'userName': 'Malarvili Raj',
         'userAvatar': 'M',
         'rating': 5,
         'date': '1 month ago',
@@ -113,7 +113,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_008',
-        'userName': 'James Wilson',
+        'userName': 'Jaya Ravikumar',
         'userAvatar': 'J',
         'rating': 4,
         'date': '1 month ago',
@@ -121,7 +121,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_009',
-        'userName': 'Anna Lee',
+        'userName': 'Amrah Fayas',
         'userAvatar': 'A',
         'rating': 5,
         'date': '2 months ago',
@@ -129,7 +129,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_010',
-        'userName': 'Tom Brown',
+        'userName': 'Thiyagaraja',
         'userAvatar': 'T',
         'rating': 4,
         'date': '2 months ago',
@@ -139,7 +139,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
     'agency_003': [
       {
         'id': 'review_011',
-        'userName': 'Jennifer Davis',
+        'userName': 'Jennifer Dias',
         'userAvatar': 'J',
         'rating': 5,
         'date': '5 days ago',
@@ -147,7 +147,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_012',
-        'userName': 'Kevin Zhang',
+        'userName': 'Kevin Dissanayake',
         'userAvatar': 'K',
         'rating': 4,
         'date': '2 weeks ago',
@@ -155,7 +155,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_013',
-        'userName': 'Sophie Martin',
+        'userName': 'Sarojini',
         'userAvatar': 'S',
         'rating': 5,
         'date': '3 weeks ago',
@@ -163,7 +163,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_014',
-        'userName': 'Alex Thompson',
+        'userName': 'Amna Fathima',
         'userAvatar': 'A',
         'rating': 4,
         'date': '1 month ago',
@@ -171,7 +171,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_015',
-        'userName': 'Rachel Green',
+        'userName': 'Ravikumar',
         'userAvatar': 'R',
         'rating': 5,
         'date': '1 month ago',
@@ -179,7 +179,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_016',
-        'userName': 'Mark Johnson',
+        'userName': 'Madhurshika',
         'userAvatar': 'M',
         'rating': 4,
         'date': '2 months ago',
@@ -187,15 +187,15 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_017',
-        'userName': 'Elena Petrov',
-        'userAvatar': 'E',
+        'userName': 'Niroshan Silva',
+        'userAvatar': 'N',
         'rating': 5,
         'date': '2 months ago',
         'comment': 'Outstanding experience! Sunil spoke excellent Dutch which made our communication easy. Very knowledgeable about historical sites.',
       },
       {
         'id': 'review_018',
-        'userName': 'Chris Wong',
+        'userName': 'Chamika Jayasuriya',
         'userAvatar': 'C',
         'rating': 3,
         'date': '3 months ago',
@@ -205,7 +205,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
     'agency_004': [
       {
         'id': 'review_019',
-        'userName': 'Patricia White',
+        'userName': 'Prabath Senanayake',
         'userAvatar': 'P',
         'rating': 5,
         'date': '1 week ago',
@@ -213,7 +213,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_020',
-        'userName': 'Daniel Kim',
+        'userName': 'Dushan Rathnayake',
         'userAvatar': 'D',
         'rating': 4,
         'date': '2 weeks ago',
@@ -221,7 +221,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_021',
-        'userName': 'Laura Mitchell',
+        'userName': 'Lahiru Munasinghe',
         'userAvatar': 'L',
         'rating': 5,
         'date': '3 weeks ago',
@@ -229,7 +229,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_022',
-        'userName': 'Ivan Petrov',
+        'userName': 'Ishani Dias',
         'userAvatar': 'I',
         'rating': 4,
         'date': '1 month ago',
@@ -237,7 +237,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_023',
-        'userName': 'Grace Lee',
+        'userName': 'Gayani Selvam',
         'userAvatar': 'G',
         'rating': 5,
         'date': '1 month ago',
@@ -245,7 +245,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_024',
-        'userName': 'Mohammed Ali',
+        'userName': 'Mohammed Fayas',
         'userAvatar': 'M',
         'rating': 4,
         'date': '2 months ago',
@@ -253,7 +253,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_025',
-        'userName': 'Catherine Fox',
+        'userName': 'Chathumini',
         'userAvatar': 'C',
         'rating': 5,
         'date': '2 months ago',
@@ -261,7 +261,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_026',
-        'userName': 'Peter Müller',
+        'userName': 'Perera',
         'userAvatar': 'P',
         'rating': 4,
         'date': '2 months ago',
@@ -269,7 +269,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_027',
-        'userName': 'Yuki Tanaka',
+        'userName': 'Yugeshini',
         'userAvatar': 'Y',
         'rating': 3,
         'date': '3 months ago',
@@ -285,7 +285,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_029',
-        'userName': 'Victoria Smith',
+        'userName': 'Vicky',
         'userAvatar': 'V',
         'rating': 5,
         'date': '3 months ago',
@@ -293,7 +293,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_030',
-        'userName': 'Carlos Mendez',
+        'userName': 'Chaminda',
         'userAvatar': 'C',
         'rating': 4,
         'date': '4 months ago',
@@ -303,7 +303,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
     'agency_005': [
       {
         'id': 'review_031',
-        'userName': 'Jake Stevens',
+        'userName': 'Jayasuriya',
         'userAvatar': 'J',
         'rating': 5,
         'date': '3 days ago',
@@ -311,7 +311,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_032',
-        'userName': 'Maya Patel',
+        'userName': 'Maya Kavin',
         'userAvatar': 'M',
         'rating': 4,
         'date': '1 week ago',
@@ -319,7 +319,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_033',
-        'userName': 'Oliver Jones',
+        'userName': 'Oliviya',
         'userAvatar': 'O',
         'rating': 5,
         'date': '2 weeks ago',
@@ -335,7 +335,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_035',
-        'userName': 'Noah Williams',
+        'userName': 'Nuwan Perera',
         'userAvatar': 'N',
         'rating': 5,
         'date': '1 month ago',
@@ -343,7 +343,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_036',
-        'userName': 'Zoe Chen',
+        'userName': 'Zoya',
         'userAvatar': 'Z',
         'rating': 4,
         'date': '1 month ago',
@@ -351,7 +351,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_037',
-        'userName': 'Liam Murphy',
+        'userName': 'Lia',
         'userAvatar': 'L',
         'rating': 5,
         'date': '1 month ago',
@@ -359,7 +359,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_038',
-        'userName': 'Ava Rodriguez',
+        'userName': 'Arumugam',
         'userAvatar': 'A',
         'rating': 4,
         'date': '2 months ago',
@@ -367,7 +367,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_039',
-        'userName': 'Ethan Davis',
+        'userName': 'Eliviya',
         'userAvatar': 'E',
         'rating': 5,
         'date': '2 months ago',
@@ -375,7 +375,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_040',
-        'userName': 'Isabella Garcia',
+        'userName': 'Isuri',
         'userAvatar': 'I',
         'rating': 3,
         'date': '2 months ago',
@@ -383,7 +383,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_041',
-        'userName': 'Mason Brown',
+        'userName': 'Madhusha',
         'userAvatar': 'M',
         'rating': 4,
         'date': '2 months ago',
@@ -391,7 +391,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_042',
-        'userName': 'Sophia Kim',
+        'userName': 'Sophia',
         'userAvatar': 'S',
         'rating': 5,
         'date': '3 months ago',
@@ -399,7 +399,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_043',
-        'userName': 'Logan Wilson',
+        'userName': 'Logananthan',
         'userAvatar': 'L',
         'rating': 4,
         'date': '3 months ago',
@@ -407,7 +407,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_044',
-        'userName': 'Mia Thompson',
+        'userName': 'Mianika',
         'userAvatar': 'M',
         'rating': 2,
         'date': '3 months ago',
@@ -415,7 +415,7 @@ class _TravelAgencyReviewsPageState extends State<TravelAgencyReviewsPage> {
       },
       {
         'id': 'review_045',
-        'userName': 'Lucas Martinez',
+        'userName': 'Laxmika',
         'userAvatar': 'L',
         'rating': 5,
         'date': '4 months ago',
