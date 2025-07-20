@@ -47,10 +47,10 @@ class _TripGroupsTabState extends State<TripGroupsTab> {
                 child: GestureDetector(
                   onTap: () => setState(() => _showMyGroups = true),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
                       color: _showMyGroups ? AppTheme.lightTheme.colorScheme.secondary : null,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -193,24 +193,7 @@ class _TripGroupsTabState extends State<TripGroupsTab> {
                         color: Colors.black87,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    // Show unread count for joined groups only
-                    if (!isMyGroup && trip['unreadCount'] != null && trip['unreadCount'] > 0)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '${trip['unreadCount']} new messages',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                    // Removed the unread count display section
                   ],
                 ),
               ),
