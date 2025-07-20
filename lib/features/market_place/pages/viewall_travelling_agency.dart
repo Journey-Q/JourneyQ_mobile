@@ -288,46 +288,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
       'isAvailable': true,
       'category': 'Adventure',
     },
-    {
-      'id': 'agency_006',
-      'name': 'Blue Lanka Tours',
-      'rating': 4.4,
-      'experience': '8+ Years',
-      'location': 'Colombo 07, Sri Lanka',
-      'contact': '+94 11 789 0123',
-      'email': 'info@bluelankatours.lk',
-      'image': 'assets/images/blue_lanka.jpg',
-      'backgroundColor': const Color(0xFF4169E1),
-      'description': 'Blue Lanka Tours specializes in coastal and marine tourism with a focus on water sports and beach activities. Our fleet includes boats and coastal transport vehicles.',
-      'vehicles': [
-        {
-          'type': 'Beach Car',
-          'seats': 4,
-          'acPricePerKm': 45,
-          'nonAcPricePerKm': 35,
-          'features': ['Beach access', 'Sand-resistant', 'Cooler box', 'Beach equipment', 'Surf racks', 'Coastal navigation'],
-        },
-        {
-          'type': 'Coastal Van',
-          'seats': 8,
-          'acPricePerKm': 65,
-          'nonAcPricePerKm': 50,
-          'features': ['Water sports gear', 'Beach chairs', 'Snorkel equipment', 'Coastal routes', 'Marine radio', 'Safety equipment'],
-        },
-      ],
-      'drivers': [
-        {
-          'name': 'Asanka Perera',
-          'experience': '6 years',
-          'languages': ['English', 'Sinhala', 'German'],
-          'contact': '+94 77 234 5678',
-          'specialization': 'Coastal & Marine Tours',
-        },
-      ],
-      'services': ['Beach Tours', 'Water Sports', 'Marine Tours', 'Coastal Drives'],
-      'isAvailable': false,
-      'category': 'Beach',
-    },
+
   ];
 
   void _navigateToAgencyDetails(String agencyId) {
