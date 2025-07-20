@@ -6,7 +6,7 @@ class PointsExplanationPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Example user points - replace with actual user data
-    final int userPoints = 125; // This would come from user data/API
+    final int userPoints = 15; // This would come from user data/API
     
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),

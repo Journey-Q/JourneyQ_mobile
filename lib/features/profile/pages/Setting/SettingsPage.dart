@@ -178,7 +178,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE5E7EB)),
                 ),
                 child: ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -238,7 +237,6 @@ class _SettingsPageState extends State<SettingsPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -269,13 +267,27 @@ class _SettingsPageState extends State<SettingsPage> {
             fontSize: 13,
           ),
         ),
-        trailing: Switch(
+        trailing: Switch.adaptive(
           value: value,
           onChanged: onChanged,
           activeColor: const Color(0xFF0088cc),
           activeTrackColor: const Color(0xFF0088cc).withOpacity(0.3),
           inactiveThumbColor: const Color(0xFF9CA3AF),
           inactiveTrackColor: const Color(0xFFE5E7EB),
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+          thumbColor: WidgetStateProperty.resolveWith<Color>((states) {
+            if (states.contains(WidgetState.selected)) {
+              return const Color(0xFF0088cc);
+            }
+            return const Color(0xFF9CA3AF);
+          }),
+          trackColor: WidgetStateProperty.resolveWith<Color>((states) {
+            if (states.contains(WidgetState.selected)) {
+              return const Color(0xFF0088cc).withOpacity(0.3);
+            }
+            return const Color(0xFFE5E7EB);
+          }),
         ),
       ),
     );
@@ -292,7 +304,6 @@ class _SettingsPageState extends State<SettingsPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
