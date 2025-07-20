@@ -1356,24 +1356,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
 
       const SizedBox(height: 32),
 
-      // Customer Reviews Section
-      Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+
             const Text(
               'Customer Reviews',
               style: TextStyle(
@@ -1445,7 +1428,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
 
             const SizedBox(height: 20),
 
-            // Read Reviews Button
+// Read Reviews Button
             GestureDetector(
               onTap: _viewReviews,
               child: Row(
@@ -1467,9 +1450,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                 ],
               ),
             ),
-          ],
-        ),
-      ),
+
 
       const SizedBox(height: 80), // Space for bottom button
     ],
