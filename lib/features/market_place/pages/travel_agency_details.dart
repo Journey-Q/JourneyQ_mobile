@@ -59,7 +59,249 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
   }
 
   void _contactAgency() {
-    context.push('/marketplace/travel_agencies/contact/${widget.agencyId}');
+    _showContactBottomSheet();
+  }
+
+  void _bookNow() {
+    if (widget.agencyId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid agency ID')),
+      );
+      return;
+    }
+
+    // Navigate to booking page
+    context.push('/marketplace/travel_agencies/booking/${widget.agencyId}');
+  }
+
+  void _showContactBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) =>
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Handle bar
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Agency info row
+                  Row(
+                    children: [
+                      // Agency image
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.asset(
+                            agencyData['image'] ?? '',
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      agencyData['backgroundColor'] ??
+                                          Colors.blue,
+                                      (agencyData['backgroundColor'] ??
+                                          Colors.blue).withOpacity(0.8),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.business,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+
+                      // Agency details
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              agencyData['name'] ?? 'Travel Agency',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                const Icon(
+                                    Icons.star, color: Colors.orange, size: 16),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${agencyData['rating'] ?? 4.5}',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '• ${agencyData['experience'] ??
+                                      'Experienced'}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade50,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'Verified Agency',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.green.shade700,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Contact buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            // Add phone call functionality here
+                          },
+                          icon: const Icon(Icons.phone, size: 18),
+                          label: const Text('Call Now'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            // Add chat functionality here
+                          },
+                          icon: const Icon(Icons.chat_bubble_outline, size: 18),
+                          label: const Text('Start Chat'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0088cc),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Contact info
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.phone, size: 16,
+                                color: Color(0xFF0088cc)),
+                            const SizedBox(width: 8),
+                            Text(
+                              agencyData['contact'] ?? '+94 11 000 0000',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const Spacer(),
+                            const Icon(Icons.content_copy, size: 16,
+                                color: Colors.grey),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on, size: 16,
+                                color: Color(0xFF0088cc)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                agencyData['location'] ?? 'Colombo, Sri Lanka',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ),
+    );
   }
 
   void _viewReviews() {
@@ -177,21 +419,39 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
           'seats': 4,
           'acPricePerKm': 65,
           'nonAcPricePerKm': 50,
-          'features': ['Premium leather', 'GPS & maps', 'Premium audio', 'Wireless charging', 'Refreshments'],
+          'features': [
+            'Premium leather',
+            'GPS & maps',
+            'Premium audio',
+            'Wireless charging',
+            'Refreshments'
+          ],
         },
         {
           'type': 'Premium Van',
           'seats': 8,
           'acPricePerKm': 85,
           'nonAcPricePerKm': 70,
-          'features': ['Luxury interior', 'Captain seats', 'Entertainment screens', 'Refrigerator', 'WiFi hotspot'],
+          'features': [
+            'Luxury interior',
+            'Captain seats',
+            'Entertainment screens',
+            'Refrigerator',
+            'WiFi hotspot'
+          ],
         },
         {
           'type': 'Coach Bus',
           'seats': 25,
           'acPricePerKm': 110,
           'nonAcPricePerKm': 90,
-          'features': ['Reclining seats', 'Entertainment system', 'WiFi', 'Onboard washroom', 'Safety equipment'],
+          'features': [
+            'Reclining seats',
+            'Entertainment system',
+            'WiFi',
+            'Onboard washroom',
+            'Safety equipment'
+          ],
         },
       ],
       'drivers': [
@@ -236,21 +496,40 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
           'seats': 4,
           'acPricePerKm': 50,
           'nonAcPricePerKm': 40,
-          'features': ['Comfortable seats', 'GPS navigation', 'Music system', 'Phone charging', 'Water bottles'],
+          'features': [
+            'Comfortable seats',
+            'GPS navigation',
+            'Music system',
+            'Phone charging',
+            'Water bottles'
+          ],
         },
         {
           'type': 'Family Van',
           'seats': 8,
           'acPricePerKm': 70,
           'nonAcPricePerKm': 55,
-          'features': ['Family friendly', 'Spacious interior', 'Large windows', 'Safety features', 'Storage space', 'Reading lights'],
+          'features': [
+            'Family friendly',
+            'Spacious interior',
+            'Large windows',
+            'Safety features',
+            'Storage space',
+            'Reading lights'
+          ],
         },
         {
           'type': 'Tour Bus',
           'seats': 20,
           'acPricePerKm': 90,
           'nonAcPricePerKm': 75,
-          'features': ['Tour guide system', 'Comfortable seating', 'Large windows', 'Storage areas', 'Emergency equipment'],
+          'features': [
+            'Tour guide system',
+            'Comfortable seating',
+            'Large windows',
+            'Storage areas',
+            'Emergency equipment'
+          ],
         },
       ],
       'drivers': [
@@ -295,14 +574,27 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
           'seats': 4,
           'acPricePerKm': 48,
           'nonAcPricePerKm': 38,
-          'features': ['Comfortable ride', 'Local music', 'Basic amenities', 'Safe driving', 'Courteous service'],
+          'features': [
+            'Comfortable ride',
+            'Local music',
+            'Basic amenities',
+            'Safe driving',
+            'Courteous service'
+          ],
         },
         {
           'type': 'Tourist Van',
           'seats': 10,
           'acPricePerKm': 68,
           'nonAcPricePerKm': 54,
-          'features': ['Tourist friendly', 'Multiple windows', 'Spacious design', 'Cultural music', 'Local guides', 'Photo stops'],
+          'features': [
+            'Tourist friendly',
+            'Multiple windows',
+            'Spacious design',
+            'Cultural music',
+            'Local guides',
+            'Photo stops'
+          ],
         },
       ],
       'drivers': [
@@ -347,21 +639,42 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
           'seats': 4,
           'acPricePerKm': 52,
           'nonAcPricePerKm': 42,
-          'features': ['Rugged design', 'Adventure ready', 'GPS tracking', 'Emergency kit', 'Action camera mounts', 'Outdoor gear storage'],
+          'features': [
+            'Rugged design',
+            'Adventure ready',
+            'GPS tracking',
+            'Emergency kit',
+            'Action camera mounts',
+            'Outdoor gear storage'
+          ],
         },
         {
           'type': 'Adventure Van',
           'seats': 6,
           'acPricePerKm': 72,
           'nonAcPricePerKm': 58,
-          'features': ['Off-road capable', 'Equipment storage', 'Safety gear', 'Communication system', 'First aid', 'Adventure guides'],
+          'features': [
+            'Off-road capable',
+            'Equipment storage',
+            'Safety gear',
+            'Communication system',
+            'First aid',
+            'Adventure guides'
+          ],
         },
         {
           'type': 'Group Bus',
           'seats': 18,
           'acPricePerKm': 88,
           'nonAcPricePerKm': 72,
-          'features': ['Group friendly', 'Activity planning', 'Safety briefing area', 'Equipment space', 'Team building setup', 'Adventure maps'],
+          'features': [
+            'Group friendly',
+            'Activity planning',
+            'Safety briefing area',
+            'Equipment space',
+            'Team building setup',
+            'Adventure maps'
+          ],
         },
       ],
       'drivers': [
@@ -634,7 +947,8 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  'Languages: ${(driver['languages'] as List<dynamic>? ?? ['English', 'Sinhala']).join(', ')}',
+                  'Languages: ${(driver['languages'] as List<dynamic>? ??
+                      ['English', 'Sinhala']).join(', ')}',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey.shade600,
@@ -774,411 +1088,429 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
     }
 
     return Scaffold(
-        backgroundColor: Colors.grey[50],
-        body: CustomScrollView(
+      backgroundColor: Colors.grey[50],
+      body: CustomScrollView(
         slivers: [
-        SliverAppBar(
-        expandedHeight: 250,
-        pinned: true,
-        backgroundColor: const Color(0xFF0088cc),
-    leading: IconButton(
-    onPressed: () => context.pop(),
-    icon: const Icon(Icons.arrow_back, color: Colors.white),
-    ),
-          flexibleSpace: FlexibleSpaceBar(
-            background: Stack(
-              fit: StackFit.expand,
-              children: [
-                Image.asset(
-                  agencyData['image'] ?? '',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            agencyData['backgroundColor'] ?? Colors.blue,
-                            (agencyData['backgroundColor'] ?? Colors.blue).withOpacity(0.8),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.business,
-                          size: 80,
-                          color: Colors.white,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withOpacity(0.3),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+          SliverAppBar(
+            expandedHeight: 250,
+            pinned: true,
+            backgroundColor: const Color(0xFF0088cc),
+            leading: IconButton(
+              onPressed: () => context.pop(),
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
             ),
-          ),
-        ),
-    SliverToBoxAdapter(
-    child: Padding(
-    padding: const EdgeInsets.all(20),
-    child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-    // Agency Header Info
-    Container(
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(16),
-    boxShadow: [
-    BoxShadow(
-    color: Colors.grey.withOpacity(0.1),
-    spreadRadius: 1,
-    blurRadius: 10,
-    offset: const Offset(0, 2),
-    ),
-    ],
-    ),
-    child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-    Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-    Expanded(
-    child: Text(
-    agencyData['name'] ?? 'Travel Agency',
-    style: const TextStyle(
-    fontSize: 24,
-    fontWeight: FontWeight.bold,
-    color: Colors.black87,
-    ),
-    ),
-    ),
-    Container(
-    padding: const EdgeInsets.symmetric(
-    horizontal: 12,
-    vertical: 6,
-    ),
-    decoration: BoxDecoration(
-    color: Colors.orange.shade100,
-    borderRadius: BorderRadius.circular(20),
-    ),
-    child: Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-    const Icon(
-    Icons.star,
-    color: Colors.orange,
-    size: 18,
-    ),
-    const SizedBox(width: 4),
-    Text(
-    (agencyData['rating'] ?? 4.0).toString(),
-    style: const TextStyle(
-    fontWeight: FontWeight.bold,
-    color: Colors.orange,
-    ),
-    ),
-    ],
-    ),
-    ),
-    ],
-    ),
-    const SizedBox(height: 16),
-    Text(
-    agencyData['location'] ?? 'Colombo, Sri Lanka',
-    style: const TextStyle(fontSize: 14, color: Colors.grey),
-    ),
-    const SizedBox(height: 8),
-    Text(
-    agencyData['contact'] ?? '+94 11 000 0000',
-    style: const TextStyle(fontSize: 14, color: Colors.grey),
-    ),
-    const SizedBox(height: 8),
-    Text(
-      agencyData['email'] ?? 'info@agency.lk',
-      style: const TextStyle(fontSize: 14, color: Colors.grey),
-    ),
-      const SizedBox(height: 8),
-      Text(
-        agencyData['experience'] ?? 'Years of Experience',
-        style: const TextStyle(fontSize: 14, color: Colors.grey),
-      ),
-    ],
-    ),
-    ),
-
-      const SizedBox(height: 20),
-
-      // Description Section
-      Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'About Us',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              agencyData['description'] ?? 'Welcome to our travel agency!',
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black54,
-                height: 1.5,
-              ),
-            ),
-          ],
-        ),
-      ),
-
-      const SizedBox(height: 20),
-
-      // Vehicle Types Section
-      Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Vehicle Types & Pricing',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Column(
-              children: (agencyData['vehicles'] as List)
-                  .asMap()
-                  .entries
-                  .map((entry) {
-                int index = entry.key;
-                Map<String, dynamic> vehicle = entry.value;
-                return _buildVehicleCard(vehicle, index);
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
-
-      const SizedBox(height: 20),
-
-      // Drivers Section
-      Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Our Professional Drivers',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Column(
-              children: (agencyData['drivers'] as List)
-                  .asMap()
-                  .entries
-                  .map((entry) {
-                int index = entry.key;
-                Map<String, dynamic> driver = entry.value;
-                return Padding(
-                  padding: EdgeInsets.only(
-                    bottom: index == (agencyData['drivers'] as List).length - 1 ? 0 : 12,
-                  ),
-                  child: _buildDriverCard(driver),
-                );
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
-
-      const SizedBox(height: 20),
-
-      // Customer Reviews Section (WITHOUT white container)
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Customer Reviews',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          Row(
-            children: [
-              // Left side - Overall rating
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Stack(
+                fit: StackFit.expand,
                 children: [
-                  Text(
-                    (agencyData['rating'] ?? 4.0).toString(),
-                    style: const TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
+                  Image.asset(
+                    agencyData['image'] ?? '',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              agencyData['backgroundColor'] ?? Colors.blue,
+                              (agencyData['backgroundColor'] ?? Colors.blue)
+                                  .withOpacity(0.8),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.business,
+                            size: 80,
+                            color: Colors.white,
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: List.generate(5, (index) {
-                      double rating = agencyData['rating'] ?? 4.0;
-                      if (index < rating.floor()) {
-                        return const Icon(Icons.star, color: Colors.orange, size: 20);
-                      } else if (index < rating) {
-                        return const Icon(Icons.star_half, color: Colors.orange, size: 20);
-                      } else {
-                        return Icon(Icons.star_border, color: Colors.grey.shade300, size: 20);
-                      }
-                    }),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${agencyData['totalReviews'] ?? 0} reviews',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.3),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
-
-              const SizedBox(width: 32),
-
-              // Right side - Rating breakdown
-              Expanded(
-                child: Column(
-                  children: [
-                    _buildRatingBar(
-                        5,
-                        (agencyData['reviewStats']?['5'] ?? 0) as int,
-                        agencyData['totalReviews'] ?? 0),
-                    const SizedBox(height: 8),
-                    _buildRatingBar(
-                        4,
-                        (agencyData['reviewStats']?['4'] ?? 0) as int,
-                        agencyData['totalReviews'] ?? 0),
-                    const SizedBox(height: 8),
-                    _buildRatingBar(
-                        3,
-                        (agencyData['reviewStats']?['3'] ?? 0) as int,
-                        agencyData['totalReviews'] ?? 0),
-                    const SizedBox(height: 8),
-                    _buildRatingBar(
-                        2,
-                        (agencyData['reviewStats']?['2'] ?? 0) as int,
-                        agencyData['totalReviews'] ?? 0),
-                    const SizedBox(height: 8),
-                    _buildRatingBar(
-                        1,
-                        (agencyData['reviewStats']?['1'] ?? 0) as int,
-                        agencyData['totalReviews'] ?? 0),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
-
-          const SizedBox(height: 20),
-
-          // Read Reviews Button
-          GestureDetector(
-            onTap: _viewReviews,
-            child: Row(
-              children: [
-                Text(
-                  'Read reviews',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.blue.shade600,
-                    fontWeight: FontWeight.w500,
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Agency Header Info
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                agencyData['name'] ?? 'Travel Agency',
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.shade100,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.star,
+                                    color: Colors.orange,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    (agencyData['rating'] ?? 4.0).toString(),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.orange,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          agencyData['location'] ?? 'Colombo, Sri Lanka',
+                          style: const TextStyle(fontSize: 14, color: Colors
+                              .grey),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          agencyData['contact'] ?? '+94 11 000 0000',
+                          style: const TextStyle(fontSize: 14, color: Colors
+                              .grey),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          agencyData['email'] ?? 'info@agency.lk',
+                          style: const TextStyle(fontSize: 14, color: Colors
+                              .grey),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          agencyData['experience'] ?? 'Years of Experience',
+                          style: const TextStyle(fontSize: 14, color: Colors
+                              .grey),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: Colors.blue.shade600,
-                ),
-              ],
+
+                  const SizedBox(height: 20),
+
+                  // Description Section
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'About Us',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          agencyData['description'] ??
+                              'Welcome to our travel agency!',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black54,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Vehicle Types Section
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Vehicle Types & Pricing',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Column(
+                          children: (agencyData['vehicles'] as List)
+                              .asMap()
+                              .entries
+                              .map((entry) {
+                            int index = entry.key;
+                            Map<String, dynamic> vehicle = entry.value;
+                            return _buildVehicleCard(vehicle, index);
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Drivers Section
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Our Professional Drivers',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Column(
+                          children: (agencyData['drivers'] as List)
+                              .asMap()
+                              .entries
+                              .map((entry) {
+                            int index = entry.key;
+                            Map<String, dynamic> driver = entry.value;
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                bottom: index ==
+                                    (agencyData['drivers'] as List).length - 1
+                                    ? 0
+                                    : 12,
+                              ),
+                              child: _buildDriverCard(driver),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Customer Reviews Section (WITHOUT white container)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Customer Reviews',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      Row(
+                        children: [
+                          // Left side - Overall rating
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                (agencyData['rating'] ?? 4.0).toString(),
+                                style: const TextStyle(
+                                  fontSize: 48,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: List.generate(5, (index) {
+                                  double rating = agencyData['rating'] ?? 4.0;
+                                  if (index < rating.floor()) {
+                                    return const Icon(
+                                        Icons.star, color: Colors.orange,
+                                        size: 20);
+                                  } else if (index < rating) {
+                                    return const Icon(
+                                        Icons.star_half, color: Colors.orange,
+                                        size: 20);
+                                  } else {
+                                    return Icon(Icons.star_border,
+                                        color: Colors.grey.shade300, size: 20);
+                                  }
+                                }),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${agencyData['totalReviews'] ?? 0} reviews',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(width: 32),
+
+                          // Right side - Rating breakdown
+                          Expanded(
+                            child: Column(
+                              children: [
+                                _buildRatingBar(
+                                    5,
+                                    (agencyData['reviewStats']?['5'] ??
+                                        0) as int,
+                                    agencyData['totalReviews'] ?? 0),
+                                const SizedBox(height: 8),
+                                _buildRatingBar(
+                                    4,
+                                    (agencyData['reviewStats']?['4'] ??
+                                        0) as int,
+                                    agencyData['totalReviews'] ?? 0),
+                                const SizedBox(height: 8),
+                                _buildRatingBar(
+                                    3,
+                                    (agencyData['reviewStats']?['3'] ??
+                                        0) as int,
+                                    agencyData['totalReviews'] ?? 0),
+                                const SizedBox(height: 8),
+                                _buildRatingBar(
+                                    2,
+                                    (agencyData['reviewStats']?['2'] ??
+                                        0) as int,
+                                    agencyData['totalReviews'] ?? 0),
+                                const SizedBox(height: 8),
+                                _buildRatingBar(
+                                    1,
+                                    (agencyData['reviewStats']?['1'] ??
+                                        0) as int,
+                                    agencyData['totalReviews'] ?? 0),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Read Reviews Button
+                      GestureDetector(
+                        onTap: _viewReviews,
+                        child: Row(
+                          children: [
+                            Text(
+                              'Read reviews',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.blue.shade600,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.arrow_forward_ios,
+                              size: 16,
+                              color: Colors.blue.shade600,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 80), // Space for bottom button
+                ],
+              ),
             ),
           ),
         ],
       ),
 
-      const SizedBox(height: 80), // Space for bottom button
-    ],
-    ),
-    ),
-    ),
-        ],
-        ),
-
-      // Fixed Contact Button
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
@@ -1193,34 +1525,67 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
           ],
         ),
         child: SafeArea(
-          child: SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              onPressed: _contactAgency,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0088cc),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 2,
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.contact_phone, size: 24),
-                  SizedBox(width: 8),
-                  Text(
-                    'Contact Agency',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+          child: Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _contactAgency,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFF0088cc),
+                    side: const BorderSide(color: Color(0xFF0088cc)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    elevation: 0,
                   ),
-                ],
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.contact_phone, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Contact',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _bookNow,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0088cc),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    elevation: 2,
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.calendar_today, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Book Now',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

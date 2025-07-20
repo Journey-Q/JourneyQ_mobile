@@ -14,6 +14,7 @@ import 'package:journeyq/features/market_place/pages/tour_package_details.dart';
 import 'package:journeyq/features/market_place/pages/book_package_page.dart';
 import 'package:journeyq/features/market_place/pages/viewall_travelling_agency.dart';
 import 'package:journeyq/features/market_place/pages/travel_agency_details.dart';
+import 'package:journeyq/features/market_place/pages/booking_agency.dart';
 import 'package:journeyq/features/market_place/pages/travel_agency_reviews.dart';
 import 'package:journeyq/features/market_place/pages/contact_travel_agency.dart';
 import 'package:journeyq/features/join_trip/pages/index.dart';
@@ -235,7 +236,7 @@ class AppRouter {
           },
           transitionType: PageTransitionType.slide,
         ),
-        // Contact Travel Agency Route (without AppWrapper as it's a full-screen contact flow)
+
         TransitionGoRoute(
           path: '/marketplace/travel_agencies/contact/:agencyId',
           builder: (context, state) {
@@ -250,6 +251,28 @@ class AppRouter {
             return ContactTravelAgencyPage(agencyId: agencyId);
           },
           transitionType: PageTransitionType.none,
+        ),
+
+        TransitionGoRoute(
+          path: '/marketplace/travel_agencies/booking/:agencyId',
+          builder: (context, state) {
+            final agencyId = state.pathParameters['agencyId'];
+            if (agencyId == null) {
+              return AppWrapper(
+                currentRoute: '/marketplace',
+                child: const ViewAllTravelAgenciesPage(),
+              );
+            }
+            // Option 1: With AppWrapper (if you want bottom navigation visible)
+            return AppWrapper(
+              currentRoute: '/marketplace',
+              child: BookingAgencyPage(agencyId: agencyId),
+            );
+
+            // Option 2: Without AppWrapper (if you want full-screen booking experience)
+            // return BookingAgencyPage(agencyId: agencyId);
+          },
+          transitionType: PageTransitionType.slide, // Changed from none to slide for better UX
         ),
 
         // Book Package Route (without AppWrapper as it's a full-screen booking flow)
