@@ -9,77 +9,39 @@ class BucketListPage extends StatefulWidget {
 }
 
 class _BucketListPageState extends State<BucketListPage> {
-  // Sample bucket list data with Sri Lankan destinations
+  // Updated bucket list data with journey IDs for routing
   final List<Map<String, dynamic>> bucketListItems = [
-    {
-      'destination': 'Sigiriya Rock Fortress',
-      'image': 'assets/images/sigiriya_rock.jpg',
-      'isCompleted': true,
-      'visitedDate': '2023-08-15',
-      'description': 'Ancient rock fortress and UNESCO World Heritage site'
-    },
-    {
-      'destination': 'Nine Arch Bridge, Ella',
-      'image': 'assets/images/nine_arch_bridge.jpeg',
-      'isCompleted': false,
-      'visitedDate': null,
-      'description': 'Iconic railway bridge surrounded by tea plantations'
-    },
-    {
-      'destination': 'Temple of the Tooth, Kandy',
-      'image': 'assets/images/kandy_temple.jpeg',
-      'isCompleted': true,
-      'visitedDate': '2023-12-20',
-      'description': 'Sacred Buddhist temple housing the tooth relic of Buddha'
-    },
-    {
-      'destination': 'Galle Fort',
-      'image': 'assets/images/galle_fort.jpg',
-      'isCompleted': false,
-      'visitedDate': null,
-      'description': 'Historic Dutch colonial fort by the ocean'
-    },
-    {
-      'destination': 'Yala National Park',
-      'image': 'assets/images/yala_national_park.jpg',
-      'isCompleted': false,
-      'visitedDate': null,
-      'description': 'Wildlife safari to spot leopards and elephants'
-    },
-    {
-      'destination': 'Nuwara Eliya Tea Country',
-      'image': 'assets/images/nuwara_eliya.jpeg',
-      'isCompleted': true,
-      'visitedDate': '2023-07-10',
-      'description': 'Rolling tea plantations in the hill country'
-    },
     {
       'destination': 'Mirissa Beach',
       'image': 'assets/images/mirissa_beach.jpg',
       'isCompleted': false,
       'visitedDate': null,
-      'description': 'Whale watching and pristine golden beaches'
+      'description': 'Whale watching and pristine golden beaches',
+      'journeyId': '7' // Links to 'Mirissa Beach Paradise'
     },
     {
       'destination': 'Adams Peak (Sri Pada)',
       'image': 'assets/images/adams_peak.jpg',
       'isCompleted': false,
       'visitedDate': null,
-      'description': 'Sacred mountain pilgrimage and sunrise hike'
+      'description': 'Sacred mountain pilgrimage and sunrise hike',
+      'journeyId': '8' // Links to 'Sacred Adams Peak Pilgrimage'
     },
     {
       'destination': 'Anuradhapura Ancient City',
       'image': 'assets/images/anuradhapura.jpeg',
       'isCompleted': false,
       'visitedDate': null,
-      'description': 'Ancient capital with sacred Buddhist sites'
+      'description': 'Ancient capital with sacred Buddhist sites',
+      'journeyId': '9' // Links to 'Ancient Anuradhapura Heritage'
     },
     {
       'destination': 'Arugam Bay',
       'image': 'assets/images/arugam_bay.jpg',
       'isCompleted': false,
       'visitedDate': null,
-      'description': 'World-class surfing destination on the east coast'
+      'description': 'World-class surfing destination on the east coast',
+      'journeyId': '10' // Links to 'Arugam Bay Surf Paradise'
     },
   ];
 
@@ -308,9 +270,9 @@ class _BucketListPageState extends State<BucketListPage> {
                 Row(
                   children: [
                     Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _planRoute(item),
-                        label: const Text('View journey'),
+                      child: ElevatedButton(
+                        onPressed: () => _viewJourney(item),
+                        child: const Text('View journey'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
                           foregroundColor: Colors.white,
@@ -342,15 +304,15 @@ class _BucketListPageState extends State<BucketListPage> {
     });
   }
 
-  void _planRoute(Map<String, dynamic> item) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Planning route to ${item['destination']}')),
-    );
-  }
-
-  void _shareDestination(Map<String, dynamic> item) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Sharing ${item['destination']}')),
-    );
+  void _viewJourney(Map<String, dynamic> item) {
+    // Navigate to journey details page using the journey ID
+    final journeyId = item['journeyId'];
+    if (journeyId != null) {
+      context.push('/journey/$journeyId');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Journey details not available for ${item['destination']}')),
+      );
+    }
   }
 }

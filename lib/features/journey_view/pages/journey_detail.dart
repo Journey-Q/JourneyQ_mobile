@@ -176,7 +176,7 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      'Journey by ${journeyData!['authorName']}',
+                      journeyData!['authorName'],
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
