@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:journeyq/data/repositories/auth_repositories/auth_repository.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -213,7 +214,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     color: Color(0xFF9CA3AF),
                     size: 16,
                   ),
-                  onTap: () => _showLogoutDialog(),
+                  onTap: ()async => {
+                    await AuthRepository.clearTokens()
+                  },
                 ),
               ),
               
