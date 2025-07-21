@@ -48,6 +48,15 @@ class CustomBottomNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    
+    // Check if keyboard is visible using MediaQuery
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final isKeyboardVisible = keyboardHeight > 0;
+
+    // Hide bottom navigation when keyboard is visible
+    if (isKeyboardVisible) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -122,7 +131,6 @@ class CustomBottomNavigation extends StatelessWidget {
                   size: 24,
                 ),
               ),
-              
             ],
           ),
         ),
@@ -131,39 +139,42 @@ class CustomBottomNavigation extends StatelessWidget {
   }
 
   void _handleNavigation(BuildContext context, int index) {
-    // Unfocus any text fields to hide keyboard
+    // Unfocus any text fields to hide keyboard before navigation
     FocusScope.of(context).unfocus();
     
-    // Call the callback if provided
-    if (onPageChanged != null) {
-      onPageChanged!(index);
-    }
+    // Add a small delay to ensure keyboard dismissal
+    Future.delayed(const Duration(milliseconds: 100), () {
+      // Call the callback if provided
+      if (onPageChanged != null) {
+        onPageChanged!(index);
+      }
 
-    // Handle navigation based on index
-    switch (index) {
-      case 0: // Home
-        context.go('/home');
-        break;
-      case 1: // Marketplace
-        context.go('/marketplace');
-        break;
-      case 2: // Create
-        context.go('/create');
-        break;
-      case 3: // Join Trip
-        context.go('/join_trip');
-        break;
-      case 4: // Profile
-        context.go('/profile');
-        break;
-      default:
-        // Fallback to first item's route if index is out of bounds
-        if (_navItems.isNotEmpty && index < _navItems.length) {
-          context.go(_navItems[index].route);
-        } else {
+      // Handle navigation based on index
+      switch (index) {
+        case 0: // Home
           context.go('/home');
-        }
-    }
+          break;
+        case 1: // Marketplace
+          context.go('/marketplace');
+          break;
+        case 2: // Create
+          context.go('/create');
+          break;
+        case 3: // Join Trip
+          context.go('/join_trip');
+          break;
+        case 4: // Profile
+          context.go('/profile');
+          break;
+        default:
+          // Fallback to first item's route if index is out of bounds
+          if (_navItems.isNotEmpty && index < _navItems.length) {
+            context.go(_navItems[index].route);
+          } else {
+            context.go('/home');
+          }
+      }
+    });
   }
 
   // Helper method to get route based on index
