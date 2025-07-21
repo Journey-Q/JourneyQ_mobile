@@ -6,6 +6,9 @@ import 'package:journeyq/app/routes/app_router.dart';
 import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:journeyq/app/themes/theme.dart';
 import 'package:journeyq/shared/components/bottom_naviagtion.dart';
+import 'package:journeyq/core/services/api_service.dart';
+
+
 
 class TravelApp extends StatefulWidget {
   const TravelApp({super.key});

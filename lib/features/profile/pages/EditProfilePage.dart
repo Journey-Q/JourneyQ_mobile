@@ -1,51 +1,147 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'dart:io';
 import 'package:go_router/go_router.dart';
+import 'package:journeyq/data/repositories/profile_repository/profile_repository.dart';
+import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
+import 'package:journeyq/core/errors/exception.dart';
+import 'package:journeyq/shared/widgets/dialog/show_dialog.dart';
 
 class EditProfilePage extends StatefulWidget {
-  final Map<String, dynamic> userData;
-
-  const EditProfilePage({super.key, required this.userData});
+  const EditProfilePage({super.key});
 
   @override
   State<EditProfilePage> createState() => _EditProfilePageState();
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  late TextEditingController _nameController;
-  late TextEditingController _usernameController;
+  late TextEditingController _displayNameController;
   late TextEditingController _bioController;
   final ImagePicker _picker = ImagePicker();
+  final SnackBar_service = SnackBarService();
+
   String? _profileImagePath;
-  
+  String? _currentProfileImageUrl;
+  File? _selectedImageFile;
+
   // User preferences from database
   List<String> userActivities = [];
-  String userTripMood = '';
+  List<String> userTripMoods = [];
+
+  // Loading states
+  bool _isLoading = true;
+  bool _isSaving = false;
+
+  // User data
+  String? _userId;
+  Map<String, dynamic>? _profileData;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.userData['name']);
-    _usernameController = TextEditingController(text: widget.userData['username']);
-    _bioController = TextEditingController(text: widget.userData['bio']);
-    _profileImagePath = widget.userData['profileImage'];
-    
-    // Initialize user preferences from database
-    userActivities = List<String>.from(widget.userData['activities'] ?? []);
-    userTripMood = widget.userData['tripMood'] ?? '';
+    _displayNameController = TextEditingController();
+    _bioController = TextEditingController();
+    // Don't call _loadUserProfile() here
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_isLoading) {
+      // Only load once
+      _loadUserProfile();
+    }
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _usernameController.dispose();
+    _displayNameController.dispose();
     _bioController.dispose();
     super.dispose();
   }
 
+  Future<void> _loadUserProfile() async {
+    try {
+      print("hello");
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final authUser = authProvider.user;
+
+      if (authUser?.userId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not found. Please login again.')),
+        );
+        Navigator.pop(context);
+        return;
+      }
+
+      _userId = authUser!.userId?.toString();
+
+      // Get profile data from repository
+      final profileData = await ProfileRepository.getProfile(_userId!);
+      print(profileData);
+
+      setState(() {
+        _profileData = profileData;
+        _displayNameController.text =
+            profileData['display_name'] ?? authUser.username ?? '';
+        _bioController.text = profileData['bio'] ?? '';
+        _currentProfileImageUrl =
+            profileData['profile_image_url'] ?? authUser.profileUrl;
+        _profileImagePath = _currentProfileImageUrl;
+
+        // Handle activities and trip moods
+        userActivities = List<String>.from(
+          profileData['favourite_activities'] ?? [],
+        );
+        userTripMoods = List<String>.from(
+          profileData['preferred_trip_moods'] ?? [],
+        );
+
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (e is AppException) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading profile: ${e.message}')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading profile: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.close, color: Colors.black),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: const Text(
+            'Edit profile',
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -65,15 +161,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
         actions: [
           TextButton(
-            onPressed: _saveProfile,
-            child: const Text(
-              'Done',
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            onPressed: _isSaving ? null : _saveProfile,
+            child: _isSaving
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text(
+                    'Done',
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
           ),
         ],
       ),
@@ -89,11 +191,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     CircleAvatar(
                       radius: 50,
                       backgroundColor: Colors.grey[300],
-                      backgroundImage: _profileImagePath != null
-                          ? (_profileImagePath!.startsWith('http')
-                              ? NetworkImage(_profileImagePath!)
-                              : FileImage(File(_profileImagePath!)) as ImageProvider)
-                          : null,
+                      backgroundImage: _getProfileImage(),
                       child: _profileImagePath == null
                           ? const Icon(
                               Icons.person,
@@ -142,16 +240,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
               // Form Fields
               _buildTextField(
-                controller: _nameController,
-                label: 'Name',
-                hint: 'Enter your full name',
-              ),
-              const SizedBox(height: 20),
-
-              _buildTextField(
-                controller: _usernameController,
-                label: 'Username',
-                hint: 'Enter your username',
+                controller: _displayNameController,
+                label: 'Display Name',
+                hint: 'Enter your display name',
               ),
               const SizedBox(height: 20),
 
@@ -167,14 +258,27 @@ class _EditProfilePageState extends State<EditProfilePage> {
               _buildActivitiesSection(),
               const SizedBox(height: 30),
 
-              // Trip Mood Section
-              _buildTripMoodSection(),
+              // Trip Moods Section
+              _buildTripMoodsSection(),
               const SizedBox(height: 30),
             ],
           ),
         ),
       ),
     );
+  }
+
+  ImageProvider? _getProfileImage() {
+    if (_selectedImageFile != null) {
+      return FileImage(_selectedImageFile!);
+    } else if (_profileImagePath != null && _profileImagePath!.isNotEmpty) {
+      if (_profileImagePath!.startsWith('http')) {
+        return NetworkImage(_profileImagePath!);
+      } else {
+        return FileImage(File(_profileImagePath!));
+      }
+    }
+    return null;
   }
 
   Widget _buildTextField({
@@ -226,7 +330,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-              'Activities',
+              'Favourite Activities',
               style: TextStyle(
                 color: Colors.black,
                 fontSize: 16,
@@ -249,10 +353,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         const SizedBox(height: 8),
         const Text(
           'Your selected travel activities',
-          style: TextStyle(
-            color: Colors.grey,
-            fontSize: 14,
-          ),
+          style: TextStyle(color: Colors.grey, fontSize: 14),
         ),
         const SizedBox(height: 12),
         userActivities.isEmpty
@@ -269,10 +370,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     const SizedBox(width: 8),
                     Text(
                       'No activities selected. Tap Edit to add.',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
                     ),
                   ],
                 ),
@@ -282,7 +380,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 runSpacing: 8,
                 children: userActivities.map((activity) {
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.blue.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(16),
@@ -303,7 +404,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  Widget _buildTripMoodSection() {
+  Widget _buildTripMoodsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -311,7 +412,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-              'Trip Mood',
+              'Trip Moods',
               style: TextStyle(
                 color: Colors.black,
                 fontSize: 16,
@@ -319,7 +420,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ),
             ),
             GestureDetector(
-              onTap: _editTripMood,
+              onTap: _editTripMoods,
               child: const Text(
                 'Edit',
                 style: TextStyle(
@@ -333,42 +434,65 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Your preferred travel style',
-          style: TextStyle(
-            color: Colors.grey,
-            fontSize: 14,
-          ),
+          'Your preferred travel styles',
+          style: TextStyle(color: Colors.grey, fontSize: 14),
         ),
         const SizedBox(height: 12),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: userTripMood.isEmpty ? Colors.grey[100] : Colors.blue.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: userTripMood.isEmpty ? Colors.grey[300]! : Colors.blue.withOpacity(0.3),
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                userTripMood.isEmpty ? Icons.add : _getTripMoodIcon(userTripMood),
-                color: userTripMood.isEmpty ? Colors.grey[600] : Colors.blue,
-                size: 20,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                userTripMood.isEmpty ? 'No trip mood selected. Tap Edit to choose.' : userTripMood,
-                style: TextStyle(
-                  color: userTripMood.isEmpty ? Colors.grey[600] : Colors.blue,
-                  fontSize: 14,
-                  fontWeight: userTripMood.isEmpty ? FontWeight.normal : FontWeight.w600,
+        userTripMoods.isEmpty
+            ? Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
                 ),
+                child: Row(
+                  children: [
+                    Icon(Icons.add, color: Colors.grey[600], size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'No trip moods selected. Tap Edit to choose.',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    ),
+                  ],
+                ),
+              )
+            : Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: userTripMoods.map((mood) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _getTripMoodIcon(mood),
+                          color: Colors.blue,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          mood,
+                          style: const TextStyle(
+                            color: Colors.blue,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
               ),
-            ],
-          ),
-        ),
       ],
     );
   }
@@ -393,13 +517,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   void _editActivities() {
-    // Show bottom sheet or navigate to activities selection page
     _showActivitiesBottomSheet();
   }
 
-  void _editTripMood() {
-    // Show bottom sheet or navigate to trip mood selection page
-    _showTripMoodBottomSheet();
+  void _editTripMoods() {
+    _showTripMoodsBottomSheet();
   }
 
   void _showActivitiesBottomSheet() {
@@ -445,54 +567,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  
+
                   const Text(
                     'Select Activities',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Custom activity input
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            decoration: const InputDecoration(
-                              hintText: 'Enter activity name...',
-                              border: InputBorder.none,
-                            ),
-                            onSubmitted: (value) {
-                              if (value.trim().isNotEmpty && !tempSelected.contains(value.trim())) {
-                                setModalState(() {
-                                  tempSelected.add(value.trim());
-                                });
-                              }
-                            },
-                          ),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            // Add custom activity logic here
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          child: const Text('Add', style: TextStyle(color: Colors.white)),
-                        ),
-                      ],
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -516,7 +597,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       itemBuilder: (context, index) {
                         final activity = availableActivities[index];
                         final isSelected = tempSelected.contains(activity);
-                        
+
                         return CheckboxListTile(
                           title: Text(activity),
                           value: isSelected,
@@ -558,7 +639,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: const Text('Done', style: TextStyle(color: Colors.white)),
+                          child: const Text(
+                            'Done',
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ),
                       ),
                     ],
@@ -572,7 +656,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  void _showTripMoodBottomSheet() {
+  void _showTripMoodsBottomSheet() {
     final List<String> tripMoods = [
       'Adventure',
       'Relaxation',
@@ -582,11 +666,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
       'Backpacking',
     ];
 
-    String tempSelected = userTripMood;
+    List<String> tempSelected = List.from(userTripMoods);
 
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -594,9 +679,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Container(
+              height: MediaQuery.of(context).size.height * 0.6,
               padding: const EdgeInsets.all(20),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Handle bar
                   Container(
@@ -608,9 +693,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  
+
                   const Text(
-                    'Select Trip Mood',
+                    'Select Trip Moods',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -619,22 +704,30 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ),
                   const SizedBox(height: 20),
 
-                  ...tripMoods.map((mood) {
-                    final isSelected = tempSelected == mood;
-                    return RadioListTile<String>(
-                      title: Text(mood),
-                      value: mood,
-                      groupValue: tempSelected,
-                      onChanged: (String? value) {
-                        setModalState(() {
-                          tempSelected = value ?? '';
-                        });
-                      },
-                      activeColor: Colors.blue,
-                    );
-                  }).toList(),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: tripMoods.length,
+                      itemBuilder: (context, index) {
+                        final mood = tripMoods[index];
+                        final isSelected = tempSelected.contains(mood);
 
-                  const SizedBox(height: 20),
+                        return CheckboxListTile(
+                          title: Text(mood),
+                          value: isSelected,
+                          onChanged: (bool? value) {
+                            setModalState(() {
+                              if (value == true) {
+                                tempSelected.add(mood);
+                              } else {
+                                tempSelected.remove(mood);
+                              }
+                            });
+                          },
+                          activeColor: Colors.blue,
+                        );
+                      },
+                    ),
+                  ),
 
                   // Bottom buttons
                   Row(
@@ -649,7 +742,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         child: ElevatedButton(
                           onPressed: () {
                             setState(() {
-                              userTripMood = tempSelected;
+                              userTripMoods = tempSelected;
                             });
                             Navigator.pop(context);
                           },
@@ -659,7 +752,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: const Text('Done', style: TextStyle(color: Colors.white)),
+                          child: const Text(
+                            'Done',
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ),
                       ),
                     ],
@@ -716,6 +812,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     Navigator.pop(context);
                     setState(() {
                       _profileImagePath = null;
+                      _selectedImageFile = null;
                     });
                   },
                 ),
@@ -730,25 +827,77 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final XFile? image = await _picker.pickImage(source: source);
     if (image != null) {
       setState(() {
+        _selectedImageFile = File(image.path);
         _profileImagePath = image.path;
       });
     }
   }
 
-  void _saveProfile() {
-    // Update the user data
-    widget.userData['name'] = _nameController.text;
-    widget.userData['username'] = _usernameController.text;
-    widget.userData['bio'] = _bioController.text;
-    widget.userData['profileImage'] = _profileImagePath;
-    widget.userData['activities'] = userActivities;
-    widget.userData['tripMood'] = userTripMood;
+  Future<void> _saveProfile() async {
+    if (_userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User ID not found. Please login again.')),
+      );
+      return;
+    }
 
-    // In a real app, you would save this to backend/database
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Profile updated successfully')),
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      // Prepare update data
+      final updateData = {
+        'user_id': _userId!,
+        'display_name': _displayNameController.text.trim(),
+        'bio': _bioController.text.trim(),
+        'favourite_activities': userActivities,
+        'preferred_trip_moods': userTripMoods,
+      };
+
+      // Add profile image if selected
+      if (_selectedImageFile != null) {
+        updateData['profile_image'] = _selectedImageFile!;
+      } else if (_currentProfileImageUrl != null && _profileImagePath == null) {
+        // User removed the image
+        updateData['profile_image_url'] = '';
+      }
+
+      // Call repository method (you might need to create this method in ProfileRepository)
+      await _updateProfileWithRepository(updateData);
+
+      if (mounted) {
+        SnackBarService.showSuccess(
+      context,
+      "Profile updated successfully"
     );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        String errorMessage = 'Failed to update profile';
+        if (e is AppException) {
+          errorMessage = e.message;
+        }
 
-    Navigator.pop(context);
+         SnackBarService.showError(
+      context,
+      "Profile updated failed"
+    );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _updateProfileWithRepository(
+    Map<String, dynamic> updateData,
+  ) async {
+    // Use the new updateCompleteProfile method that calls /profile/update endpoint
+    await ProfileRepository.updateCompleteProfile(updateData);
   }
 }
