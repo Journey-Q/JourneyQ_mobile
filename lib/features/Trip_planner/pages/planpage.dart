@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:journeyq/features/Trip_planner/pages/routemap.dart';
 
 class TripPlanViewPage extends StatefulWidget {
   final Map<String, dynamic> tripData;
@@ -12,7 +13,8 @@ class TripPlanViewPage extends StatefulWidget {
 class _TripPlanViewPageState extends State<TripPlanViewPage>
     with TickerProviderStateMixin {
   late TabController _tabController;
-  final GlobalKey<MapRouteWidgetState> _mapKey = GlobalKey<MapRouteWidgetState>();
+  final GlobalKey<MapRouteWidgetState> _mapKey =
+      GlobalKey<MapRouteWidgetState>();
 
   // Professional Color Scheme
   static const _primaryColor = Color(0xFF2563EB);
@@ -72,7 +74,9 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
             backgroundColor: _accentColor,
             duration: const Duration(seconds: 1),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
         );
       },
@@ -162,11 +166,7 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
                     'Duration',
                   ),
                 ),
-                Container(
-                  width: 1,
-                  height: 40,
-                  color: Colors.grey[300],
-                ),
+                Container(width: 1, height: 40, color: Colors.grey[300]),
                 Expanded(
                   child: _buildStatItem(
                     Icons.people,
@@ -174,11 +174,7 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
                     'Travelers',
                   ),
                 ),
-                Container(
-                  width: 1,
-                  height: 40,
-                  color: Colors.grey[300],
-                ),
+                Container(width: 1, height: 40, color: Colors.grey[300]),
                 Expanded(
                   child: _buildStatItem(
                     Icons.account_balance_wallet,
@@ -197,7 +193,7 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
   Widget _buildStatItem(IconData icon, String value, String label) {
     return Column(
       children: [
-        Icon(icon, color:  _primaryColor, size: 20),
+        Icon(icon, color: _primaryColor, size: 20),
         const SizedBox(height: 4),
         Text(
           value,
@@ -207,13 +203,7 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
             color: _textPrimary,
           ),
         ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: _textSecondary,
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 12, color: _textSecondary)),
       ],
     );
   }
@@ -327,11 +317,11 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
           ),
           const SizedBox(height: 20),
           // Places
-          if (dayData['places'] != null && (dayData['places'] as List).isNotEmpty)
-            ...((dayData['places'] as List)
-                .asMap()
-                .entries
-                .map((entry) => _buildPlaceCard(entry.value, entry.key))),
+          if (dayData['places'] != null &&
+              (dayData['places'] as List).isNotEmpty)
+            ...((dayData['places'] as List).asMap().entries.map(
+              (entry) => _buildPlaceCard(entry.value, entry.key),
+            )),
           // Hotel
           if (dayData['hotel'] != null) _buildHotelCard(dayData['hotel']),
         ],
@@ -340,79 +330,81 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
   }
 
   Widget _buildPlaceCard(Map<String, dynamic> place, int index) {
-  return Container(
-    margin: const EdgeInsets.only(bottom: 16),
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: _backgroundColor,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: Colors.grey[200]!),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              '${index + 1}. ',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: _textPrimary,
-              ),
-            ),
-            Expanded(
-              child: Text(
-                place['name'] ?? 'Unknown Place',
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                '${index + 1}. ',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: _textPrimary,
                 ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        // Enhanced Activities Section
-        if (place['activities'] != null &&
-            (place['activities'] as List).isNotEmpty) ...[
-          Text(
-            'Activities',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: _textPrimary,
-              letterSpacing: -0.2,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: (place['activities'] as List)
-                .map<Widget>((activity) => _buildActivityBadge(
-                      activity.toString(),
-                      color: _accentColor,
-                    ))
-                .toList(),
+              Expanded(
+                child: Text(
+                  place['name'] ?? 'Unknown Place',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: _textPrimary,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
-        ],
-        if (place['experience'] != null)
-          Text(
-            place['experience'],
-            style: TextStyle(
-              fontSize: 14,
-              color: _textSecondary,
-              height: 1.5,
-              fontWeight: FontWeight.w400,
+          // Enhanced Activities Section
+          if (place['activities'] != null &&
+              (place['activities'] as List).isNotEmpty) ...[
+            Text(
+              'Activities',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: _textPrimary,
+                letterSpacing: -0.2,
+              ),
             ),
-          ),
-      ],
-    ),
-  );
-}
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: (place['activities'] as List)
+                  .map<Widget>(
+                    (activity) => _buildActivityBadge(
+                      activity.toString(),
+                      color: _accentColor,
+                    ),
+                  )
+                  .toList(),
+            ),
+            const SizedBox(height: 16),
+          ],
+          if (place['experience'] != null)
+            Text(
+              place['experience'],
+              style: TextStyle(
+                fontSize: 14,
+                color: _textSecondary,
+                height: 1.5,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildHotelCard(Map<String, dynamic> hotel) {
     return Container(
@@ -458,25 +450,16 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
           const SizedBox(height: 4),
           Text(
             hotel['location'] ?? 'Location not specified',
-            style: TextStyle(
-              fontSize: 14,
-              color: _textSecondary,
-            ),
+            style: TextStyle(fontSize: 14, color: _textSecondary),
           ),
           const SizedBox(height: 12),
           Row(
             children: [
               if (hotel['pricePerNight'] != null)
-                _buildSimpleBadge(
-                  hotel['pricePerNight'],
-                  color: _accentColor,
-                ),
+                _buildSimpleBadge(hotel['pricePerNight'], color: _accentColor),
               const SizedBox(width: 8),
               if (hotel['rating'] != null)
-                _buildSimpleBadge(
-                  '⭐ ${hotel['rating']}',
-                  color: Colors.black,
-                ),
+                _buildSimpleBadge('⭐ ${hotel['rating']}', color: Colors.black),
             ],
           ),
         ],
@@ -488,9 +471,7 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
   Widget _buildSimpleBadge(String text, {Color? color}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
       child: Text(
         text,
         style: TextStyle(
@@ -630,10 +611,7 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
           // Map Tab - Using the separated MapRouteWidget
           SingleChildScrollView(
             padding: const EdgeInsets.all(16),
-            child: MapRouteWidget(
-              key: _mapKey,
-              tripData: widget.tripData,
-            ),
+            child: MapRouteWidget(key: _mapKey, tripData: widget.tripData),
           ),
           // Tips Tab
           SingleChildScrollView(
@@ -710,50 +688,3 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
 }
 
 // Placeholder widget for the separated MapRouteWidget
-class MapRouteWidget extends StatefulWidget {
-  final Map<String, dynamic> tripData;
-
-  const MapRouteWidget({super.key, required this.tripData});
-
-  @override
-  State<MapRouteWidget> createState() => MapRouteWidgetState();
-}
-
-class MapRouteWidgetState extends State<MapRouteWidget> {
-  void focusOnDay(Map<String, dynamic> dayData) {
-    // This method will be implemented in the actual MapRouteWidget
-    print('Focusing on day ${dayData['day']}');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 400,
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.map, size: 48, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
-              'Map Route Widget',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey,
-              ),
-            ),
-            Text(
-              'Import the actual MapRouteWidget file',
-              style: TextStyle(color: Colors.grey),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

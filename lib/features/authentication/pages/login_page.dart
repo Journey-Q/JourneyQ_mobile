@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:journeyq/core/services/notification_service.dart';
 import 'package:journeyq/core/utils/validator.dart';
 import 'package:journeyq/core/errors/error_handler.dart';
 import 'package:journeyq/core/errors/exception.dart';
@@ -41,51 +42,52 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _handleLogin() async {
-  if (!_formKey.currentState!.validate()) return;
-  
-  setState(() => _isLoading = true);
-  
-  try {
-    final result = await AuthRepository.login(
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
-    
-    // Verify login was successful and contains required data
-    if (result == null || result['accessToken'] == null) {
-      throw Exception('Login failed: Invalid response from server');
-    }
-    
-    // Get user data for personalized welcome message
-    final userData = result['user'];
-    final userName = userData != null ? userData['name'] : null;
-    
-    // Success - show success message with user name if available
-    SnackBarService.showSuccess(
-      context,
-      userName != null 
-        ? "Login Successful! Welcome back, $userName!"
-        : "Login Successful! Welcome back!",
-    );
-    
-    if (mounted) {
-      authProvider.setStatus(AuthStatus.authenticated);
-      context.go('/home');
-    }
-    
-  } catch (e) {
-    // Use existing ErrorHandler pattern
-    if (mounted) {
-      ErrorHandler.handleError(context, e is Exception ? e : Exception(e.toString()));
-      setState(() => _isLoading = false);
-    }
-  } finally {
-    // Only reset loading state if we're still mounted and haven't already reset it
-    if (mounted && _isLoading) {
-      setState(() => _isLoading = false);
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final result = await AuthRepository.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+
+      // Verify login was successful and contains required data
+      if (result == null || result['accessToken'] == null) {
+        throw Exception('Login failed: Invalid response from server');
+      }
+
+      // Get user data for personalized welcome message
+      final userData = result['user'];
+      final userName = userData != null ? userData['name'] : null;
+
+      // Success - show success message with user name if available
+
+      NotificationService.showNotification(
+        title: "Welcome back",
+        body: "Login successfully",
+      );
+
+      if (mounted) {
+        authProvider.setStatus(AuthStatus.authenticated);
+        context.go('/home');
+      }
+    } catch (e) {
+      // Use existing ErrorHandler pattern
+      if (mounted) {
+        ErrorHandler.handleError(
+          context,
+          e is Exception ? e : Exception(e.toString()),
+        );
+        setState(() => _isLoading = false);
+      }
+    } finally {
+      // Only reset loading state if we're still mounted and haven't already reset it
+      if (mounted && _isLoading) {
+        setState(() => _isLoading = false);
+      }
     }
   }
-}
 
   Future<void> _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
@@ -95,42 +97,31 @@ class _LoginPageState extends State<LoginPage> {
 
       if (userCredential != null) {
         final user = userCredential.user;
-        SnackBarService.showSuccess(
-          context,
-          "Login Successful! Welcome back!"
-        );
+        SnackBarService.showSuccess(context, "Login Successful! Welcome back!");
 
         if (mounted) {
           authProvider.setStatus(AuthStatus.authenticated);
           context.go('/home');
         }
       } else {
-        // Handle case where sign-in was cancelled or failed
-        SnackBarService.showSuccess(
-          context,
-          "Login Successful! Welcome back!"
-        );
+        NotificationService.showNotification(title: "Welcome back", body:"Login successfully" );
       }
     } catch (e) {
-      ErrorHandler.handleError(context, e is AppException? e :Exception());
+      ErrorHandler.handleError(context, e is AppException ? e : Exception());
       if (mounted) {
         setState(() => _isLoading = false);
       }
     }
   }
 
-  
   Future<void> _handleAppleSignIn() async {
     setState(() => _isLoading = true);
 
     try {
       final userCredential = await _socialAuthService.signInWithApple();
-      
+
       if (userCredential != null) {
-        SnackBarService.showSuccess(
-          context,
-          "Login Successful! Welcome back!"
-        );
+        SnackBarService.showSuccess(context, "Login Successful! Welcome back!");
 
         if (mounted) {
           authProvider.setStatus(AuthStatus.authenticated);
@@ -138,13 +129,10 @@ class _LoginPageState extends State<LoginPage> {
         }
       } else {
         // Handle case where sign-in was cancelled or failed
-        SnackBarService.showSuccess(
-          context,
-          "Login Successful! Welcome back!"
-        );
+        SnackBarService.showSuccess(context, "Login Successful! Welcome back!");
       }
     } catch (e) {
-      ErrorHandler.handleError(context, e is AppException? e :Exception());
+      ErrorHandler.handleError(context, e is AppException ? e : Exception());
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -243,33 +231,29 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget buildSocialButtons() {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      buildSocialButton(
-        icon: Image.asset(
-          'assets/images/google.png',
-          width: 28,
-          height: 28,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        buildSocialButton(
+          icon: Image.asset('assets/images/google.png', width: 28, height: 28),
+          label: 'Google',
+          onPressed: _handleGoogleSignIn,
+          backgroundColor: Colors.white,
+          textColor: Colors.grey[800]!,
+          borderColor: Colors.grey[300]!,
         ),
-        label: 'Google',
-        onPressed: _handleGoogleSignIn,
-        backgroundColor: Colors.white,
-        textColor: Colors.grey[800]!,
-        borderColor: Colors.grey[300]!,
-      ),
-      const SizedBox(width: 32),
-      buildSocialButton(
-        icon: Icons.apple,
-        label: 'Apple',
-        onPressed: _handleAppleSignIn,
-        backgroundColor: Colors.black,
-        textColor: Colors.white,
-        borderColor: Colors.black,
-      ),
-    ],
-  );
-}
+        const SizedBox(width: 32),
+        buildSocialButton(
+          icon: Icons.apple,
+          label: 'Apple',
+          onPressed: _handleAppleSignIn,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          borderColor: Colors.black,
+        ),
+      ],
+    );
+  }
 
   Widget buildSignUpLink() {
     return Row(

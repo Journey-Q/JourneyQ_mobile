@@ -301,8 +301,10 @@ class _CreateTripPageState extends State<CreateTripPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+    
+      
       // FIXED: Set to false to prevent automatic resizing
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(
           _currentStep == 0

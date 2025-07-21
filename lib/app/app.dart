@@ -112,20 +112,27 @@ class AppWrapper extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final currentPageIndex = _getCurrentPageIndex(currentRoute);
-    final showNavigation = _shouldShowNavigation(currentRoute);
-
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        body: child,
-        bottomNavigationBar: showNavigation
-            ? CustomBottomNavigation(currentPageIndex: currentPageIndex)
-            : null,
-      ),
-    );
-  }
+  @override
+@override
+Widget build(BuildContext context) {
+  final currentPageIndex = _getCurrentPageIndex(currentRoute);
+  final showNavigation = _shouldShowNavigation(currentRoute);
+  final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+  final isKeyboardOpen = keyboardHeight > 0;
+  
+  return GestureDetector(
+    onTap: () => FocusScope.of(context).unfocus(),
+    child: Scaffold(
+      resizeToAvoidBottomInset: true,
+      body: child,
+      bottomNavigationBar: (showNavigation && !isKeyboardOpen) 
+          ? CustomBottomNavigation(
+              currentPageIndex: currentPageIndex,
+            ) 
+          : null,
+    ),
+  );
+}
 }
 
 
