@@ -372,7 +372,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   userData['username'] ?? 'Unknown',
                   style: const TextStyle(
                     color: Color(0xFF2D3436),
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -410,7 +410,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   onPressed: _handleSubscribe,
                   icon: Icon(
                     isSubscribed ? Icons.star : Icons.star_outline,
-                    size: 12,
+                    size: 13,
                   ),
                   label: Text(isSubscribed ? 'Premium' : 'Subscribe'),
                   style: ElevatedButton.styleFrom(
@@ -418,8 +418,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     foregroundColor: Colors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 6,
+                      horizontal: 12,
+                      vertical: 4,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -432,7 +432,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
               ),
-              const SizedBox(width: 12), // Proper gap between buttons
+              const SizedBox(width: 10), // Proper gap between buttons
               _buildHeaderButton(
                 Icons.settings_outlined,
                 () => context.push('/profile/settings'),
@@ -460,7 +460,7 @@ class _ProfilePageState extends State<ProfilePage> {
       child: IconButton(
         icon: Icon(icon, color: const Color(0xFF2D3436)),
         onPressed: onPressed,
-        iconSize: 22,
+        iconSize: 20,
       ),
     );
   }
