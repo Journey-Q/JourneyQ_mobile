@@ -39,7 +39,7 @@ import 'package:journeyq/features/market_place/pages/market_chat.dart';
 import 'package:journeyq/features/market_place/pages/BookingHistoryPage.dart';
 import 'package:journeyq/features/market_place/pages/chat_details.dart';
 import 'package:journeyq/features/preference_page/index.dart';
-import 'package:journeyq/features/preference_page/profile_setup.dart';
+
 
 class AppRouter {
   static GoRouter createRouter(AuthProvider authProvider) {
@@ -323,8 +323,7 @@ class AppRouter {
         TransitionGoRoute(
           path: '/profile/edit',
           builder: (context, state) {
-            final userData = state.extra as Map<String, dynamic>?;
-            return EditProfilePage(userData: userData ?? {});
+            return EditProfilePage();
           },
           transitionType: PageTransitionType.slide,
         ),

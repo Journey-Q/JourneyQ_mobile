@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:journeyq/data/repositories/profile_repository/profile_repository.dart';
 import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:journeyq/core/errors/exception.dart';
+import 'package:journeyq/features/create_trip/pages/widget.dart';
 
 class CombinedSetupPage extends StatefulWidget {
   const CombinedSetupPage({super.key});
@@ -54,7 +55,7 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
     'Train rides',
     'Sight seeing',
     'Beach Whalk',
-    'Shopping'
+    'Shopping',
   ];
 
   // Step 2: Profile
@@ -93,21 +94,14 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeInOut),
+    );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(1.0, 0.0),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutCubic,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(1.0, 0.0), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
 
     _fadeController.forward();
     _slideController.forward();
@@ -262,7 +256,9 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: isDestructive ? Colors.red.shade600 : textPrimary,
+                        color: isDestructive
+                            ? Colors.red.shade600
+                            : textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -294,7 +290,8 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
       if (image != null) {
         setState(() {
           _profileImage = File(image.path);
-          _networkImageUrl = null; // Clear network image when local image is selected
+          _networkImageUrl =
+              null; // Clear network image when local image is selected
         });
       }
     } catch (e) {
@@ -309,47 +306,56 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
     });
   }
 
-  Future<void> _completeSetup() async {
-    if (!_formKey.currentState!.validate()) return;
+bool _isLoading = false; 
 
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      final completeData = {
-        'preferences': {
-          'trip_moods': selectedMoods.toList(),
-          'favorite_activities': selectedActivities.toList(),
-        },
-        'profile': {
-          'display_name': _displayNameController.text.trim(),
-          'bio': _bioController.text.trim(),
-        },
-      };
-
-      if (_profileImage != null) {
-        completeData['profileImage'] = _profileImage as Map<String, Object>;
-      }
-
-      await ProfileRepository.completeUserSetup(completeData);
-      _showSnackBar('Profile setup completed successfully!');
-
-      if (mounted) {
-        context.go('/home');
-      }
-    } on AppException catch (e) {
-      _showSnackBar(e.message, isError: true);
-    } catch (e) {
-      _showSnackBar('Failed to complete setup. Please try again.', isError: true);
-    } finally {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
+Future<void> _completeSetup() async {
+  if (!_formKey.currentState!.validate()) return;
+  
+  setState(() {
+    _isLoading = true;
+  });
+  
+  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+  final user = authProvider.user;
+        
+  try {
+    // Prepare data in the required format
+    final completeData = {
+      'user_id': user?.userId,
+      'display_name': _displayNameController.text.trim(),
+      'bio': _bioController.text.trim(),
+      'favourite_activities': selectedActivities.toList(),
+      'preferred_trip_moods': selectedMoods.toList(),
+    };
+     
+    // Handle profile image
+    if (_profileImage != null) {
+      completeData['profile_image'] = _profileImage;
+    } else if (_networkImageUrl != null && _networkImageUrl!.isNotEmpty) {
+      completeData['photo_url'] = _networkImageUrl;
+    }
+     
+    await ProfileRepository.completeUserSetup(completeData);
+    _showSnackBar('Profile setup completed successfully!');
+     
+    if (mounted) {
+      context.go('/home');
+    }
+  } on AppException catch (e) {
+    _showSnackBar(e.message, isError: true);
+  } catch (e) {
+    _showSnackBar(
+      'Failed to complete setup. Please try again.',
+      isError: true,
+    );
+  } finally {
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
+}
 
   void _showSnackBar(String message, {bool isError = false}) {
     if (!mounted) return;
@@ -364,9 +370,7 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
         ),
         backgroundColor: isError ? Colors.red.shade600 : secondaryColor,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
       ),
     );
@@ -407,7 +411,10 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -470,7 +477,8 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
                 // Continue Button
                 _buildPrimaryButton(
                   text: 'Continue',
-                  onPressed: selectedMoods.isNotEmpty || selectedActivities.isNotEmpty
+                  onPressed:
+                      selectedMoods.isNotEmpty || selectedActivities.isNotEmpty
                       ? _nextStep
                       : null,
                 ),
@@ -503,11 +511,7 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
               ),
             ],
           ),
-          child: Icon(
-            icon,
-            color: Colors.white,
-            size: 24,
-          ),
+          child: Icon(icon, color: Colors.white, size: 24),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -525,10 +529,7 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
               const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: textSecondary,
-                ),
+                style: const TextStyle(fontSize: 15, color: textSecondary),
               ),
             ],
           ),
@@ -638,10 +639,7 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
                   const SizedBox(height: 2),
                   const Text(
                     'Let others know who you are',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: textSecondary,
-                    ),
+                    style: TextStyle(fontSize: 16, color: textSecondary),
                   ),
                   const SizedBox(height: 20),
                   // Profile Photo Section
@@ -657,7 +655,6 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
                                 height: 140,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(70),
@@ -666,11 +663,13 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
                                           _profileImage!,
                                           fit: BoxFit.cover,
                                         )
-                                      : _networkImageUrl != null && _networkImageUrl!.isNotEmpty
-                                          ? Image.network(
-                                              _networkImageUrl!,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (context, error, stackTrace) {
+                                      : _networkImageUrl != null &&
+                                            _networkImageUrl!.isNotEmpty
+                                      ? Image.network(
+                                          _networkImageUrl!,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
                                                 return Container(
                                                   color: backgroundColor,
                                                   child: const Icon(
@@ -680,15 +679,15 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
                                                   ),
                                                 );
                                               },
-                                            )
-                                          : Container(
-                                              color: backgroundColor,
-                                              child: const Icon(
-                                                Icons.person_rounded,
-                                                size: 70,
-                                                color: textSecondary,
-                                              ),
-                                            ),
+                                        )
+                                      : Container(
+                                          color: backgroundColor,
+                                          child: const Icon(
+                                            Icons.person_rounded,
+                                            size: 70,
+                                            color: textSecondary,
+                                          ),
+                                        ),
                                 ),
                               ),
                               Positioned(
@@ -724,7 +723,9 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          (_profileImage != null || (_networkImageUrl != null && _networkImageUrl!.isNotEmpty))
+                          (_profileImage != null ||
+                                  (_networkImageUrl != null &&
+                                      _networkImageUrl!.isNotEmpty))
                               ? 'Tap to change photo'
                               : 'Add profile photo',
                           style: const TextStyle(
@@ -819,15 +820,10 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
         TextFormField(
           controller: controller,
           maxLines: maxLines,
-          style: const TextStyle(
-            fontSize: 16,
-            color: textPrimary,
-          ),
+          style: const TextStyle(fontSize: 16, color: textPrimary),
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: const TextStyle(
-              color: textSecondary,
-            ),
+            hintStyle: const TextStyle(color: textSecondary),
             filled: true,
             fillColor: backgroundColor,
             border: OutlineInputBorder(
@@ -898,9 +894,12 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+ @override
+Widget build(BuildContext context) {
+  return LoadingOverlay(
+    isLoading: _isLoading,
+    message: 'Setting up your profile...',
+    child: Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
         backgroundColor: backgroundColor,
@@ -919,13 +918,15 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
             ],
           ),
           child: IconButton(
-            onPressed: isLoading ? null : () {
-              if (currentStep > 0) {
-                _previousStep();
-              } else {
-                context.pop();
-              }
-            },
+            onPressed: _isLoading
+                ? null
+                : () {
+                    if (currentStep > 0) {
+                      _previousStep();
+                    } else {
+                      context.pop();
+                    }
+                  },
             icon: const Icon(
               Icons.arrow_back_ios_new_rounded, // iOS back icon
               color: textPrimary,
@@ -954,6 +955,7 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

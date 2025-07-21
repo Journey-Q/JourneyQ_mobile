@@ -17,39 +17,95 @@ class ProfileRepository {
 
   // Complete user profile setup
   static Future<Map<String, dynamic>> completeUserSetup(
-    Map<String, dynamic> setupData,
-  ) async {
-    try {
-      String? profileImageUrl;
-
-      // Upload profile image first if provided using Supabase
-      if (setupData['profileImage'] != null) {
-        profileImageUrl = await uploadProfileImage(
-          setupData['profileImage'] as File,
-        );
-        setupData['profile_image_url'] = profileImageUrl;
-        setupData.remove('profileImage');
-      }
-
-      final response = await ApiService.put(
-        '/user/profile/complete',
-        data: setupData,
+  Map<String, dynamic> setupData,
+) async {
+  try {
+    String? profileImageUrl;
+    
+    // Upload profile image first if provided using Supabase
+    if (setupData['profile_image'] != null) {
+      profileImageUrl = await uploadProfileImage(
+        setupData['profile_image'] as File,
       );
-
-      // Save updated user data and mark setup as complete
-      if (response.data != null) {
-        await saveProfileResponse(response.data);
-        await setFirstTimeUser(false);
-        await authProvider.completeSetup();
-      }
-
-      return response.data;
-    } on AppException catch (e) {
-      rethrow;
-    } catch (e) {
-      rethrow;
+      setupData['profile_image_url'] = profileImageUrl;
+      setupData.remove('profile_image');
+    } else if (setupData['photo_url'] != null) {
+      // Use existing photo URL if provided
+      setupData['profile_image_url'] = setupData['photo_url'];
+      setupData.remove('photo_url');
     }
+    
+    final response = await ApiService.post(
+      '/profile/setup',
+      data: setupData,
+    );
+    
+    // Save updated user data and mark setup as complete
+    if (response.data != null) {
+      await setFirstTimeUser(false);
+      await authProvider.completeSetup();
+    }
+    
+    return response.data;
+  } on AppException catch (e) {
+    rethrow;
+  } catch (e) {
+    rethrow;
   }
+}
+
+// Get user profile by ID (for viewing other users' profiles)
+// Get user profile by ID (for viewing other users' profiles)
+static Future<Map<String, dynamic>> getProfile(String userId) async {
+  try {
+    final response = await ApiService.get('/profile/$userId');
+    
+    // Extract actual profile data from wrapped response
+    if (response.data.containsKey('data') && response.data['data'] != null) {
+      return response.data['data'] as Map<String, dynamic>;
+    } else {
+      return response.data; // Fallback if response is not wrapped
+    }
+  } on AppException catch (e) {
+    rethrow;
+  } catch (e) {
+    rethrow;
+  }
+}
+
+static Future<Map<String, dynamic>> updateCompleteProfile(
+  Map<String, dynamic> updateData,
+) async {
+  try {
+    String? profileImageUrl;
+    
+    // Upload profile image first if provided using Supabase
+    if (updateData['profile_image'] != null) {
+      profileImageUrl = await uploadProfileImage(
+        updateData['profile_image'] as File,
+      );
+      updateData['profile_image_url'] = profileImageUrl;
+      updateData.remove('profile_image');
+    }
+    
+    final response = await ApiService.put(
+      '/profile/update',
+      data: updateData,
+    );
+    
+    // Save updated user data
+    if (response.data != null) {
+      await saveProfileResponse(response.data);
+    }
+    
+    return response.data;
+  } on AppException catch (e) {
+    rethrow;
+  } catch (e) {
+    rethrow;
+  }
+}
+
 
   // Upload profile image using Supabase storage
   static Future<String> uploadProfileImage(File imageFile) async {
@@ -128,11 +184,6 @@ class ProfileRepository {
         '/user/profile',
         data: data,
       );
-
-      if (response.data != null) {
-        await saveProfileResponse(response.data);
-      }
-
       return response.data;
     } on AppException catch (e) {
       rethrow;
