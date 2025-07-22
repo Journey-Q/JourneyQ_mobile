@@ -215,23 +215,21 @@ class _TripGroupsTabState extends State<TripGroupsTab> {
     final dest = destination?.toLowerCase() ?? '';
     
     if (dest.contains('kandy')) {
-      return 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop';
+      return 'https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=800';
     } else if (dest.contains('ella')) {
-      return 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop';
+      return 'https://images.unsplash.com/photo-1605640840605-14ac1855827b?w=800';
     } else if (dest.contains('sigiriya')) {
-      return 'https://images.unsplash.com/photo-1566133568781-d0293023926a?w=400&h=400&fit=crop';
+      return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800';
     } else if (dest.contains('galle')) {
-      return 'https://images.unsplash.com/photo-1549366021-9f761d040a94?w=400&h=400&fit=crop';
+      return 'https://images.unsplash.com/photo-1539650116574-75c0c6d24e14?w=800';
     } else if (dest.contains('nuwara eliya')) {
-      return 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=400&fit=crop';
+      return 'https://images.unsplash.com/photo-1605640957230-d8b5b3c7b1e4?w=800';
     } else if (dest.contains('yala')) {
-      return 'https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?w=400&h=400&fit=crop';
+      return 'https://images.unsplash.com/photo-1539650116574-75c0c6d24e14?w=800';
     } else if (dest.contains('mirissa')) {
-      return 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=400&fit=crop';
-    } else if (dest.contains('anuradhapura')) {
-      return 'https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=400&h=400&fit=crop';
-    } else {
-      return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop';
+      return 'https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=800&h=600&fit=crop';
+    }  else {
+      return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop';
     }
   }
 
