@@ -179,7 +179,7 @@ class _PaymentPageState extends State<PaymentPage> {
                           Expanded(
                             child: _buildPlanOption(
                               title: 'Monthly Plan',
-                              price: hasMonthlyOfferApplied ? '\$7.99' : '\$9.99',
+                              price: hasMonthlyOfferApplied ? 'Rs 2 000' : 'Rs 2 500',
                               isSelected: selectedPlanIndex == 0,
                               onTap: () {
                                 setState(() => selectedPlanIndex = 0);
@@ -194,10 +194,10 @@ class _PaymentPageState extends State<PaymentPage> {
                           Expanded(
                             child: _buildPlanOption(
                               title: 'Annual Plan',
-                              price: '\$79.99',
+                              price: 'Rs 25 000',
                               isSelected: selectedPlanIndex == 1,
                               onTap: () => setState(() => selectedPlanIndex = 1),
-                              badge: 'GET 33% OFF',
+                              badge: 'GET 20% OFF',
                             ),
                           ),
                         ],
@@ -255,7 +255,7 @@ class _PaymentPageState extends State<PaymentPage> {
                                   ),
                                 )
                               : Text(
-                                  'Subscribe ${selectedPlanIndex == 0 ? (hasMonthlyOfferApplied ? '\$7.99/month' : '\$9.99/month') : '\$79.99/year'}',
+                                  'Subscribe ${selectedPlanIndex == 0 ? (hasMonthlyOfferApplied ? 'Rs 2 000/month' : 'Rs 2 500/month') : 'Rs 25 000/year'}',
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
