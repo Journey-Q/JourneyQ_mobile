@@ -17,9 +17,9 @@ class _PaymentPageState extends State<PaymentPage> {
   final List<Map<String, dynamic>> subscriptionPlans = [
     {
       'title': 'Monthly',
-      'price': '\$9.99',
-      'originalPrice': '\$9.99',
-      'discountedPrice': '\$7.99',
+      'price': 'Rs 2 500',
+      'originalPrice': 'Rs 2 500',
+      'discountedPrice': 'Rs 2 000',
       'duration': '/month',
       'features': [
         'AI trip planning tools',
@@ -32,7 +32,7 @@ class _PaymentPageState extends State<PaymentPage> {
     },
     {
       'title': 'Annual',
-      'price': '\$79.99',
+      'price': 'Rs 25 000',
       'duration': '/year',
       'features': [
         'AI trip planning tools',
@@ -40,7 +40,7 @@ class _PaymentPageState extends State<PaymentPage> {
         'Ad-free experience',
       ],
       'popular': false,
-      'savings': 'GET 33% OFF',
+      'savings': 'GET 13% OFF',
     },
   ];
 
