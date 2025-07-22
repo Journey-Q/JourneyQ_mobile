@@ -33,7 +33,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
 
   // Trip basic details
   final TextEditingController _tripTitleController = TextEditingController();
-  int _selectedDays = 1; // Counter for days instead of TextEditingController
+  int _selectedDays = 1;
   final TextEditingController _numberOfPersonsController = TextEditingController();
   final TextEditingController _totalBudgetController = TextEditingController();
 
@@ -91,7 +91,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
   );
 
   int _currentStep = 0;
-  final int _totalSteps = 4; // Basic Details -> Recommendations -> Budget -> Travel Tips
+  final int _totalSteps = 4;
 
   @override
   void initState() {
@@ -166,7 +166,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
       setState(() {
         _currentTrip = _currentTrip.copyWith(
           tripTitle: _tripTitleController.text,
-          totalDays: _selectedDays, // Use _selectedDays directly
+          totalDays: _selectedDays,
           totalBudget: double.tryParse(_numberOfPersonsController.text) ?? 0,
         );
       });
@@ -185,7 +185,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
           result['places'] is List<PlaceModel>) {
         setState(() {
           _currentTrip = _currentTrip.copyWith(places: result['places']);
-          _currentStep = result['nextStep'] ?? 1; // Go to recommendations step
+          _currentStep = result['nextStep'] ?? 1;
         });
         _pageController.animateToPage(
           _currentStep,
@@ -264,7 +264,6 @@ class _CreateTripPageState extends State<CreateTripPage> {
     });
 
     try {
-      // Update budget breakdown and transportation before publishing
       _currentTrip = _currentTrip.copyWith(
         totalBudget: double.tryParse(_totalBudgetController.text) ?? 0,
         budgetBreakdown: BudgetBreakdown(
@@ -275,7 +274,6 @@ class _CreateTripPageState extends State<CreateTripPage> {
         ),
       );
 
-      // Simulate API call
       await Future.delayed(const Duration(seconds: 2));
 
       setState(() {
@@ -293,18 +291,49 @@ class _CreateTripPageState extends State<CreateTripPage> {
     }
   }
 
+  void _adjustOtherSliders(String changedSlider) {
+    double total =
+        _accommodationPercentage +
+        _foodPercentage +
+        _transportPercentage +
+        _activitiesPercentage;
+    if (total > 100) {
+      double excess = total - 100;
+      List<String> otherSliders = [
+        'accommodation',
+        'food',
+        'transport',
+        'activities',
+      ]..remove(changedSlider);
+      double reduction = excess / otherSliders.length;
+
+      for (String slider in otherSliders) {
+        switch (slider) {
+          case 'accommodation':
+            _accommodationPercentage = (_accommodationPercentage - reduction)
+                .clamp(0, 100);
+            break;
+          case 'food':
+            _foodPercentage = (_foodPercentage - reduction).clamp(0, 100);
+            break;
+          case 'transport':
+            _transportPercentage = (_transportPercentage - reduction).clamp(0, 100);
+            break;
+          case 'activities':
+            _activitiesPercentage = (_activitiesPercentage - reduction).clamp(0, 100);
+            break;
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Check if keyboard is visible
-    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
-    final isKeyboardVisible = keyboardHeight > 0;
-
     return Scaffold(
       backgroundColor: Colors.white,
-    
-      
-      // FIXED: Set to false to prevent automatic resizing
-      resizeToAvoidBottomInset: true,
+
+      // KEY FIX: Set resizeToAvoidBottomInset to false to prevent layout changes
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text(
           _currentStep == 0
@@ -320,7 +349,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
             color: Colors.black87,
           ),
         ),
-        backgroundColor:  Colors.white,
+        backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
@@ -332,19 +361,23 @@ class _CreateTripPageState extends State<CreateTripPage> {
               )
             : null,
       ),
-      body: SafeArea(
-        child: LoadingOverlay(
-          isLoading: _isLoading,
-          message: _loadingMessage,
-          child: Column(
-            children: [
-              // Progress indicator - FIXED: Hide when keyboard is visible
-              if (!isKeyboardVisible)
+      body: GestureDetector(
+        // Dismiss keyboard when tapping outside text fields
+        onTap: () {
+          FocusScope.of(context).unfocus();
+        },
+        child: SafeArea(
+          bottom: false,
+          child: LoadingOverlay(
+            isLoading: _isLoading,
+            message: _loadingMessage,
+            child: Column(
+              children: [
                 Container(
                   color: const Color(0xFFF8FAFC),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 30,
-                    vertical: 0,
+                    vertical: 8,
                   ),
                   child: Center(
                     child: StepProgressIndicator(
@@ -353,10 +386,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
                     ),
                   ),
                 ),
-              // Page content - FIXED: Adjust bottom padding when keyboard is visible
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: keyboardHeight),
+                Expanded(
                   child: PageView(
                     controller: _pageController,
                     physics: const NeverScrollableScrollPhysics(),
@@ -368,27 +398,39 @@ class _CreateTripPageState extends State<CreateTripPage> {
                     ],
                   ),
                 ),
-              ),
-              // Bottom button - FIXED: Hide when keyboard is visible
-              if (!isKeyboardVisible) _buildBottomButton(),
-            ],
+                // Bottom button with proper keyboard handling
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    top: 8,
+                    // Add bottom padding when keyboard is visible
+                    bottom: MediaQuery.of(context).viewInsets.bottom > 0 ? 8 : 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, -2),
+                      ),
+                    ],
+                  ),
+                  child: _buildStepButtons(),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildBottomButton() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(6.0),
-      child: _buildStepButtons(),
-    );
-  }
-
   Widget _buildStepButtons() {
     switch (_currentStep) {
-      case 0: // Basic Details
+      case 0:
         return SizedBox(
           width: double.infinity,
           height: 48,
@@ -406,13 +448,13 @@ class _CreateTripPageState extends State<CreateTripPage> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF0088cc),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
           ),
         );
-
-      case 1: // Recommendations
+      case 1:
+      case 2:
         return Row(
           children: [
             Expanded(
@@ -426,63 +468,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
                       width: 1.5,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    backgroundColor: Colors.white,
-                  ),
-                  child: const Text(
-                    'Skip',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF0088cc),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: SizedBox(
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: _nextStep,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0088cc),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    elevation: 2,
-                  ),
-                  child: const Text(
-                    'Next',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-
-      case 2: // Budget
-        return Row(
-          children: [
-            Expanded(
-              child: SizedBox(
-                height: 48,
-                child: OutlinedButton(
-                  onPressed: _skipStep,
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(
-                      color: Color(0xFF0088cc),
-                      width: 1.5,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     backgroundColor: Colors.white,
                   ),
@@ -506,7 +492,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0088cc),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     elevation: 2,
                   ),
@@ -523,8 +509,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
             ),
           ],
         );
-
-      case 3: // Travel Tips
+      case 3:
         return Row(
           children: [
             Expanded(
@@ -538,7 +523,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
                       width: 1.5,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     backgroundColor: Colors.white,
                   ),
@@ -571,7 +556,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0088cc),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     elevation: 2,
                   ),
@@ -580,218 +565,178 @@ class _CreateTripPageState extends State<CreateTripPage> {
             ),
           ],
         );
-
       default:
         return const SizedBox();
     }
   }
 
   Widget _buildBasicDetailsStep() {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final safeAreaHeight = MediaQuery.of(context).padding.top + MediaQuery.of(context).padding.bottom;
-    final availableHeight = screenHeight - safeAreaHeight - 200; 
-    final carouselHeight = availableHeight * 0.76; 
-
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          // Carousel Header with Background Images and Overlaid Trip Title
-          SizedBox(
-            height: carouselHeight,
-            child: Stack(
-              children: [
-                // Image Carousel - FIXED to use AssetImage
-                PageView.builder(
-                  controller: _carouselController,
-                  onPageChanged: (index) {
-                    setState(() {
-                      _currentCarouselIndex = index;
-                    });
-                  },
-                  itemCount: _backgroundImages.length,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          // FIXED: Changed from NetworkImage to AssetImage
-                          image: AssetImage(_backgroundImages[index]),
-                          fit: BoxFit.cover,
-                          // Add error handling for asset images
-                          onError: (exception, stackTrace) {
-                            debugPrint('Error loading image: ${_backgroundImages[index]}');
-                          },
-                        ),
-                      ),
-                      child: Container(
+    return SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            Container(
+              height: MediaQuery.of(context).size.height * 0.5,
+              child: Stack(
+                children: [
+                  PageView.builder(
+                    controller: _carouselController,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentCarouselIndex = index;
+                      });
+                    },
+                    itemCount: _backgroundImages.length,
+                    itemBuilder: (context, index) {
+                      return Container(
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.black.withOpacity(0.2),
-                              Colors.black.withOpacity(0.4),
-                              Colors.black.withOpacity(0.8),
-                            ],
+                          image: DecorationImage(
+                            image: AssetImage(_backgroundImages[index]),
+                            fit: BoxFit.cover,
+                            onError: (exception, stackTrace) {
+                              debugPrint('Error loading image: ${_backgroundImages[index]}');
+                            },
                           ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-
-                // Header Content
-                Positioned(
-                  top: 200,
-                  left: 24,
-                  right: 24,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // Main title
-                      const Text(
-                        'Tell us about your trip',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: -0.5,
-                          shadows: [
-                            Shadow(
-                              offset: Offset(0, 2),
-                              blurRadius: 4,
-                              color: Colors.black45,
-                            ),
-                          ],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Subtitle
-                      const Text(
-                        'Share your travel experience and help others discover amazing destinations',
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.white,
-                          height: 1.4,
-                          fontWeight: FontWeight.w400,
-                          shadows: [
-                            Shadow(
-                              offset: Offset(0, 1),
-                              blurRadius: 3,
-                              color: Colors.black45,
-                            ),
-                          ],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Trip Title Field Overlay - Bottom of carousel with Glassy Effect
-                Positioned(
-                  bottom: 40,
-                  left: 24,
-                  right: 24,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.25),
-                          blurRadius: 30,
-                          offset: const Offset(0, 15),
-                          spreadRadius: 0,
-                        ),
-                        BoxShadow(
-                          color: Colors.white.withOpacity(0.1),
-                          blurRadius: 1,
-                          offset: const Offset(0, 1),
-                          spreadRadius: 0,
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
-                              width: 1.5,
-                            ),
                             gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
                               colors: [
-                                Colors.white.withOpacity(0.25),
-                                Colors.white.withOpacity(0.1),
+                                Colors.black.withOpacity(0.2),
+                                Colors.black.withOpacity(0.4),
+                                Colors.black.withOpacity(0.8),
                               ],
                             ),
                           ),
-                          child: TextFormField(
-                            controller: _tripTitleController,
-                            cursorColor: Colors.white,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                        ),
+                      );
+                    },
+                  ),
+                  Positioned(
+                    top: 60,
+                    left: 24,
+                    right: 24,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Tell us about your trip',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: -0.5,
+                            shadows: [
+                              Shadow(
+                                offset: Offset(0, 2),
+                                blurRadius: 4,
+                                color: Colors.black45,
+                              ),
+                            ],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Share your travel experience and help others discover amazing destinations',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                            height: 1.4,
+                            fontWeight: FontWeight.w400,
+                            shadows: [
+                              Shadow(
+                                offset: Offset(0, 1),
+                                blurRadius: 3,
+                                color: Colors.black45,
+                              ),
+                            ],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 20,
+                    left: 24,
+                    right: 24,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.25),
+                            blurRadius: 30,
+                            offset: const Offset(0, 15),
+                            spreadRadius: 0,
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                                width: 1.5,
+                              ),
                             ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter a trip title';
-                              }
-                              return null;
-                            },
-                            decoration: InputDecoration(
-                              hintText: 'Enter your amazing trip title...',
-                              hintStyle: TextStyle(
-                                fontSize: 14,
-                                color: Colors.white.withOpacity(0.7),
-                                fontWeight: FontWeight.w500,
+                            child: TextFormField(
+                              controller: _tripTitleController,
+                              cursorColor: Colors.white,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
                               ),
-                              errorStyle: const TextStyle(
-                                color: Colors.redAccent,
-                                fontWeight: FontWeight.w500,
-                                shadows: [
-                                  Shadow(
-                                    offset: Offset(0, 1),
-                                    blurRadius: 3,
-                                    color: Colors.black45,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter a trip title';
+                                }
+                                return null;
+                              },
+                              decoration: InputDecoration(
+                                hintText: 'Enter your amazing trip title...',
+                                hintStyle: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white.withOpacity(0.7),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                errorStyle: const TextStyle(
+                                  color: Colors.redAccent,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                prefixIcon: Container(
+                                  margin: const EdgeInsets.all(16),
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.3),
+                                      width: 1,
+                                    ),
                                   ),
-                                ],
-                              ),
-                              prefixIcon: Container(
-                                margin: const EdgeInsets.all(16),
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: Colors.white.withOpacity(0.3),
-                                    width: 1,
+                                  child: const Icon(
+                                    Icons.auto_awesome,
+                                    color: Colors.white,
+                                    size: 18,
                                   ),
                                 ),
-                                child: const Icon(
-                                  Icons.auto_awesome,
-                                  color: Colors.white,
-                                  size: 18,
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 18,
                                 ),
-                              ),
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              errorBorder: InputBorder.none,
-                              focusedErrorBorder: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 18,
                               ),
                             ),
                           ),
@@ -799,155 +744,158 @@ class _CreateTripPageState extends State<CreateTripPage> {
                       ),
                     ),
                   ),
-                ),
-
-              ],
-            ),
-          ),
-
-          // Duration Counter Below Carousel
-          Expanded(
-            child: Container(
-                padding: const EdgeInsets.all(8), // Reduced padding
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildDurationCounter(),
-                  ],
-                ),
+                ],
               ),
-          ),
-        ],
+            ),
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: _buildDurationCounter(),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildDurationCounter() {
     return Container(
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Label    
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6), // Reduced padding
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0088cc).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ))
-              ],
-            ),
-        
-
-          // Counter Widget
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2), // Reduced padding
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Decrease Button
-                  GestureDetector(
-                    onTap: () {
-                      if (_selectedDays > 1) {
-                        setState(() {
-                          _selectedDays--;
-                        });
-                      }
-                    },
-                    child: Container(
-                      width: 36, // Reduced size
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: _selectedDays > 1
-                            ? const Color(0xFF0088cc)
-                            : Colors.grey.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: _selectedDays > 1
-                            ? [
-                                BoxShadow(
-                                  color: const Color(0xFF0088cc).withOpacity(0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Icon(
-                        Icons.remove,
-                        color: _selectedDays > 1 ? Colors.white : Colors.grey,
-                        size: 20, // Reduced icon size
-                      ),
-                    ),
-                  ),
-
-                  // Days Display
-                  Column(
-                    children: [
-                      Text(
-                        '$_selectedDays',
-                        style: const TextStyle(
-                          fontSize: 28, // Slightly reduced font size
-                          fontWeight: FontWeight.w800,
-                          color: Colors.black87,
-                          height: 1,
-                        ),
-                      ),
-                      Text(
-                        _selectedDays == 1 ? 'Day' : 'Days',
-                        style: TextStyle(
-                          fontSize: 12, // Reduced font size
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey.withOpacity(0.8),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  // Increase Button
-                  GestureDetector(
-                    onTap: () {
-                      if (_selectedDays < 30) {
-                        // Max 30 days
-                        setState(() {
-                          _selectedDays++;
-                        });
-                      }
-                    },
-                    child: Container(
-                      width: 36, // Reduced size
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: _selectedDays < 30
-                            ? const Color(0xFF0088cc)
-                            : Colors.grey.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: _selectedDays < 30
-                            ? [
-                                BoxShadow(
-                                  color: const Color(0xFF0088cc).withOpacity(0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Icon(
-                        Icons.add,
-                        color: _selectedDays < 30 ? Colors.white : Colors.grey,
-                        size: 20, // Reduced icon size
-                      ),
-                    ),
-                  ),
-                ],
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0088cc).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.calendar_today,
+                  color: Color(0xFF0088cc),
+                  size: 20,
+                ),
               ),
+              const SizedBox(width: 12),
+              const Text(
+                'Trip Duration',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    if (_selectedDays > 1) {
+                      setState(() {
+                        _selectedDays--;
+                      });
+                    }
+                  },
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: _selectedDays > 1
+                          ? const Color(0xFF0088cc)
+                          : Colors.grey.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: _selectedDays > 1
+                          ? [
+                              BoxShadow(
+                                color: const Color(0xFF0088cc).withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Icon(
+                      Icons.remove,
+                      color: _selectedDays > 1 ? Colors.white : Colors.grey,
+                      size: 20,
+                    ),
+                  ),
+                ),
+                Column(
+                  children: [
+                    Text(
+                      '$_selectedDays',
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0088cc),
+                        height: 1,
+                      ),
+                    ),
+                    Text(
+                      _selectedDays == 1 ? 'Day' : 'Days',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+                GestureDetector(
+                  onTap: () {
+                    if (_selectedDays < 30) {
+                      setState(() {
+                        _selectedDays++;
+                      });
+                    }
+                  },
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: _selectedDays < 30
+                          ? const Color(0xFF0088cc)
+                          : Colors.grey.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: _selectedDays < 30
+                          ? [
+                              BoxShadow(
+                                color: const Color(0xFF0088cc).withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Icon(
+                      Icons.add,
+                      color: _selectedDays < 30 ? Colors.white : Colors.grey,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -957,11 +905,11 @@ class _CreateTripPageState extends State<CreateTripPage> {
 
   Widget _buildRecommendationsStep() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 0),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header - Updated to match gradient style
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -1009,10 +957,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
               ],
             ),
           ),
-
           const SizedBox(height: 24),
-
-          // Hotels Section
           _buildRecommendationSection(
             title: 'Hotels',
             items: _hotelsList,
@@ -1022,10 +967,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
             onRemove: _removeHotel,
             icon: Icons.hotel,
           ),
-
           const SizedBox(height: 24),
-
-          // Restaurants Section
           _buildRecommendationSection(
             title: 'Restaurants',
             items: _restaurantsList,
@@ -1035,13 +977,9 @@ class _CreateTripPageState extends State<CreateTripPage> {
             onRemove: _removeRestaurant,
             icon: Icons.restaurant,
           ),
-
           const SizedBox(height: 24),
-
-          // Transportation Section
           _buildTransportationSection(),
-
-          const SizedBox(height: 100), // Extra space for bottom button
+          const SizedBox(height: 80),
         ],
       ),
     );
@@ -1087,8 +1025,6 @@ class _CreateTripPageState extends State<CreateTripPage> {
             ],
           ),
           const SizedBox(height: 16),
-
-          // Input field with add button
           Row(
             children: [
               Expanded(
@@ -1121,23 +1057,22 @@ class _CreateTripPageState extends State<CreateTripPage> {
               ),
               const SizedBox(width: 12),
               SizedBox(
-  height: 28,
-  width: 28, // make it square
-  child: ElevatedButton(
-    onPressed: onAdd,
-    style: ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFF0088cc),
-      shape: const CircleBorder(), // make it round
-      padding: EdgeInsets.zero, // remove extra padding so icon is centered nicely
-    ),
-    child: const Icon(Icons.add, color: Colors.white),
-  ),
-),
-
+                height: 48,
+                width: 48,
+                child: ElevatedButton(
+                  onPressed: onAdd,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0088cc),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: EdgeInsets.zero,
+                  ),
+                  child: const Icon(Icons.add, color: Colors.white, size: 24),
+                ),
+              ),
             ],
           ),
-
-          // Added items list
           if (items.isNotEmpty) ...[
             const SizedBox(height: 16),
             ...items.asMap().entries.map((entry) {
@@ -1313,11 +1248,11 @@ class _CreateTripPageState extends State<CreateTripPage> {
 
   Widget _buildBudgetStep() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 0),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header - Updated to match gradient style
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -1365,10 +1300,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
               ],
             ),
           ),
-
           const SizedBox(height: 24),
-
-          // Total Budget
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -1405,10 +1337,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
               ],
             ),
           ),
-
           const SizedBox(height: 24),
-
-          // Budget Allocation
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -1439,8 +1368,6 @@ class _CreateTripPageState extends State<CreateTripPage> {
                   style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 20),
-
-                // Accommodation
                 _buildSlider(
                   label: 'Accommodation',
                   value: _accommodationPercentage,
@@ -1451,8 +1378,6 @@ class _CreateTripPageState extends State<CreateTripPage> {
                     });
                   },
                 ),
-
-                // Food
                 _buildSlider(
                   label: 'Food',
                   value: _foodPercentage,
@@ -1463,8 +1388,6 @@ class _CreateTripPageState extends State<CreateTripPage> {
                     });
                   },
                 ),
-
-                // Transport
                 _buildSlider(
                   label: 'Transport',
                   value: _transportPercentage,
@@ -1475,8 +1398,6 @@ class _CreateTripPageState extends State<CreateTripPage> {
                     });
                   },
                 ),
-
-                // Activities
                 _buildSlider(
                   label: 'Activities',
                   value: _activitiesPercentage,
@@ -1490,8 +1411,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
               ],
             ),
           ),
-
-          const SizedBox(height: 100), // Extra space for bottom button
+          const SizedBox(height: 80),
         ],
       ),
     );
@@ -1547,55 +1467,13 @@ class _CreateTripPageState extends State<CreateTripPage> {
     );
   }
 
-  void _adjustOtherSliders(String changedSlider) {
-    double total =
-        _accommodationPercentage +
-        _foodPercentage +
-        _transportPercentage +
-        _activitiesPercentage;
-    if (total > 100) {
-      double excess = total - 100;
-      List<String> otherSliders = [
-        'accommodation',
-        'food',
-        'transport',
-        'activities',
-      ]..remove(changedSlider);
-      double reduction = excess / otherSliders.length;
-
-      for (String slider in otherSliders) {
-        switch (slider) {
-          case 'accommodation':
-            _accommodationPercentage = (_accommodationPercentage - reduction)
-                .clamp(0, 100);
-            break;
-          case 'food':
-            _foodPercentage = (_foodPercentage - reduction).clamp(0, 100);
-            break;
-          case 'transport':
-            _transportPercentage = (_transportPercentage - reduction).clamp(
-              0,
-              100,
-            );
-            break;
-          case 'activities':
-            _activitiesPercentage = (_activitiesPercentage - reduction).clamp(
-              0,
-              100,
-            );
-            break;
-        }
-      }
-    }
-  }
-
   Widget _buildTravelTipsStep() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 0),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header - Updated to match gradient style
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -1643,9 +1521,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
               ],
             ),
           ),
-
           const SizedBox(height: 32),
-
           Container(
             child: EnhancedTipsSection(
               tips: _currentTrip.tips,
@@ -1656,8 +1532,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
               },
             ),
           ),
-
-          const SizedBox(height: 100), // Extra space for bottom button
+          const SizedBox(height: 80),
         ],
       ),
     );
