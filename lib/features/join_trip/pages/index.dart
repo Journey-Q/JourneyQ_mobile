@@ -98,7 +98,7 @@ class _JoinTripPageState extends State<JoinTripPage>
   PreferredSizeWidget _buildEnhancedAppBar() {
     return AppBar(
       title: const Text(
-        'My Trips',
+        'Join Trips',
         style: TextStyle(
           color: Colors.black,
           fontWeight: FontWeight.bold,
