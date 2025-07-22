@@ -193,7 +193,7 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
-                  Icons.flight_takeoff,
+                  Icons.location_on_rounded,
                   color: Colors.white,
                   size: 18,
                 ),

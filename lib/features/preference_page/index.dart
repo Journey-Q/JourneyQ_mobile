@@ -54,7 +54,7 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
     'Surfing',
     'Train rides',
     'Sight seeing',
-    'Beach Whalk',
+    'Beach Walk',
     'Shopping',
   ];
 

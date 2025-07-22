@@ -1052,25 +1052,7 @@ class MapRouteWidgetState extends State<MapRouteWidget> {
                 ),
               ),
               
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  _buildSimpleBadge(
-                    'Real Coordinates',
-                    color: _primaryColor,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildSimpleBadge(
-                    'Blue Route Path',
-                    color: const Color(0xFF2196F3),
-                  ),
-                  const SizedBox(width: 8),
-                  _buildSimpleBadge(
-                    'Day-wise Markers',
-                    color: _accentColor,
-                  ),
-                ],
-              ),
+              
             ],
           ),
         ),
