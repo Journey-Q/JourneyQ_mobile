@@ -66,18 +66,19 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
     super.dispose();
   }
 
-  String _getLocationBasedImage() {
-    final destination = _tripDetails['destination']?.toLowerCase() ?? '';
+String _getLocationBasedImage() {
+    // Use groupName instead of destination for determining image
+    final groupNameLower = widget.groupName.toLowerCase();
 
-    if (destination.contains('kandy')) {
-      return 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=400&fit=crop';
-    } else if (destination.contains('ella')) {
-      return 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=400&fit=crop';
-    } else if (destination.contains('sigiriya')) {
-      return 'https://images.unsplash.com/photo-1566133568781-d0293023926a?w=800&h=400&fit=crop';
-    } else if (destination.contains('galle')) {
+    if (groupNameLower.contains('kandy')) {
+      return 'https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=800';
+    } else if (groupNameLower.contains('ella')) {
+      return 'https://images.unsplash.com/photo-1605640840605-14ac1855827b?w=800';
+    } else if (groupNameLower.contains('sigiriya')) {
+      return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800';
+    } else if (groupNameLower.contains('galle')) {
       return 'https://images.unsplash.com/photo-1549366021-9f761d040a94?w=800&h=400&fit=crop';
-    } else if (destination.contains('nuwara eliya')) {
+    } else if (groupNameLower.contains('nuwara eliya')) {
       return 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=400&fit=crop';
     } else {
       return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop';
