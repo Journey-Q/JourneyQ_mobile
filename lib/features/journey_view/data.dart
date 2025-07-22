@@ -1,4 +1,4 @@
-// journey_data.dart - Complete Sri Lankan journey details data with CORRECTED relevant images
+// journey_data.dart - Complete Sri Lankan journey details data with REAL coordinates
 final List<Map<String, dynamic>> journeyDetailsData = [
   {
     'id': '1',
@@ -118,12 +118,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'rating': 4.6,
         }
       ],
-      'transportation': [
-        {
-          'name': 'Private Car with Driver',
-          'rating': 4.7,
-        }
-      ]
     },
     'tips': [
       'Start early morning climbs to avoid heat and crowds',
@@ -134,7 +128,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
     ]
   },
 
-  // Trip 2: Cultural Heart of Sri Lanka
   {
     'id': '2',
     'tripTitle': 'Cultural Heart of Sri Lanka',
@@ -154,8 +147,8 @@ final List<Map<String, dynamic>> journeyDetailsData = [
         'name': 'Temple of the Sacred Tooth Relic',
         'trip_mood': 'Cultural',
         'location': {
-          'latitude': 7.2906,
-          'longitude': 80.6337,
+          'latitude': 7.2935,
+          'longitude': 80.6414,
           'address': 'Sri Dalada Veediya, Kandy, Sri Lanka'
         },
         'images': [
@@ -253,12 +246,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'rating': 4.6,
         }
       ],
-      'transportation': [
-        {
-          'name': 'Three-wheeler (Tuk-tuk)',
-          'rating': 4.2,
-        }
-      ]
     },
     'tips': [
       'Attend the evening puja at Temple of Tooth (6:30 PM)',
@@ -269,7 +256,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
     ]
   },
 
-  // Trip 3: Colonial Charm & Coastal Beauty
   {
     'id': '3',
     'tripTitle': 'Colonial Charm & Coastal Beauty',
@@ -289,8 +275,8 @@ final List<Map<String, dynamic>> journeyDetailsData = [
         'name': 'Galle Dutch Fort',
         'trip_mood': 'Cultural',
         'location': {
-          'latitude': 6.0535,
-          'longitude': 80.2210,
+          'latitude': 6.0276,
+          'longitude': 80.2168,
           'address': 'Galle Fort, Galle, Sri Lanka'
         },
         'images': [
@@ -317,7 +303,7 @@ final List<Map<String, dynamic>> journeyDetailsData = [
         'trip_mood': 'Beach',
         'location': {
           'latitude': 6.0108,
-          'longitude': 80.2167,
+          'longitude': 80.2494,
           'address': 'Unawatuna, Galle District, Sri Lanka'
         },
         'images': [
@@ -343,8 +329,8 @@ final List<Map<String, dynamic>> journeyDetailsData = [
         'name': 'Mirissa Whale Watching',
         'trip_mood': 'Adventure',
         'location': {
-          'latitude': 5.9467,
-          'longitude': 80.4610,
+          'latitude': 5.9487,
+          'longitude': 80.4617,
           'address': 'Mirissa Harbor, Matara District, Sri Lanka'
         },
         'images': [
@@ -388,12 +374,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'rating': 4.5,
         }
       ],
-      'transportation': [
-        {
-          'name': 'Coastal Train',
-          'rating': 4.8,
-        }
-      ]
     },
     'tips': [
       'Book whale watching tours in advance (season: Nov-Apr)',
@@ -404,7 +384,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
     ]
   },
 
-  // Trip 4: Hill Country Tea Trail Adventure
   {
     'id': '4',
     'tripTitle': 'Hill Country Tea Trail Adventure',
@@ -452,7 +431,7 @@ final List<Map<String, dynamic>> journeyDetailsData = [
         'trip_mood': 'Adventure',
         'location': {
           'latitude': 6.8667,
-          'longitude': 81.0500,
+          'longitude': 81.0463,
           'address': 'Ella, Badulla District, Sri Lanka'
         },
         'images': [
@@ -478,8 +457,8 @@ final List<Map<String, dynamic>> journeyDetailsData = [
         'name': 'Tea Plantation Experience',
         'trip_mood': 'Cultural',
         'location': {
-          'latitude': 6.8833,
-          'longitude': 81.0667,
+          'latitude': 6.8925,
+          'longitude': 80.5956,
           'address': 'Lipton\'s Seat, Haputale, Sri Lanka'
         },
         'images': [
@@ -523,12 +502,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'rating': 4.7,
         }
       ],
-      'transportation': [
-        {
-          'name': 'Hill Country Train',
-          'rating': 4.9,
-        }
-      ]
     },
     'tips': [
       'Take the train from Kandy to Ella - one of world\'s most scenic rides',
@@ -539,7 +512,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
     ]
   },
 
-  // Trip 5: Wildlife Safari Adventure
   {
     'id': '5',
     'tripTitle': 'Wildlife Safari Adventure',
@@ -559,8 +531,8 @@ final List<Map<String, dynamic>> journeyDetailsData = [
         'name': 'Yala National Park Block 1',
         'trip_mood': 'Adventure',
         'location': {
-          'latitude': 6.3779,
-          'longitude': 81.5205,
+          'latitude': 6.3725,
+          'longitude': 81.5067,
           'address': 'Yala National Park, Hambantota District, Sri Lanka'
         },
         'images': [
@@ -586,8 +558,8 @@ final List<Map<String, dynamic>> journeyDetailsData = [
         'name': 'Bundala National Park',
         'trip_mood': 'Nature',
         'location': {
-          'latitude': 6.1957,
-          'longitude': 81.2319,
+          'latitude': 6.1967,
+          'longitude': 81.2500,
           'address': 'Bundala National Park, Hambantota District, Sri Lanka'
         },
         'images': [
@@ -658,12 +630,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'rating': 4.2,
         }
       ],
-      'transportation': [
-        {
-          'name': 'Safari Jeep with Guide',
-          'rating': 4.8,
-        }
-      ]
     },
     'tips': [
       'Book safari tours in advance during peak season (Dec-Apr)',
@@ -674,7 +640,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
     ]
   },
 
-  // Trip 6: Little England in the Hills
   {
     'id': '6',
     'tripTitle': 'Little England in the Hills',
@@ -694,8 +659,8 @@ final List<Map<String, dynamic>> journeyDetailsData = [
         'name': 'Horton Plains & World\'s End',
         'trip_mood': 'Adventure',
         'location': {
-          'latitude': 6.8067,
-          'longitude': 80.7933,
+          'latitude': 6.8089,
+          'longitude': 80.8052,
           'address': 'Horton Plains National Park, Nuwara Eliya District, Sri Lanka'
         },
         'images': [
@@ -793,12 +758,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'rating': 4.3,
         }
       ],
-      'transportation': [
-        {
-          'name': 'Highland Train',
-          'rating': 4.7,
-        }
-      ]
     },
     'tips': [
       'Start Horton Plains hike very early (6 AM) before clouds cover views',
@@ -808,328 +767,4 @@ final List<Map<String, dynamic>> journeyDetailsData = [
       'Visit during April for rhododendron blooms in the hills'
     ]
   },
-
-  // Trip 7: Mirissa Beach Paradise
-  {
-    'id': '7',
-    'tripTitle': 'Mirissa Beach Paradise',
-    'authorName': 'Nadeesha Silva',
-    'authorImage': 'https://i.pravatar.cc/150?img=28',
-    'totalDays': 3,
-    'totalBudget': 45000,
-    'currency': 'LKR',
-    'budgetBreakdown': {
-      'accommodation': 40,
-      'food': 30,
-      'transport': 15,
-      'activities': 15,
-    },
-    'places': [
-      {
-        'name': 'Mirissa Beach',
-        'trip_mood': 'Beach',
-        'location': {
-          'latitude': 5.9467,
-          'longitude': 80.4610,
-          'address': 'Mirissa, Matara District, Sri Lanka'
-        },
-        'images': [
-          'assets/images/mirissa_beach.jpg',
-        ],
-        'activities': [
-          'Whale watching boat tours',
-          'Swimming in crystal clear waters',
-          'Surfing lessons for beginners',
-          'Beach volleyball and water sports',
-          'Sunset watching from coconut tree hill'
-        ],
-        'experiences': [
-          {
-            'description': 'Pristine golden beaches with perfect swimming conditions',
-          },
-          {
-            'description': 'World-class whale watching with blue whales and dolphins',
-          }
-        ]
-      }
-    ],
-    'overallRecommendations': {
-      'hotels': [
-        {
-          'name': 'Mirissa Beach Resort',
-          'rating': 4.2,
-        },
-        {
-          'name': 'Paradise Beach Club',
-          'rating': 4.4,
-        }
-      ],
-      'restaurants': [
-        {
-          'name': 'Dewmini Roti Shop',
-          'rating': 4.6,
-        },
-        {
-          'name': 'Zephyr Restaurant',
-          'rating': 4.3,
-        }
-      ],
-      'transportation': [
-        {
-          'name': 'Local Bus',
-          'rating': 3.8,
-        }
-      ]
-    },
-    'tips': [
-      'Best whale watching season is November to April',
-      'Book whale watching tours early morning for better sightings',
-      'Try fresh seafood at beachside restaurants',
-      'Climb coconut tree hill for best sunset views',
-      'Bring reef-safe sunscreen to protect marine life'
-    ]
-  },
-
-  // Trip 8: Sacred Adams Peak Pilgrimage
-  {
-    'id': '8',
-    'tripTitle': 'Sacred Adams Peak Pilgrimage',
-    'authorName': 'Priya Weerasinghe',
-    'authorImage': 'https://i.pravatar.cc/150?img=35',
-    'totalDays': 2,
-    'totalBudget': 25000,
-    'currency': 'LKR',
-    'budgetBreakdown': {
-      'accommodation': 30,
-      'food': 35,
-      'transport': 25,
-      'activities': 10,
-    },
-    'places': [
-      {
-        'name': 'Adams Peak (Sri Pada)',
-        'trip_mood': 'Adventure',
-        'location': {
-          'latitude': 6.8094,
-          'longitude': 80.4989,
-          'address': 'Sri Pada, Ratnapura District, Sri Lanka'
-        },
-        'images': [
-          'assets/images/adams_peak.jpg',
-        ],
-        'activities': [
-          'Night climb to summit for sunrise',
-          'Visiting the sacred footprint',
-          'Meeting pilgrims from different faiths',
-          'Photography of sunrise from 2,243m peak',
-          'Exploring tea plantations around base'
-        ],
-        'experiences': [
-          {
-            'description': 'Spiritual journey up 5,200 steps to the sacred summit',
-          },
-          {
-            'description': 'Breathtaking sunrise views across the entire island',
-          }
-        ]
-      }
-    ],
-    'overallRecommendations': {
-      'hotels': [
-        {
-          'name': 'Slightly Chilled Guest House',
-          'rating': 4.1,
-        },
-        {
-          'name': 'White Monkey Dias Rest',
-          'rating': 3.9,
-        }
-      ],
-      'restaurants': [
-        {
-          'name': 'Local Tea Shops on Trail',
-          'rating': 4.0,
-        },
-        {
-          'name': 'Base Camp Restaurant',
-          'rating': 3.8,
-        }
-      ],
-      'transportation': [
-        {
-          'name': 'Local Bus to Dalhousie',
-          'rating': 3.5,
-        }
-      ]
-    },
-    'tips': [
-      'Best climbing season: December to May',
-      'Start climb around 2 AM to reach summit for sunrise',
-      'Wear comfortable hiking shoes with good grip',
-      'Bring warm clothes for summit - gets very cold',
-      'Respect the sacred nature - this is a pilgrimage site'
-    ]
-  },
-
-  // Trip 9: Ancient Anuradhapura Heritage
-  {
-    'id': '9',
-    'tripTitle': 'Ancient Anuradhapura Heritage',
-    'authorName': 'Ruwan Perera',
-    'authorImage': 'https://i.pravatar.cc/150?img=41',
-    'totalDays': 3,
-    'totalBudget': 40000,
-    'currency': 'LKR',
-    'budgetBreakdown': {
-      'accommodation': 35,
-      'food': 25,
-      'transport': 25,
-      'activities': 15,
-    },
-    'places': [
-      {
-        'name': 'Anuradhapura Ancient City',
-        'trip_mood': 'Cultural',
-        'location': {
-          'latitude': 8.3114,
-          'longitude': 80.4037,
-          'address': 'Anuradhapura, North Central Province, Sri Lanka'
-        },
-        'images': [
-          'assets/images/anuradhapura.jpeg',
-        ],
-        'activities': [
-          'Visiting Sri Maha Bodhi sacred tree',
-          'Exploring Ruwanwelisaya stupa',
-          'Bicycle tour of ancient ruins',
-          'Jetavanaramaya monastery visit',
-          'Photography at moonstone entrances'
-        ],
-        'experiences': [
-          {
-            'description': 'Standing before the 2,300-year-old sacred Bodhi tree',
-          },
-          {
-            'description': 'Exploring Sri Lanka\'s first capital and UNESCO World Heritage site',
-          }
-        ]
-      }
-    ],
-    'overallRecommendations': {
-      'hotels': [
-        {
-          'name': 'Heritage Hotel Anuradhapura',
-          'rating': 4.2,
-        },
-        {
-          'name': 'Lakshitha Guest House',
-          'rating': 4.0,
-        }
-      ],
-      'restaurants': [
-        {
-          'name': 'Casserole Restaurant',
-          'rating': 4.3,
-        },
-        {
-          'name': 'Milano Tourist Restaurant',
-          'rating': 4.1,
-        }
-      ],
-      'transportation': [
-        {
-          'name': 'Bicycle Rental',
-          'rating': 4.5,
-        }
-      ]
-    },
-    'tips': [
-      'Rent a bicycle to explore the vast archaeological site',
-      'Start early morning to avoid heat',
-      'Dress modestly for religious sites',
-      'Hire a guide to understand the rich history',
-      'Bring plenty of water and sun protection'
-    ]
-  },
-
-  // Trip 10: Arugam Bay Surf Paradise
-  {
-    'id': '10',
-    'tripTitle': 'Arugam Bay Surf Paradise',
-    'authorName': 'Suranga Bandara',
-    'authorImage': 'https://i.pravatar.cc/150?img=36',
-    'totalDays': 4,
-    'totalBudget': 55000,
-    'currency': 'LKR',
-    'budgetBreakdown': {
-      'accommodation': 35,
-      'food': 30,
-      'transport': 20,
-      'activities': 15,
-    },
-    'places': [
-      {
-        'name': 'Arugam Bay',
-        'trip_mood': 'Adventure',
-        'location': {
-          'latitude': 6.8404,
-          'longitude': 81.8365,
-          'address': 'Arugam Bay, Ampara District, Sri Lanka'
-        },
-        'images': [
-          'assets/images/arugam_bay.jpg',
-        ],
-        'activities': [
-          'World-class surfing lessons',
-          'Beach relaxation and sunbathing',
-          'Visiting Muhudu Maha Viharaya temple',
-          'Safari to nearby Kumana National Park',
-          'Exploring local fishing village culture'
-        ],
-        'experiences': [
-          {
-            'description': 'Riding perfect waves at one of Asia\'s top surf destinations',
-          },
-          {
-            'description': 'Laid-back beach town atmosphere with international surf community',
-          }
-        ]
-      }
-    ],
-    'overallRecommendations': {
-      'hotels': [
-        {
-          'name': 'Stardust Beach Hotel',
-          'rating': 4.3,
-        },
-        {
-          'name': 'Galaxy Guest House',
-          'rating': 4.1,
-        }
-      ],
-      'restaurants': [
-        {
-          'name': 'Mambo\'s Restaurant',
-          'rating': 4.5,
-        },
-        {
-          'name': 'Surf \'N\' Turf',
-          'rating': 4.2,
-        }
-      ],
-      'transportation': [
-        {
-          'name': 'Motorcycle Rental',
-          'rating': 4.0,
-        }
-      ]
-    },
-    'tips': [
-      'Best surf season: April to October',
-      'Book surfboard rental in advance during peak season',
-      'Try fresh seafood at beachside restaurants',
-      'Respect local customs in this traditional area',
-      'Combine with wildlife safari at nearby Kumana National Park'
-    ]
-  }
 ];

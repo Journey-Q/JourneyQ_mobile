@@ -38,66 +38,62 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Future<void> _handleSignUp() async {
-  if (!_formKey.currentState!.validate()) {
-    return;
-  }
-  
-   _dismissKeyboard();
-  
-  // Small delay to let keyboard animation complete
-  await Future.delayed(const Duration(milliseconds: 100));
-  
-  setState(() => _isLoading = true);
-  
-  try {
-    final result = await AuthRepository.register(
-      _usernameController.text.trim(),
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
-    
-    // Verify registration was successful and contains required data
-    if (result == null || result['accessToken'] == null) {
-      throw Exception('Registration failed: Invalid response from server');
+    if (!_formKey.currentState!.validate()) {
+      return;
     }
-    
-    // Get user data for personalized welcome message
-    final userData = result['user'];
-    final userName = userData != null ? userData['name'] : null;
-    
-    SnackBarService.showSuccess(
-      context,
-      userName != null
-          ? "Account created successfully! Welcome, $userName!"
-          : "Account created successfully! Welcome to JourneyQ!",
-    );
-    
-    if (mounted) {
-      
-      // Add small delay before navigation to prevent conflicts
-      await Future.delayed(const Duration(milliseconds: 200));
-      
-      // Navigate to home
+
+    _dismissKeyboard();
+
+    // Small delay to let keyboard animation complete
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    setState(() => _isLoading = true);
+
+    try {
+      final result = await AuthRepository.register(
+        _usernameController.text.trim(),
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+
+      // Verify registration was successful and contains required data
+      if (result == null || result['accessToken'] == null) {
+        throw Exception('Registration failed: Invalid response from server');
+      }
+
+      // Get user data for personalized welcome message
+      final userData = result['user'];
+      final userName = userData != null ? userData['name'] : null;
+
+      NotificationService.showNotification(
+        title: "Welcome ",
+        body: "Signup successfully",
+      );
+
       if (mounted) {
-        context.go('/home');
+        // Add small delay before navigation to prevent conflicts
+        await Future.delayed(const Duration(milliseconds: 200));
+
+        // Navigate to home
+        if (mounted) {
+          context.go('/home');
+        }
+      }
+    } catch (e) {
+      // Handle registration errors
+      if (mounted) {
+        ErrorHandler.handleError(
+          context,
+          e is Exception ? e : Exception(e.toString()),
+        );
+        setState(() => _isLoading = false);
+      }
+    } finally {
+      if (mounted && _isLoading) {
+        setState(() => _isLoading = false);
       }
     }
-    
-  } catch (e) {
-    // Handle registration errors
-    if (mounted) {
-      ErrorHandler.handleError(
-        context,
-        e is Exception ? e : Exception(e.toString()),
-      );
-      setState(() => _isLoading = false);
-    }
-  } finally {
-    if (mounted && _isLoading) {
-      setState(() => _isLoading = false);
-    }
   }
-}
 
   Future<void> _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
@@ -166,11 +162,9 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   void _dismissKeyboard() {
-  // Immediately hide keyboard without animation
-  FocusScope.of(context).unfocus();
-}
-
-  
+    // Immediately hide keyboard without animation
+    FocusScope.of(context).unfocus();
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -331,6 +331,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+
       // KEY FIX: Set resizeToAvoidBottomInset to false to prevent layout changes
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
