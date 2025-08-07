@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:journeyq/features/market_place/pages/searchbar.dart';
+import 'package:journeyq/features/market_place/pages/data.dart'; // Import centralized data
 
 class ViewAllTravelAgenciesPage extends StatefulWidget {
   const ViewAllTravelAgenciesPage({Key? key}) : super(key: key);
@@ -16,301 +17,12 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
   // Standard distance for price calculation
   final int standardDistance = 100; // 100km for example
 
-  // Comprehensive Travel Agencies Data with IDs (matching travel agency details database)
-  final List<Map<String, dynamic>> allTravelAgencies = [
-    {
-      'id': 'agency_001',
-      'name': 'Ceylon Roots',
-      'rating': 4.9,
-      'experience': '15+ Years',
-      'location': 'Colombo 03, Sri Lanka',
-      'contact': '+94 11 234 5678',
-      'email': 'info@ceylonroots.lk',
-      'image': 'assets/images/ceylon_roots.jpg',
-      'backgroundColor': const Color(0xFF8B4513),
-      'description': 'Welcome to Ceylon Roots! We have been serving customers with 15+ years of experience in the travel industry. Our professional team is dedicated to providing you with authentic Sri Lankan travel experiences.',
-      'vehicles': [
-        {
-          'type': 'Car',
-          'seats': 4,
-          'acPricePerKm': 55,
-          'nonAcPricePerKm': 45,
-          'features': ['Premium AC', 'Leather seats', 'GPS navigation', 'Bluetooth system', 'Phone charging', 'Complimentary water'],
-        },
-        {
-          'type': 'Van',
-          'seats': 8,
-          'acPricePerKm': 75,
-          'nonAcPricePerKm': 60,
-          'features': ['Climate control AC', 'Spacious 8-seater', 'Large luggage space', 'Panoramic windows', 'Individual lights', 'USB charging ports'],
-        },
-        {
-          'type': 'Mini Bus',
-          'seats': 15,
-          'acPricePerKm': 95,
-          'nonAcPricePerKm': 80,
-          'features': ['Central AC', 'Comfortable seating', 'Entertainment system', 'WiFi connectivity', 'Luggage compartment', 'First aid kit'],
-        },
-      ],
-      'drivers': [
-        {
-          'name': 'Kumara Perera',
-          'experience': '12 years',
-          'languages': ['English', 'Sinhala', 'Tamil', 'German'],
-          'contact': '+94 77 123 4567',
-          'specialization': 'Cultural & Heritage Tours',
-        },
-        {
-          'name': 'Nimal Silva',
-          'experience': '10 years',
-          'languages': ['English', 'Sinhala', 'French'],
-          'contact': '+94 76 234 5678',
-          'specialization': 'Adventure & Wildlife Tours',
-        },
-        {
-          'name': 'Rohan Fernando',
-          'experience': '8 years',
-          'languages': ['English', 'Sinhala', 'Japanese'],
-          'contact': '+94 75 345 6789',
-          'specialization': 'Beach & Coastal Tours',
-        },
-      ],
-      'services': ['Cultural Tours', 'Heritage Sites', 'Temple Visits', 'Historical Tours'],
-      'isAvailable': true,
-      'category': 'Cultural',
-    },
-    {
-      'id': 'agency_002',
-      'name': 'Jetwing Travels',
-      'rating': 4.8,
-      'experience': '20+ Years',
-      'location': 'Colombo 01, Sri Lanka',
-      'contact': '+94 11 345 6789',
-      'email': 'reservations@jetwing.lk',
-      'image': 'assets/images/jetwing.jpg',
-      'backgroundColor': const Color(0xFF228B22),
-      'description': 'Jetwing Travels has been a pioneer in Sri Lankan tourism for over 20 years. We offer comprehensive travel solutions with a focus on sustainable tourism and authentic experiences.',
-      'vehicles': [
-        {
-          'type': 'Luxury Car',
-          'seats': 4,
-          'acPricePerKm': 65,
-          'nonAcPricePerKm': 50,
-          'features': ['Premium leather', 'Advanced AC', 'GPS & maps', 'Premium audio', 'Wireless charging', 'Refreshments'],
-        },
-        {
-          'type': 'Premium Van',
-          'seats': 8,
-          'acPricePerKm': 85,
-          'nonAcPricePerKm': 70,
-          'features': ['Luxury interior', 'Captain seats', 'Individual AC', 'Entertainment screens', 'Refrigerator', 'WiFi hotspot'],
-        },
-        {
-          'type': 'Coach Bus',
-          'seats': 25,
-          'acPricePerKm': 110,
-          'nonAcPricePerKm': 90,
-          'features': ['Central AC', 'Reclining seats', 'Entertainment system', 'WiFi', 'Onboard washroom', 'Safety equipment'],
-        },
-      ],
-      'drivers': [
-        {
-          'name': 'Prasad Wickramasinghe',
-          'experience': '15 years',
-          'languages': ['English', 'Sinhala', 'Tamil', 'Italian'],
-          'contact': '+94 77 456 7890',
-          'specialization': 'Luxury & Premium Tours',
-        },
-        {
-          'name': 'Chaminda Rathnayake',
-          'experience': '12 years',
-          'languages': ['English', 'Sinhala', 'Spanish'],
-          'contact': '+94 76 567 8901',
-          'specialization': 'Group & Corporate Tours',
-        },
-      ],
-      'services': ['Luxury Tours', 'Premium Transport', 'VIP Services', 'Corporate Travel'],
-      'isAvailable': true,
-      'category': 'Luxury',
-    },
-    {
-      'id': 'agency_003',
-      'name': 'Aitken Spence',
-      'rating': 4.7,
-      'experience': '25+ Years',
-      'location': 'Colombo 02, Sri Lanka',
-      'contact': '+94 11 456 7890',
-      'email': 'travel@aitkenspence.lk',
-      'image': 'assets/images/aitken_spence.jpg',
-      'backgroundColor': const Color(0xFF20B2AA),
-      'description': 'Aitken Spence Travels is one of Sri Lanka\'s most established travel companies with 25+ years of excellence. We provide comprehensive travel services including transportation, accommodation, and guided tours.',
-      'vehicles': [
-        {
-          'type': 'Standard Car',
-          'seats': 4,
-          'acPricePerKm': 50,
-          'nonAcPricePerKm': 40,
-          'features': ['AC system', 'Comfortable seats', 'GPS navigation', 'Music system', 'Phone charging', 'Water bottles'],
-        },
-        {
-          'type': 'Family Van',
-          'seats': 8,
-          'acPricePerKm': 70,
-          'nonAcPricePerKm': 55,
-          'features': ['Family friendly', 'Spacious interior', 'Large windows', 'Safety features', 'Storage space', 'Reading lights'],
-        },
-        {
-          'type': 'Tour Bus',
-          'seats': 20,
-          'acPricePerKm': 90,
-          'nonAcPricePerKm': 75,
-          'features': ['Tour guide system', 'Comfortable seating', 'Large windows', 'AC system', 'Storage areas', 'Emergency equipment'],
-        },
-      ],
-      'drivers': [
-        {
-          'name': 'Sunil Mendis',
-          'experience': '18 years',
-          'languages': ['English', 'Sinhala', 'Tamil', 'Dutch'],
-          'contact': '+94 77 678 9012',
-          'specialization': 'Historical & Cultural Tours',
-        },
-        {
-          'name': 'Ranjith Perera',
-          'experience': '14 years',
-          'languages': ['English', 'Sinhala', 'Hindi'],
-          'contact': '+94 76 789 0123',
-          'specialization': 'Family & Leisure Tours',
-        },
-      ],
-      'services': ['General Tours', 'Family Travel', 'Group Tours', 'Corporate Services'],
-      'isAvailable': true,
-      'category': 'General',
-    },
-    {
-      'id': 'agency_004',
-      'name': 'Walkers Tours',
-      'rating': 4.6,
-      'experience': '30+ Years',
-      'location': 'Colombo 05, Sri Lanka',
-      'contact': '+94 11 567 8901',
-      'email': 'info@walkerstours.com',
-      'image': 'assets/images/walkers.jpg',
-      'backgroundColor': const Color(0xFF8FBC8F),
-      'description': 'Walkers Tours is the oldest travel company in Sri Lanka with 30+ years of unmatched experience. We have been crafting memorable travel experiences for generations of travelers.',
-      'vehicles': [
-        {
-          'type': 'Classic Car',
-          'seats': 4,
-          'acPricePerKm': 48,
-          'nonAcPricePerKm': 38,
-          'features': ['Reliable AC', 'Comfortable ride', 'Local music', 'Basic amenities', 'Safe driving', 'Courteous service'],
-        },
-        {
-          'type': 'Tourist Van',
-          'seats': 10,
-          'acPricePerKm': 68,
-          'nonAcPricePerKm': 54,
-          'features': ['Tourist friendly', 'Multiple windows', 'Spacious design', 'Cultural music', 'Local guides', 'Photo stops'],
-        },
-      ],
-      'drivers': [
-        {
-          'name': 'Bandula Jayasinghe',
-          'experience': '20 years',
-          'languages': ['English', 'Sinhala', 'Tamil', 'Russian'],
-          'contact': '+94 77 890 1234',
-          'specialization': 'Scenic & Nature Tours',
-        },
-        {
-          'name': 'Sarath Gunasekara',
-          'experience': '16 years',
-          'languages': ['English', 'Sinhala', 'Chinese'],
-          'contact': '+94 76 901 2345',
-          'specialization': 'Religious & Pilgrimage Tours',
-        },
-      ],
-      'services': ['Scenic Tours', 'Nature Tours', 'Religious Tours', 'Heritage Tours'],
-      'isAvailable': true,
-      'category': 'Scenic',
-    },
-    {
-      'id': 'agency_005',
-      'name': 'Red Dot Tours',
-      'rating': 4.5,
-      'experience': '12+ Years',
-      'location': 'Colombo 06, Sri Lanka',
-      'contact': '+94 11 678 9012',
-      'email': 'bookings@reddottours.lk',
-      'image': 'assets/images/red_dot.jpeg',
-      'backgroundColor': const Color(0xFF9370DB),
-      'description': 'Red Dot Tours is a modern travel agency with 12+ years of innovative service. We specialize in adventure tourism and off-the-beaten-path experiences.',
-      'vehicles': [
-        {
-          'type': 'Adventure Car',
-          'seats': 4,
-          'acPricePerKm': 52,
-          'nonAcPricePerKm': 42,
-          'features': ['Rugged design', 'Adventure ready', 'GPS tracking', 'Emergency kit', 'Action camera mounts', 'Outdoor gear storage'],
-        },
-        {
-          'type': 'Adventure Van',
-          'seats': 6,
-          'acPricePerKm': 72,
-          'nonAcPricePerKm': 58,
-          'features': ['Off-road capable', 'Equipment storage', 'Safety gear', 'Communication system', 'First aid', 'Adventure guides'],
-        },
-        {
-          'type': 'Group Bus',
-          'seats': 18,
-          'acPricePerKm': 88,
-          'nonAcPricePerKm': 72,
-          'features': ['Group friendly', 'Activity planning', 'Safety briefing area', 'Equipment space', 'Team building setup', 'Adventure maps'],
-        },
-      ],
-      'drivers': [
-        {
-          'name': 'Dilshan Wijeratne',
-          'experience': '8 years',
-          'languages': ['English', 'Sinhala', 'Korean'],
-          'contact': '+94 77 012 3456',
-          'specialization': 'Adventure & Extreme Sports',
-        },
-        {
-          'name': 'Kasun Liyanage',
-          'experience': '6 years',
-          'languages': ['English', 'Sinhala', 'Arabic'],
-          'contact': '+94 76 123 4567',
-          'specialization': 'Youth & Backpacker Tours',
-        },
-      ],
-      'services': ['Adventure Tours', 'Extreme Sports', 'Backpacker Tours', 'Youth Travel'],
-      'isAvailable': true,
-      'category': 'Adventure',
-    },
-
-  ];
-
   void _navigateToAgencyDetails(String agencyId) {
     context.push('/marketplace/travel_agencies/details/$agencyId');
   }
 
   void _contactAgency(String agencyId) {
     context.push('/marketplace/travel_agencies/contact/$agencyId');
-  }
-
-  // Calculate total price for standard distance with AC
-  String _calculateTotalPrice(int acPricePerKm) {
-    int totalPrice = acPricePerKm * standardDistance;
-    return _formatPrice(totalPrice);
-  }
-
-  // Format price with commas
-  String _formatPrice(int price) {
-    return price.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[1]},',
-    );
   }
 
   Widget _buildAgencyCard(Map<String, dynamic> agency) {
@@ -414,8 +126,6 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                         ),
                       ),
                     ),
-                    
-      
                   ],
                 ),
               ),
@@ -457,9 +167,10 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                           ),
                         ),
                       ),
-                      
                     ],
                   ),
+
+                  const SizedBox(height: 12),
 
                   // Vehicle Types and Pricing
                   Container(
@@ -480,7 +191,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                               Row(
                                 children: [
                                   Icon(
-                                    _getVehicleIcon(vehicle['type']),
+                                    MarketplaceData.getVehicleIcon(vehicle['type']), // FIXED: Use MarketplaceData
                                     color: const Color(0xFF0088cc),
                                     size: 14,
                                   ),
@@ -496,13 +207,12 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                                 ],
                               ),
                               Text(
-                                'LKR ${_calculateTotalPrice(vehicle['acPricePerKm'])}',
+                                'LKR ${MarketplaceData.calculateTotalPrice(vehicle['acPricePerKm'], standardDistance)}', // FIXED: Use MarketplaceData
                                 style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                   color: Color(0xFF0088cc),
                                 ),
-
                               ),
                             ],
                           ),
@@ -546,19 +256,19 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                         child: ElevatedButton(
                           onPressed: () {
                             _navigateToAgencyDetails(agency['id']);
-                          } ,
+                          },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: agency['isAvailable'] 
-                                ? const Color(0xFF0088cc) 
+                            backgroundColor: agency['isAvailable']
+                                ? const Color(0xFF0088cc)
                                 : Colors.grey,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: Text(
+                          child: const Text(
                             'View Details',
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+                            style: TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
                       ),
@@ -624,36 +334,6 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
     );
   }
 
-  // Get appropriate icon for vehicle type
-  IconData _getVehicleIcon(String vehicleType) {
-    switch (vehicleType.toLowerCase()) {
-      case 'car':
-      case 'luxury car':
-      case 'standard car':
-      case 'classic car':
-      case 'adventure car':
-      case 'beach car':
-        return Icons.directions_car;
-      case 'van':
-      case 'premium van':
-      case 'family van':
-      case 'tourist van':
-      case 'adventure van':
-      case 'coastal van':
-        return Icons.airport_shuttle;
-      case 'bus':
-      case 'mini bus':
-      case 'coach bus':
-      case 'tour bus':
-      case 'group bus':
-        return Icons.directions_bus;
-      default:
-        return Icons.directions_car;
-    }
-  }
-
-
-
   @override
   void initState() {
     super.initState();
@@ -661,7 +341,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final displayedAgencies = allTravelAgencies;
+    final displayedAgencies = MarketplaceData.travelAgencies; // FIXED: Use MarketplaceData
 
     // Count variables - replace with your actual state variables
     int orderCount = 3; // Number of pending orders
@@ -692,9 +372,9 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
         actions: [
           // Booking Orders Icon with Badge
           _buildIconWithBadge(
-            icon: LucideIcons.clipboardList,
-            count: orderCount,
-            onTap: () => context.push('/booking_history')
+              icon: LucideIcons.clipboardList,
+              count: orderCount,
+              onTap: () => context.push('/booking_history')
           ),
 
           const SizedBox(width: 10),
@@ -722,7 +402,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                 },
                 placeholder: 'Search travel agencies...',
               ),
-              
+
               const SizedBox(height: 24),
 
               // Travel Agencies Section Header
@@ -739,7 +419,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                   )
                 ],
               ),
-              
+
               const SizedBox(height: 16),
 
               // Travel Agencies List
@@ -784,7 +464,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                     return _buildAgencyCard(displayedAgencies[index]);
                   },
                 ),
-                
+
               // Add some bottom padding for better scrolling
               const SizedBox(height: 80),
             ],
