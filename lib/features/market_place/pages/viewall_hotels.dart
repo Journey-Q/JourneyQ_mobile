@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:journeyq/features/market_place/pages/searchbar.dart';
+import 'package:journeyq/features/market_place/pages/data.dart'; // Import centralized data
 
 class ViewAllHotelsPage extends StatefulWidget {
   const ViewAllHotelsPage({Key? key}) : super(key: key);
@@ -14,113 +15,7 @@ class ViewAllHotelsPage extends StatefulWidget {
 
 class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
   // Comprehensive Hotels Data with IDs (matching hotel details database)
-  final List<Map<String, dynamic>> allHotels = [
-    {
-      'id': 'hotel_001',
-      'name': 'Shangri-La Hotel Colombo',
-      'location': 'Galle Face, Colombo',
-      'rating': 4.8,
-      'reviewCount': 1250,
-      'price': 'LKR 45,000/night',
-      'contact': '+94 11 254 4544',
-      'email': 'reservations@shangrilahotelcolombo.com',
-      'image': 'assets/images/shangri_la.jpg',
-      'backgroundColor': const Color(0xFF8B4513),
-      'amenities': [
-        'Infinity Pool',
-        'CHI Spa',
-        'Free WiFi',
-        'Multiple Restaurants',
-        'Fitness Center',
-        'Business Center',
-      ],
-      'isAvailable': true,
-    },
-    {
-      'id': 'hotel_002',
-      'name': 'Galle Face Hotel',
-      'location': 'Galle Face Green, Colombo',
-      'rating': 4.5,
-      'reviewCount': 980,
-      'price': 'LKR 38,000/night',
-      'contact': '+94 11 254 1010',
-      'email': 'reservations@gallefacehotel.com',
-      'image': 'assets/images/galle_face.jpg',
-      'backgroundColor': const Color(0xFF228B22),
-      'amenities': [
-        'Heritage Pool',
-        'Spa Ceylon',
-        'Free WiFi',
-        'Sea Spray Restaurant',
-        'Fitness Center',
-        'Heritage Tours',
-      ],
-      'isAvailable': true,
-    },
-    {
-      'id': 'hotel_003',
-      'name': 'Cinnamon Grand Colombo',
-      'location': 'Fort, Colombo',
-      'rating': 4.7,
-      'reviewCount': 1100,
-      'price': 'LKR 42,000/night',
-      'contact': '+94 11 249 1437',
-      'email': 'reservations@cinnamongrandcolombo.com',
-      'image': 'assets/images/cinnamon_grand.jpg',
-      'backgroundColor': const Color(0xFF20B2AA),
-      'amenities': [
-        'Rooftop Pool',
-        'Red Spa',
-        'Free WiFi',
-        'Nuga Gama Restaurant',
-        'Fitness Center',
-        'Shopping Arcade',
-      ],
-      'isAvailable': true,
-    },
-    {
-      'id': 'hotel_004',
-      'name': 'Hilton Colombo',
-      'location': 'Echelon Square, Colombo',
-      'rating': 4.6,
-      'reviewCount': 890,
-      'price': 'LKR 40,000/night',
-      'contact': '+94 11 254 9200',
-      'email': 'reservations@hiltoncolombo.com',
-      'image': 'assets/images/hilton.jpg',
-      'backgroundColor': const Color(0xFF8FBC8F),
-      'amenities': [
-        'Outdoor Pool',
-        'eforea Spa',
-        'Free WiFi',
-        'Graze Kitchen',
-        'Executive Lounge',
-        'Event Spaces',
-      ],
-      'isAvailable': true,
-    },
-    {
-      'id': 'hotel_005',
-      'name': 'Taj Samudra',
-      'location': 'Galle Face, Colombo',
-      'rating': 4.4,
-      'reviewCount': 750,
-      'price': 'LKR 35,000/night',
-      'contact': '+94 11 244 6622',
-      'email': 'reservations@tajsamudra.com',
-      'image': 'assets/images/taj_samudra.jpg',
-      'backgroundColor': const Color(0xFF9370DB),
-      'amenities': [
-        'Ocean Pool',
-        'Jiva Spa',
-        'Free WiFi',
-        'Golden Dragon Restaurant',
-        'Cultural Experiences',
-        'Banquet Halls',
-      ],
-      'isAvailable': true,
-    }
-  ];
+
 
   void _navigateToHotelDetails(String hotelId) {
     context.push('/marketplace/hotels/details/$hotelId');
@@ -456,7 +351,7 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final displayedHotels = allHotels;
+    final displayedHotels = MarketplaceData.hotels;
 
     // Count variables - replace with your actual state variables
     int orderCount = 3; // Number of pending orders
