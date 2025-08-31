@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
+import 'package:journeyq/data/repositories/follow_repository/follow_repository.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -13,6 +14,10 @@ class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker();
   bool isSubscribed = false;
   String selectedTab = 'posts'; // 'posts', 'bucketlist', 'liked'
+
+  // Real-time follow stats
+  UserStats? _userStats;
+  bool _isLoadingStats = true;
 
   // Enhanced posts data with Sri Lankan travel destination information
   List<Map<String, dynamic>> userPosts = [
@@ -158,6 +163,47 @@ class _ProfilePageState extends State<ProfilePage> {
     'joinDate': 'March 2022',
     'achievements': ['Mountain Climber', 'Ocean Explorer', 'City Wanderer'],
   };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserStats();
+  }
+
+  /// Load real-time follow statistics from the backend
+  Future<void> _loadUserStats() async {
+    try {
+      setState(() {
+        _isLoadingStats = true;
+      });
+
+      final stats = await FollowRepository.getMyStats();
+
+      if (mounted) {
+        setState(() {
+          _userStats = stats;
+          _isLoadingStats = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingStats = false;
+          // Use fallback values if API fails
+          _userStats = UserStats(
+            userId: 'current_user',
+            followersCount: 5, // fallback
+            followingCount: 4, // fallback
+          );
+        });
+      }
+    }
+  }
+
+  /// Refresh stats after returning from followers/following page
+  Future<void> _refreshStats() async {
+    await _loadUserStats();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -405,8 +451,10 @@ class _ProfilePageState extends State<ProfilePage> {
           _buildDivider(),
           GestureDetector(
             onTap: () => _navigateToFollowersFollowing('followers'),
-            child: _buildStatItem(
-              _formatNumber(userData['followers']),
+            child: _isLoadingStats
+                ? _buildLoadingStatItem('Followers', Icons.people, const Color(0xFF00B894))
+                : _buildStatItem(
+              _formatNumber(_userStats?.followersCount ?? 0),
               'Followers',
               Icons.people,
               const Color(0xFF00B894),
@@ -415,8 +463,10 @@ class _ProfilePageState extends State<ProfilePage> {
           _buildDivider(),
           GestureDetector(
             onTap: () => _navigateToFollowersFollowing('following'),
-            child: _buildStatItem(
-              userData['following'].toString(),
+            child: _isLoadingStats
+                ? _buildLoadingStatItem('Following', Icons.person_add, const Color(0xFFE17055))
+                : _buildStatItem(
+              _formatNumber(_userStats?.followingCount ?? 0),
               'Following',
               Icons.person_add,
               const Color(0xFFE17055),
@@ -447,6 +497,38 @@ class _ProfilePageState extends State<ProfilePage> {
             color: Color(0xFF2D3436),
           ),
         ),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Color(0xFF636E72),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoadingStatItem(String label, IconData icon, Color color) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: color, size: 24),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 4),
         Text(
           label,
           style: const TextStyle(
@@ -1273,5 +1355,6 @@ class _ProfilePageState extends State<ProfilePage> {
       'initialTab': tab,
       'userData': userData,
     });
+
   }
 }
