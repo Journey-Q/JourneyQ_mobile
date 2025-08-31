@@ -4,6 +4,10 @@ import 'package:journeyq/core/utils/validator.dart';
 import 'package:journeyq/core/services/notification_service.dart';
 import 'package:journeyq/shared/widgets/dialog/show_dialog.dart';
 import 'package:journeyq/features/authentication/pages/widget.dart';
+import 'package:journeyq/core/errors/error_handler.dart';
+import 'package:journeyq/core/errors/exception.dart';
+import 'package:journeyq/data/repositories/auth_repositories/auth_repository.dart';
+import 'package:journeyq/data/repositories/auth_repositories/social_auth.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({Key? key}) : super(key: key);
@@ -18,6 +22,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _socialAuthService = SocialAuthService();
 
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -37,67 +42,98 @@ class _SignUpPageState extends State<SignUpPage> {
       return;
     }
 
+    _dismissKeyboard();
+
+    // Small delay to let keyboard animation complete
+    await Future.delayed(const Duration(milliseconds: 100));
 
     setState(() => _isLoading = true);
 
     try {
-      await Future.delayed(const Duration(seconds: 2));
+      final result = await AuthRepository.register(
+        _usernameController.text.trim(),
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+
+      // Verify registration was successful and contains required data
+      if (result == null || result['accessToken'] == null) {
+        throw Exception('Registration failed: Invalid response from server');
+      }
+
+      // Get user data for personalized welcome message
+      final userData = result['user'];
+      final userName = userData != null ? userData['name'] : null;
 
       NotificationService.showNotification(
-        title: "Account Created! 🎉",
-        body: "Welcome to JourneyQ! Your adventure begins now...",
+        title: "Welcome ",
+        body: "Signup successfully",
       );
 
       if (mounted) {
-        // Navigate to home page using GoRouter
-        context.go('/home');
+        // Add small delay before navigation to prevent conflicts
+        await Future.delayed(const Duration(milliseconds: 200));
+
+        // Navigate to home
+        if (mounted) {
+          context.go('/home');
+        }
       }
     } catch (e) {
-      NotificationService.showNotification(
-        title: "Sign Up Failed",
-        body: "Please check your information and try again.",
-      );
-
+      // Handle registration errors
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Sign up failed: ${e.toString()}'),
-            backgroundColor: Colors.red[400],
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
+        ErrorHandler.handleError(
+          context,
+          e is Exception ? e : Exception(e.toString()),
         );
+        setState(() => _isLoading = false);
       }
     } finally {
-      if (mounted) {
+      if (mounted && _isLoading) {
         setState(() => _isLoading = false);
       }
     }
   }
 
   Future<void> _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+
     try {
-      // Simulate Google Sign In
-      await Future.delayed(const Duration(seconds: 1));
-      NotificationService.showNotification(
-        title: "Google Sign In",
-        body: "Signing in with Google...",
-      );
-      
-      if (mounted) {
-        // Navigate to home after successful Google sign in
-        context.go('/home');
-      }
+      final userCredential = await _socialAuthService.signInWithGoogle();
+
+      if (userCredential != null) {
+        // Both Firebase and backend authentication successful
+        final user = userCredential.user;
+
+        SnackBarService.showSuccess(
+          context,
+          user?.displayName != null
+              ? "Welcome back, ${user!.displayName}!"
+              : "Successfully signed in with Google!",
+        );
+
+        if (mounted) {
+          context.go('/home');
+        }
+      } else {}
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Google Sign In failed: ${e.toString()}'),
-          backgroundColor: Colors.red[400],
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      // Handle Google sign-in errors
+      if (mounted) {
+        NotificationService.showNotification(
+          title: "Google Sign In Failed",
+          body: "Please try again or use email sign in.",
+        );
+
+        ErrorHandler.handleError(
+          context,
+          e is Exception ? e : Exception(e.toString()),
+        );
+        setState(() => _isLoading = false);
+      }
+    } finally {
+      if (mounted && _isLoading) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -109,7 +145,7 @@ class _SignUpPageState extends State<SignUpPage> {
         title: "Apple Sign In",
         body: "Signing in with Apple...",
       );
-      
+
       if (mounted) {
         // Navigate to home after successful Apple sign in
         context.go('/home');
@@ -125,35 +161,16 @@ class _SignUpPageState extends State<SignUpPage> {
     }
   }
 
-  Future<void> _handleFacebookSignIn() async {
-    try {
-      // Simulate Facebook Sign In
-      await Future.delayed(const Duration(seconds: 1));
-      NotificationService.showNotification(
-        title: "Facebook Sign In",
-        body: "Signing in with Facebook...",
-      );
-      
-      if (mounted) {
-        // Navigate to home after successful Facebook sign in
-        context.go('/home');
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Facebook Sign In failed: ${e.toString()}'),
-          backgroundColor: Colors.red[400],
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
+  void _dismissKeyboard() {
+    // Immediately hide keyboard without animation
+    FocusScope.of(context).unfocus();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -261,7 +278,6 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   // Usage for Confirm Password Field
-  
 
   Widget buildSignUpButton() {
     return buildPrimaryGradientButton(
@@ -272,33 +288,29 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Widget buildSocialButtons() {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      buildSocialButton(
-        icon: Image.asset(
-          'assets/images/google.png',
-          width: 28,
-          height: 28,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        buildSocialButton(
+          icon: Image.asset('assets/images/google.png', width: 28, height: 28),
+          label: 'Google',
+          onPressed: _handleGoogleSignIn,
+          backgroundColor: Colors.white,
+          textColor: Colors.grey[800]!,
+          borderColor: Colors.grey[300]!,
         ),
-        label: 'Google',
-        onPressed: _handleGoogleSignIn,
-        backgroundColor: Colors.white,
-        textColor: Colors.grey[800]!,
-        borderColor: Colors.grey[300]!,
-      ),
-      const SizedBox(width: 32),
-      buildSocialButton(
-        icon: Icons.apple,
-        label: 'Apple',
-        onPressed: _handleAppleSignIn,
-        backgroundColor: Colors.black,
-        textColor: Colors.white,
-        borderColor: Colors.black,
-      ),
-    ],
-  );
-}
+        const SizedBox(width: 32),
+        buildSocialButton(
+          icon: Icons.apple,
+          label: 'Apple',
+          onPressed: _handleAppleSignIn,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          borderColor: Colors.black,
+        ),
+      ],
+    );
+  }
 
   Widget buildSignInLink() {
     return Row(

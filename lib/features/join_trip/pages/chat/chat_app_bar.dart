@@ -25,6 +25,28 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onBudgetPressed,
   });
 
+  String _getLocationBasedImage(String? destination) {
+    final dest = destination?.toLowerCase() ?? '';
+    
+    if (dest.contains('kandy')) {
+      return 'https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=800';
+    } else if (dest.contains('ella')) {
+      return 'https://images.unsplash.com/photo-1605640840605-14ac1855827b?w=800';
+    } else if (dest.contains('sigiriya')) {
+      return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800';
+    } else if (dest.contains('galle')) {
+      return 'https://images.unsplash.com/photo-1539650116574-75c0c6d24e14?w=800';
+    } else if (dest.contains('nuwara eliya')) {
+      return 'https://images.unsplash.com/photo-1605640957230-d8b5b3c7b1e4?w=800';
+    } else if (dest.contains('yala')) {
+      return 'https://images.unsplash.com/photo-1539650116574-75c0c6d24e14?w=800';
+    } else if (dest.contains('mirissa')) {
+      return 'https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=800&h=600&fit=crop';
+    } else {
+      return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppBar(
@@ -40,7 +62,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
           children: [
             Stack(
               children: [
-                // Profile image as rounded square
+                // Profile image as rounded square - now using location-based image
                 Container(
                   width: 40,
                   height: 40,
@@ -51,7 +73,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(9),
                     child: Image.network(
-                      userImage,
+                      _getLocationBasedImage(groupName),
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(

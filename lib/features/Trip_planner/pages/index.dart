@@ -22,14 +22,14 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
   // Form data
   int _numberOfDays = 3;
   int _numberOfPersons = 2;
-  String _selectedBudget = 'Mid-range (Rs.12,000-25,000/day)';
+  String _selectedBudget = 'Mid-range (Rs.5,000-25,000/day)'; // Fixed: Changed to match exact string from list
   List<String> _selectedMoods = [];
   bool _isLoading = false;
 
-  // Options
+  // Options - Fixed: Removed duplicate and corrected budget ranges
   final List<String> _budgetOptions = [
-    'Budget (Under Rs.12,000/day)',
-    'Mid-range (Rs.12,000-25,000/day)',
+    'Budget (Under Rs.5,000/day)',
+    'Mid-range (Rs.5,000-25,000/day)', // Fixed: Corrected range to avoid duplication
     'Luxury (Rs.25,000+/day)',
   ];
 
@@ -193,7 +193,7 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
-                  Icons.flight_takeoff,
+                  Icons.location_on_rounded,
                   color: Colors.white,
                   size: 18,
                 ),
@@ -451,16 +451,34 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
                 fontWeight: FontWeight.w500,
                 color: Colors.black87,
               ),
+              // Fixed: Ensure each item has unique value and proper validation
               items: _budgetOptions
+                  .where((budget) => budget.isNotEmpty) // Filter out empty strings
                   .map(
-                    (budget) =>
-                        DropdownMenuItem(value: budget, child: Text(budget)),
+                    (budget) => DropdownMenuItem<String>(
+                      value: budget,
+                      child: Text(
+                        budget,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
                   )
                   .toList(),
               onChanged: (value) {
-                if (value != null) {
+                if (value != null && value.isNotEmpty) {
                   setState(() => _selectedBudget = value);
                 }
+              },
+              // Added validator to ensure value is selected
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please select a budget range';
+                }
+                return null;
               },
             ),
           ),
@@ -478,11 +496,11 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration:  BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     colors: [primaryLightColor, primaryBlue],
                   ),
-                  borderRadius:BorderRadius.circular(8.0),
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
                 ),
                 child: const Icon(
                   Icons.psychology,
@@ -551,7 +569,6 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
                           fontSize: 13,
                         ),
                       ),
-                      
                     ],
                   ),
                 ),
@@ -562,7 +579,7 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
             const SizedBox(height: 12),
             Text(
               '${_selectedMoods.length} mood${_selectedMoods.length == 1 ? '' : 's'} selected',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
                 color: primaryBlue,
                 fontWeight: FontWeight.w500,

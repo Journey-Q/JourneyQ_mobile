@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:journeyq/features/journey_view/data.dart';
+import 'package:journeyq/features/journey_view/pages/Journeyroute.dart';
 
 class JourneyDetailsPage extends StatefulWidget {
   final String journeyId;
@@ -15,7 +16,7 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   Map<String, dynamic>? journeyData;
   Map<String, int> _currentImageIndexes = {};
   Map<String, PageController> _pageControllers = {};
-  
+
   // Add controllers for places pagination
   final PageController _placesPageController = PageController();
   int _currentPlaceIndex = 0;
@@ -44,14 +45,15 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
           'likesCount': 2,
           'isLiked': false,
           'replies': [],
-        }
+        },
       ],
     },
     {
       'id': '2',
       'userName': 'Mike Chen',
       'userImage': '',
-      'comment': 'I\'ve been to Kandy too! Such a beautiful place. Your photos captured it perfectly.',
+      'comment':
+          'I\'ve been to Kandy too! Such a beautiful place. Your photos captured it perfectly.',
       'timeAgo': '5h',
       'likesCount': 8,
       'isLiked': false,
@@ -97,6 +99,7 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildTripStats(),
+                  JourneyRouteMapWidget(journeyData: journeyData!),
                   _buildAllPlacesSection(),
                   _buildRecommendationsSection(),
                   _buildTipsSection(),
@@ -113,184 +116,190 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   }
 
   Widget _buildSliverAppBar() {
-  final places = journeyData!['places'] as List;
-  final firstPlace = places.first;
-  final images = firstPlace['images'] as List<String>;
+    final places = journeyData!['places'] as List;
+    final firstPlace = places.first;
+    final images = firstPlace['images'] as List<String>;
 
-  return SliverAppBar(
-    expandedHeight: 200,
-    pinned: true,
-    backgroundColor: Colors.white,
-    foregroundColor: Colors.black,
-    surfaceTintColor: Colors.transparent,
-    elevation: 0,
-    flexibleSpace: FlexibleSpaceBar(
-      background: Stack(
-        children: [
-          PageView.builder(
-            itemCount: images.length,
-            itemBuilder: (context, index) {
-              return _buildImage(images[index]); // Use the helper method
-            },
-          ),
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withOpacity(0.3),
-                  Colors.transparent,
-                  Colors.black.withOpacity(0.7),
+    return SliverAppBar(
+      expandedHeight: 200,
+      pinned: true,
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      flexibleSpace: FlexibleSpaceBar(
+        background: Stack(
+          children: [
+            PageView.builder(
+              itemCount: images.length,
+              itemBuilder: (context, index) {
+                return _buildImage(images[index]); // Use the helper method
+              },
+            ),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.3),
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.7),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 20,
+              left: 20,
+              right: 20,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    journeyData!['tripTitle'],
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundImage:
+                            journeyData!['authorImage'].startsWith('assets/')
+                            ? AssetImage(journeyData!['authorImage'])
+                                  as ImageProvider
+                            : NetworkImage(journeyData!['authorImage']),
+                        onBackgroundImageError: (_, __) {},
+                        backgroundColor: Colors.grey[300],
+                        child: journeyData!['authorImage'].isEmpty
+                            ? Icon(Icons.person, color: Colors.grey[600])
+                            : null,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        journeyData!['authorName'],
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+
+                      const SizedBox(width: 18),
+
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[600],
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Text(
+                          'Follow',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
-          ),
-          Positioned(
-            bottom: 20,
-            left: 20,
-            right: 20,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  journeyData!['tripTitle'],
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundImage: journeyData!['authorImage'].startsWith('assets/')
-                          ? AssetImage(journeyData!['authorImage']) as ImageProvider
-                          : NetworkImage(journeyData!['authorImage']),
-                      onBackgroundImageError: (_, __) {},
-                      backgroundColor: Colors.grey[300],
-                      child: journeyData!['authorImage'].isEmpty
-                          ? Icon(Icons.person, color: Colors.grey[600])
-                          : null,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Journey by ${journeyData!['authorName']}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-
-                    const SizedBox(width: 18),
-
-                    Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.blue[600],
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Text(
-                'Follow',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
-
-Widget _buildImage(String imagePath) {
-  // Check if it's an asset image (starts with 'assets/') or network URL
-  if (imagePath.startsWith('assets/')) {
-    return Image.asset(
-      imagePath,
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) {
-        return Container(
-          color: Colors.grey[300],
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.broken_image, color: Colors.grey[600], size: 50),
-                const SizedBox(height: 8),
-                Text(
-                  'Failed to load image',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  } else if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-    // Network image
-    return Image.network(
-      imagePath,
-      fit: BoxFit.cover,
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return Container(
-          color: Colors.grey[200],
-          child: Center(
-            child: CircularProgressIndicator(
-              value: loadingProgress.expectedTotalBytes != null
-                  ? loadingProgress.cumulativeBytesLoaded /
-                        loadingProgress.expectedTotalBytes!
-                  : null,
-            ),
-          ),
-        );
-      },
-      errorBuilder: (context, error, stackTrace) {
-        return Container(
-          color: Colors.grey[300],
-          child: const Center(
-            child: Icon(Icons.error, color: Colors.grey, size: 50),
-          ),
-        );
-      },
-    );
-  } else {
-    // Assume it's an asset image without 'assets/' prefix
-    return Image.asset(
-      'assets/images/$imagePath', // Adjust path as needed
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) {
-        return Container(
-          color: Colors.grey[300],
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.broken_image, color: Colors.grey[600], size: 50),
-                const SizedBox(height: 8),
-                Text(
-                  'Failed to load image',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
-}
+
+  Widget _buildImage(String imagePath) {
+    // Check if it's an asset image (starts with 'assets/') or network URL
+    if (imagePath.startsWith('assets/')) {
+      return Image.asset(
+        imagePath,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: Colors.grey[300],
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.broken_image, color: Colors.grey[600], size: 50),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Failed to load image',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    } else if (imagePath.startsWith('http://') ||
+        imagePath.startsWith('https://')) {
+      // Network image
+      return Image.network(
+        imagePath,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            color: Colors.grey[200],
+            child: Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                    : null,
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: Colors.grey[300],
+            child: const Center(
+              child: Icon(Icons.error, color: Colors.grey, size: 50),
+            ),
+          );
+        },
+      );
+    } else {
+      // Assume it's an asset image without 'assets/' prefix
+      return Image.asset(
+        'assets/images/$imagePath', // Adjust path as needed
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: Colors.grey[300],
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.broken_image, color: Colors.grey[600], size: 50),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Failed to load image',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    }
+  }
 
   Widget _buildTripStats() {
     final places = journeyData!['places'] as List;
@@ -358,26 +367,13 @@ Widget _buildImage(String imagePath) {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
-              const Text(
-                'Places to Visit',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-              const Spacer(),
-              Text(
-                '${_currentPlaceIndex + 1} of ${places.length}',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
             ],
           ),
         ),
-        
+
         // Horizontal scrollable places
         SizedBox(
-          height: 560, // Increased height to accommodate scrollable activities
+          height: 560, // Keep the same height
           child: PageView.builder(
             controller: _placesPageController,
             onPageChanged: (index) {
@@ -394,7 +390,7 @@ Widget _buildImage(String imagePath) {
             },
           ),
         ),
-        
+
         // Dot indicators for places
         if (places.length > 1) ...[
           const SizedBox(height: 8),
@@ -439,133 +435,148 @@ Widget _buildImage(String imagePath) {
       _currentImageIndexes[placeName] = 0;
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Place name and trip mood
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  place['name'],
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              if (tripMood.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.orange[600],
-                    borderRadius: BorderRadius.circular(20),
-                  ),
+    return SingleChildScrollView(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Place name and trip mood
+            Row(
+              children: [
+                Expanded(
                   child: Text(
-                    tripMood,
+                    place['name'],
                     style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Image carousel
-          _buildImageCarousel(images, placeName),
-          _buildDotsIndicator(images, placeName),
-          const SizedBox(height: 12),
-
-          // Activities
-          const Text(
-            'Activities',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 10),
-
-          // Activities as horizontal scrollable
-          SizedBox(
-            height: 40,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: [
-                  ...activities.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final activity = entry.value;
-                    return Row(
-                      children: [
-                        if (index > 0) const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.blue[600],
-                            borderRadius: BorderRadius.circular(22),
-                          ),
-                          child: Text(
-                            activity,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              height: 1.4,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
-                  const SizedBox(width: 16),
-                ],
-              ),
+                if (tripMood.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[600],
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      tripMood,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
             ),
-          ),
+            const SizedBox(height: 12),
 
-          const SizedBox(height: 12),
+            // Image carousel
+            _buildImageCarousel(images, placeName),
+            _buildDotsIndicator(images, placeName),
+            const SizedBox(height: 12),
 
-          // Experiences as vertical scrollable
-          if (experiences.isNotEmpty) ...[
+            // Activities
             const Text(
-              'Experiences',
+              'Activities',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 10),
+
+            // Activities as horizontal scrollable
             SizedBox(
-              height: 120, // Fixed height for experiences section
+              height: 40,
               child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
-                child: Column(
-                  children: experiences.map((experience) {
-                    return Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.only(bottom: 6),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        experience['description'],
-                        style: const TextStyle(
-                          color: Colors.black87,
-                          fontSize: 14,
-                          height: 1.3,
-                        ),
-                        maxLines: null,
-                        overflow: TextOverflow.visible,
-                      ),
-                    );
-                  }).toList(),
+                child: Row(
+                  children: [
+                    ...activities.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final activity = entry.value;
+                      return Row(
+                        children: [
+                          if (index > 0) const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blue[600],
+                              borderRadius: BorderRadius.circular(22),
+                            ),
+                            child: Text(
+                              activity,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                height: 1.4,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                    const SizedBox(width: 16),
+                  ],
                 ),
               ),
             ),
+
+            const SizedBox(height: 12),
+
+            // Experiences as flexible scrollable
+            if (experiences.isNotEmpty) ...[
+              const Text(
+                'Experiences',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 10),
+              ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxHeight: 150, // Maximum height for experiences
+                  minHeight: 50, // Minimum height
+                ),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    children: experiences.map((experience) {
+                      return Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          experience['description'],
+                          style: const TextStyle(
+                            color: Colors.black87,
+                            fontSize: 14,
+                            height: 1.3,
+                          ),
+                          maxLines: null,
+                          overflow: TextOverflow.visible,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 16), // Extra padding at bottom
           ],
-        ],
+        ),
       ),
     );
   }
@@ -673,95 +684,92 @@ Widget _buildImage(String imagePath) {
   }
 
   Widget _buildTipsSection() {
-  final tips = journeyData!['tips'] as List<String>;
-  return Container(
-    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.04),
-          spreadRadius: 0,
-          blurRadius: 8,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header with icon
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.green[50],
-                borderRadius: BorderRadius.circular(8),
+    final tips = journeyData!['tips'] as List<String>;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            spreadRadius: 0,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with icon
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.lightbulb_outline,
+                  color: Colors.green[600],
+                  size: 20,
+                ),
               ),
-              child: Icon(
-                Icons.lightbulb_outline,
-                color: Colors.green[600],
-                size: 20,
+              const SizedBox(width: 12),
+              const Text(
+                'Travel Tips',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'Travel Tips',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: Colors.black87,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        
-        // Tips list
-        ...tips.asMap().entries.map((entry) {
-          final index = entry.key;
-          final tip = entry.value;
-          final isLast = index == tips.length - 1;
-          
-          return Container(
-            margin: EdgeInsets.only(bottom: isLast ? 0 : 16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Tip content
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.grey[200]!,
-                        width: 1,
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Tips list
+          ...tips.asMap().entries.map((entry) {
+            final index = entry.key;
+            final tip = entry.value;
+            final isLast = index == tips.length - 1;
+
+            return Container(
+              margin: EdgeInsets.only(bottom: isLast ? 0 : 16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Tip content
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey[200]!, width: 1),
                       ),
-                    ),
-                    child: Text(
-                      tip,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        height: 1.5,
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w400,
+                      child: Text(
+                        tip,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          height: 1.5,
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      ],
-    ),
-  );
-}
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
 
   Widget _buildBudgetBreakdown() {
     final breakdown = journeyData!['budgetBreakdown'] as Map<String, dynamic>;
@@ -841,117 +849,108 @@ Widget _buildImage(String imagePath) {
   }
 
   // New interaction section
- // Replace your _buildInteractionSection() method with this improved version:
+  // Replace your _buildInteractionSection() method with this improved version:
 
-// Replace your _buildInteractionSection() method with this improved version:
+  // Replace your _buildInteractionSection() method with this improved version:
 
-Widget _buildInteractionSection() {
-  return Container(
-    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.04),
-          spreadRadius: 0,
-          blurRadius: 8,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-       
-        
-        // Divider
-        Container(
-          height: 1,
-          color: Colors.grey[200],
-        ),
-        
-        const SizedBox(height: 14),
-        
-        // Action buttons - Icons only with counts
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            // Like Button
-            _buildIconButton(
-              icon: _isLiked ? Icons.favorite : Icons.favorite_border,
-              count: _likesCount,
-              isActive: _isLiked,
-              activeColor: Colors.red,
-              onTap: _handleLike,
-            ),
-            
-            // Comment Button
-            _buildIconButton(
-              icon: LucideIcons.messageCircle,
-              count: _commentsCount,
-              isActive: false,
-              activeColor: Colors.blue[600]!,
-              onTap: _handleComment,
-            ),
-            
-            // Save Button
-            _buildIconButton(
-              icon: _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-              count: null, // No count for save
-              isActive: _isBookmarked,
-              activeColor: Colors.amber[700]!,
-              onTap: _handleSave,
-            ),
-            
-            
-          ],
-        ),
-      ],
-    ),
-  );
-}
-
-// Helper method for icon buttons with counts
-Widget _buildIconButton({
-  required IconData icon,
-  required int? count,
-  required bool isActive,
-  required Color activeColor,
-  required VoidCallback onTap,
-}) {
-  return GestureDetector(
-    onTap: onTap,
-    child: Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 20,
-            color: isActive ? activeColor : Colors.grey[600],
+  Widget _buildInteractionSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            spreadRadius: 0,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-          if (count != null && count > 0) ...[
-            const SizedBox(width: 6),
-            Text(
-              count.toString(),
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: isActive ? activeColor : Colors.grey[700],
-              ),
-            ),
-          ],
         ],
       ),
-    ),
-  );
-}
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Divider
+          Container(height: 1, color: Colors.grey[200]),
 
+          const SizedBox(height: 14),
 
+          // Action buttons - Icons only with counts
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              // Like Button
+              _buildIconButton(
+                icon: _isLiked ? Icons.favorite : Icons.favorite_border,
+                count: _likesCount,
+                isActive: _isLiked,
+                activeColor: Colors.red,
+                onTap: _handleLike,
+              ),
+
+              // Comment Button
+              _buildIconButton(
+                icon: LucideIcons.messageCircle,
+                count: _commentsCount,
+                isActive: false,
+                activeColor: Colors.blue[600]!,
+                onTap: _handleComment,
+              ),
+
+              // Save Button
+              _buildIconButton(
+                icon: _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                count: null, // No count for save
+                isActive: _isBookmarked,
+                activeColor: Colors.amber[700]!,
+                onTap: _handleSave,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper method for icon buttons with counts
+  Widget _buildIconButton({
+    required IconData icon,
+    required int? count,
+    required bool isActive,
+    required Color activeColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 24,
+              color: isActive ? activeColor : Colors.grey[600],
+            ),
+            if (count != null && count > 0) ...[
+              const SizedBox(width: 6),
+              Text(
+                count.toString(),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: isActive ? activeColor : Colors.grey[700],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 
   // Interaction handlers
   void _handleLike() {
@@ -978,7 +977,8 @@ Widget _buildIconButton({
           for (var comment in _comments) {
             totalComments++; // Count the main comment
             if (comment['replies'] != null) {
-              totalComments += (comment['replies'] as List).length; // Count replies
+              totalComments +=
+                  (comment['replies'] as List).length; // Count replies
             }
           }
           _commentsCount = totalComments;
@@ -991,7 +991,6 @@ Widget _buildIconButton({
     setState(() {
       _isBookmarked = !_isBookmarked;
     });
-
   }
 
   String _capitalize(String text) {
@@ -1014,28 +1013,28 @@ Widget _buildIconButton({
   }
 
   Widget _buildImageCarousel(List<String> images, String placeName) {
-  return SizedBox(
-    height: 200,
-    child: PageView.builder(
-      controller: _pageControllers[placeName]!,
-      onPageChanged: (index) {
-        setState(() {
-          _currentImageIndexes[placeName] = index;
-        });
-      },
-      itemCount: images.length,
-      itemBuilder: (context, index) {
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 0),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: _buildImage(images[index]), // Use the helper method
-          ),
-        );
-      },
-    ),
-  );
-}
+    return SizedBox(
+      height: 200,
+      child: PageView.builder(
+        controller: _pageControllers[placeName]!,
+        onPageChanged: (index) {
+          setState(() {
+            _currentImageIndexes[placeName] = index;
+          });
+        },
+        itemCount: images.length,
+        itemBuilder: (context, index) {
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: _buildImage(images[index]), // Use the helper method
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   Widget _buildDotsIndicator(List<String> images, String placeName) {
     return Padding(

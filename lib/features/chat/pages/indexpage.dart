@@ -9,16 +9,11 @@ class ChatPage extends StatefulWidget {
   State<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
+class _ChatPageState extends State<ChatPage> {
   // Controllers and State Variables
-  late TabController _tabController;
-  late List<Map<String, dynamic>> _allChats;
-  List<Map<String, dynamic>> _filteredChats = [];
-  int _currentTabIndex = 0;
+  late List<Map<String, dynamic>> _travellerChats;
 
   // Constants
-  static const int _travellerTabIndex = 0;
-  static const int _marketplaceTabIndex = 1;
   static const double _appBarElevation = 0.0;
   static const double _borderRadius = 12.0;
   static const double _avatarRadius = 28.0;
@@ -26,47 +21,19 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _initializeController();
     _loadChatData();
-    _setupTabListener();
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   // Initialization Methods
-  void _initializeController() {
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
   void _loadChatData() {
-    _allChats = List.from(chat_data);
-    _filterChats();
-  }
-
-  void _setupTabListener() {
-    _tabController.addListener(() {
-      if (_tabController.indexIsChanging) {
-        setState(() {
-          _currentTabIndex = _tabController.index;
-        });
-        _filterChats();
-      }
-    });
-  }
-
-  // Data Processing Methods
-  void _filterChats() {
-    final chatType = _currentTabIndex == _travellerTabIndex ? 'traveller' : 'marketplace';
-    _filteredChats = _allChats.where((chat) => chat['type'] == chatType).toList();
+    _travellerChats = chat_data
+        .where((chat) => chat['type'] == 'traveller')
+        .toList();
     _sortChatsByTime();
   }
 
   void _sortChatsByTime() {
-    _filteredChats.sort((a, b) {
+    _travellerChats.sort((a, b) {
       final timeA = _parseTimeAgo(a['lastMessageTime']);
       final timeB = _parseTimeAgo(b['lastMessageTime']);
       return timeA.compareTo(timeB);
@@ -85,22 +52,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
 
   // Counter Methods
   int _getTotalUnreadCount() {
-    return _allChats
-        .map((chat) => chat['unreadCount'] as int)
-        .fold(0, (sum, count) => sum + count);
-  }
-
-  int _getTravellerUnreadCount() {
-    return _getChatUnreadCount('traveller');
-  }
-
-  int _getMarketplaceUnreadCount() {
-    return _getChatUnreadCount('marketplace');
-  }
-
-  int _getChatUnreadCount(String type) {
-    return _allChats
-        .where((chat) => chat['type'] == type)
+    return _travellerChats
         .map((chat) => chat['unreadCount'] as int)
         .fold(0, (sum, count) => sum + count);
   }
@@ -110,21 +62,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildAppBar(),
-      body: _buildBody()
-    );
-  }
-
-  // Main Body Structure
-  Widget _buildBody() {
-    return Column(
-      children: [
-        _buildTabBar(),
-        Expanded(
-          child: _currentTabIndex == _travellerTabIndex
-              ? _buildChatList('traveller')
-              : _buildChatList('marketplace'),
-        ),
-      ],
+      body: _buildChatList(),
     );
   }
 
@@ -182,103 +120,35 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
     );
   }
 
-  // Tab Bar Components
-  Widget _buildTabBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      child: TabBar(
-        controller: _tabController,
-        indicator: const UnderlineTabIndicator(
-          borderSide: BorderSide(color: Colors.blue, width: 2),
-          insets: EdgeInsets.symmetric(horizontal: 10),
-        ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        dividerColor: Colors.transparent,
-        labelColor: Colors.blue,
-        unselectedLabelColor: Colors.black,
-        labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
-        tabs: [
-          _buildTab(
-            icon: Icons.people,
-            label: 'Travellers',
-            unreadCount: _getTravellerUnreadCount(),
-            isSelected: _currentTabIndex == _travellerTabIndex,
-          ),
-          _buildTab(
-            icon: Icons.storefront,
-            label: 'Marketplace',
-            unreadCount: _getMarketplaceUnreadCount(),
-            isSelected: _currentTabIndex == _marketplaceTabIndex,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTab({
-    required IconData icon,
-    required String label,
-    required int unreadCount,
-    required bool isSelected,
-  }) {
-    return Tab(
-      height: 40,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon, 
-              size: 18,
-              color: isSelected ? Colors.blue : Colors.black,
-            ),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(label, overflow: TextOverflow.ellipsis),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-
   // Chat List Components
-  Widget _buildChatList(String type) {
-    final chats = _allChats.where((chat) => chat['type'] == type).toList();
-    
-    if (chats.isEmpty) {
-      return _buildEmptyState(type);
+  Widget _buildChatList() {
+    if (_travellerChats.isEmpty) {
+      return _buildEmptyState();
     }
 
     return RefreshIndicator(
       onRefresh: _handleRefresh,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: chats.length,
-        itemBuilder: (context, index) => _buildChatItem(chats[index]),
+        itemCount: _travellerChats.length,
+        itemBuilder: (context, index) => _buildChatItem(_travellerChats[index]),
       ),
     );
   }
 
-  Widget _buildEmptyState(String type) {
-    final isTraveller = type == 'traveller';
-    
+  Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            isTraveller ? Icons.people_outline : Icons.storefront_outlined,
+            Icons.people_outline,
             size: 64,
             color: Colors.grey,
           ),
           const SizedBox(height: 16),
           Text(
-            isTraveller ? 'No traveller chats yet' : 'No marketplace chats yet',
+            'No traveller chats yet',
             style: const TextStyle(
               fontSize: 18,
               color: Colors.grey,
@@ -287,9 +157,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
           ),
           const SizedBox(height: 8),
           Text(
-            isTraveller 
-                ? 'Start chatting with fellow travellers\nto share experiences and tips!'
-                : 'Browse marketplace to find\ntravel gear and services!',
+            'Start chatting with fellow travellers\nto share experiences and tips!',
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 14, color: Colors.grey),
           ),
@@ -330,7 +198,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
           backgroundColor: Colors.grey[300],
           child: chat['userImage'].isEmpty
               ? Icon(
-                  chat['type'] == 'marketplace' ? Icons.storefront : Icons.person,
+                  Icons.person,
                   color: Colors.grey[600],
                   size: 28,
                 )
@@ -357,8 +225,6 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
     );
   }
 
-  
-
   Widget _buildChatTitle(Map<String, dynamic> chat) {
     return Row(
       children: [
@@ -377,8 +243,6 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
       ],
     );
   }
-
- 
 
   Widget _buildChatSubtitle(Map<String, dynamic> chat) {
     return Padding(

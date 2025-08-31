@@ -1,4 +1,4 @@
-// journey_data.dart - Complete Sri Lankan journey details data with CORRECTED relevant images
+// journey_data.dart - Complete Sri Lankan journey details data with REAL coordinates
 final List<Map<String, dynamic>> journeyDetailsData = [
   {
     'id': '1',
@@ -78,8 +78,7 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Polonnaruwa, North Central Province, Sri Lanka'
         },
         'images': [
-          'assets/images/img5.jpg', // Ancient Buddha statues at Gal Vihara
-          
+          'assets/images/img5.jpg',
         ],
         'activities': [
           'Bicycle tour through ancient ruins',
@@ -119,12 +118,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'rating': 4.6,
         }
       ],
-      'transportation': [
-        {
-          'name': 'Private Car with Driver',
-          'rating': 4.7,
-        }
-      ]
     },
     'tips': [
       'Start early morning climbs to avoid heat and crowds',
@@ -135,7 +128,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
     ]
   },
 
-  // Trip 2: Cultural Heart of Sri Lanka
   {
     'id': '2',
     'tripTitle': 'Cultural Heart of Sri Lanka',
@@ -155,12 +147,12 @@ final List<Map<String, dynamic>> journeyDetailsData = [
         'name': 'Temple of the Sacred Tooth Relic',
         'trip_mood': 'Cultural',
         'location': {
-          'latitude': 7.2906,
-          'longitude': 80.6337,
+          'latitude': 7.2935,
+          'longitude': 80.6414,
           'address': 'Sri Dalada Veediya, Kandy, Sri Lanka'
         },
         'images': [
-          'assets/images/img11.jpg', // Temple of the Tooth exterior
+          'assets/images/img11.jpg',
         ],
         'activities': [
           'Attending evening puja ceremony',
@@ -187,8 +179,7 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Peradeniya, Kandy, Sri Lanka'
         },
         'images': [
-          'assets/images/img10.jpg', // Tropical botanical gardens
-      
+          'assets/images/img10.jpg',
         ],
         'activities': [
           'Walking through 147-acre botanical paradise',
@@ -215,8 +206,7 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Kandy Lake, Kandy, Sri Lanka'
         },
         'images': [
-          'assets/images/img8.jpg', // Kandy Lake with temple
-          
+          'assets/images/img8.jpg',
         ],
         'activities': [
           'Walking around the scenic artificial lake',
@@ -256,12 +246,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'rating': 4.6,
         }
       ],
-      'transportation': [
-        {
-          'name': 'Three-wheeler (Tuk-tuk)',
-          'rating': 4.2,
-        }
-      ]
     },
     'tips': [
       'Attend the evening puja at Temple of Tooth (6:30 PM)',
@@ -272,7 +256,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
     ]
   },
 
-  // Trip 3: Colonial Charm & Coastal Beauty
   {
     'id': '3',
     'tripTitle': 'Colonial Charm & Coastal Beauty',
@@ -292,8 +275,8 @@ final List<Map<String, dynamic>> journeyDetailsData = [
         'name': 'Galle Dutch Fort',
         'trip_mood': 'Cultural',
         'location': {
-          'latitude': 6.0535,
-          'longitude': 80.2210,
+          'latitude': 6.0276,
+          'longitude': 80.2168,
           'address': 'Galle Fort, Galle, Sri Lanka'
         },
         'images': [
@@ -320,7 +303,7 @@ final List<Map<String, dynamic>> journeyDetailsData = [
         'trip_mood': 'Beach',
         'location': {
           'latitude': 6.0108,
-          'longitude': 80.2167,
+          'longitude': 80.2494,
           'address': 'Unawatuna, Galle District, Sri Lanka'
         },
         'images': [
@@ -346,12 +329,12 @@ final List<Map<String, dynamic>> journeyDetailsData = [
         'name': 'Mirissa Whale Watching',
         'trip_mood': 'Adventure',
         'location': {
-          'latitude': 5.9467,
-          'longitude': 80.4610,
+          'latitude': 5.9487,
+          'longitude': 80.4617,
           'address': 'Mirissa Harbor, Matara District, Sri Lanka'
         },
         'images': [
-          'assets/images/img15.jpg', // Blue whale in ocean
+          'assets/images/img15.jpg',
         ],
         'activities': [
           'Early morning whale watching boat tour',
@@ -391,12 +374,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'rating': 4.5,
         }
       ],
-      'transportation': [
-        {
-          'name': 'Coastal Train',
-          'rating': 4.8,
-        }
-      ]
     },
     'tips': [
       'Book whale watching tours in advance (season: Nov-Apr)',
@@ -407,7 +384,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
     ]
   },
 
-  // Trip 4: Hill Country Tea Trail Adventure
   {
     'id': '4',
     'tripTitle': 'Hill Country Tea Trail Adventure',
@@ -432,8 +408,7 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Gotuwala, Ella, Sri Lanka'
         },
         'images': [
-          'assets/images/img14.jpg', // Nine Arch Bridge with train
-          
+          'assets/images/img14.jpg',
         ],
         'activities': [
           'Photography of the iconic stone bridge',
@@ -456,12 +431,11 @@ final List<Map<String, dynamic>> journeyDetailsData = [
         'trip_mood': 'Adventure',
         'location': {
           'latitude': 6.8667,
-          'longitude': 81.0500,
+          'longitude': 81.0463,
           'address': 'Ella, Badulla District, Sri Lanka'
         },
         'images': [
-          'assets/images/img13.jpg', // Little Adam's Peak summit
-          
+          'assets/images/img13.jpg',
         ],
         'activities': [
           'Easy hiking to the summit (1141m)',
@@ -483,13 +457,12 @@ final List<Map<String, dynamic>> journeyDetailsData = [
         'name': 'Tea Plantation Experience',
         'trip_mood': 'Cultural',
         'location': {
-          'latitude': 6.8833,
-          'longitude': 81.0667,
+          'latitude': 6.8925,
+          'longitude': 80.5956,
           'address': 'Lipton\'s Seat, Haputale, Sri Lanka'
         },
         'images': [
-          'assets/images/img23.jpg', // Tea plantation workers
-          
+          'assets/images/img23.jpg',
         ],
         'activities': [
           'Tea factory tour and processing demonstration',
@@ -529,12 +502,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'rating': 4.7,
         }
       ],
-      'transportation': [
-        {
-          'name': 'Hill Country Train',
-          'rating': 4.9,
-        }
-      ]
     },
     'tips': [
       'Take the train from Kandy to Ella - one of world\'s most scenic rides',
@@ -545,7 +512,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
     ]
   },
 
-  // Trip 5: Wildlife Safari Adventure
   {
     'id': '5',
     'tripTitle': 'Wildlife Safari Adventure',
@@ -565,13 +531,12 @@ final List<Map<String, dynamic>> journeyDetailsData = [
         'name': 'Yala National Park Block 1',
         'trip_mood': 'Adventure',
         'location': {
-          'latitude': 6.3779,
-          'longitude': 81.5205,
+          'latitude': 6.3725,
+          'longitude': 81.5067,
           'address': 'Yala National Park, Hambantota District, Sri Lanka'
         },
         'images': [
-          'assets/images/img6.jpg', // Sri Lankan leopard
-          
+          'assets/images/img6.jpg',
         ],
         'activities': [
           'Early morning leopard tracking safari',
@@ -593,12 +558,12 @@ final List<Map<String, dynamic>> journeyDetailsData = [
         'name': 'Bundala National Park',
         'trip_mood': 'Nature',
         'location': {
-          'latitude': 6.1957,
-          'longitude': 81.2319,
+          'latitude': 6.1967,
+          'longitude': 81.2500,
           'address': 'Bundala National Park, Hambantota District, Sri Lanka'
         },
         'images': [
-          'assets/images/img18.jpg', // Flamingos in Bundala
+          'assets/images/img18.jpg',
         ],
         'activities': [
           'Migratory bird watching (Sep-Mar season)',
@@ -625,8 +590,7 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Palatupana, Yala, Sri Lanka'
         },
         'images': [
-          'assets/images/img19.jpg', // Pristine beach coastline
-          
+          'assets/images/img19.jpg',
         ],
         'activities': [
           'Relaxing on pristine untouched beach',
@@ -666,12 +630,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'rating': 4.2,
         }
       ],
-      'transportation': [
-        {
-          'name': 'Safari Jeep with Guide',
-          'rating': 4.8,
-        }
-      ]
     },
     'tips': [
       'Book safari tours in advance during peak season (Dec-Apr)',
@@ -682,7 +640,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
     ]
   },
 
-  // Trip 6: Little England in the Hills
   {
     'id': '6',
     'tripTitle': 'Little England in the Hills',
@@ -702,12 +659,12 @@ final List<Map<String, dynamic>> journeyDetailsData = [
         'name': 'Horton Plains & World\'s End',
         'trip_mood': 'Adventure',
         'location': {
-          'latitude': 6.8067,
-          'longitude': 80.7933,
+          'latitude': 6.8089,
+          'longitude': 80.8052,
           'address': 'Horton Plains National Park, Nuwara Eliya District, Sri Lanka'
         },
         'images': [
-          'assets/images/img31.jpg', // World's End cliff view
+          'assets/images/img31.jpg',
         ],
         'activities': [
           'Hiking the 9km circular trail',
@@ -734,8 +691,7 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'address': 'Gregory Lake, Nuwara Eliya, Sri Lanka'
         },
         'images': [
-          'assets/images/img32.jpg', // Gregory Lake with colonial buildings
-          
+          'assets/images/img32.jpg',
         ],
         'activities': [
           'Boat rides on Gregory Lake',
@@ -802,12 +758,6 @@ final List<Map<String, dynamic>> journeyDetailsData = [
           'rating': 4.3,
         }
       ],
-      'transportation': [
-        {
-          'name': 'Highland Train',
-          'rating': 4.7,
-        }
-      ]
     },
     'tips': [
       'Start Horton Plains hike very early (6 AM) before clouds cover views',
@@ -816,5 +766,5 @@ final List<Map<String, dynamic>> journeyDetailsData = [
       'Try fresh strawberries and cream - local specialty',
       'Visit during April for rhododendron blooms in the hills'
     ]
-  }
+  },
 ];

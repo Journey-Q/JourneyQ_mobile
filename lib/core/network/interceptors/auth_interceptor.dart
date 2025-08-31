@@ -1,7 +1,7 @@
-// auth_interceptor.dart
+
 import 'package:dio/dio.dart';
 import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
-import 'package:journeyq/data/repositories/auth_repositories/auth_repository.dart'; // Import your AuthProvider
+
 
 class AuthInterceptor extends Interceptor {
   final AuthProvider authProvider;
@@ -34,41 +34,6 @@ class AuthInterceptor extends Interceptor {
       if (_isAuthEndpoint(err.requestOptions.path)) {
         handler.next(err);
         return;
-      }
-
-      try {
-        // Attempt to refresh token
-       final refreshtoken  = await AuthRepository.getRefreshToken();
-        if (refreshtoken == null) {
-          handler.next(err);
-          return;
-        }
-
-  
-       final authProvider = AuthProvider(); // or get it via Provider/Dependency Injection
-       final bool refreshed = await authProvider.refreshTokenSilently();
-
-
-        if (refreshed) {
-          // Update the failed request with new token
-          err.requestOptions.headers['Authorization'] =
-              'Bearer ${authProvider.accessToken}';
-
-          // Retry the original request
-          final dio = Dio();
-
-          // Copy base options
-          dio.options = BaseOptions(
-            baseUrl: err.requestOptions.baseUrl,
-            headers: err.requestOptions.headers,
-          );
-
-          final response = await dio.fetch(err.requestOptions);
-          handler.resolve(response);
-          return;
-        } 
-      } catch (refreshError) {
-         return ;
       }
     }
 
