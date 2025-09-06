@@ -266,6 +266,48 @@ class FollowRepository {
     }
   }
 
+  /// Get current user's profile stats in Map format (for profile page)
+  static Future<Map<String, dynamic>> getMyProfileStats() async {
+    try {
+      final stats = await getMyStats(); // Use existing method
+      return {
+        'success': true,
+        'followersCount': stats.followersCount,
+        'followingCount': stats.followingCount,
+        'data': {
+          'userId': stats.userId,
+          'followersCount': stats.followersCount,
+          'followingCount': stats.followingCount,
+        }
+      };
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw ServerException('Failed to get my profile stats: $e');
+    }
+  }
+
+  /// Get profile stats for a specific user in Map format
+  static Future<Map<String, dynamic>> getProfileStats(String userId) async {
+    try {
+      final stats = await getUserStats(userId); // Use existing method
+      return {
+        'success': true,
+        'followersCount': stats.followersCount,
+        'followingCount': stats.followingCount,
+        'data': {
+          'userId': stats.userId,
+          'followersCount': stats.followersCount,
+          'followingCount': stats.followingCount,
+        }
+      };
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw ServerException('Failed to get profile stats: $e');
+    }
+  }
+
   /// Get follow statistics for a specific user
   static Future<UserStats> getUserStats(String userId) async {
     try {
