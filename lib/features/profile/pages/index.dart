@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:journeyq/data/repositories/profile_repository/profile_repository.dart';
+import 'package:journeyq/data/repositories/follow_repository/follow_repository.dart';
 import 'package:journeyq/core/errors/exception.dart';
-import 'package:journeyq/features/journey_view/data.dart'; // Import journey data
+import 'package:journeyq/features/journey_view/data.dart';
+import 'package:journeyq/features/profile/pages/followersfollowingpage.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -17,53 +19,51 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker();
   bool isSubscribed = false;
-  String selectedTab = 'posts'; // 'posts', 'bucketlist', 'liked'
+  String selectedTab = 'posts';
 
   // Loading and data states
   bool _isLoading = true;
+  bool _isLoadingStats = true;
   Map<String, dynamic>? _profileData;
+  Map<String, dynamic>? _statsData;
   String? _userId;
 
   // Transform journey data to user posts format
   List<Map<String, dynamic>> get userPosts {
     return journeyDetailsData.map((journey) {
-      // Get the first place and its first image for the post
       final places = journey['places'] as List;
       final firstPlace = places.isNotEmpty ? places.first : null;
       final images = firstPlace?['images'] as List<String>? ?? [];
       final firstImage = images.isNotEmpty ? images.first : 'assets/images/placeholder.jpg';
-      
-      // Generate consistent engagement numbers based on journey ID
+
       final likes = 50 + (journey['id'].hashCode % 200);
       final comments = 5 + (journey['id'].hashCode % 30);
-      
+
       return {
         'imageUrl': firstImage,
         'likes': likes,
         'comments': comments,
-        'isLiked': (journey['id'].hashCode % 3) == 0, // Consistent liked status
-        'isSaved': (journey['id'].hashCode % 4) == 0, // Consistent saved status
+        'isLiked': (journey['id'].hashCode % 3) == 0,
+        'isSaved': (journey['id'].hashCode % 4) == 0,
         'caption': journey['tripTitle'],
         'location': firstPlace?['name'] ?? 'Unknown Location',
         'destination': journey['tripTitle'],
-        'description': firstPlace != null 
+        'description': firstPlace != null
             ? 'Explore ${firstPlace['name']} - ${journey['totalDays']} days journey'
             : 'Amazing ${journey['totalDays']}-day journey',
         'timestamp': _getRandomTimestamp(journey['id']),
         'isVisited': true,
         'visitDate': _getRandomVisitDate(journey['id']),
-        'journeyId': journey['id'], // Add journey ID for routing
+        'journeyId': journey['id'],
       };
     }).toList();
   }
 
-  // Helper method to generate consistent timestamps
   String _getRandomTimestamp(String journeyId) {
     final timestamps = ['2 hours ago', '5 hours ago', '1 day ago', '2 days ago', '3 days ago', '4 days ago', '5 days ago', '1 week ago'];
     return timestamps[journeyId.hashCode % timestamps.length];
   }
 
-  // Helper method to generate consistent visit dates
   String _getRandomVisitDate(String journeyId) {
     final dates = ['2024-06-15', '2024-06-10', '2024-06-08', '2024-06-05', '2024-06-01', '2024-05-28', '2024-05-25', '2024-05-20', '2024-05-15'];
     return dates[journeyId.hashCode % dates.length];
@@ -72,7 +72,6 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    // Use addPostFrameCallback to ensure context is ready
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadUserProfile();
     });
@@ -91,18 +90,34 @@ class _ProfilePageState extends State<ProfilePage> {
       _userId = authUser!.userId?.toString();
       print("Loading profile for userId: $_userId");
 
-      // Get profile data from repository
-      final profileData = await ProfileRepository.getProfile(_userId!);
+      setState(() {
+        _isLoading = true;
+        _isLoadingStats = true;
+      });
+
+      // Load profile data and stats concurrently
+      final List<dynamic> results = await Future.wait([
+        ProfileRepository.getProfile(_userId!),
+        _loadUserStats(),
+      ]);
+
+      final profileData = results[0] as Map<String, dynamic>;
+      final statsData = results[1] as Map<String, dynamic>?;
+
       print("Profile data loaded: $profileData");
+      print("Stats data loaded: $statsData");
 
       setState(() {
         _profileData = profileData;
+        _statsData = statsData;
         _isLoading = false;
+        _isLoadingStats = false;
       });
     } catch (e) {
       print("Error loading profile: $e");
       setState(() {
         _isLoading = false;
+        _isLoadingStats = false;
       });
 
       if (mounted) {
@@ -116,22 +131,70 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  // Get user data combining profile data and auth data
+  // New method to load user stats
+  Future<Map<String, dynamic>?> _loadUserStats() async {
+    try {
+      final statsResponse = await FollowRepository.getMyProfileStats();
+      return statsResponse;
+    } catch (e) {
+      print("Error loading user stats: $e");
+      // Try to create stats if they don't exist
+      try {
+        if (_userId != null) {
+          await FollowRepository.createUserStats(_userId!);
+          // Try again after creating
+          final statsResponse = await FollowRepository.getMyProfileStats();
+          return statsResponse;
+        }
+      } catch (createError) {
+        print("Error creating user stats: $createError");
+      }
+      return null;
+    }
+  }
+
+  // Method to refresh stats after follow actions
+  Future<void> _refreshStats() async {
+    try {
+      final statsData = await _loadUserStats();
+      if (mounted) {
+        setState(() {
+          _statsData = statsData;
+        });
+      }
+    } catch (e) {
+      print("Error refreshing stats: $e");
+    }
+  }
+
+  // Updated method to get user data with dynamic stats
   Map<String, dynamic> _getUserData(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final authUser = authProvider.user;
 
+    // Get follower/following counts from stats data
+    int followersCount = 0;
+    int followingCount = 0;
+
+    if (_statsData != null) {
+      followersCount = _statsData!['followersCount'] ?? 0;
+      followingCount = _statsData!['followingCount'] ?? 0;
+    }
+
     if (_profileData != null) {
-      // Use loaded profile data
       return {
+        'id': _userId,
+        'userId': _userId,
         'name': _profileData!['display_name'] ?? authUser?.username ?? 'Unknown User',
         'username': authUser?.username ?? 'unknown_user',
+        'displayName': _profileData!['display_name'] ?? authUser?.username ?? 'Unknown User',
         'bio': _profileData!['bio'] ?? 'Travel enthusiast | Exploring Sri Lanka 🇱🇰\n✈️ ${journeyDetailsData.length} amazing journeys completed',
         'posts': userPosts.length,
-        'followers': 5, // This would come from a separate API in a real app
-        'following': 4,  // This would come from a separate API in a real app
+        'followers': followersCount,
+        'following': followingCount,
         'profileImage': _profileData!['profile_image_url'] ?? authUser?.profileUrl ?? 'assets/images/profile_picture.jpg',
         'isVerified': true,
+        'isCurrentUser': true,
         'level': 'Explorer',
         'joinDate': 'March 2022',
         'achievements': ['Mountain Climber', 'Ocean Explorer', 'City Wanderer'],
@@ -139,16 +202,19 @@ class _ProfilePageState extends State<ProfilePage> {
         'tripMoods': _profileData!['preferred_trip_moods'] ?? [],
       };
     } else {
-      // Fallback to auth user data
       return {
+        'id': _userId,
+        'userId': _userId,
         'name': authUser?.username ?? 'Unknown User',
         'username': authUser?.username ?? 'unknown_user',
+        'displayName': authUser?.username ?? 'Unknown User',
         'bio': 'Travel enthusiast | Exploring Sri Lanka 🇱🇰\n✈️ ${journeyDetailsData.length} amazing journeys completed',
         'posts': userPosts.length,
-        'followers': 5,
-        'following': 4,
+        'followers': followersCount,
+        'following': followingCount,
         'profileImage': authUser?.profileUrl ?? 'assets/images/profile_picture.jpg',
         'isVerified': true,
+        'isCurrentUser': true,
         'level': 'Explorer',
         'joinDate': 'March 2022',
         'achievements': ['Mountain Climber', 'Ocean Explorer', 'City Wanderer'],
@@ -160,37 +226,36 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Show loading screen while profile is loading
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF8F9FA),
-        body: SafeArea(
+          backgroundColor: const Color(0xFFF8F9FA),
+          body: SafeArea(
           child: Column(
-            children: [
-              _buildHeaderSkeleton(),
-              Expanded(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0088cc)),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Loading Profile...',
-                        style: TextStyle(
-                          color: Color(0xFF636E72),
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+          children: [
+          _buildHeaderSkeleton(),
+    Expanded(
+    child: Center(
+    child: Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+    const CircularProgressIndicator(
+    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0088cc)),
+    ),
+      const SizedBox(height: 16),
+      const Text(
+        'Loading Profile...',
+        style: TextStyle(
+          color: Color(0xFF636E72),
+          fontSize: 16,
         ),
+      ),
+    ],
+    ),
+    ),
+    ),
+          ],
+          ),
+          ),
       );
     }
 
@@ -208,7 +273,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 _buildStatsCard(context),
                 _buildActionButtons(),
                 _buildContentSection(),
-                const SizedBox(height: 10), // Space for bottom navigation
+                const SizedBox(height: 10),
               ],
             ),
           ),
@@ -251,7 +316,6 @@ class _ProfilePageState extends State<ProfilePage> {
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          // Left side - Username
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
@@ -289,10 +353,9 @@ class _ProfilePageState extends State<ProfilePage> {
               ],
             ),
           ),
-          
+
           const Spacer(),
-          
-          // Right side - Subscribe + Settings buttons
+
           Row(
             children: [
               Container(
@@ -303,9 +366,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     colors: isSubscribed
                         ? [const Color(0xFFFFD700), const Color(0xFFFF6B6B)]
                         : [
-                            const Color(0xFF0088cc),
-                            Color(0xFF0088cc).withOpacity(0.8),
-                          ],
+                      const Color(0xFF0088cc),
+                      Color(0xFF0088cc).withOpacity(0.8),
+                    ],
                   ),
                 ),
                 child: ElevatedButton.icon(
@@ -337,7 +400,7 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(width: 10),
               _buildHeaderButton(
                 Icons.settings_outlined,
-                () => context.push('/profile/settings'),
+                    () => context.push('/profile/settings'),
               ),
             ],
           ),
@@ -370,15 +433,12 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildProfileCard(BuildContext context) {
     final userData = _getUserData(context);
 
-    // Helper function to determine image provider
     ImageProvider? _getImageProvider(String? imagePath) {
       if (imagePath == null) return null;
 
-      // Check if it's a URL (starts with http or https)
       if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
         return NetworkImage(imagePath);
       } else {
-        // Treat as asset path
         return AssetImage(imagePath);
       }
     }
@@ -513,26 +573,23 @@ class _ProfilePageState extends State<ProfilePage> {
             'Posts',
             Icons.photo_library,
             const Color(0xFF0088cc),
+            null,
           ),
           _buildDivider(),
-          GestureDetector(
-            onTap: () => _navigateToFollowersFollowing('followers'),
-            child: _buildStatItem(
-              _formatNumber(userData['followers'] ?? 0),
-              'Followers',
-              Icons.people,
-              const Color(0xFF00B894),
-            ),
+          _buildStatItem(
+            _isLoadingStats ? '...' : _formatNumber(userData['followers'] ?? 0),
+            'Followers',
+            Icons.people,
+            const Color(0xFF00B894),
+                () => _navigateToFollowersFollowing('followers'),
           ),
           _buildDivider(),
-          GestureDetector(
-            onTap: () => _navigateToFollowersFollowing('following'),
-            child: _buildStatItem(
-              (userData['following'] ?? 0).toString(),
-              'Following',
-              Icons.person_add,
-              const Color(0xFFE17055),
-            ),
+          _buildStatItem(
+            _isLoadingStats ? '...' : (userData['following'] ?? 0).toString(),
+            'Following',
+            Icons.person_add,
+            const Color(0xFFE17055),
+                () => _navigateToFollowersFollowing('following'),
           ),
         ],
       ),
@@ -540,12 +597,13 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildStatItem(
-    String count,
-    String label,
-    IconData icon,
-    Color color,
-  ) {
-    return Column(
+      String count,
+      String label,
+      IconData icon,
+      Color color,
+      VoidCallback? onTap,
+      ) {
+    Widget statWidget = Column(
       children: [
         Container(
           padding: const EdgeInsets.all(12),
@@ -570,6 +628,15 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ],
     );
+
+    if (onTap != null) {
+      return GestureDetector(
+        onTap: onTap,
+        child: statWidget,
+      );
+    }
+
+    return statWidget;
   }
 
   Widget _buildDivider() {
@@ -647,7 +714,6 @@ class _ProfilePageState extends State<ProfilePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // "My Journeys" title
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: const Text(
@@ -665,108 +731,104 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildPostsGrid() {
-  // Calculate posts starting from index 7
-  final postsFromIndex7 = userPosts.length > 7 
-      ? userPosts.sublist(7) 
-      : <Map<String, dynamic>>[];
-  
-  return Container(
-    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    child: ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: postsFromIndex7.length,
-      itemBuilder: (context, index) {
-        final post = postsFromIndex7[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Image
-              ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
+    final postsFromIndex7 = userPosts.length > 7
+        ? userPosts.sublist(7)
+        : <Map<String, dynamic>>[];
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: postsFromIndex7.length,
+        itemBuilder: (context, index) {
+          final post = postsFromIndex7[index];
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
                 ),
-                child: Container(
-                  height: 200,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(post['imageUrl']),
-                      fit: BoxFit.cover,
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                  child: Container(
+                    height: 200,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage(post['imageUrl']),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              // Content
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      post['destination'] ?? 'Unknown Location',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2D3436),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      post['description'] ?? 'No description available',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF636E72),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    // View Journey button with ID-based routing
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => _viewJourney(post),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0088cc),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'View Journey',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        post['destination'] ?? 'Unknown Location',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2D3436),
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        post['description'] ?? 'No description available',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF636E72),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () => _viewJourney(post),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0088cc),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text(
+                            'View Journey',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        );
-      },
-    ),
-  );
-}
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   String _formatNumber(int number) {
     if (number >= 1000000) {
@@ -851,7 +913,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 Icons.settings,
                 'Manage Subscription',
                 const Color(0xFF0088cc),
-                () {
+                    () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -870,7 +932,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 Icons.cancel,
                 'Cancel Subscription',
                 const Color(0xFFE17055),
-                () {
+                    () {
                   Navigator.pop(context);
                   _showCancelSubscriptionDialog();
                 },
@@ -883,11 +945,11 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildSubscriptionOption(
-    IconData icon,
-    String title,
-    Color color,
-    VoidCallback onTap,
-  ) {
+      IconData icon,
+      String title,
+      Color color,
+      VoidCallback onTap,
+      ) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -964,7 +1026,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Updated navigation method for ID-based routing
   void _viewJourney(Map<String, dynamic> post) {
     final journeyId = post['journeyId'];
     if (journeyId != null) {
@@ -980,11 +1041,21 @@ class _ProfilePageState extends State<ProfilePage> {
     context.push('/profile/bucketlist');
   }
 
+  // Updated navigation method to pass userData and refresh stats on return
   void _navigateToFollowersFollowing(String tab) {
     final userData = _getUserData(context);
-    context.push(
-      '/profile/followers-following',
-      extra: {'initialTab': tab, 'userData': userData},
-    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FollowersFollowingPage(
+          initialTab: tab,
+          userData: userData,
+        ),
+      ),
+    ).then((_) {
+      // Refresh stats when returning from followers/following page
+      _refreshStats();
+    });
   }
 }
