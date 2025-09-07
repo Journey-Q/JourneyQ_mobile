@@ -3,9 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:journeyq/features/market_place/pages/searchbar.dart';
-
-// Professional Marketplace Search Bar Widget
-
+import 'package:journeyq/features/market_place/pages/data.dart'; // Import centralized data
 
 class MarketplacePage extends StatefulWidget {
   const MarketplacePage({Key? key}) : super(key: key);
@@ -23,9 +21,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
   bool showAllAgencies = false;
   bool showAllPackages = false;
 
-
-
-  // Updated services - only 3 services with proper navigation
+  // Main services - only 3 services with proper navigation
   final List<Map<String, dynamic>> mainServices = [
     {
       'name': 'Hotels',
@@ -47,158 +43,16 @@ class _MarketplacePageState extends State<MarketplacePage> {
     },
   ];
 
-  // Popular Hotels Data with IDs
-  final List<Map<String, dynamic>> popularHotels = [
-    {
-      'id': 'hotel_001',
-      'name': 'Shangri-La Hotel Colombo',
-      'location': 'Galle Face, Colombo',
-      'rating': 4.8,
-      'image': 'assets/images/shangri_la.jpg',
-      'backgroundColor': const Color(0xFF8B4513),
-    },
-    {
-      'id': 'hotel_002',
-      'name': 'Galle Face Hotel',
-      'location': 'Galle Face Green, Colombo',
-      'rating': 4.5,
-      'image': 'assets/images/galle_face.jpg',
-      'backgroundColor': const Color(0xFF228B22),
-    },
-    {
-      'id': 'hotel_003',
-      'name': 'Cinnamon Grand Colombo',
-      'location': 'Fort, Colombo',
-      'rating': 4.7,
-      'image': 'assets/images/cinnamon_grand.jpg',
-      'backgroundColor': const Color(0xFF20B2AA),
-    },
-    {
-      'id': 'hotel_004',
-      'name': 'Hilton Colombo',
-      'location': 'Echelon Square, Colombo',
-      'rating': 4.6,
-      'image': 'assets/images/hilton.jpg',
-      'backgroundColor': const Color(0xFF8FBC8F),
-    },
-    {
-      'id': 'hotel_005',
-      'name': 'Taj Samudra',
-      'location': 'Galle Face, Colombo',
-      'rating': 4.4,
-      'image': 'assets/images/taj_samudra.jpg',
-      'backgroundColor': const Color(0xFF9370DB),
-    },
-  ];
-
-  // Popular Travel Agencies Data with IDs
-  final List<Map<String, dynamic>> travelAgencies = [
-    {
-      'id': 'agency_001',
-      'name': 'Ceylon Roots',
-      'rating': 4.9,
-      'experience': '15+ Years',
-      'image': 'assets/images/ceylon_roots.jpg',
-      'backgroundColor': const Color(0xFF8B4513),
-    },
-    {
-      'id': 'agency_002',
-      'name': 'Jetwing Travels',
-      'rating': 4.8,
-      'experience': '20+ Years',
-      'image': 'assets/images/jetwing.jpg',
-      'backgroundColor': const Color(0xFF228B22),
-    },
-    {
-      'id': 'agency_003',
-      'name': 'Aitken Spence',
-      'rating': 4.7,
-      'experience': '25+ Years',
-      'image': 'assets/images/aitken_spence.jpg',
-      'backgroundColor': const Color(0xFF20B2AA),
-    },
-    {
-      'id': 'agency_004',
-      'name': 'Walkers Tours',
-      'rating': 4.6,
-      'experience': '30+ Years',
-      'image': 'assets/images/walkers.jpg',
-      'backgroundColor': const Color(0xFF8FBC8F),
-    },
-    {
-      'id': 'agency_005',
-      'name': 'Red Dot Tours',
-      'rating': 4.5,
-      'experience': '12+ Years',
-      'image': 'assets/images/red_dot.jpeg',
-      'backgroundColor': const Color(0xFF9370DB),
-    },
-  ];
-
-  // Tour Packages Data with IDs
-  final List<Map<String, dynamic>> tourPackages = [
-    {
-      'id': 'package_001',
-      'title': 'Cultural Triangle Tour',
-      'subtitle': '5 Days • Anuradhapura, Polonnaruwa, Sigiriya',
-      'price': 'LKR 25,000',
-      'rating': 4.8,
-      'image': 'assets/images/cultural_triangle.jpg',
-      'duration': '5 Days',
-      'icon': Icons.account_balance,
-      'backgroundColor': const Color(0xFF8B4513),
-    },
-    {
-      'id': 'package_002',
-      'title': 'Hill Country Adventure',
-      'subtitle': '4 Days • Kandy, Nuwara Eliya, Ella',
-      'price': 'LKR 22,000',
-      'rating': 4.9,
-      'image': 'assets/images/hill_country.jpg',
-      'duration': '4 Days',
-      'icon': Icons.landscape,
-      'backgroundColor': const Color(0xFF228B22),
-    },
-    {
-      'id': 'package_003',
-      'title': 'Southern Coast Explorer',
-      'subtitle': '3 Days • Galle, Hikkaduwa, Mirissa',
-      'price': 'LKR 18,000',
-      'rating': 4.7,
-      'image': 'assets/images/southern_coast.jpg',
-      'duration': '3 Days',
-      'icon': Icons.waves,
-      'backgroundColor': const Color(0xFF20B2AA),
-    },
-    {
-      'id': 'package_004',
-      'title': 'Wildlife Safari Package',
-      'subtitle': '6 Days • Yala, Udawalawe, Minneriya',
-      'price': 'LKR 35,000',
-      'rating': 4.6,
-      'image': 'assets/images/wildlife_safari.jpg',
-      'duration': '6 Days',
-      'icon': Icons.pets,
-      'backgroundColor': const Color(0xFF8FBC8F),
-    },
-    {
-      'id': 'package_005',
-      'title': 'Temple & Heritage Tour',
-      'subtitle': '7 Days • Kandy, Dambulla, Galle',
-      'price': 'LKR 28,000',
-      'rating': 4.7,
-      'image': 'assets/images/temple_heritage.jpg',
-      'duration': '7 Days',
-      'icon': Icons.temple_buddhist,
-      'backgroundColor': const Color(0xFF9370DB),
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
     // Count variables - replace with your actual state variables
     int orderCount = 3; // Number of pending orders
     int chatCount = 7; // Number of unread messages
+
+    // Get data from centralized source
+    final popularHotels = MarketplaceData.getPopularHotels();
+    final popularTravelAgencies = MarketplaceData.getPopularTravelAgencies();
+    final popularTourPackages = MarketplaceData.getPopularTourPackages();
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -307,7 +161,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
               ),
 
               const SizedBox(height: 20), // Reduced from 32 to 20
-              // Popular Hotels Section (changed from "Nearby Hotels")
+              // Popular Hotels Section
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -338,10 +192,10 @@ class _MarketplacePageState extends State<MarketplacePage> {
                 height: 220,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: popularHotels.length,
-                  itemBuilder: (context, index) {
-                    return _buildHotelCard(popularHotels[index]);
-                  },
+                    itemCount: MarketplaceData.getPopularHotels().length,
+                    itemBuilder: (context, index) {
+                      return _buildHotelCard(MarketplaceData.getPopularHotels()[index]);
+                    },
                 ),
               ),
 
@@ -377,9 +231,9 @@ class _MarketplacePageState extends State<MarketplacePage> {
                 height: 240,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: travelAgencies.length,
+                  itemCount: popularTravelAgencies.length,
                   itemBuilder: (context, index) {
-                    return _buildTravelAgencyCard(travelAgencies[index]);
+                    return _buildTravelAgencyCard(popularTravelAgencies[index]);
                   },
                 ),
               ),
@@ -416,9 +270,9 @@ class _MarketplacePageState extends State<MarketplacePage> {
                 height: 240,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: tourPackages.length,
+                  itemCount: popularTourPackages.length,
                   itemBuilder: (context, index) {
-                    return _buildTourPackageCard(tourPackages[index]);
+                    return _buildTourPackageCard(popularTourPackages[index]);
                   },
                 ),
               ),
