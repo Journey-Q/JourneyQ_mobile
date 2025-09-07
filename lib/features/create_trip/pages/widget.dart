@@ -1,6 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:journeyq/data/models/journey_model/joureny_model.dart';
-import 'dart:math' as math; // Fixed typo: joureny -> journey
+import 'dart:math' as math;
+import 'dart:io';
+
+// Extension for RecommendationItem to add toJson method
+extension RecommendationItemExtension on RecommendationItem {
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'rating': rating,
+    };
+  }
+}
 
 class StepProgressIndicator extends StatelessWidget {
   final int currentStep;
@@ -413,8 +424,11 @@ class PlaceCard extends StatelessWidget {
                       margin: const EdgeInsets.only(right: 8),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
+                        // Updated to handle file paths instead of URLs
                         image: DecorationImage(
-                          image: NetworkImage(place.images[index]),
+                          image: place.images[index].startsWith('http') 
+                              ? NetworkImage(place.images[index])
+                              : FileImage(File(place.images[index])) as ImageProvider,
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -471,6 +485,24 @@ class PlaceCard extends StatelessWidget {
                   ),
                 ),
             ],
+            
+            // Show coordinates for debugging/verification
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'Coordinates: ${place.location.latitude.toStringAsFixed(6)}, ${place.location.longitude.toStringAsFixed(6)}',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.grey[600],
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -809,11 +841,6 @@ class _LoadingOverlayState extends State<LoadingOverlay>
     );
   }
 }
-
-// Don't forget to import dart:math for the progress dots animation
-
-
-
 
 class BudgetBreakdownWidget extends StatelessWidget {
   final BudgetBreakdown budgetBreakdown;
@@ -1289,8 +1316,6 @@ class _AddRecommendationDialogState extends State<AddRecommendationDialog> {
   }
 }
 
-
-
 class EnhancedTipsSection extends StatefulWidget {
   final List<String> tips;
   final Function(List<String>) onTipsChanged;
@@ -1518,3 +1543,4 @@ class _EnhancedTipsSectionState extends State<EnhancedTipsSection> {
     );
   }
 }
+

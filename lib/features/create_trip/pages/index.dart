@@ -7,6 +7,109 @@ import 'package:go_router/go_router.dart';
 import 'dart:async';
 import 'dart:ui';
 
+// Comprehensive Submission Data Model
+class JourneySubmissionData {
+  final String journeyTitle;
+  final int numberOfDays;
+  final List<String> placesVisited; // Array of place names
+  final List<PlaceWiseContent> placeWiseContent; // Detailed content for each place
+  final BudgetInfo budgetInfo;
+  final List<String> travelTips;
+  final String authorName;
+  final String authorImage;
+  final String currency;
+  final List<String> transportationOptions;
+  final List<RecommendationItem> hotelRecommendations;
+  final List<RecommendationItem> restaurantRecommendations;
+
+  JourneySubmissionData({
+    required this.journeyTitle,
+    required this.numberOfDays,
+    required this.placesVisited,
+    required this.placeWiseContent,
+    required this.budgetInfo,
+    required this.travelTips,
+    required this.authorName,
+    required this.authorImage,
+    required this.currency,
+    required this.transportationOptions,
+    required this.hotelRecommendations,
+    required this.restaurantRecommendations,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'journeyTitle': journeyTitle,
+      'numberOfDays': numberOfDays,
+      'placesVisited': placesVisited,
+      'placeWiseContent': placeWiseContent.map((place) => place.toJson()).toList(),
+      'budgetInfo': budgetInfo.toJson(),
+      'travelTips': travelTips,
+      'authorName': authorName,
+      'authorImage': authorImage,
+      'currency': currency,
+      'transportationOptions': transportationOptions,
+      'hotelRecommendations': hotelRecommendations.map((item) => item.toJson()).toList(),
+      'restaurantRecommendations': restaurantRecommendations.map((item) => item.toJson()).toList(),
+      'createdAt': DateTime.now().toIso8601String(),
+    };
+  }
+}
+
+class PlaceWiseContent {
+  final String placeName;
+  final double latitude;
+  final double longitude;
+  final String address;
+  final String tripMood;
+  final List<String> activities;
+  final List<String> experiences;
+  final List<String> imageUrls; // File paths
+
+  PlaceWiseContent({
+    required this.placeName,
+    required this.latitude,
+    required this.longitude,
+    required this.address,
+    required this.tripMood,
+    required this.activities,
+    required this.experiences,
+    required this.imageUrls,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'placeName': placeName,
+      'coordinates': {
+        'latitude': latitude,
+        'longitude': longitude,
+      },
+      'address': address,
+      'tripMood': tripMood,
+      'activities': activities,
+      'experiences': experiences,
+      'imageUrls': imageUrls,
+    };
+  }
+}
+
+class BudgetInfo {
+  final double totalBudget;
+  final Map<String, double> budgetBreakdown;
+
+  BudgetInfo({
+    required this.totalBudget,
+    required this.budgetBreakdown,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'totalBudget': totalBudget,
+      'budgetBreakdown': budgetBreakdown,
+    };
+  }
+}
+
 class CreateTripPage extends StatefulWidget {
   const CreateTripPage({Key? key}) : super(key: key);
 
@@ -257,6 +360,57 @@ class _CreateTripPageState extends State<CreateTripPage> {
     );
   }
 
+  // Create comprehensive submission object
+  JourneySubmissionData _createSubmissionData() {
+    // Extract place names
+    List<String> placesVisited = _currentTrip.places.map((place) => place.name).toList();
+
+    // Create place-wise content with coordinates
+    List<PlaceWiseContent> placeWiseContent = _currentTrip.places.map((place) {
+      return PlaceWiseContent(
+        placeName: place.name,
+        latitude: place.location.latitude,
+        longitude: place.location.longitude,
+        address: place.location.address,
+        tripMood: place.tripMood,
+        activities: place.activities,
+        experiences: place.experiences.map((exp) => exp.description).toList(),
+        imageUrls: place.images,
+      );
+    }).toList();
+
+    // Create budget info
+    BudgetInfo budgetInfo = BudgetInfo(
+      totalBudget: double.tryParse(_totalBudgetController.text) ?? 0,
+      budgetBreakdown: {
+        'accommodation': _accommodationPercentage,
+        'food': _foodPercentage,
+        'transport': _transportPercentage,
+        'activities': _activitiesPercentage,
+      },
+    );
+
+    // Create the comprehensive submission object
+    return JourneySubmissionData(
+      journeyTitle: _tripTitleController.text,
+      numberOfDays: _selectedDays,
+      placesVisited: placesVisited,
+      placeWiseContent: placeWiseContent,
+      budgetInfo: budgetInfo,
+      travelTips: _currentTrip.tips,
+      authorName: _currentTrip.authorName,
+      authorImage: _currentTrip.authorImage,
+      currency: _currentTrip.currency,
+      transportationOptions: _selectedTransports,
+      hotelRecommendations: _hotelsList
+          .map((name) => RecommendationItem(name: name, rating: 4.0))
+          .toList(),
+      restaurantRecommendations: _restaurantsList
+          .map((name) => RecommendationItem(name: name, rating: 4.0))
+          .toList(),
+    );
+  }
+
   void _publishTrip() async {
     setState(() {
       _isLoading = true;
@@ -264,6 +418,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
     });
 
     try {
+      // Update the current trip with final budget data
       _currentTrip = _currentTrip.copyWith(
         totalBudget: double.tryParse(_totalBudgetController.text) ?? 0,
         budgetBreakdown: BudgetBreakdown(
@@ -274,13 +429,28 @@ class _CreateTripPageState extends State<CreateTripPage> {
         ),
       );
 
+      // Create the comprehensive submission data
+      final submissionData = _createSubmissionData();
+
+      // Print the comprehensive data structure (for debugging)
+      print('=== COMPREHENSIVE JOURNEY SUBMISSION DATA ===');
+      print('Journey Data: ${submissionData.toJson()}');
+      print('===============================================');
+
+      // Here you would send the submissionData to your backend
+      // Example: await journeyService.submitJourney(submissionData.toJson());
+
       await Future.delayed(const Duration(seconds: 2));
 
       setState(() {
         _isLoading = false;
       });
 
-      SnackBarService.showSuccess(context, 'journey published successfully!');
+      SnackBarService.showSuccess(context, 'Journey published successfully!');
+      
+      // Show success dialog with data summary
+      _showSubmissionSuccessDialog(submissionData);
+      
       context.go('/home');
     } catch (error) {
       setState(() {
@@ -289,6 +459,38 @@ class _CreateTripPageState extends State<CreateTripPage> {
 
       SnackBarService.showError(context, 'Failed to publish journey: $error');
     }
+  }
+
+  void _showSubmissionSuccessDialog(JourneySubmissionData data) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Journey Published!'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Title: ${data.journeyTitle}'),
+              Text('Duration: ${data.numberOfDays} days'),
+              Text('Places visited: ${data.placesVisited.length}'),
+              const SizedBox(height: 8),
+              const Text('Places:', style: TextStyle(fontWeight: FontWeight.bold)),
+              ...data.placesVisited.map((place) => Text('• $place')),
+              const SizedBox(height: 8),
+              Text('Budget: ${data.budgetInfo.totalBudget} ${data.currency}'),
+              Text('Travel Tips: ${data.travelTips.length}'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _adjustOtherSliders(String changedSlider) {

@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:journeyq/features/journey_view/data.dart';
-import 'package:journeyq/features/journey_view/pages/Journeyroute.dart';
+// Update this import to use the enhanced map widget
+// import 'package:journeyq/features/journey_view/pages/Journeyroute.dart';
+import 'package:journeyq/features/journey_view/pages/journeyroute.dart'; 
 
 class JourneyDetailsPage extends StatefulWidget {
   final String journeyId;
+  final String? googleMapsApiKey; // Add API key parameter
 
-  const JourneyDetailsPage({super.key, required this.journeyId});
+  const JourneyDetailsPage({
+    super.key, 
+    required this.journeyId,
+    this.googleMapsApiKey,
+  });
 
   @override
   State<JourneyDetailsPage> createState() => _JourneyDetailsPageState();
@@ -61,6 +68,9 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
     },
   ];
 
+  // Default API key - replace with your actual API key
+  static const String _defaultApiKey = "AIzaSyCFbprhDc_fKXUHl-oYEVGXKD1HciiAsz0";
+
   @override
   void initState() {
     super.initState();
@@ -99,18 +109,221 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildTripStats(),
-                  JourneyRouteMapWidget(journeyData: journeyData!),
+                  _buildEnhancedMapSection(), // Updated map section
                   _buildAllPlacesSection(),
                   _buildRecommendationsSection(),
                   _buildTipsSection(),
                   _buildBudgetBreakdown(),
-                  _buildInteractionSection(), // New interaction section
-                  const SizedBox(height: 10), // Bottom padding
+                  _buildInteractionSection(),
+                  const SizedBox(height: 10),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // New enhanced map section
+  Widget _buildEnhancedMapSection() {
+    final apiKey = widget.googleMapsApiKey ?? _defaultApiKey;
+    
+    if (apiKey == "YOUR_GOOGLE_MAPS_API_KEY_HERE") {
+      // Show warning if API key is not set
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.orange[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.orange[200]!),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.warning, color: Colors.orange[600]),
+                const SizedBox(width: 8),
+                const Text(
+                  'Google Maps API Key Required',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'To display the interactive route map with real directions, please add your Google Maps API key.',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: () => _showApiKeyInstructions(),
+              icon: const Icon(Icons.info_outline),
+              label: const Text('Setup Instructions'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange[600],
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Return the enhanced map widget with API key
+    return JourneyRouteMapWidget(
+      journeyData: journeyData!,
+      googleMapsApiKey: apiKey,
+    );
+  }
+
+  void _showApiKeyInstructions() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Google Maps API Setup',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSetupStep(
+                      '1',
+                      'Get Google Maps API Key',
+                      'Visit Google Cloud Console and create a new project or select an existing one.',
+                    ),
+                    _buildSetupStep(
+                      '2',
+                      'Enable Required APIs',
+                      'Enable Maps SDK for Android, Maps SDK for iOS, and Directions API.',
+                    ),
+                    _buildSetupStep(
+                      '3',
+                      'Create Credentials',
+                      'Create an API key and restrict it to your app package name for security.',
+                    ),
+                    _buildSetupStep(
+                      '4',
+                      'Add to Your App',
+                      'Update the JourneyDetailsPage constructor to include your API key.',
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Example Usage:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'JourneyDetailsPage(\n  journeyId: "journey_1",\n  googleMapsApiKey: "YOUR_API_KEY_HERE",\n)',
+                            style: TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 12,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSetupStep(String number, String title, String description) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: Colors.blue[600],
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Center(
+              child: Text(
+                number,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -133,7 +346,7 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
             PageView.builder(
               itemCount: images.length,
               itemBuilder: (context, index) {
-                return _buildImage(images[index]); // Use the helper method
+                return _buildImage(images[index]);
               },
             ),
             Container(
@@ -188,9 +401,7 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-
                       const SizedBox(width: 18),
-
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 14,
@@ -221,7 +432,6 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   }
 
   Widget _buildImage(String imagePath) {
-    // Check if it's an asset image (starts with 'assets/') or network URL
     if (imagePath.startsWith('assets/')) {
       return Image.asset(
         imagePath,
@@ -247,7 +457,6 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
       );
     } else if (imagePath.startsWith('http://') ||
         imagePath.startsWith('https://')) {
-      // Network image
       return Image.network(
         imagePath,
         fit: BoxFit.cover,
@@ -275,9 +484,8 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
         },
       );
     } else {
-      // Assume it's an asset image without 'assets/' prefix
       return Image.asset(
-        'assets/images/$imagePath', // Adjust path as needed
+        'assets/images/$imagePath',
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
           return Container(
@@ -362,18 +570,8 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Places title with current place indicator
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            children: [
-            ],
-          ),
-        ),
-
-        // Horizontal scrollable places
         SizedBox(
-          height: 560, // Keep the same height
+          height: 560,
           child: PageView.builder(
             controller: _placesPageController,
             onPageChanged: (index) {
@@ -390,8 +588,6 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
             },
           ),
         ),
-
-        // Dot indicators for places
         if (places.length > 1) ...[
           const SizedBox(height: 8),
           _buildPlacesDotsIndicator(places.length),
@@ -429,7 +625,6 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
     final placeName = place['name'];
     final tripMood = place['trip_mood'] ?? '';
 
-    // Initialize page controller and current index for this place if not exists
     if (!_pageControllers.containsKey(placeName)) {
       _pageControllers[placeName] = PageController();
       _currentImageIndexes[placeName] = 0;
@@ -441,7 +636,6 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Place name and trip mood
             Row(
               children: [
                 Expanded(
@@ -475,20 +669,14 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
               ],
             ),
             const SizedBox(height: 12),
-
-            // Image carousel
             _buildImageCarousel(images, placeName),
             _buildDotsIndicator(images, placeName),
             const SizedBox(height: 12),
-
-            // Activities
             const Text(
               'Activities',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 10),
-
-            // Activities as horizontal scrollable
             SizedBox(
               height: 40,
               child: SingleChildScrollView(
@@ -528,10 +716,7 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
                 ),
               ),
             ),
-
             const SizedBox(height: 12),
-
-            // Experiences as flexible scrollable
             if (experiences.isNotEmpty) ...[
               const Text(
                 'Experiences',
@@ -540,8 +725,8 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
               const SizedBox(height: 10),
               ConstrainedBox(
                 constraints: const BoxConstraints(
-                  maxHeight: 150, // Maximum height for experiences
-                  minHeight: 50, // Minimum height
+                  maxHeight: 150,
+                  minHeight: 50,
                 ),
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
@@ -574,7 +759,7 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
                 ),
               ),
             ],
-            const SizedBox(height: 16), // Extra padding at bottom
+            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -595,16 +780,12 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-
-          // Hotels
           if (recommendations.containsKey('hotels'))
             _buildRecommendationCategory(
               'Hotels',
               LucideIcons.building,
               recommendations['hotels'] as List,
             ),
-
-          // Restaurants
           if (recommendations.containsKey('restaurants'))
             _buildRecommendationCategory(
               'Restaurants',
@@ -703,7 +884,6 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with icon
           Row(
             children: [
               Container(
@@ -730,8 +910,6 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
             ],
           ),
           const SizedBox(height: 20),
-
-          // Tips list
           ...tips.asMap().entries.map((entry) {
             final index = entry.key;
             final tip = entry.value;
@@ -742,7 +920,6 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Tip content
                   Expanded(
                     child: Container(
                       padding: const EdgeInsets.all(16),
@@ -848,11 +1025,6 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
     );
   }
 
-  // New interaction section
-  // Replace your _buildInteractionSection() method with this improved version:
-
-  // Replace your _buildInteractionSection() method with this improved version:
-
   Widget _buildInteractionSection() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -873,16 +1045,11 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Divider
           Container(height: 1, color: Colors.grey[200]),
-
           const SizedBox(height: 14),
-
-          // Action buttons - Icons only with counts
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              // Like Button
               _buildIconButton(
                 icon: _isLiked ? Icons.favorite : Icons.favorite_border,
                 count: _likesCount,
@@ -890,8 +1057,6 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
                 activeColor: Colors.red,
                 onTap: _handleLike,
               ),
-
-              // Comment Button
               _buildIconButton(
                 icon: LucideIcons.messageCircle,
                 count: _commentsCount,
@@ -899,11 +1064,9 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
                 activeColor: Colors.blue[600]!,
                 onTap: _handleComment,
               ),
-
-              // Save Button
               _buildIconButton(
                 icon: _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                count: null, // No count for save
+                count: null,
                 isActive: _isBookmarked,
                 activeColor: Colors.amber[700]!,
                 onTap: _handleSave,
@@ -915,7 +1078,6 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
     );
   }
 
-  // Helper method for icon buttons with counts
   Widget _buildIconButton({
     required IconData icon,
     required int? count,
@@ -952,7 +1114,6 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
     );
   }
 
-  // Interaction handlers
   void _handleLike() {
     setState(() {
       _isLiked = !_isLiked;
@@ -972,13 +1133,11 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
       postOwnerName: journeyData!['authorName'],
       onCommentsUpdated: () {
         setState(() {
-          // Count total comments including replies
           int totalComments = 0;
           for (var comment in _comments) {
-            totalComments++; // Count the main comment
+            totalComments++;
             if (comment['replies'] != null) {
-              totalComments +=
-                  (comment['replies'] as List).length; // Count replies
+              totalComments += (comment['replies'] as List).length;
             }
           }
           _commentsCount = totalComments;
@@ -1028,7 +1187,7 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
             margin: const EdgeInsets.symmetric(horizontal: 0),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: _buildImage(images[index]), // Use the helper method
+              child: _buildImage(images[index]),
             ),
           );
         },
@@ -1060,7 +1219,6 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
     );
   }
 
-  // Comments Bottom Sheet Method
   void _showCommentsBottomSheet(
     BuildContext context, {
     required String postId,
@@ -1130,13 +1288,8 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
       ),
       child: Column(
         children: [
-          // Header
           _buildHeader(),
-
-          // Comments List
           Expanded(child: _buildCommentsList()),
-
-          // Comment Input
           _buildCommentInput(),
         ],
       ),
@@ -1224,7 +1377,6 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // User Avatar
               CircleAvatar(
                 radius: isReply ? 14 : 16,
                 backgroundImage:
@@ -1243,13 +1395,10 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
                     : null,
               ),
               const SizedBox(width: 12),
-
-              // Comment Content
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Username and Comment
                     RichText(
                       text: TextSpan(
                         children: [
@@ -1272,10 +1421,7 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 8),
-
-                    // Actions Row
                     Row(
                       children: [
                         Text(
@@ -1316,8 +1462,6 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
                   ],
                 ),
               ),
-
-              // Like Button
               GestureDetector(
                 onTap: () => _toggleCommentLike(comment),
                 child: Container(
@@ -1331,8 +1475,6 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
               ),
             ],
           ),
-
-          // Replies
           if (!isReply &&
               comment['replies'] != null &&
               comment['replies'].isNotEmpty) ...[
@@ -1361,7 +1503,6 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Reply indicator
           if (_replyingTo != null) ...[
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -1386,19 +1527,14 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
             ),
             const SizedBox(height: 8),
           ],
-
-          // Input Row
           Row(
             children: [
-              // User Avatar
               CircleAvatar(
                 radius: 16,
                 backgroundColor: Colors.grey[300],
                 child: Icon(Icons.person, color: Colors.grey[600], size: 20),
               ),
               const SizedBox(width: 12),
-
-              // Text Input
               Expanded(
                 child: TextField(
                   controller: _commentController,
@@ -1433,7 +1569,7 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
                   maxLines: null,
                   textCapitalization: TextCapitalization.sentences,
                   onChanged: (text) {
-                    setState(() {}); // Update send button visibility
+                    setState(() {});
                   },
                   onSubmitted: (text) {
                     if (text.trim().isNotEmpty) {
@@ -1470,8 +1606,8 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
 
     final newComment = {
       'id': 'new_${DateTime.now().millisecondsSinceEpoch}',
-      'userName': 'You', // Replace with actual user name
-      'userImage': '', // Replace with actual user image
+      'userName': 'You',
+      'userImage': '',
       'comment': commentText,
       'timeAgo': 'now',
       'likesCount': 0,
@@ -1481,7 +1617,6 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
 
     setState(() {
       if (_replyingTo != null && _replyingToCommentId != null) {
-        // Add as reply
         final commentIndex = _comments.indexWhere(
           (c) => c['id'] == _replyingToCommentId,
         );
@@ -1489,7 +1624,6 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
           _comments[commentIndex]['replies'].add(newComment);
         }
       } else {
-        // Add as new comment
         _comments.insert(0, newComment);
       }
 
@@ -1497,10 +1631,7 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
       _cancelReply();
     });
 
-    // Hide keyboard
     _commentFocusNode.unfocus();
-
-    // Notify parent of update
     widget.onCommentsUpdated?.call();
   }
 

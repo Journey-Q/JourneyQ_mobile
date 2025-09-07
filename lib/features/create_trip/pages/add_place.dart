@@ -6,6 +6,8 @@ import 'package:journeyq/data/models/journey_model/joureny_model.dart';
 import 'package:journeyq/features/create_trip/trip_cosntant.dart';
 import 'package:journeyq/features/create_trip/pages/widget.dart';
 import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 
 class AddPlacePage extends StatefulWidget {
   final PlaceModel? editingPlace;
@@ -1004,6 +1006,40 @@ class _AddPlacePageState extends State<AddPlacePage> with TickerProviderStateMix
     }
   }
 
+  // Updated method to save images to assets/posts_images
+  Future<List<String>> _saveImagesToAssets() async {
+    List<String> imagePaths = [];
+    
+    try {
+      // Get the application directory
+      final directory = await getApplicationDocumentsDirectory();
+      final postsImagesDir = Directory('${directory.path}/assets/posts_images');
+      
+      // Create directory if it doesn't exist
+      if (!await postsImagesDir.exists()) {
+        await postsImagesDir.create(recursive: true);
+      }
+
+      for (int i = 0; i < _selectedImages.length; i++) {
+        final file = _selectedImages[i];
+        final fileName = 'post_${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
+        final newPath = '${postsImagesDir.path}/$fileName';
+        
+        // Copy the file to the new location
+        await file.copy(newPath);
+        
+        // Add the relative path to the list
+        imagePaths.add('assets/posts_images/$fileName');
+      }
+    } catch (e) {
+      print('Error saving images: $e');
+      // If saving fails, return the original paths
+      imagePaths = _selectedImages.map((file) => file.path).toList();
+    }
+
+    return imagePaths;
+  }
+
   void _savePlace({bool goToNextPlace = false}) async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -1018,11 +1054,14 @@ class _AddPlacePageState extends State<AddPlacePage> with TickerProviderStateMix
         address: _locationController.text.isNotEmpty ? _locationController.text : 'Unknown Location',
       );
 
+      // Save images to assets/posts_images and get file paths
+      final savedImagePaths = await _saveImagesToAssets();
+
       final place = PlaceModel(
         name: _selectedLocation?.address.split(',').first ?? _locationController.text.split(',').first,
         tripMood: _selectedMood,
         location: location,
-        images: _selectedImages.map((image) => image.path).toList(),
+        images: savedImagePaths, // Use the saved image paths
         activities: _selectedActivities,
         experiences: _experiences.map((e) => ExperienceModel(description: e)).toList(),
       );
