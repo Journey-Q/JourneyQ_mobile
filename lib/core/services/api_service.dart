@@ -17,7 +17,7 @@ class ApiService {
 
     _dio = Dio(
       BaseOptions(
-        baseUrl: 'https://socialmediaservice-production.up.railway.app',
+        baseUrl: 'http://10.0.2.2:8081',
         connectTimeout: const Duration(seconds: 45),
         receiveTimeout: const Duration(seconds: 45),
       ),
@@ -129,9 +129,6 @@ class ApiService {
       throw ServerException('Unexpected error occurred');
     }
   }
-
- 
-
 
   /// Upload a single image to Supabase storage
   static Future<String?> uploadImage({
