@@ -7,6 +7,7 @@ import 'package:journeyq/data/repositories/profile_repository/profile_repository
 import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:journeyq/core/errors/exception.dart';
 import 'package:journeyq/features/create_trip/pages/widget.dart';
+import 'package:journeyq/core/services/api_service.dart';
 
 class CombinedSetupPage extends StatefulWidget {
   const CombinedSetupPage({super.key});
@@ -64,6 +65,7 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
   final _bioController = TextEditingController();
   File? _profileImage;
   String? _networkImageUrl;
+  String? _cloudinaryImageUrl;
   final ImagePicker _picker = ImagePicker();
 
   // Updated color scheme to match your theme
@@ -194,7 +196,7 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
                   subtitle: 'Choose from gallery',
                   onTap: () => _pickImage(ImageSource.gallery),
                 ),
-                if (_profileImage != null || _networkImageUrl != null)
+                if (_profileImage != null || _cloudinaryImageUrl != null || _networkImageUrl != null)
                   _buildImageSourceOption(
                     icon: Icons.delete_rounded,
                     title: 'Remove Photo',
@@ -288,74 +290,115 @@ class _CombinedSetupPageState extends State<CombinedSetupPage>
         imageQuality: 85,
       );
       if (image != null) {
+        // Show loading state
         setState(() {
           _profileImage = File(image.path);
-          _networkImageUrl =
-              null; // Clear network image when local image is selected
+          _isLoading = true;
         });
+        _showSnackBar('Uploading image to Cloudinary...');
+        
+        // Upload the image to Cloudinary using ApiService
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        final userId = authProvider.user?.userId ?? 'unknown';
+        
+        final cloudinaryUrl = await ApiService.uploadImage(
+          imageFile: File(image.path),
+          subfolderName: 'profile_pictures',
+          customFileName: 'profile_$userId',
+        );
+        
+        if (cloudinaryUrl != null && cloudinaryUrl.isNotEmpty) {
+          setState(() {
+            _cloudinaryImageUrl = cloudinaryUrl;
+            _networkImageUrl = null; // Clear old network image
+            _isLoading = false;
+          });
+          _showSnackBar('Profile image uploaded successfully!');
+        } else {
+          setState(() {
+            _profileImage = null; // Clear on failure
+            _isLoading = false;
+          });
+          _showSnackBar('Failed to upload image to Cloudinary. Please try again.', isError: true);
+        }
       }
     } catch (e) {
-      _showSnackBar('Failed to pick image: $e', isError: true);
+      setState(() {
+        _profileImage = null; // Clear on error
+        _isLoading = false;
+      });
+      _showSnackBar('Failed to upload image: ${e.toString()}', isError: true);
     }
   }
 
-  void _removeImage() {
+  void _removeImage() async {
+    // Delete the Cloudinary image if it exists
+    if (_cloudinaryImageUrl != null) {
+      try {
+        await ApiService.deleteImage(imageUrl: _cloudinaryImageUrl!);
+      } catch (e) {
+        // Continue with removal even if delete fails
+        print('Failed to delete Cloudinary image: $e');
+      }
+    }
+    
     setState(() {
       _profileImage = null;
       _networkImageUrl = null;
+      _cloudinaryImageUrl = null;
     });
   }
 
-bool _isLoading = false; 
+  bool _isLoading = false; 
 
-Future<void> _completeSetup() async {
-  if (!_formKey.currentState!.validate()) return;
-  
-  setState(() {
-    _isLoading = true;
-  });
-  
-  final authProvider = Provider.of<AuthProvider>(context, listen: false);
-  final user = authProvider.user;
-        
-  try {
-    // Prepare data in the required format
-    final completeData = {
-      'user_id': user?.userId,
-      'display_name': _displayNameController.text.trim(),
-      'bio': _bioController.text.trim(),
-      'favourite_activities': selectedActivities.toList(),
-      'preferred_trip_moods': selectedMoods.toList(),
-    };
-     
-    // Handle profile image
-    if (_profileImage != null) {
-      completeData['profile_image'] = _profileImage;
-    } else if (_networkImageUrl != null && _networkImageUrl!.isNotEmpty) {
-      completeData['photo_url'] = _networkImageUrl;
-    }
-     
-    await ProfileRepository.completeUserSetup(completeData);
-    _showSnackBar('Profile setup completed successfully!');
-     
-    if (mounted) {
-      context.go('/home');
-    }
-  } on AppException catch (e) {
-    _showSnackBar(e.message, isError: true);
-  } catch (e) {
-    _showSnackBar(
-      'Failed to complete setup. Please try again.',
-      isError: true,
-    );
-  } finally {
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+  Future<void> _completeSetup() async {
+    if (!_formKey.currentState!.validate()) return;
+    
+    setState(() {
+      _isLoading = true;
+    });
+    
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final user = authProvider.user;
+          
+    try {
+      // Prepare data in the required format
+      final completeData = {
+        'user_id': user?.userId,
+        'display_name': _displayNameController.text.trim(),
+        'bio': _bioController.text.trim(),
+        'favourite_activities': selectedActivities.toList(),
+        'preferred_trip_moods': selectedMoods.toList(),
+      };
+       
+      // Handle profile image - send Cloudinary URL
+      if (_cloudinaryImageUrl != null) {
+        completeData['photo_url'] = _cloudinaryImageUrl;
+      } else if (_networkImageUrl != null && _networkImageUrl!.isNotEmpty) {
+        completeData['photo_url'] = _networkImageUrl;
+      }
+       
+      await ProfileRepository.completeUserSetup(completeData);
+      _showSnackBar('Profile setup completed successfully!');
+       
+      if (mounted) {
+        context.go('/home');
+      }
+    } on AppException catch (e) {
+      _showSnackBar(e.message, isError: true);
+    } catch (e) {
+      _showSnackBar(
+        'Failed to complete setup. Please try again.',
+        isError: true,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
-}
 
   void _showSnackBar(String message, {bool isError = false}) {
     if (!mounted) return;
@@ -658,36 +701,7 @@ Future<void> _completeSetup() async {
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(70),
-                                  child: _profileImage != null
-                                      ? Image.file(
-                                          _profileImage!,
-                                          fit: BoxFit.cover,
-                                        )
-                                      : _networkImageUrl != null &&
-                                            _networkImageUrl!.isNotEmpty
-                                      ? Image.network(
-                                          _networkImageUrl!,
-                                          fit: BoxFit.cover,
-                                          errorBuilder:
-                                              (context, error, stackTrace) {
-                                                return Container(
-                                                  color: backgroundColor,
-                                                  child: const Icon(
-                                                    Icons.person_rounded,
-                                                    size: 70,
-                                                    color: textSecondary,
-                                                  ),
-                                                );
-                                              },
-                                        )
-                                      : Container(
-                                          color: backgroundColor,
-                                          child: const Icon(
-                                            Icons.person_rounded,
-                                            size: 70,
-                                            color: textSecondary,
-                                          ),
-                                        ),
+                                  child: _buildProfileImageWidget(),
                                 ),
                               ),
                               Positioned(
@@ -723,9 +737,7 @@ Future<void> _completeSetup() async {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          (_profileImage != null ||
-                                  (_networkImageUrl != null &&
-                                      _networkImageUrl!.isNotEmpty))
+                          _hasProfileImage()
                               ? 'Tap to change photo'
                               : 'Add profile photo',
                           style: const TextStyle(
@@ -766,8 +778,8 @@ Future<void> _completeSetup() async {
                         flex: 2,
                         child: _buildPrimaryButton(
                           text: 'Complete Setup',
-                          onPressed: isLoading ? null : _completeSetup,
-                          isLoading: isLoading,
+                          onPressed: _isLoading ? null : _completeSetup,
+                          isLoading: _isLoading,
                         ),
                       ),
                     ],
@@ -780,6 +792,71 @@ Future<void> _completeSetup() async {
         ),
       ),
     );
+  }
+
+  Widget _buildProfileImageWidget() {
+    if (_profileImage != null) {
+      return Image.file(
+        _profileImage!,
+        fit: BoxFit.cover,
+      );
+    } else if (_cloudinaryImageUrl != null) {
+      return Image.network(
+        _cloudinaryImageUrl!,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                      loadingProgress.expectedTotalBytes!
+                  : null,
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: backgroundColor,
+            child: const Icon(
+              Icons.person_rounded,
+              size: 70,
+              color: textSecondary,
+            ),
+          );
+        },
+      );
+    } else if (_networkImageUrl != null && _networkImageUrl!.isNotEmpty) {
+      return Image.network(
+        _networkImageUrl!,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: backgroundColor,
+            child: const Icon(
+              Icons.person_rounded,
+              size: 70,
+              color: textSecondary,
+            ),
+          );
+        },
+      );
+    } else {
+      return Container(
+        color: backgroundColor,
+        child: const Icon(
+          Icons.person_rounded,
+          size: 70,
+          color: textSecondary,
+        ),
+      );
+    }
+  }
+
+  bool _hasProfileImage() {
+    return _profileImage != null ||
+        _cloudinaryImageUrl != null ||
+        (_networkImageUrl != null && _networkImageUrl!.isNotEmpty);
   }
 
   Widget _buildTextField({
@@ -894,68 +971,68 @@ Future<void> _completeSetup() async {
     );
   }
 
- @override
-Widget build(BuildContext context) {
-  return LoadingOverlay(
-    isLoading: _isLoading,
-    message: 'Setting up your profile...',
-    child: Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBar(
+  @override
+  Widget build(BuildContext context) {
+    return LoadingOverlay(
+      isLoading: _isLoading,
+      message: 'Setting up your profile...',
+      child: Scaffold(
         backgroundColor: backgroundColor,
-        elevation: 0,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: surfaceColor,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+        appBar: AppBar(
+          backgroundColor: backgroundColor,
+          elevation: 0,
+          leading: Container(
+            margin: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: IconButton(
+              onPressed: _isLoading
+                  ? null
+                  : () {
+                      if (currentStep > 0) {
+                        _previousStep();
+                      } else {
+                        context.pop();
+                      }
+                    },
+              icon: const Icon(
+                Icons.arrow_back_ios_new_rounded, // iOS back icon
+                color: textPrimary,
+                size: 20,
               ),
-            ],
-          ),
-          child: IconButton(
-            onPressed: _isLoading
-                ? null
-                : () {
-                    if (currentStep > 0) {
-                      _previousStep();
-                    } else {
-                      context.pop();
-                    }
-                  },
-            icon: const Icon(
-              Icons.arrow_back_ios_new_rounded, // iOS back icon
-              color: textPrimary,
-              size: 20,
             ),
           ),
+          title: const Text(
+            'Profile Setup',
+            style: TextStyle(
+              color: textPrimary,
+              fontWeight: FontWeight.w700,
+              fontSize: 18,
+            ),
+          ),
+          centerTitle: true,
         ),
-        title: const Text(
-          'Profile Setup',
-          style: TextStyle(
-            color: textPrimary,
-            fontWeight: FontWeight.w700,
-            fontSize: 18,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Step Progress Bar
+              _buildStepProgressBar(),
+              // Current Step Content
+              if (currentStep == 0) _buildPreferencesStep(),
+              if (currentStep == 1) _buildProfileStep(),
+            ],
           ),
         ),
-        centerTitle: true,
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Step Progress Bar
-            _buildStepProgressBar(),
-            // Current Step Content
-            if (currentStep == 0) _buildPreferencesStep(),
-            if (currentStep == 1) _buildProfileStep(),
-          ],
-        ),
-      ),
-    ),
-  );
-}
+    );
+  }
 }
