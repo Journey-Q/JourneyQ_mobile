@@ -200,9 +200,9 @@ class TripDetailsWidget extends StatelessWidget {
           initialData: tripData,
           isGroupMember: isGroupMember,
           customTitle: 'Edit ${tripData['title']}',
-          onSubmit: (updatedData) {
+          onSubmit: (updatedData) async {
             // Handle trip update
-            print('Trip updated: $updatedData');
+            // Trip updated successfully
           },
         ),
         fullscreenDialog: true,

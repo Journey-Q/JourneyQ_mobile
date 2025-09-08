@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:journeyq/features/join_trip/pages/create_trip_form.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final VoidCallback onCreateTrip;
+  final VoidCallback? onTripCreated;
 
-  const CustomAppBar({super.key, required this.onCreateTrip});
+  const CustomAppBar({super.key, this.onTripCreated});
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +40,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             color: Colors.transparent,
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
-              onTap: onCreateTrip,
+              onTap: () => _handleCreateTrip(context),
               child: const Padding(
                 padding: EdgeInsets.all(12),
                 child: Icon(Icons.add, color: Colors.white, size: 20),
@@ -50,6 +50,42 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ],
     );
+  }
+
+  void _handleCreateTrip(BuildContext context) async {
+    try {
+      // FIXED: Properly handle navigation result with error handling
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const CreateTripForm(),
+          fullscreenDialog: true,
+        ),
+      );
+
+      // FIXED: Only trigger refresh if result is explicitly true and callback exists
+      if (result == true) {
+        print('✅ Trip created successfully, triggering refresh...');
+        if (onTripCreated != null) {
+          // Add small delay to ensure state is properly updated
+          await Future.delayed(const Duration(milliseconds: 200));
+          onTripCreated!();
+        }
+      }
+    } catch (e) {
+      // FIXED: Handle any navigation errors gracefully
+      print('Navigation error: $e');
+      // Optionally show error message to user
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Navigation error occurred'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   @override

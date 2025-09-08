@@ -17,6 +17,10 @@ class _JoinTripPageState extends State<JoinTripPage>
     with TickerProviderStateMixin {
   int _selectedIndex = 0;
   late TabController _tabController;
+  
+  // FIXED: Changed to CreatedTripsTabState (without underscore)
+  final GlobalKey<CreatedTripsTabState> _createdTripsKey = GlobalKey<CreatedTripsTabState>();
+  int _refreshCounter = 0;
 
   @override
   void initState() {
@@ -35,20 +39,84 @@ class _JoinTripPageState extends State<JoinTripPage>
     super.dispose();
   }
 
-  void _showCreateTripForm() {
-    // Navigate to full-screen create trip form instead of showing dialog
-    Navigator.push(
+ // Replace the _showCreateTripForm method in index.dart
+
+void _showCreateTripForm() async {
+  try {
+    print('Opening create trip form...');
+    
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => const CreateTripForm(),
-        fullscreenDialog: true, // This makes it slide up from bottom
+        fullscreenDialog: true,
       ),
-    ).then((_) {
-      // Refresh the page when returning from create trip form
-      setState(() {});
-    });
-  }
+    );
 
+    print('Create trip result: $result');
+
+    // CRITICAL FIX: Handle successful creation properly
+    if (result == true && mounted) {
+      print('Trip created successfully, switching to Created Trips tab...');
+      
+      // Switch to Created Trips tab (index 2)
+      _tabController.animateTo(2);
+      
+      // Wait for tab animation to complete
+      await Future.delayed(const Duration(milliseconds: 400));
+      
+      // CRITICAL FIX: Force refresh of the Created Trips tab
+      if (mounted) {
+        final currentState = _createdTripsKey.currentState;
+        if (currentState != null) {
+          print('Refreshing Created Trips tab...');
+          await currentState.refreshTrips();
+          print('Refresh completed');
+        }
+      }
+      
+      // Show confirmation message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Icon(
+                    Icons.check_circle,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text('Trip added to your trips list!'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  } catch (e) {
+    print('Error in trip creation flow: $e');
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error occurred: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+}
   void _navigateToChatScreen(String groupId, String groupName, String userImage) {
     Navigator.push(
       context,
@@ -70,7 +138,6 @@ class _JoinTripPageState extends State<JoinTripPage>
       body: SafeArea(
         child: Column(
           children: [
-            // Use AnimatedBuilder to rebuild when tab changes
             AnimatedBuilder(
               animation: _tabController,
               builder: (context, child) {
@@ -84,6 +151,7 @@ class _JoinTripPageState extends State<JoinTripPage>
                   TripGroupsTab(onNavigateToChat: _navigateToChatScreen),
                   const JoinRequestsTab(),
                   CreatedTripsTab(
+                    key: _createdTripsKey,
                     onCreateTrip: _showCreateTripForm,
                   ),
                 ],
