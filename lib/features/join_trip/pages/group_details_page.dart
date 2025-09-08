@@ -647,7 +647,7 @@ String _getLocationBasedImage() {
             initialData: _tripFormData,
             isGroupMember: false,
             customTitle: 'Edit ${widget.groupName} Trip',
-            onSubmit: (updatedData) {
+onSubmit: (updatedData) async {
               setState(() {
                 _tripFormData = updatedData;
                 _tripDetails = {

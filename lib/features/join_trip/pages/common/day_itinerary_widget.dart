@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:journeyq/features/join_trip/pages/data.dart';
-import 'package:journeyq/features/join_trip/pages/widget.dart';
 
 class DayItineraryWidget extends StatefulWidget {
   final List<Map<String, dynamic>> initialItinerary;
@@ -37,7 +35,7 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
       return {
         'day': day['day'] ?? 1,
         'places': _ensureStringList(day['places']),
-        'accommodations': _ensureStringList(day['accommodations'] ?? day['accommodation']),
+        'accommodations': _ensureStringList(day['accommodations']),
         'restaurants': _ensureStringList(day['restaurants']),
         'notes': day['notes']?.toString() ?? '',
       };
@@ -65,7 +63,6 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
 
   void _updateItinerary() {
     if (widget.onItineraryChanged != null) {
-      // Only pass days that have content
       final filledDays = _itinerary.where((day) => _isDayFilled(day)).toList();
       widget.onItineraryChanged!(filledDays);
     }
@@ -103,7 +100,6 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
       });
       _updateItinerary();
       
-      // Navigate to the new day with a small delay to ensure the page is built
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_pageController.hasClients && _itinerary.isNotEmpty) {
           _pageController.animateToPage(
@@ -122,13 +118,12 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
       return _buildEmptyState();
     }
 
-    // If no days created yet, show initial empty state with Add Day button
     if (_itinerary.isEmpty && !widget.isReadOnly) {
       return _buildInitialAddDayState();
     }
 
     return Container(
-      height: 300,
+      height: 350,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -146,7 +141,6 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
                     color: Color(0xFF0088cc),
                   ),
                 ),
-                // Show Add Day button if we haven't reached the total days yet
                 if (!widget.isReadOnly && _itinerary.length < widget.totalDays)
                   TextButton.icon(
                     onPressed: _addNewDay,
@@ -180,7 +174,7 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
             ),
           ),
 
-          // Navigation dots (now clickable with arrows)
+          // Navigation dots
           _buildNavigationDots(),
         ],
       ),
@@ -319,7 +313,6 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
                 const SizedBox(height: 12),
                 
                 if (!isFilled) ...[
-                  // Empty state
                   Expanded(
                     child: Center(
                       child: Column(
@@ -345,7 +338,6 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
                     ),
                   ),
                 ] else ...[
-                  // Filled content
                   Expanded(
                     child: SingleChildScrollView(
                       child: Column(
@@ -367,6 +359,28 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
                             _buildSectionTitle('Restaurants', Icons.restaurant),
                             _buildTagList(day['restaurants']),
                             const SizedBox(height: 8),
+                          ],
+
+                          if (day['notes'].toString().isNotEmpty) ...[
+                            _buildSectionTitle('Notes', Icons.note),
+                            const SizedBox(height: 4),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[50],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                day['notes'].toString(),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black87,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                           ],
                         ],
                       ),
@@ -409,7 +423,6 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Left arrow for previous day
           if (_itinerary.length > 1 && _currentDay > 0)
             GestureDetector(
               onTap: () {
@@ -429,7 +442,6 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
               ),
             ),
           
-          // Day dots
           ...List.generate(
             _itinerary.length,
             (index) => GestureDetector(
@@ -470,7 +482,6 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
             ),
           ),
           
-          // Right arrow for next day
           if (_itinerary.length > 1 && _currentDay < _itinerary.length - 1)
             GestureDetector(
               onTap: () {
@@ -537,7 +548,7 @@ class _DayItineraryWidgetState extends State<DayItineraryWidget> {
   }
 }
 
-// Day Edit Sheet - Updated to handle data normalization
+// Day Edit Sheet
 class DayEditSheet extends StatefulWidget {
   final Map<String, dynamic> day;
   final bool isReadOnly;
@@ -572,7 +583,7 @@ class _DayEditSheetState extends State<DayEditSheet> {
     return {
       'day': day['day'] ?? 1,
       'places': _ensureStringList(day['places']),
-      'accommodations': _ensureStringList(day['accommodations'] ?? day['accommodation']),
+      'accommodations': _ensureStringList(day['accommodations']),
       'restaurants': _ensureStringList(day['restaurants']),
       'notes': day['notes']?.toString() ?? '',
     };
@@ -617,7 +628,6 @@ class _DayEditSheetState extends State<DayEditSheet> {
       ),
       child: Column(
         children: [
-          // Handle
           Container(
             width: 40,
             height: 4,
@@ -628,7 +638,6 @@ class _DayEditSheetState extends State<DayEditSheet> {
             ),
           ),
           
-          // Header
           Padding(
             padding: const EdgeInsets.all(20),
             child: Row(
@@ -665,14 +674,12 @@ class _DayEditSheetState extends State<DayEditSheet> {
             ),
           ),
           
-          // Content
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Places section
                   _buildListSection(
                     'Places to Visit',
                     Icons.location_on,
@@ -683,7 +690,6 @@ class _DayEditSheetState extends State<DayEditSheet> {
                   
                   const SizedBox(height: 24),
                   
-                  // Accommodations section
                   _buildListSection(
                     'Accommodations',
                     Icons.hotel,
@@ -694,7 +700,6 @@ class _DayEditSheetState extends State<DayEditSheet> {
                   
                   const SizedBox(height: 24),
                   
-                  // Restaurants section
                   _buildListSection(
                     'Restaurants',
                     Icons.restaurant,
@@ -705,7 +710,6 @@ class _DayEditSheetState extends State<DayEditSheet> {
                   
                   const SizedBox(height: 24),
                   
-                  // Notes section
                   _buildTextFieldSection(
                     'Notes',
                     Icons.note,
@@ -751,7 +755,6 @@ class _DayEditSheetState extends State<DayEditSheet> {
         ),
         const SizedBox(height: 12),
         
-        // Items list
         ...items.asMap().entries.map((entry) => Container(
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -778,7 +781,6 @@ class _DayEditSheetState extends State<DayEditSheet> {
           ),
         )),
         
-        // Add new item
         if (!widget.isReadOnly)
           Row(
             children: [
