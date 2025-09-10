@@ -11,9 +11,8 @@ import 'package:journeyq/core/storage/localstorage.dart';
 class ProfileRepository {
   static final authProvider = AuthProvider();
   
-  // Supabase storage configuration
-  static const String _profileImagesBucket = 'user-uploads';
-  static const String _profileImagesFolder = 'profile-images';
+  // Cloudinary folder configuration
+  static const String _profileImagesFolder = 'profile_pictures';
 
   // Complete user profile setup
   static Future<Map<String, dynamic>> completeUserSetup(
@@ -22,7 +21,7 @@ class ProfileRepository {
   try {
     String? profileImageUrl;
     
-    // Upload profile image first if provided using Supabase
+    // Upload profile image first if provided using Cloudinary
     if (setupData['profile_image'] != null) {
       profileImageUrl = await uploadProfileImage(
         setupData['profile_image'] as File,
@@ -79,7 +78,7 @@ static Future<Map<String, dynamic>> updateCompleteProfile(
   try {
     String? profileImageUrl;
     
-    // Upload profile image first if provided using Supabase
+    // Upload profile image first if provided using Cloudinary
     if (updateData['profile_image'] != null) {
       profileImageUrl = await uploadProfileImage(
         updateData['profile_image'] as File,
@@ -107,13 +106,18 @@ static Future<Map<String, dynamic>> updateCompleteProfile(
 }
 
 
-  // Upload profile image using Supabase storage
+  // Upload profile image using Cloudinary
   static Future<String> uploadProfileImage(File imageFile) async {
     try {
+      // Generate unique filename for the user
+      final userId = authProvider.user?.userId ?? 'anonymous';
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final customFileName = 'profile_${userId}_$timestamp';
+      
       final imageUrl = await ApiService.uploadImage(
         imageFile: imageFile,
-        bucketName: _profileImagesBucket,
-        folder: _profileImagesFolder,
+        subfolderName: _profileImagesFolder,
+        customFileName: customFileName,
       );
 
       return imageUrl ?? '';
@@ -163,13 +167,13 @@ static Future<Map<String, dynamic>> updateCompleteProfile(
       if (displayName != null) data['display_name'] = displayName;
       if (bio != null) data['bio'] = bio;
 
-      // Upload new profile image if provided using Supabase
+      // Upload new profile image if provided using Cloudinary
       if (profileImage != null) {
         // Delete old profile image first (if exists)
         try {
           final cachedUser = await getCachedUserData();
           if (cachedUser != null && cachedUser['profile_image_url'] != null) {
-            await deleteProfileImageFromStorage(cachedUser['profile_image_url']);
+            await deleteProfileImageFromCloudinary(cachedUser['profile_image_url']);
           }
         } catch (e) {
           // Continue even if deletion fails
@@ -238,7 +242,7 @@ static Future<Map<String, dynamic>> updateCompleteProfile(
     }
   }
 
-  // Delete user profile image using Supabase storage
+  // Delete user profile image from Cloudinary
   static Future<void> deleteProfileImage() async {
     try {
       // Get current user data to find the image URL
@@ -249,9 +253,9 @@ static Future<Map<String, dynamic>> updateCompleteProfile(
         currentImageUrl = cachedUser['profile_image_url'];
       }
 
-      // Delete from Supabase storage
+      // Delete from Cloudinary
       if (currentImageUrl != null && currentImageUrl.isNotEmpty) {
-        await deleteProfileImageFromStorage(currentImageUrl);
+        await deleteProfileImageFromCloudinary(currentImageUrl);
       }
 
       // Update profile on server to remove image URL
@@ -270,13 +274,10 @@ static Future<Map<String, dynamic>> updateCompleteProfile(
     }
   }
 
-  // Helper method to delete image from Supabase storage
-  static Future<void> deleteProfileImageFromStorage(String imageUrl) async {
+  // Helper method to delete image from Cloudinary
+  static Future<void> deleteProfileImageFromCloudinary(String imageUrl) async {
     try {
-      await ApiService.deleteImage(
-        bucketName: _profileImagesBucket,
-        imageUrl: imageUrl,
-      );
+      await ApiService.deleteImage(imageUrl: imageUrl);
     } on AppException catch (e) {
       rethrow;
     } catch (e) {
@@ -284,15 +285,19 @@ static Future<Map<String, dynamic>> updateCompleteProfile(
     }
   }
 
-  // Delete all user profile images
+  // Delete user profile image (simplified method)
   static Future<bool> deleteAllUserProfileImages() async {
     try {
-      final success = await ApiService.deleteAllUserImages(
-        bucketName: _profileImagesBucket,
-        folder: _profileImagesFolder,
-      );
-
-      return success;
+      // For Cloudinary, we'll just delete the current profile image
+      // since there's typically only one profile image per user
+      final cachedUser = await getCachedUserData();
+      
+      if (cachedUser != null && cachedUser['profile_image_url'] != null) {
+        await deleteProfileImageFromCloudinary(cachedUser['profile_image_url']);
+        return true;
+      }
+      
+      return true; // No image to delete
     } on AppException catch (e) {
       rethrow;
     } catch (e) {
@@ -415,7 +420,7 @@ static Future<Map<String, dynamic>> updateCompleteProfile(
       await prefs.remove('user_data');
       await prefs.remove('first_time_user');
       
-      // Optionally delete all user images from Supabase storage
+      // Optionally delete all user images from Cloudinary
       try {
         await deleteAllUserProfileImages();
       } catch (e) {
@@ -428,8 +433,8 @@ static Future<Map<String, dynamic>> updateCompleteProfile(
     }
   }
 
-  // Check if image service is available
-  static bool get isImageServiceAvailable => ApiService.isImageServiceAvailable;
+  // Image service is always available with Cloudinary
+  static bool get isImageServiceAvailable => true;
 }
 
 /// Model classes for API responses

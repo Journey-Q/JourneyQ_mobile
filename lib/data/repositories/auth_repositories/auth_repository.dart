@@ -209,12 +209,17 @@ class AuthRepository {
             DateTime.now().millisecondsSinceEpoch + (expiresIn * 1000);
         await prefs.setInt('token_expires_at', expirationTime);
         await prefs.setInt('expires_in', expiresIn);
+
       }
 
       // Save user data to SharedPreferences
-      if (authResponse['user'] != null) {
-        await prefs.setString('user_data', jsonEncode(authResponse['user']));
-      }
+     if (authResponse['user'] != null) {
+  await prefs.setString('user_data', jsonEncode(authResponse['user']));
+  
+  // Store whether user is set up (not inverted)
+  bool isSetup = authResponse['user']['isSetup'] ?? false;
+  await prefs.setBool('is_setup', isSetup);
+}
 
       // ===== NEW: Update AuthProvider =====
 
