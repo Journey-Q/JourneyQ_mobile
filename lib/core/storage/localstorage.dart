@@ -165,8 +165,13 @@ class LocalStorage {
   }
 
   Future<bool> isFirstTimeUser() async {
-    return _prefs.getBool(_firstTimeUserKey) ?? true;
-  }
+  // Get setup status - if null or false, it's a first-time user
+  bool? isSetup = _prefs.getBool('is_setup');
+  print('User setup status: $isSetup');
+  
+  // First time user if setup is null (no data) or false (not set up)
+  return isSetup != true;
+}
 
   Future<void> setOnboardingCompleted(bool completed) async {
     await _prefs.setBool(_onboardingCompletedKey, completed);
