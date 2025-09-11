@@ -11,7 +11,9 @@ class PostRepository {
       
       // Handle direct array response
       if (response.data is List) {
-        final posts = List<Map<String, dynamic>>.from(response.data);
+        final posts = (response.data as List).map((item) => 
+          item is Map ? Map<String, dynamic>.from(item) : <String, dynamic>{}
+        ).toList();
         print('Found ${posts.length} posts for user $userId');
         return posts;
       }
@@ -20,13 +22,19 @@ class PostRepository {
       if (response.data is Map<String, dynamic>) {
         final data = response.data as Map<String, dynamic>;
         if (data['posts'] != null && data['posts'] is List) {
-          return List<Map<String, dynamic>>.from(data['posts']);
+          return (data['posts'] as List).map((item) => 
+            item is Map ? Map<String, dynamic>.from(item) : <String, dynamic>{}
+          ).toList();
         }
         if (data['data'] != null && data['data'] is List) {
-          return List<Map<String, dynamic>>.from(data['data']);
+          return (data['data'] as List).map((item) => 
+            item is Map ? Map<String, dynamic>.from(item) : <String, dynamic>{}
+          ).toList();
         }
         if (data['results'] != null && data['results'] is List) {
-          return List<Map<String, dynamic>>.from(data['results']);
+          return (data['results'] as List).map((item) => 
+            item is Map ? Map<String, dynamic>.from(item) : <String, dynamic>{}
+          ).toList();
         }
       }
       
@@ -49,10 +57,10 @@ class PostRepository {
       print('Post Details API Response: ${response.data}');
       
       // Handle wrapped response
-      if (response.data is Map<String, dynamic>) {
-        final data = response.data as Map<String, dynamic>;
-        if (data['data'] != null) {
-          return data['data'] as Map<String, dynamic>;
+      if (response.data is Map) {
+        final data = Map<String, dynamic>.from(response.data as Map);
+        if (data['data'] != null && data['data'] is Map) {
+          return Map<String, dynamic>.from(data['data'] as Map);
         }
         return data;
       }
@@ -73,7 +81,9 @@ class PostRepository {
       final response = await ApiService.post('/posts/$postId/likes/toggle');
       
       print('Toggle Like API Response: ${response.data}');
-      return response.data as Map<String, dynamic>;
+      return response.data is Map 
+        ? Map<String, dynamic>.from(response.data as Map) 
+        : <String, dynamic>{};
     } on AppException catch (e) {
       print('Error in toggleLike: $e');
       rethrow;
@@ -89,7 +99,9 @@ class PostRepository {
       final response = await ApiService.get('/posts/$postId/likes/status');
       
       print('Like Status API Response: ${response.data}');
-      return response.data as Map<String, dynamic>;
+      return response.data is Map 
+        ? Map<String, dynamic>.from(response.data as Map) 
+        : <String, dynamic>{};
     } on AppException catch (e) {
       print('Error in getLikeStatus: $e');
       rethrow;
@@ -107,10 +119,12 @@ class PostRepository {
       print('Comments API Response: ${response.data}');
       
       // Handle wrapped response
-      if (response.data is Map<String, dynamic>) {
-        final data = response.data as Map<String, dynamic>;
+      if (response.data is Map) {
+        final data = Map<String, dynamic>.from(response.data as Map);
         if (data['data'] != null && data['data'] is List) {
-          return List<Map<String, dynamic>>.from(data['data']);
+          return (data['data'] as List).map((item) => 
+            item is Map ? Map<String, dynamic>.from(item) : <String, dynamic>{}
+          ).toList();
         }
       }
       
@@ -133,7 +147,9 @@ class PostRepository {
       );
       
       print('Add Comment API Response: ${response.data}');
-      return response.data as Map<String, dynamic>;
+      return response.data is Map 
+        ? Map<String, dynamic>.from(response.data as Map) 
+        : <String, dynamic>{};
     } on AppException catch (e) {
       print('Error in addComment: $e');
       rethrow;
@@ -156,7 +172,9 @@ class PostRepository {
       );
       
       print('Reply Comment API Response: ${response.data}');
-      return response.data as Map<String, dynamic>;
+      return response.data is Map 
+        ? Map<String, dynamic>.from(response.data as Map) 
+        : <String, dynamic>{};
     } on AppException catch (e) {
       print('Error in replyToComment: $e');
       rethrow;
@@ -172,7 +190,9 @@ class PostRepository {
       final response = await ApiService.delete('/posts/$postId/comments/$commentId');
       
       print('Delete Comment API Response: ${response.data}');
-      return response.data as Map<String, dynamic>;
+      return response.data is Map 
+        ? Map<String, dynamic>.from(response.data as Map) 
+        : <String, dynamic>{};
     } on AppException catch (e) {
       print('Error in deleteComment: $e');
       rethrow;
@@ -189,8 +209,8 @@ class PostRepository {
       
       print('Comments Count API Response: ${response.data}');
       
-      if (response.data is Map<String, dynamic>) {
-        final data = response.data as Map<String, dynamic>;
+      if (response.data is Map) {
+        final data = Map<String, dynamic>.from(response.data as Map);
         return (data['commentsCount'] ?? 0) as int;
       }
       
@@ -200,6 +220,27 @@ class PostRepository {
       rethrow;
     } catch (e) {
       print('Unexpected error in getCommentsCount: $e');
+      rethrow;
+    }
+  }
+
+  // Create a new post
+  static Future<Map<String, dynamic>> createPost(Map<String, dynamic> postData) async {
+    try {
+      final response = await ApiService.post('/posts/create', data: postData);
+      
+      print('Create Post API Response: ${response.data}');
+      
+      if (response.data is Map) {
+        return Map<String, dynamic>.from(response.data as Map);
+      }
+      
+      throw ServerException('Invalid create post response format');
+    } on AppException catch (e) {
+      print('Error in createPost: $e');
+      rethrow;
+    } catch (e) {
+      print('Unexpected error in createPost: $e');
       rethrow;
     }
   }

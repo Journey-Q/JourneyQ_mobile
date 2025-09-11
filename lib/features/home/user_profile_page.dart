@@ -627,7 +627,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   Widget _buildPostsList() {
     if (_isLoadingPosts) {
       return const Padding(
-        padding: EdgeInsets.all(32),
+        padding: EdgeInsets.fromLTRB(32, 32, 32, 112),
         child: Center(
           child: CircularProgressIndicator(),
         ),
@@ -636,7 +636,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     
     if (_userPosts.isEmpty) {
       return const Padding(
-        padding: EdgeInsets.all(32),
+        padding: EdgeInsets.fromLTRB(32, 32, 32, 112),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -665,7 +665,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
       itemCount: _userPosts.length,
       itemBuilder: (context, index) {
         final post = _userPosts[index];
@@ -710,7 +710,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   children: [
                     // Location Title
                     Text(
-                      (post['location'] != null ? post['location'].toString() : 'Unknown Location'),
+                      (post['journeyTitle'] != null ? post['journeyTitle'].toString() : 'Unknown Location'),
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -721,7 +721,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
                     // Description
                     Text(
-                      (post['journeyTitle'] != null ? post['journeyTitle'].toString() : 'Explore this amazing destination'),
+                      (post['location'] != null ? post['location'].toString() : 'Explore this amazing destination'),
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],

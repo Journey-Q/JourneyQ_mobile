@@ -5,9 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:journeyq/data/models/journey_model/joureny_model.dart';
 import 'package:journeyq/features/create_trip/trip_cosntant.dart';
 import 'package:journeyq/features/create_trip/pages/widget.dart';
+import 'package:journeyq/core/services/api_service.dart';
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path;
 
 class AddPlacePage extends StatefulWidget {
   final PlaceModel? editingPlace;
@@ -1006,38 +1005,31 @@ class _AddPlacePageState extends State<AddPlacePage> with TickerProviderStateMix
     }
   }
 
-  // Updated method to save images to assets/posts_images
-  Future<List<String>> _saveImagesToAssets() async {
-    List<String> imagePaths = [];
+  // Upload images to cloudinary and return URLs
+  Future<List<String>> _uploadImages() async {
+    List<String> imageUrls = [];
+    
+    if (_selectedImages.isEmpty) {
+      return imageUrls;
+    }
     
     try {
-      // Get the application directory
-      final directory = await getApplicationDocumentsDirectory();
-      final postsImagesDir = Directory('${directory.path}/assets/posts_images');
+      // Upload images to cloudinary via ApiService
+      imageUrls = await ApiService.uploadMultipleImages(
+        imageFiles: _selectedImages,
+        subfolderName: 'journey_posts',
+        onProgress: (uploaded, total) {
+          print('Uploading images: $uploaded/$total');
+        },
+      );
       
-      // Create directory if it doesn't exist
-      if (!await postsImagesDir.exists()) {
-        await postsImagesDir.create(recursive: true);
-      }
-
-      for (int i = 0; i < _selectedImages.length; i++) {
-        final file = _selectedImages[i];
-        final fileName = 'post_${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
-        final newPath = '${postsImagesDir.path}/$fileName';
-        
-        // Copy the file to the new location
-        await file.copy(newPath);
-        
-        // Add the relative path to the list
-        imagePaths.add('assets/posts_images/$fileName');
-      }
+      print('Successfully uploaded ${imageUrls.length} images');
+      return imageUrls;
     } catch (e) {
-      print('Error saving images: $e');
-      // If saving fails, return the original paths
-      imagePaths = _selectedImages.map((file) => file.path).toList();
+      print('Error uploading images: $e');
+      // Return empty list on error - UI should handle gracefully
+      return [];
     }
-
-    return imagePaths;
   }
 
   void _savePlace({bool goToNextPlace = false}) async {
@@ -1054,14 +1046,14 @@ class _AddPlacePageState extends State<AddPlacePage> with TickerProviderStateMix
         address: _locationController.text.isNotEmpty ? _locationController.text : 'Unknown Location',
       );
 
-      // Save images to assets/posts_images and get file paths
-      final savedImagePaths = await _saveImagesToAssets();
+      // Upload images to cloudinary and get URLs
+      final uploadedImageUrls = await _uploadImages();
 
       final place = PlaceModel(
         name: _selectedLocation?.address.split(',').first ?? _locationController.text.split(',').first,
         tripMood: _selectedMood,
         location: location,
-        images: savedImagePaths, // Use the saved image paths
+        images: uploadedImageUrls, // Use the uploaded image URLs
         activities: _selectedActivities,
         experiences: _experiences.map((e) => ExperienceModel(description: e)).toList(),
       );

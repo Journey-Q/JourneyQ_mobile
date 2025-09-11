@@ -5,8 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:journeyq/data/repositories/profile_repository/profile_repository.dart';
 import 'package:journeyq/data/repositories/follow_repository/follow_repository.dart';
+import 'package:journeyq/data/repositories/post_repository/post_repository.dart';
 import 'package:journeyq/core/errors/exception.dart';
-import 'package:journeyq/features/journey_view/data.dart';
 import 'package:journeyq/features/profile/pages/followersfollowingpage.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -24,50 +24,12 @@ class _ProfilePageState extends State<ProfilePage> {
   // Loading and data states
   bool _isLoading = true;
   bool _isLoadingStats = true;
+  bool _isLoadingPosts = true;
   Map<String, dynamic>? _profileData;
   Map<String, dynamic>? _statsData;
+  List<Map<String, dynamic>> _userPosts = [];
   String? _userId;
 
-  // Transform journey data to user posts format
-  List<Map<String, dynamic>> get userPosts {
-    return journeyDetailsData.map((journey) {
-      final places = journey['places'] as List;
-      final firstPlace = places.isNotEmpty ? places.first : null;
-      final images = firstPlace?['images'] as List<String>? ?? [];
-      final firstImage = images.isNotEmpty ? images.first : 'assets/images/placeholder.jpg';
-
-      final likes = 50 + (journey['id'].hashCode % 200);
-      final comments = 5 + (journey['id'].hashCode % 30);
-
-      return {
-        'imageUrl': firstImage,
-        'likes': likes,
-        'comments': comments,
-        'isLiked': (journey['id'].hashCode % 3) == 0,
-        'isSaved': (journey['id'].hashCode % 4) == 0,
-        'caption': journey['tripTitle'],
-        'location': firstPlace?['name'] ?? 'Unknown Location',
-        'destination': journey['tripTitle'],
-        'description': firstPlace != null
-            ? 'Explore ${firstPlace['name']} - ${journey['totalDays']} days journey'
-            : 'Amazing ${journey['totalDays']}-day journey',
-        'timestamp': _getRandomTimestamp(journey['id']),
-        'isVisited': true,
-        'visitDate': _getRandomVisitDate(journey['id']),
-        'journeyId': journey['id'],
-      };
-    }).toList();
-  }
-
-  String _getRandomTimestamp(String journeyId) {
-    final timestamps = ['2 hours ago', '5 hours ago', '1 day ago', '2 days ago', '3 days ago', '4 days ago', '5 days ago', '1 week ago'];
-    return timestamps[journeyId.hashCode % timestamps.length];
-  }
-
-  String _getRandomVisitDate(String journeyId) {
-    final dates = ['2024-06-15', '2024-06-10', '2024-06-08', '2024-06-05', '2024-06-01', '2024-05-28', '2024-05-25', '2024-05-20', '2024-05-15'];
-    return dates[journeyId.hashCode % dates.length];
-  }
 
   @override
   void initState() {
@@ -93,31 +55,38 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         _isLoading = true;
         _isLoadingStats = true;
+        _isLoadingPosts = true;
       });
 
-      // Load profile data and stats concurrently
+      // Load profile data, stats, and posts concurrently
       final List<dynamic> results = await Future.wait([
         ProfileRepository.getProfile(_userId!),
         _loadUserStats(),
+        _loadUserPosts(),
       ]);
 
       final profileData = results[0] as Map<String, dynamic>;
       final statsData = results[1] as Map<String, dynamic>?;
+      final postsData = results[2] as List<Map<String, dynamic>>;
 
       print("Profile data loaded: $profileData");
       print("Stats data loaded: $statsData");
+      print("Posts data loaded: ${postsData.length} posts");
 
       setState(() {
         _profileData = profileData;
         _statsData = statsData;
+        _userPosts = postsData;
         _isLoading = false;
         _isLoadingStats = false;
+        _isLoadingPosts = false;
       });
     } catch (e) {
       print("Error loading profile: $e");
       setState(() {
         _isLoading = false;
         _isLoadingStats = false;
+        _isLoadingPosts = false;
       });
 
       if (mounted) {
@@ -153,6 +122,46 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  // New method to load user posts
+  Future<List<Map<String, dynamic>>> _loadUserPosts() async {
+    try {
+      if (_userId == null) return [];
+      
+      final postsResponse = await PostRepository.getUserPosts(_userId!);
+      print("Loaded ${postsResponse.length} posts for user $_userId");
+      
+      // Transform the backend response to match the UI format
+      return postsResponse.map((post) {
+        final postImages = (post['postImages'] as List? ?? []).cast<String>();
+        final firstImage = postImages.isNotEmpty 
+            ? postImages.first 
+            : 'assets/images/placeholder.jpg';
+        
+        return {
+          'id': post['id']?.toString() ?? '',
+          'imageUrl': firstImage,
+          'postImages': postImages,
+          'likes': 0, // Will be fetched separately if needed
+          'comments': 0, // Will be fetched separately if needed
+          'isLiked': false,
+          'isSaved': false,
+          'caption': post['journeyTitle']?.toString() ?? 'Untitled Journey',
+          'location': post['location']?.toString() ?? 'Unknown Location',
+          'destination': post['journeyTitle']?.toString() ?? 'Unknown Destination',
+          'description': 'Explore this amazing journey',
+          'timestamp': _formatTimestamp(post['createdAt']?.toString()),
+          'isVisited': true,
+          'visitDate': post['createdAt']?.toString()?.split('T').first ?? '',
+          'journeyId': post['id']?.toString() ?? '',
+          'postId': post['id']?.toString() ?? '', // For navigation to journey details
+        };
+      }).toList();
+    } catch (e) {
+      print("Error loading user posts: $e");
+      return [];
+    }
+  }
+
   // Method to refresh stats after follow actions
   Future<void> _refreshStats() async {
     try {
@@ -164,6 +173,32 @@ class _ProfilePageState extends State<ProfilePage> {
       }
     } catch (e) {
       print("Error refreshing stats: $e");
+    }
+  }
+
+  // Helper method to format timestamp
+  String _formatTimestamp(String? timestamp) {
+    if (timestamp == null || timestamp.isEmpty) return 'Recently';
+    
+    try {
+      final DateTime postTime = DateTime.parse(timestamp);
+      final DateTime now = DateTime.now();
+      final Duration difference = now.difference(postTime);
+
+      if (difference.inMinutes < 60) {
+        return '${difference.inMinutes}m ago';
+      } else if (difference.inHours < 24) {
+        return '${difference.inHours}h ago';
+      } else if (difference.inDays < 7) {
+        return '${difference.inDays}d ago';
+      } else if (difference.inDays < 30) {
+        return '${(difference.inDays / 7).floor()}w ago';
+      } else {
+        return '${(difference.inDays / 30).floor()}mo ago';
+      }
+    } catch (e) {
+      print('Error parsing timestamp: $e');
+      return 'Recently';
     }
   }
 
@@ -188,8 +223,8 @@ class _ProfilePageState extends State<ProfilePage> {
         'name': _profileData!['display_name'] ?? authUser?.username ?? 'Unknown User',
         'username': authUser?.username ?? 'unknown_user',
         'displayName': _profileData!['display_name'] ?? authUser?.username ?? 'Unknown User',
-        'bio': _profileData!['bio'] ?? 'Travel enthusiast | Exploring Sri Lanka 🇱🇰\n✈️ ${journeyDetailsData.length} amazing journeys completed',
-        'posts': userPosts.length,
+        'bio': _profileData!['bio'] ?? 'Travel enthusiast | Exploring Sri Lanka 🇱🇰\n✈️ ${_userPosts.length} amazing journeys completed',
+        'posts': _userPosts.length,
         'followers': followersCount,
         'following': followingCount,
         'profileImage': _profileData!['profile_image_url'] ?? authUser?.profileUrl ?? 'assets/images/profile_picture.jpg',
@@ -208,8 +243,8 @@ class _ProfilePageState extends State<ProfilePage> {
         'name': authUser?.username ?? 'Unknown User',
         'username': authUser?.username ?? 'unknown_user',
         'displayName': authUser?.username ?? 'Unknown User',
-        'bio': 'Travel enthusiast | Exploring Sri Lanka 🇱🇰\n✈️ ${journeyDetailsData.length} amazing journeys completed',
-        'posts': userPosts.length,
+        'bio': 'Travel enthusiast | Exploring Sri Lanka 🇱🇰\n✈️ ${_userPosts.length} amazing journeys completed',
+        'posts': _userPosts.length,
         'followers': followersCount,
         'following': followingCount,
         'profileImage': authUser?.profileUrl ?? 'assets/images/profile_picture.jpg',
@@ -316,41 +351,48 @@ class _ProfilePageState extends State<ProfilePage> {
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.person, color: Color(0xFF0088cc), size: 16),
-                const SizedBox(width: 6),
-                Text(
-                  userData['username'] ?? 'Unknown',
-                  style: const TextStyle(
-                    color: Color(0xFF2D3436),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (userData['isVerified'] == true) ...[
-                  const SizedBox(width: 4),
-                  const Icon(
-                    Icons.verified,
-                    color: Color(0xFF0088cc),
-                    size: 16,
+          Flexible(
+            flex: 3,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
                   ),
                 ],
-              ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.person, color: Color(0xFF0088cc), size: 16),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      userData['username'] ?? 'Unknown',
+                      style: const TextStyle(
+                        color: Color(0xFF2D3436),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
+                  if (userData['isVerified'] == true) ...[
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.verified,
+                      color: Color(0xFF0088cc),
+                      size: 16,
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
 
@@ -504,10 +546,12 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Text(
                         userData['name'] ?? 'Unknown User',
                         style: const TextStyle(
-                          fontSize: 22,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF2D3436),
                         ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
                       ),
                     ),
                   ],
@@ -569,7 +613,7 @@ class _ProfilePageState extends State<ProfilePage> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _buildStatItem(
-            userPosts.length.toString(),
+            _userPosts.length.toString(),
             'Posts',
             Icons.photo_library,
             const Color(0xFF0088cc),
@@ -731,18 +775,58 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildPostsGrid() {
-    final postsFromIndex7 = userPosts.length > 7
-        ? userPosts.sublist(7)
-        : <Map<String, dynamic>>[];
+    // Show all posts if loading is complete, otherwise show empty list
+    if (_isLoadingPosts) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: const Center(
+          child: Column(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Loading posts...'),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_userPosts.isEmpty) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.all(32),
+        child: const Center(
+          child: Column(
+            children: [
+              Icon(Icons.photo_library_outlined, size: 64, color: Colors.grey),
+              SizedBox(height: 16),
+              Text(
+                'No posts yet',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Start sharing your amazing journeys!',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        itemCount: postsFromIndex7.length,
+        itemCount: _userPosts.length,
         itemBuilder: (context, index) {
-          final post = postsFromIndex7[index];
+          final post = _userPosts[index];
           return Container(
             margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
@@ -767,12 +851,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Container(
                     height: 200,
                     width: double.infinity,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage(post['imageUrl']),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+                    child: _buildPostImage(post['imageUrl']),
                   ),
                 ),
                 Padding(
@@ -1026,10 +1105,63 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  // Helper method to build post images (supports both asset and network images)
+  Widget _buildPostImage(String? imagePath) {
+    if (imagePath == null || imagePath.isEmpty) {
+      return Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: Colors.grey[300],
+        child: const Icon(Icons.image, size: 50, color: Colors.grey),
+      );
+    }
+    
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return Image.network(
+        imagePath,
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            color: Colors.grey[200],
+            child: const Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.grey[300],
+            child: const Icon(Icons.image, size: 50, color: Colors.grey),
+          );
+        },
+      );
+    } else {
+      return Image.asset(
+        imagePath,
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.grey[300],
+            child: const Icon(Icons.image, size: 50, color: Colors.grey),
+          );
+        },
+      );
+    }
+  }
+
   void _viewJourney(Map<String, dynamic> post) {
-    final journeyId = post['journeyId'];
-    if (journeyId != null) {
-      context.push('/journey/$journeyId');
+    final postId = post['postId'] ?? post['journeyId'] ?? post['id'];
+    if (postId != null && postId.toString().isNotEmpty) {
+      context.push('/journey/$postId');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Journey details not available for ${post['destination']}')),

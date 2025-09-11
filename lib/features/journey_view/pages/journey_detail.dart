@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:journeyq/data/repositories/post_repository/post_repository.dart';
+import 'package:journeyq/data/repositories/bucket_list_repository/bucket_list_repository.dart';
 // Update this import to use the enhanced map widget
 // import 'package:journeyq/features/journey_view/pages/Journeyroute.dart';
 import 'package:journeyq/features/journey_view/pages/journeyroute.dart'; 
@@ -35,10 +37,20 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   int _commentsCount = 0;
   List<Map<String, dynamic>> _comments = [];
   
+  // Bucket list state
+  bool _isInBucketList = false;
+  
   // Loading states
   bool _isLoadingPost = true;
   bool _isLoadingLikes = true;
   bool _isLoadingComments = true;
+  bool _postNotFound = false;
+  
+  // Timer for auto-refreshing comments
+  Timer? _commentsTimer;
+  
+  // ValueNotifier to communicate with comments bottom sheet
+  ValueNotifier<List<Map<String, dynamic>>>? _commentsNotifier;
   
   // Direct access to postId
   String get postId => widget.postId;
@@ -52,12 +64,16 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
     _loadJourneyData();
     _loadLikeStatus();
     _loadComments();
+    _loadBucketListStatus();
+    _startCommentsPolling();
   }
 
   @override
   void dispose() {
     _pageControllers.values.forEach((controller) => controller.dispose());
     _placesPageController.dispose();
+    _commentsTimer?.cancel();
+    _commentsNotifier?.dispose();
     super.dispose();
   }
 
@@ -65,6 +81,7 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
     try {
       setState(() {
         _isLoadingPost = true;
+        _postNotFound = false;
       });
 
       final postData = await PostRepository.getPostDetails(postId);
@@ -72,12 +89,13 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
       setState(() {
         journeyData = _mapPostDataToJourneyData(postData);
         _isLoadingPost = false;
+        _postNotFound = false;
       });
     } catch (e) {
       print('Error loading journey data: $e');
       setState(() {
         _isLoadingPost = false;
-        // Use fallback data or show error
+        _postNotFound = true;
       });
     }
   }
@@ -103,20 +121,59 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
     }
   }
 
+  void _startCommentsPolling() {
+    _commentsTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      if (mounted) {
+        _loadComments();
+      }
+    });
+  }
+
   Future<void> _loadComments() async {
     try {
       setState(() {
         _isLoadingComments = true;
       });
 
-      final comments = await PostRepository.getComments(postId);
+      final commentsResponse = await PostRepository.getComments(postId);
       final commentsCount = await PostRepository.getCommentsCount(postId);
       
+      // Map the backend response to UI format
+      final mappedComments = commentsResponse.map<Map<String, dynamic>>((commentItem) {
+        final comment = commentItem is Map ? Map<String, dynamic>.from(commentItem) : <String, dynamic>{};
+        final repliesList = comment['replies'] as List? ?? [];
+        
+        return {
+          'id': comment['commentId']?.toString() ?? '',
+          'userName': comment['username']?.toString() ?? 'Unknown User',
+          'userImage': comment['userProfileUrl']?.toString() ?? '',
+          'comment': comment['commentText']?.toString() ?? '',
+          'timeAgo': _formatTimeAgo(comment['commentedAt']?.toString()),
+          'likesCount': 0, // Backend doesn't provide this yet
+          'isLiked': false, // Backend doesn't provide this yet
+          'replies': repliesList.map<Map<String, dynamic>>((replyItem) {
+            final reply = replyItem is Map ? Map<String, dynamic>.from(replyItem) : <String, dynamic>{};
+            return {
+              'id': reply['commentId']?.toString() ?? '',
+              'userName': reply['username']?.toString() ?? 'Unknown User',
+              'userImage': reply['userProfileUrl']?.toString() ?? '',
+              'comment': reply['commentText']?.toString() ?? '',
+              'timeAgo': _formatTimeAgo(reply['commentedAt']?.toString()),
+              'likesCount': 0,
+              'isLiked': false,
+            };
+          }).toList(),
+        };
+      }).toList();
+      
       setState(() {
-        _comments = comments;
+        _comments = mappedComments;
         _commentsCount = commentsCount;
         _isLoadingComments = false;
       });
+      
+      // Notify the comments bottom sheet to update if it's open
+      _commentsNotifier?.value = _comments;
     } catch (e) {
       print('Error loading comments: $e');
       setState(() {
@@ -128,38 +185,60 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   Map<String, dynamic> _mapPostDataToJourneyData(Map<String, dynamic> postData) {
     // Map the backend post data to the format expected by the UI
     final placeWiseContent = postData['placeWiseContent'] as List? ?? [];
+    final budgetInfo = postData['budgetInfo'] is Map 
+        ? Map<String, dynamic>.from(postData['budgetInfo'] as Map) 
+        : <String, dynamic>{};
     
     return {
       'id': postData['postId']?.toString() ?? postId,
-      'tripTitle': postData['journeyTitle'] ?? 'Unknown Journey',
-      'authorName': postData['creatorUsername'] ?? 'Unknown Author',
-      'authorImage': postData['creatorProfileUrl'] ?? '',
+      'tripTitle': postData['journeyTitle']?.toString() ?? 'Unknown Journey',
+      'authorName': postData['creatorUsername']?.toString() ?? 'Unknown Author',
+      'authorImage': postData['creatorProfileUrl']?.toString() ?? '',
       'totalDays': postData['numberOfDays'] ?? 1,
-      'totalBudget': postData['budgetInfo']?['totalBudget'] ?? 0,
-      'places': placeWiseContent.map((place) => {
-        'name': place['placeName'] ?? '',
-        'trip_mood': place['tripMood'] ?? '',
-        'activities': place['activities'] ?? [],
-        'experiences': (place['experiences'] as List? ?? []).map((exp) => {
-          'description': exp.toString(),
-        }).toList(),
-        'images': place['imageUrls'] ?? [],
-        'latitude': place['latitude'],
-        'longitude': place['longitude'],
-        'address': place['address'] ?? '',
+      'totalBudget': budgetInfo['totalBudget'] ?? 0,
+      'places': placeWiseContent.map((place) {
+        final placeMap = place is Map ? Map<String, dynamic>.from(place) : <String, dynamic>{};
+        final activities = placeMap['activities'] as List? ?? [];
+        final experiences = placeMap['experiences'] as List? ?? [];
+        final images = placeMap['imageUrls'] as List? ?? [];
+        
+        return {
+          'name': placeMap['placeName']?.toString() ?? '',
+          'trip_mood': placeMap['tripMood']?.toString() ?? '',
+          'activities': activities.map((activity) => activity.toString()).toList(),
+          'experiences': experiences.map((exp) => {
+            'description': exp.toString(),
+          }).toList(),
+          'images': images.map((img) => img.toString()).toList(),
+          'location': {
+            'latitude': placeMap['latitude'],
+            'longitude': placeMap['longitude'],
+            'address': placeMap['address']?.toString() ?? '',
+          },
+          'latitude': placeMap['latitude'], // Keep for backward compatibility
+          'longitude': placeMap['longitude'], // Keep for backward compatibility
+          'address': placeMap['address']?.toString() ?? '',
+        };
       }).toList(),
       'overallRecommendations': {
-        'hotels': postData['hotelRecommendations'] ?? [],
-        'restaurants': postData['restaurantRecommendations'] ?? [],
+        'hotels': (postData['hotelRecommendations'] as List? ?? []).map((hotel) =>
+          hotel is Map ? Map<String, dynamic>.from(hotel) : <String, dynamic>{}
+        ).toList(),
+        'restaurants': (postData['restaurantRecommendations'] as List? ?? []).map((restaurant) =>
+          restaurant is Map ? Map<String, dynamic>.from(restaurant) : <String, dynamic>{}
+        ).toList(),
       },
-      'tips': postData['travelTips'] ?? [],
-      'budgetBreakdown': postData['budgetInfo']?['budgetBreakdown'] ?? {},
+      'tips': (postData['travelTips'] as List? ?? []).map((tip) => tip.toString()).toList(),
+      'budgetBreakdown': budgetInfo['breakdown'] is Map 
+          ? Map<String, dynamic>.from(budgetInfo['breakdown'] as Map)
+          : <String, dynamic>{},
     };
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoadingPost || journeyData == null) {
+    // Show loading state
+    if (_isLoadingPost) {
       return const Scaffold(
         backgroundColor: Colors.white,
         body: Center(
@@ -170,6 +249,98 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
               SizedBox(height: 16),
               Text('Loading journey details...'),
             ],
+          ),
+        ),
+      );
+    }
+
+    // Show post not found UI
+    if (_postNotFound || journeyData == null) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: const Text(
+            'Journey Details',
+            style: TextStyle(color: Colors.black),
+          ),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.explore_off,
+                  size: 80,
+                  color: Colors.grey[400],
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Post Not Found',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'The journey you\'re looking for might have been removed or doesn\'t exist.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Go Back',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () {
+                    // Retry loading the post
+                    _loadJourneyData();
+                    _loadLikeStatus();
+                    _loadComments();
+                  },
+                  child: Text(
+                    'Try Again',
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -773,53 +944,58 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
             const SizedBox(height: 12),
             _buildImageCarousel(images, placeName),
             _buildDotsIndicator(images, placeName),
-            const SizedBox(height: 12),
-            const Text(
-              'Activities',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 40,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                child: Row(
-                  children: [
-                    ...activities.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final activity = entry.value;
-                      return Row(
-                        children: [
-                          if (index > 0) const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.blue[600],
-                              borderRadius: BorderRadius.circular(22),
-                            ),
-                            child: Text(
-                              activity,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                height: 1.4,
-                                color: Colors.white,
+            // Add consistent spacing before the first content section
+            if (activities.isNotEmpty || experiences.isNotEmpty)
+              const SizedBox(height: 12),
+            if (activities.isNotEmpty) ...[
+              const Text(
+                'Activities',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 40,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: Row(
+                    children: [
+                      ...activities.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final activity = entry.value;
+                        return Row(
+                          children: [
+                            if (index > 0) const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.blue[600],
+                                borderRadius: BorderRadius.circular(22),
+                              ),
+                              child: Text(
+                                activity,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  height: 1.4,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      );
-                    }).toList(),
-                    const SizedBox(width: 16),
-                  ],
+                          ],
+                        );
+                      }).toList(),
+                      const SizedBox(width: 16),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
+            ],
             if (experiences.isNotEmpty) ...[
+              // Add spacing between activities and experiences if activities exist
+              if (activities.isNotEmpty) const SizedBox(height: 12),
               const Text(
                 'Experiences',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
@@ -871,6 +1047,14 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   Widget _buildRecommendationsSection() {
     final recommendations =
         journeyData!['overallRecommendations'] as Map<String, dynamic>;
+    
+    final hotels = (recommendations['hotels'] as List?) ?? [];
+    final restaurants = (recommendations['restaurants'] as List?) ?? [];
+    
+    // Hide the entire section if both hotels and restaurants are empty
+    if (hotels.isEmpty && restaurants.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -882,17 +1066,17 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-          if (recommendations.containsKey('hotels'))
+          if (hotels.isNotEmpty)
             _buildRecommendationCategory(
               'Hotels',
               LucideIcons.building,
-              (recommendations['hotels'] as List?) ?? [],
+              hotels,
             ),
-          if (recommendations.containsKey('restaurants'))
+          if (restaurants.isNotEmpty)
             _buildRecommendationCategory(
               'Restaurants',
               LucideIcons.utensils,
-              (recommendations['restaurants'] as List?) ?? [],
+              restaurants,
             ),
         ],
       ),
@@ -969,6 +1153,12 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   Widget _buildTipsSection() {
     final tipsList = journeyData!['tips'] as List?;
     final tips = tipsList?.cast<String>() ?? <String>[];
+    
+    // Hide the section if no tips are available
+    if (tips.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(20),
@@ -1168,9 +1358,9 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
                 onTap: _handleComment,
               ),
               _buildIconButton(
-                icon: _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                icon: _isInBucketList ? Icons.bookmark : Icons.bookmark_border,
                 count: null,
-                isActive: _isBookmarked,
+                isActive: _isInBucketList,
                 activeColor: Colors.amber[700]!,
                 onTap: _handleSave,
               ),
@@ -1258,26 +1448,123 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   }
 
   void _handleComment() {
+    // Create a new notifier for this bottom sheet session
+    _commentsNotifier = ValueNotifier(_comments);
+    
     _showCommentsBottomSheet(
       context,
       postId: postId,
-      comments: _comments,
-      postOwnerName: journeyData!['authorName'],
+      commentsNotifier: _commentsNotifier!,
+      postOwnerName: journeyData!['creatorUsername'] ?? 'user',
       onCommentsUpdated: () async {
-        // Reload comments from backend
+        // Only reload comments when explicitly requested (after posting a comment)
         await _loadComments();
+      },
+      onClosed: () {
+        // Clean up the notifier when bottom sheet is closed
+        _commentsNotifier?.dispose();
+        _commentsNotifier = null;
       },
     );
   }
 
-  void _handleSave() {
-    setState(() {
-      _isBookmarked = !_isBookmarked;
-    });
+  Future<void> _loadBucketListStatus() async {
+    try {
+      final bucketListData = await BucketListRepository.getBucketList();
+      
+      if (bucketListData['posts'] != null && bucketListData['posts'] is List) {
+        final posts = bucketListData['posts'] as List;
+        final isInBucketList = posts.any((post) {
+          if (post is Map) {
+            return post['id']?.toString() == postId;
+          }
+          return false;
+        });
+        
+        setState(() {
+          _isInBucketList = isInBucketList;
+        });
+      }
+    } catch (e) {
+      print('Error loading bucket list status: $e');
+    }
+  }
+
+  Future<void> _handleSave() async {
+    try {
+      if (_isInBucketList) {
+        // Remove from bucket list
+        await BucketListRepository.removeFromBucketList(postId);
+        setState(() {
+          _isInBucketList = false;
+          _isBookmarked = false;
+        });
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Removed from bucket list'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } else {
+        // Add to bucket list
+        await BucketListRepository.addToBucketList(postId);
+        setState(() {
+          _isInBucketList = true;
+          _isBookmarked = true;
+        });
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Added to bucket list'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('Error updating bucket list: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to update bucket list'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   String _capitalize(String text) {
     return text[0].toUpperCase() + text.substring(1);
+  }
+
+  String _formatTimeAgo(String? timestamp) {
+    if (timestamp == null || timestamp.isEmpty) return 'now';
+    
+    try {
+      final DateTime commentTime = DateTime.parse(timestamp);
+      final DateTime now = DateTime.now();
+      final Duration difference = now.difference(commentTime);
+
+      if (difference.inMinutes < 1) {
+        return 'now';
+      } else if (difference.inHours < 1) {
+        return '${difference.inMinutes}m';
+      } else if (difference.inDays < 1) {
+        return '${difference.inHours}h';
+      } else if (difference.inDays < 7) {
+        return '${difference.inDays}d';
+      } else {
+        return '${(difference.inDays / 7).floor()}w';
+      }
+    } catch (e) {
+      print('Error parsing timestamp: $e');
+      return 'now';
+    }
   }
 
   Color _getBudgetColor(String category) {
@@ -1346,9 +1633,10 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   void _showCommentsBottomSheet(
     BuildContext context, {
     required String postId,
-    required List<Map<String, dynamic>> comments,
+    required ValueNotifier<List<Map<String, dynamic>>> commentsNotifier,
     required String postOwnerName,
     VoidCallback? onCommentsUpdated,
+    VoidCallback? onClosed,
   }) {
     showModalBottomSheet(
       context: context,
@@ -1356,24 +1644,26 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
       backgroundColor: Colors.transparent,
       builder: (context) => _CommentsBottomSheet(
         postId: postId,
-        comments: comments,
+        commentsNotifier: commentsNotifier,
         postOwnerName: postOwnerName,
         onCommentsUpdated: onCommentsUpdated,
       ),
-    );
+    ).whenComplete(() {
+      onClosed?.call();
+    });
   }
 }
 
 // Comments Bottom Sheet Widget
 class _CommentsBottomSheet extends StatefulWidget {
   final String postId;
-  final List<Map<String, dynamic>> comments;
+  final ValueNotifier<List<Map<String, dynamic>>> commentsNotifier;
   final String postOwnerName;
   final VoidCallback? onCommentsUpdated;
 
   const _CommentsBottomSheet({
     required this.postId,
-    required this.comments,
+    required this.commentsNotifier,
     required this.postOwnerName,
     this.onCommentsUpdated,
   });
@@ -1387,16 +1677,27 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
   final FocusNode _commentFocusNode = FocusNode();
   String? _replyingTo;
   String? _replyingToCommentId;
-  late List<Map<String, dynamic>> _comments;
+  List<Map<String, dynamic>> _comments = [];
 
   @override
   void initState() {
     super.initState();
-    _comments = List.from(widget.comments);
+    _comments = List.from(widget.commentsNotifier.value);
+    // Listen to changes in comments from parent
+    widget.commentsNotifier.addListener(_updateComments);
+  }
+
+  void _updateComments() {
+    if (mounted) {
+      setState(() {
+        _comments = List.from(widget.commentsNotifier.value);
+      });
+    }
   }
 
   @override
   void dispose() {
+    widget.commentsNotifier.removeListener(_updateComments);
     _commentController.dispose();
     _commentFocusNode.dispose();
     super.dispose();
@@ -1618,7 +1919,8 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
         left: 16,
         right: 16,
         top: 12,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 12,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 
+               MediaQuery.of(context).padding.bottom + 16,
       ),
       decoration: BoxDecoration(
         color: Colors.white,
