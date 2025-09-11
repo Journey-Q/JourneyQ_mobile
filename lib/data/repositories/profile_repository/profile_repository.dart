@@ -317,6 +317,24 @@ static Future<Map<String, dynamic>> updateCompleteProfile(
     }
   }
 
+  // Get user statistics by user ID
+  static Future<Map<String, dynamic>> getUserStats(String userId) async {
+    try {
+      final response = await ApiService.get('/stats/$userId');
+      
+      // Handle direct object response
+      if (response.data is Map<String, dynamic>) {
+        return response.data as Map<String, dynamic>;
+      }
+      
+      return {};
+    } on AppException catch (e) {
+      rethrow;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   // Update travel experience level
   static Future<void> updateTravelExperience(String experienceLevel) async {
     try {

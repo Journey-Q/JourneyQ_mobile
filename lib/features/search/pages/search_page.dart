@@ -1,182 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
-// Sri Lankan search data extracted from your journey data
-final List<Map<String, dynamic>> search_data = [
-  // Travellers from journey data
-  {
-    'title': 'Samantha Fernando',
-    'subtitle': 'Cultural Triangle Explorer',
-    'image': 'https://i.pravatar.cc/150?img=25',
-    'type': 'traveller',
-    'id': 'samantha_fernando',
-  },
-  {
-    'title': 'Kasun Ratnayake',
-    'subtitle': 'Cultural Heritage Guide',
-    'image': 'https://i.pravatar.cc/150?img=42',
-    'type': 'traveller',
-    'id': 'kasun_ratnayake',
-  },
-  {
-    'title': 'Tharaka Wijesinghe',
-    'subtitle': 'Coastal Adventure Specialist',
-    'image': 'https://i.pravatar.cc/150?img=33',
-    'type': 'traveller',
-    'id': 'tharaka_wijesinghe',
-  },
-  {
-    'title': 'Anjali Mendis',
-    'subtitle': 'Hill Country Tea Expert',
-    'image': 'https://i.pravatar.cc/150?img=27',
-    'type': 'traveller',
-    'id': 'anjali_mendis',
-  },
-  {
-    'title': 'Dinesh Jayawardena',
-    'subtitle': 'Wildlife Safari Guide',
-    'image': 'https://i.pravatar.cc/150?img=39',
-    'type': 'traveller',
-    'id': 'dinesh_jayawardena',
-  },
-  {
-    'title': 'Chamara Gunasekara',
-    'subtitle': 'Mountain Hiking Expert',
-    'image': 'https://i.pravatar.cc/150?img=34',
-    'type': 'traveller',
-    'id': 'chamara_gunasekara',
-  },
-  {
-    'title': 'Nadeesha Silva',
-    'subtitle': 'Beach Paradise Guide',
-    'image': 'https://i.pravatar.cc/150?img=28',
-    'type': 'traveller',
-    'id': 'nadeesha_silva',
-  },
-  {
-    'title': 'Priya Weerasinghe',
-    'subtitle': 'Sacred Mountain Pilgrim',
-    'image': 'https://i.pravatar.cc/150?img=35',
-    'type': 'traveller',
-    'id': 'priya_weerasinghe',
-  },
-  {
-    'title': 'Ruwan Perera',
-    'subtitle': 'Ancient Heritage Explorer',
-    'image': 'https://i.pravatar.cc/150?img=41',
-    'type': 'traveller',
-    'id': 'ruwan_perera',
-  },
-  {
-    'title': 'Suranga Bandara',
-    'subtitle': 'Surf Adventure Expert',
-    'image': 'https://i.pravatar.cc/150?img=36',
-    'type': 'traveller',
-    'id': 'suranga_bandara',
-  },
-
-  // Journey trips from journey data
-  {
-    'title': 'Ancient Wonders of Cultural Triangle',
-    'subtitle': '6 days exploring Sigiriya, Dambulla & Polonnaruwa',
-    'image': 'assets/images/img1.jpg',
-    'type': 'journey',
-    'id': '1',
-    'author': 'Samantha Fernando',
-    'budget': 85000,
-    'duration': 6,
-  },
-  {
-    'title': 'Cultural Heart of Sri Lanka',
-    'subtitle': '4 days in Kandy discovering Buddhist heritage',
-    'image': 'assets/images/img11.jpg',
-    'type': 'journey',
-    'id': '2',
-    'author': 'Kasun Ratnayake',
-    'budget': 65000,
-    'duration': 4,
-  },
-  {
-    'title': 'Colonial Charm & Coastal Beauty',
-    'subtitle': '5 days exploring Galle Fort and southern beaches',
-    'image': 'assets/images/img12.jpg',
-    'type': 'journey',
-    'id': '3',
-    'author': 'Tharaka Wijesinghe',
-    'budget': 75000,
-    'duration': 5,
-  },
-  {
-    'title': 'Hill Country Tea Trail Adventure',
-    'subtitle': '5 days in Ella experiencing tea culture',
-    'image': 'assets/images/img14.jpg',
-    'type': 'journey',
-    'id': '4',
-    'author': 'Anjali Mendis',
-    'budget': 70000,
-    'duration': 5,
-  },
-  {
-    'title': 'Wildlife Safari Adventure',
-    'subtitle': '4 days in Yala spotting leopards and elephants',
-    'image': 'assets/images/img6.jpg',
-    'type': 'journey',
-    'id': '5',
-    'author': 'Dinesh Jayawardena',
-    'budget': 95000,
-    'duration': 4,
-  },
-  {
-    'title': 'Little England in the Hills',
-    'subtitle': '4 days in Nuwara Eliya\'s cool climate',
-    'image': 'assets/images/img31.jpg',
-    'type': 'journey',
-    'id': '6',
-    'author': 'Chamara Gunasekara',
-    'budget': 80000,
-    'duration': 4,
-  },
-  {
-    'title': 'Mirissa Beach Paradise',
-    'subtitle': '3 days of whale watching and beach relaxation',
-    'image': 'assets/images/mirissa_beach.jpg',
-    'type': 'journey',
-    'id': '7',
-    'author': 'Nadeesha Silva',
-    'budget': 45000,
-    'duration': 3,
-  },
-  {
-    'title': 'Sacred Adams Peak Pilgrimage',
-    'subtitle': '2 days spiritual journey to holy summit',
-    'image': 'assets/images/adams_peak.jpg',
-    'type': 'journey',
-    'id': '8',
-    'author': 'Priya Weerasinghe',
-    'budget': 25000,
-    'duration': 2,
-  },
-  {
-    'title': 'Ancient Anuradhapura Heritage',
-    'subtitle': '3 days exploring the first capital',
-    'image': 'assets/images/anuradhapura.jpeg',
-    'type': 'journey',
-    'id': '9',
-    'author': 'Ruwan Perera',
-    'budget': 40000,
-    'duration': 3,
-  },
-  {
-    'title': 'Arugam Bay Surf Paradise',
-    'subtitle': '4 days surfing world-class waves',
-    'image': 'assets/images/arugam_bay.jpg',
-    'type': 'journey',
-    'id': '10',
-    'author': 'Suranga Bandara',
-    'budget': 55000,
-    'duration': 4,
-  },
-];
+import 'package:journeyq/data/repositories/search_repositories/search_repo.dart';
 
 // Search widget for the search bar (without back button)
 class SearchBarWidget extends StatefulWidget {
@@ -292,8 +117,8 @@ class _SearchPageState extends State<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> filteredItems = [];
   bool isSearching = false;
-
-  final List<Map<String, dynamic>> allSearchItems = search_data;
+  bool isLoading = false;
+  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -301,20 +126,53 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void _onSearchChanged(String query) {
+    // Cancel previous timer
+    _debounceTimer?.cancel();
+    
     setState(() {
       isSearching = query.isNotEmpty;
       if (query.isEmpty) {
         filteredItems = [];
-      } else {
-        filteredItems = allSearchItems.where((item) {
-          final title = item['title']?.toString().toLowerCase() ?? '';
-          final subtitle = item['subtitle']?.toString().toLowerCase() ?? '';
-          final searchQuery = query.toLowerCase();
-
-          return title.contains(searchQuery) || subtitle.contains(searchQuery);
-        }).toList();
+        isLoading = false;
       }
     });
+
+    if (query.isNotEmpty) {
+      // Set loading state immediately
+      setState(() {
+        isLoading = true;
+      });
+      
+      // Create new timer to delay search
+      _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+        _performSearch(query);
+      });
+    }
+  }
+
+  Future<void> _performSearch(String query) async {
+    if (query.isEmpty || !mounted) return;
+    
+    try {
+      final results = await SearchRepository.searchContent(
+        query: query,
+        limit: 20,
+      );
+      
+      if (mounted) {
+        setState(() {
+          filteredItems = results;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          filteredItems = [];
+          isLoading = false;
+        });
+      }
+    }
   }
 
   void _onItemTap(Map<String, dynamic> item) {
@@ -323,23 +181,46 @@ class _SearchPageState extends State<SearchPage> {
     // Navigate based on item type
     switch (itemType) {
       case 'traveller':
-        // Navigate to user profile page using the correct route path
-        final userId = item['id']?.toString() ?? '';
-        final userName = Uri.encodeComponent(item['title']?.toString() ?? '');
-        context.push('/user-profile/$userId/$userName');
+        // Validate required data before navigation
+        final userId = item['id']?.toString();
+        final userName = item['title']?.toString();
+        
+        if (userId != null && userId.isNotEmpty && userName != null && userName.isNotEmpty) {
+          final encodedUserName = Uri.encodeComponent(userName);
+          context.push('/user-profile/$userId/$encodedUserName');
+        } else {
+          // Show error if data is missing
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Unable to load user profile - missing data'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
         break;
         
       case 'journey':
-        // Navigate to journey details page
-        final journeyId = item['id']?.toString() ?? '';
-        context.push('/journey/$journeyId');
+        // Validate journey ID before navigation
+        final journeyId = item['id']?.toString();
+        
+        if (journeyId != null && journeyId.isNotEmpty) {
+          context.push('/journey/$journeyId');
+        } else {
+          // Show error if data is missing
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Unable to load journey - missing data'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
         break;
         
       default:
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Selected: ${item['title']}'),
+            content: Text('Selected: ${item['title'] ?? 'Unknown'}'),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -411,8 +292,25 @@ class _SearchPageState extends State<SearchPage> {
       );
     }
 
-    // Show no results when searching but no matches found
-    if (filteredItems.isEmpty) {
+    // Show loading indicator while searching
+    if (isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(
+              'Searching...',
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Show no results only when search is complete and no results found
+    if (isSearching && !isLoading && filteredItems.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -425,7 +323,7 @@ class _SearchPageState extends State<SearchPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Try searching for "Cultural Triangle" or "Samantha"',
+              'Try a different search term',
               style: TextStyle(fontSize: 14, color: Colors.grey[500]),
               textAlign: TextAlign.center,
             ),
@@ -440,7 +338,6 @@ class _SearchPageState extends State<SearchPage> {
       itemBuilder: (context, index) {
         final item = filteredItems[index];
         final title = item['title']?.toString() ?? '';
-        final subtitle = item['subtitle']?.toString() ?? '';
         final type = item['type']?.toString() ?? '';
         final imageUrl = item['image']?.toString() ?? '';
 
@@ -464,21 +361,6 @@ class _SearchPageState extends State<SearchPage> {
           title: Text(
             title,
             style: const TextStyle(fontWeight: FontWeight.w500),
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (subtitle.isNotEmpty) 
-                Text(subtitle),
-              if (type == 'journey' && item['budget'] != null)
-                Text(
-                  'LKR ${item['budget']} • ${item['duration']} days',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-            ],
           ),
           trailing: Container(
             padding: const EdgeInsets.symmetric(
@@ -585,6 +467,7 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }

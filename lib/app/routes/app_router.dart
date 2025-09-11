@@ -474,10 +474,16 @@ class AppRouter {
         TransitionGoRoute(
           path: '/user-profile/:userId/:userName',
           builder: (context, state) {
-            final userId = state.pathParameters['userId']!;
-            final userName = Uri.decodeComponent(
-              state.pathParameters['userName']!,
-            );
+            final userId = state.pathParameters['userId'] ?? '';
+            final userNameParam = state.pathParameters['userName'] ?? '';
+            
+            // Validate parameters before creating the page
+            if (userId.isEmpty || userNameParam.isEmpty) {
+              // Redirect to home if parameters are invalid
+              return AppWrapper(currentRoute: '/home', child: HomePage());
+            }
+            
+            final userName = Uri.decodeComponent(userNameParam);
             return UserProfilePage(userId: userId, userName: userName);
           },
           transitionType: PageTransitionType.slide,
@@ -511,7 +517,7 @@ class AppRouter {
           path: '/journey/:journeyId',
           builder: (context, state) {
             final journeyId = state.pathParameters['journeyId']!;
-            return JourneyDetailsPage(journeyId: journeyId);
+            return JourneyDetailsPage(postId: journeyId); // journeyId is actually postId
           },
           transitionType: PageTransitionType.slide,
         ),

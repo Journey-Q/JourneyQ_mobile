@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
-import 'package:journeyq/features/home/pages/travel_post_widget.dart';
-import 'package:journeyq/features/home/data.dart';
+import 'package:journeyq/data/repositories/profile_repository/profile_repository.dart';
+import 'package:journeyq/data/repositories/post_repository/post_repository.dart';
 
 class UserProfilePage extends StatefulWidget {
   final String userId;
@@ -21,96 +20,138 @@ class UserProfilePage extends StatefulWidget {
 class _UserProfilePageState extends State<UserProfilePage> {
   bool _isFollowing = false;
   bool _isOwnProfile = false;
+  bool _isLoadingProfile = true;
+  bool _isLoadingPosts = true;
+  bool _isLoadingStats = true;
 
-  // Mock user data - in a real app, this would come from an API
-  late Map<String, dynamic> _userProfile;
-  late List<Map<String, dynamic>> _userPosts;
+  Map<String, dynamic> _userProfile = {};
+  List<Map<String, dynamic>> _userPosts = [];
+  Map<String, dynamic> _userStats = {};
 
   @override
   void initState() {
     super.initState();
-    print('UserProfilePage: Loading profile for ${widget.userName} (ID: ${widget.userId})');
-    _loadUserProfile();
-    _loadUserPosts();
-    print('UserProfilePage: Profile image URL: ${_userProfile['profileImage']}');
+    // Add null safety checks for widget parameters
+    final safeUserId = widget.userId.isNotEmpty ? widget.userId : 'unknown';
+    final safeUserName = widget.userName.isNotEmpty ? widget.userName : 'Unknown User';
+    print('UserProfilePage: Loading profile for $safeUserName (ID: $safeUserId)');
+    _loadDataSequentially();
   }
 
-  void _loadUserProfile() {
-    // Get the actual user data from post_data based on userName
-    Map<String, dynamic>? userData;
+  // Sequential data loading to avoid pool collapse
+  Future<void> _loadDataSequentially() async {
+    // Load profile first
+    await _loadUserProfile();
+    // Then load posts
+    await _loadUserPosts();
+    // Finally load stats
+    await _loadUserStats();
+  }
 
-    // Find the user's post data to get their profile image
-    for (var post in post_data) {
-      if (post['userName'] == widget.userName) {
-        userData = post;
-        break;
+  Future<void> _loadUserProfile() async {
+    try {
+      setState(() {
+        _isLoadingProfile = true;
+      });
+
+      // Add null safety checks for widget parameters
+      final safeUserId = widget.userId.isNotEmpty ? widget.userId : '';
+      final safeUserName = widget.userName.isNotEmpty ? widget.userName : '';
+
+      // Get profile data from backend using ProfileRepository
+      final profileData = await ProfileRepository.getProfile(safeUserId);
+
+      setState(() {
+        _userProfile = {
+          'id': profileData['id'] ?? safeUserId,
+          'name': profileData['display_name'] ?? profileData['displayName'] ?? safeUserName,
+          'username': '@${(profileData['display_name'] ?? profileData['displayName'] ?? safeUserName).toLowerCase().replaceAll(' ', '')}',
+          'bio': profileData['bio'] ?? 'Travel enthusiast exploring hidden gems 🌍',
+          'location': profileData['location'] ?? 'Location',
+          'profileImage': profileData['profile_image_url'] ?? profileData['profileImageUrl'] ?? 'https://i.pravatar.cc/150?img=25',
+          'coverImage': profileData['cover_image_url'] ?? profileData['coverImageUrl'] ?? 'assets/images/img1.jpg',
+          'isVerified': profileData['is_verified'] ?? profileData['isVerified'] ?? false,
+          'isPremium': profileData['isPremium'] ?? profileData['is_premium'] ?? false,
+          'isTripFluencer': profileData['isTripFluence'] ?? profileData['is_trip_fluence'] ?? false,
+        };
+        _isLoadingProfile = false;
+      });
+    } catch (e) {
+      print('Error loading user profile: $e');
+      setState(() {
+        _isLoadingProfile = false;
+        // Use minimal fallback data only for essential fields
+        final safeUserId = widget.userId.isNotEmpty ? widget.userId : '';
+        final safeUserName = widget.userName.isNotEmpty ? widget.userName : '';
+        _userProfile = {
+          'id': safeUserId,
+          'name': safeUserName,
+          'username': '@${safeUserName.toLowerCase().replaceAll(' ', '')}',
+          'bio': 'Travel enthusiast exploring hidden gems 🌍',
+          'location': 'Location',
+          'profileImage': 'https://i.pravatar.cc/150?img=25',
+          'coverImage': 'assets/images/img1.jpg',
+          'isVerified': false,
+          'isPremium': false,
+          'isTripFluencer': false,
+        };
+      });
+    }
+  }
+
+  Future<void> _loadUserPosts() async {
+    try {
+      setState(() {
+        _isLoadingPosts = true;
+      });
+
+      final safeUserId = widget.userId.isNotEmpty ? widget.userId : 'unknown';
+      final posts = await PostRepository.getUserPosts(safeUserId);
+      
+      print('Loaded ${posts.length} posts for user $safeUserId');
+      for (int i = 0; i < posts.length; i++) {
+        print('Post $i: ${posts[i]}');
       }
+      
+      setState(() {
+        _userPosts = posts;
+        _isLoadingPosts = false;
+      });
+    } catch (e) {
+      print('Error loading user posts: $e');
+      setState(() {
+        _isLoadingPosts = false;
+        // No fallback posts - show empty state
+        _userPosts = [];
+      });
     }
-
-    // Mock profile data - replace with actual API call
-    _userProfile = {
-      'id': widget.userId,
-      'name': widget.userName,
-      'username': '@${widget.userName.toLowerCase().replaceAll(' ', '')}',
-      'bio': 'Travel enthusiast exploring hidden gems 🌍 | Food lover | Adventure seeker',
-      'location': userData?['location']?.toString().split(' • ')[0] ?? 'Location',
-      'profileImage': userData?['userImage'] ?? 'https://i.pravatar.cc/150?img=25',
-      'coverImage': userData?['postImages']?[0] ?? 'assets/images/img1.jpg',
-      'followers': 1247,
-      'following': 892,
-      'posts': 156,
-      'journeys': 23,
-      'countries': 12,
-      'cities': 45,
-      'isVerified': true,
-      'badges': ['Explorer', 'Trip Fluencer'],
-    };
   }
 
-  void _loadUserPosts() {
-    // For now, always use mock posts to ensure we have 4 posts
-    _userPosts = [
-      {
-        'id': '1',
-        'location': 'Mirissa Beach, Southern Province',
-        'journeyTitle': 'Stunning crescent-shaped beach famous for whale watching and surfing',
-        'postImages': ['assets/images/mirissa_beach.jpg'],
-      },
-      {
-        'id': '2',
-        'location': 'Ella, Uva Province',
-        'journeyTitle': 'Picturesque hill station with tea plantations and stunning viewpoints',
-        'postImages': ['assets/images/ella_viewpoint.jpg'],
-      },
-      {
-        'id': '3',
-        'location': 'Kandy, Central Province',
-        'journeyTitle': 'Cultural capital with the sacred Temple of the Tooth and beautiful lake',
-        'postImages': ['assets/images/kandy_temple.jpeg'],
-      },
-      {
-        'id': '4',
-        'location': 'Galle Fort, Southern Province',
-        'journeyTitle': 'Historic Dutch colonial fortress with charming cobblestone streets',
-        'postImages': ['assets/images/galle_fort.jpg'],
-      },
-    ];
+  Future<void> _loadUserStats() async {
+    try {
+      setState(() {
+        _isLoadingStats = true;
+      });
 
-    // Update profile stats based on posts
-    _userProfile['posts'] = _userPosts.length;
-
-    // Calculate total likes and comments from user's posts
-    int totalLikes = 0;
-    int totalComments = 0;
-
-    for (var post in _userPosts) {
-      totalLikes += (post['likesCount'] as int?) ?? 0;
-      totalComments += (post['commentsCount'] as int?) ?? 0;
+      final safeUserId = widget.userId.isNotEmpty ? widget.userId : 'unknown';
+      final stats = await ProfileRepository.getUserStats(safeUserId);
+      
+      setState(() {
+        _userStats = stats;
+        _isLoadingStats = false;
+      });
+    } catch (e) {
+      print('Error loading user stats: $e');
+      setState(() {
+        _isLoadingStats = false;
+        // Use minimal fallback stats
+        _userStats = {
+          'followersCount': 0,
+          'followingCount': 0,
+          'postsCount': 0,
+        };
+      });
     }
-
-    // You can use these stats in the UI if needed
-    _userProfile['totalLikes'] = totalLikes;
-    _userProfile['totalComments'] = totalComments;
   }
 
   @override
@@ -118,19 +159,71 @@ class _UserProfilePageState extends State<UserProfilePage> {
     super.dispose();
   }
 
+  // Navigation method to journey detail page
+  void _navigateToJourneyDetail(Map<String, dynamic> post) {
+    final postId = post['id']?.toString();
+    if (postId != null && postId.isNotEmpty) {
+      // Navigate to journey detail page using the app router
+      context.push('/journey/$postId');
+    } else {
+      // Show error if post ID is missing
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to open journey - missing post ID'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: CustomScrollView(
-        slivers: [
-          _buildSliverAppBar(),
-          _buildProfileInfo(),
-          _buildStatsRow(),
-          _buildMyPostsSection(),
-        ],
-      ),
-    );
+    try {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: CustomScrollView(
+          slivers: [
+            _buildSliverAppBar(),
+            _buildProfileInfo(),
+            _buildStatsRow(),
+            _buildMyPostsSection(),
+          ],
+        ),
+      );
+    } catch (e) {
+      print('Error building UserProfilePage: $e');
+      // Return a safe fallback UI instead of red error screen
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: const Text('Profile', style: TextStyle(color: Colors.black)),
+        ),
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 64, color: Colors.grey),
+              SizedBox(height: 16),
+              Text(
+                'Unable to load profile',
+                style: TextStyle(fontSize: 18, color: Colors.grey),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Please try again later',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildSliverAppBar() {
@@ -154,108 +247,183 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   Widget _buildProfileInfo() {
-    return SliverToBoxAdapter(
-      child: Container(
-        color: Colors.white,
-        padding: const EdgeInsets.fromLTRB(20, 5, 20, 0),
-        child: Column(
-          children: [
-            // Profile Picture
-            Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+    try {
+      return SliverToBoxAdapter(
+        child: Container(
+          color: Colors.white,
+          padding: const EdgeInsets.fromLTRB(20, 5, 20, 0),
+          child: Column(
+            children: [
+              // Profile Picture
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: _buildProfileAvatar(),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Name and Username
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    (_userProfile['name']?.toString() ?? ''),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  // Status icons row
+                  Row(
+                    children: [
+                      if (_userProfile['isVerified'] == true) ...[
+                        const SizedBox(width: 6),
+                        const Icon(
+                          Icons.verified,
+                          color: Colors.blue,
+                          size: 18,
+                        ),
+                      ],
+                      if (_userProfile['isPremium'] == true) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.amber,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.workspace_premium,
+                            color: Colors.white,
+                            size: 14,
+                          ),
+                        ),
+                      ],
+                      if (_userProfile['isTripFluencer'] == true) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.purple,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.trending_up,
+                            color: Colors.white,
+                            size: 14,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
-              child: CircleAvatar(
-                radius: 45,
-                backgroundImage: (_userProfile['profileImage'] != null &&
-                    _userProfile['profileImage'].toString().isNotEmpty)
-                    ? NetworkImage(_userProfile['profileImage'])
-                    : null,
-                backgroundColor: Colors.grey[300],
-                onBackgroundImageError: (error, stackTrace) {
-                  print('Error loading profile image: $error');
-                },
-                child: (_userProfile['profileImage'] == null ||
-                    _userProfile['profileImage'].toString().isEmpty)
-                    ? Icon(Icons.person, size: 45, color: Colors.grey[600])
-                    : null,
+
+              const SizedBox(height: 4),
+
+              Text(
+                (_userProfile['username']?.toString() ?? ''),
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w400,
+                ),
               ),
-            ),
 
-            const SizedBox(height: 16),
-
-            // Name and Username
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  _userProfile['name'],
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+              // Trip Fluencer name tag
+              if (_userProfile['isTripFluencer'] == true) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Colors.blue, Colors.blueAccent],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blue.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.trending_up,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'Trip Fluencer',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                if (_userProfile['isVerified'] == true) ...[
-                  const SizedBox(width: 6),
-                  const Icon(
-                    Icons.star,
-                    color: Colors.yellow,
-                    size: 18,
-                  ),
-                ],
               ],
-            ),
 
-            const SizedBox(height: 4),
+              const SizedBox(height: 16),
 
-            Text(
-              _userProfile['username'],
-              style: TextStyle(
-                fontSize: 15,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Bio
-            if (_userProfile['bio'] != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Text(
-                  _userProfile['bio'],
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                    height: 1.4,
+              // Bio
+              if (_userProfile['bio'] != null && _userProfile['bio'].toString().isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Text(
+                    (_userProfile['bio']?.toString() ?? ''),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[700],
+                      height: 1.4,
+                    ),
                   ),
                 ),
-              ),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // Action Buttons
-            _buildActionButtons(),
+              // Action Buttons
+              _buildActionButtons(),
 
-            const SizedBox(height: 24),
-
-            // Badges
-            if (_userProfile['badges'] != null)
-              _buildBadges(),
-          ],
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      print('Error building profile info: $e');
+      return SliverToBoxAdapter(
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          child: const Center(
+            child: Text(
+              'Unable to load profile information',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildActionButtons() {
@@ -316,60 +484,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
-  Widget _buildBadges() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
-            'Badges',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: (_userProfile['badges'] as List<String>).map((badge) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.blue[200]!),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _getBadgeIcon(badge),
-                    size: 16,
-                    color: Colors.blue[700],
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    badge,
-                    style: TextStyle(
-                      color: Colors.blue[700],
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 8),
-      ],
-    );
-  }
-
+  
   Widget _buildStatsRow() {
     return SliverToBoxAdapter(
       child: _buildStatsCard(),
@@ -391,37 +506,44 @@ class _UserProfilePageState extends State<UserProfilePage> {
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildStatItem(
-            _userProfile['posts'].toString(),
-            'Posts',
-            Icons.photo_library,
-            const Color(0xFF0088cc),
-          ),
-          _buildDivider(),
-          GestureDetector(
-            onTap: () => _navigateToFollowersFollowing('followers'),
-            child: _buildStatItem(
-              _formatNumber(_userProfile['followers']),
-              'Followers',
-              Icons.people,
-              const Color(0xFF00B894),
+      child: _isLoadingStats
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20.0),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildStatItem(
+                  ((_userStats['postsCount'] ?? _userPosts.length) ?? 0).toString(),
+                  'Posts',
+                  Icons.photo_library,
+                  const Color(0xFF0088cc),
+                ),
+                _buildDivider(),
+                GestureDetector(
+                  onTap: () => _navigateToFollowersFollowing('followers'),
+                  child: _buildStatItem(
+                    _formatNumber(_userStats['followersCount'] as int?),
+                    'Followers',
+                    Icons.people,
+                    const Color(0xFF00B894),
+                  ),
+                ),
+                _buildDivider(),
+                GestureDetector(
+                  onTap: () => _navigateToFollowersFollowing('following'),
+                  child: _buildStatItem(
+                    ((_userStats['followingCount'] ?? 0) ?? 0).toString(),
+                    'Following',
+                    Icons.person_add,
+                    const Color(0xFFE17055),
+                  ),
+                ),
+              ],
             ),
-          ),
-          _buildDivider(),
-          GestureDetector(
-            onTap: () => _navigateToFollowersFollowing('following'),
-            child: _buildStatItem(
-              _userProfile['following'].toString(),
-              'Following',
-              Icons.person_add,
-              const Color(0xFFE17055),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -503,6 +625,15 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   Widget _buildPostsList() {
+    if (_isLoadingPosts) {
+      return const Padding(
+        padding: EdgeInsets.all(32),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+    
     if (_userPosts.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(32),
@@ -559,22 +690,15 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                 child: AspectRatio(
                   aspectRatio: 16 / 10,
-                  child: (post['postImages'] != null && (post['postImages'] as List).isNotEmpty)
-                      ? Image.asset(
-                    (post['postImages'] as List)[0],
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[300],
-                        child: const Icon(Icons.image, size: 50, color: Colors.grey),
-                      );
-                    },
-                  )
+                  child: (post['postImages'] != null && (post['postImages'] as List).isNotEmpty && (post['postImages'] as List)[0] != null)
+                      ? GestureDetector(
+                          onTap: () => _navigateToJourneyDetail(post),
+                          child: _buildPostImage((post['postImages'] as List)[0]),
+                        )
                       : Container(
-                    color: Colors.grey[300],
-                    child: const Icon(Icons.image, size: 50, color: Colors.grey),
-                  ),
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.image, size: 50, color: Colors.grey),
+                        ),
                 ),
               ),
 
@@ -586,7 +710,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   children: [
                     // Location Title
                     Text(
-                      post['location']?.toString() ?? 'Unknown Location',
+                      (post['location'] != null ? post['location'].toString() : 'Unknown Location'),
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -597,7 +721,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
                     // Description
                     Text(
-                      post['journeyTitle']?.toString() ?? 'Explore this amazing destination',
+                      (post['journeyTitle'] != null ? post['journeyTitle'].toString() : 'Explore this amazing destination'),
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],
@@ -610,10 +734,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () {
-                          // Handle view journey action
-                          print('View journey for post: ${post['id']}');
-                        },
+                        onPressed: () => _navigateToJourneyDetail(post),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
                           foregroundColor: Colors.white,
@@ -647,9 +768,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
     setState(() {
       _isFollowing = !_isFollowing;
       if (_isFollowing) {
-        _userProfile['followers']++;
+        _userStats['followersCount'] = (_userStats['followersCount'] ?? 0) + 1;
       } else {
-        _userProfile['followers']--;
+        _userStats['followersCount'] = (_userStats['followersCount'] ?? 0) - 1;
       }
     });
 
@@ -657,8 +778,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
       SnackBar(
         content: Text(
           _isFollowing
-              ? 'Now following ${widget.userName}'
-              : 'Unfollowed ${widget.userName}',
+              ? 'Now following ${widget.userName.isNotEmpty ? widget.userName : 'User'}'
+              : 'Unfollowed ${widget.userName.isNotEmpty ? widget.userName : 'User'}',
         ),
         duration: const Duration(seconds: 2),
       ),
@@ -669,110 +790,191 @@ class _UserProfilePageState extends State<UserProfilePage> {
     // Navigate to chat or show message composer
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Opening chat with ${widget.userName}'),
+        content: Text('Opening chat with ${widget.userName.isNotEmpty ? widget.userName : 'User'}'),
         duration: const Duration(seconds: 2),
       ),
     );
   }
 
-  void _handleLike(Map<String, dynamic> post) {
-    // Handle post like
-    print('Liked post: ${post['id']}');
+ 
+
+  
+  // Helper method to build profile avatar
+  Widget _buildProfileAvatar() {
+    final profileImageUrl = _userProfile['profileImage']?.toString() ?? '';
+    
+    if (profileImageUrl.isEmpty) {
+      return CircleAvatar(
+        radius: 45,
+        backgroundColor: Colors.grey[300],
+        child: Icon(Icons.person, size: 45, color: Colors.grey[600]),
+      );
+    }
+    
+    print('Building profile avatar for: $profileImageUrl');
+    
+    // Handle different image types for profile
+    if (profileImageUrl.startsWith('assets/')) {
+      return CircleAvatar(
+        radius: 45,
+        backgroundColor: Colors.grey[300],
+        child: ClipOval(
+          child: Image.asset(
+            profileImageUrl,
+            width: 90,
+            height: 90,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              print('Error loading profile asset: $profileImageUrl - $error');
+              return Icon(Icons.person, size: 45, color: Colors.grey[600]);
+            },
+          ),
+        ),
+      );
+    } else if (profileImageUrl.startsWith('http://') || profileImageUrl.startsWith('https://')) {
+      return CircleAvatar(
+        radius: 45,
+        backgroundColor: Colors.grey[300],
+        child: ClipOval(
+          child: Image.network(
+            profileImageUrl,
+            width: 90,
+            height: 90,
+            fit: BoxFit.cover,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return SizedBox(
+                width: 90,
+                height: 90,
+                child: Center(
+                  child: CircularProgressIndicator(
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded / 
+                          loadingProgress.expectedTotalBytes!
+                        : null,
+                    strokeWidth: 2,
+                  ),
+                ),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) {
+              print('Error loading profile network image: $profileImageUrl - $error');
+              return Icon(Icons.person, size: 45, color: Colors.grey[600]);
+            },
+          ),
+        ),
+      );
+    } else {
+      // Fallback for unknown image format
+      return CircleAvatar(
+        radius: 45,
+        backgroundColor: Colors.grey[300],
+        child: Icon(Icons.person, size: 45, color: Colors.grey[600]),
+      );
+    }
   }
 
-  void _handleComment(Map<String, dynamic> post) {
-    // Handle post comment
-    print('Comment on post: ${post['id']}');
-  }
-
-  void _showPostOptions(Map<String, dynamic> post) {
-    // Show post options
-    print('More options for post: ${post['id']}');
-  }
-
-  void _showMoreOptions() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
+  // Helper method to build post images
+  Widget _buildPostImage(String? imagePath) {
+    if (imagePath == null || imagePath.isEmpty) {
+      return Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: Colors.grey[300],
+        child: const Icon(Icons.image, size: 50, color: Colors.grey),
+      );
+    }
+    
+    print('Building image for path: $imagePath');
+    
+    // Handle different image types
+    if (imagePath.startsWith('assets/')) {
+      // Asset images from the app bundle
+      return Image.asset(
+        imagePath,
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          print('Error loading asset image: $imagePath - $error');
+          return Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.grey[300],
+            child: const Icon(Icons.image, size: 50, color: Colors.grey),
+          );
+        },
+      );
+    } else if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      // Network images
+      return Image.network(
+        imagePath,
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            color: Colors.grey[200],
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded / 
+                          loadingProgress.expectedTotalBytes!
+                        : null,
+                    strokeWidth: 2,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Loading...',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.share),
-              title: const Text('Share Profile'),
-              onTap: () {
-                Navigator.pop(context);
-                _shareProfile();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.flag_outlined),
-              title: const Text('Report User'),
-              onTap: () {
-                Navigator.pop(context);
-                _reportUser();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.block),
-              title: const Text('Block User'),
-              onTap: () {
-                Navigator.pop(context);
-                _blockUser();
-              },
-            ),
-          ],
-        ),
-      ),
-    );
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          print('Error loading network image: $imagePath - $error');
+          return Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.grey[300],
+            child: const Icon(Icons.image, size: 50, color: Colors.grey),
+          );
+        },
+      );
+    } else {
+      // For any other format, just show placeholder
+      return Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: Colors.grey[300],
+        child: const Icon(Icons.image, size: 50, color: Colors.grey),
+      );
+    }
   }
 
-  void _shareProfile() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profile link copied to clipboard'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
-  void _reportUser() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('User reported'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
-  void _blockUser() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('User blocked'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
+  // Helper method to build error image widget
+  
 
   // Helper Methods
-  String _formatNumber(int number) {
-    if (number >= 1000) {
-      return '${(number / 1000).toStringAsFixed(1)}K';
+  String _formatNumber(int? number) {
+    try {
+      final safeNumber = number ?? 0;
+      if (safeNumber >= 1000) {
+        return '${(safeNumber / 1000).toStringAsFixed(1)}K';
+      }
+      return safeNumber.toString();
+    } catch (e) {
+      return '0';
     }
-    return number.toString();
   }
 
   IconData _getBadgeIcon(String badge) {

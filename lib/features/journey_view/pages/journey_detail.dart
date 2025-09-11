@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:journeyq/features/journey_view/data.dart';
+import 'package:journeyq/data/repositories/post_repository/post_repository.dart';
 // Update this import to use the enhanced map widget
 // import 'package:journeyq/features/journey_view/pages/Journeyroute.dart';
 import 'package:journeyq/features/journey_view/pages/journeyroute.dart'; 
 
 class JourneyDetailsPage extends StatefulWidget {
-  final String journeyId;
+  final String postId; // Changed from journeyId to postId for clarity
   final String? googleMapsApiKey; // Add API key parameter
 
   const JourneyDetailsPage({
     super.key, 
-    required this.journeyId,
+    required this.postId,
     this.googleMapsApiKey,
   });
 
@@ -31,42 +31,17 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   // Interaction state variables
   bool _isLiked = false;
   bool _isBookmarked = false;
-  int _likesCount = 125; // Sample data
-  int _commentsCount = 32; // Sample data
-  List<Map<String, dynamic>> _comments = [
-    {
-      'id': '1',
-      'userName': 'Sarah Johnson',
-      'userImage': '',
-      'comment': 'Amazing journey! Thanks for sharing these wonderful places.',
-      'timeAgo': '2h',
-      'likesCount': 5,
-      'isLiked': false,
-      'replies': [
-        {
-          'id': '1_1',
-          'userName': 'Travel Explorer',
-          'userImage': '',
-          'comment': 'Thank you! Glad you found it helpful.',
-          'timeAgo': '1h',
-          'likesCount': 2,
-          'isLiked': false,
-          'replies': [],
-        },
-      ],
-    },
-    {
-      'id': '2',
-      'userName': 'Mike Chen',
-      'userImage': '',
-      'comment':
-          'I\'ve been to Kandy too! Such a beautiful place. Your photos captured it perfectly.',
-      'timeAgo': '5h',
-      'likesCount': 8,
-      'isLiked': false,
-      'replies': [],
-    },
-  ];
+  int _likesCount = 0;
+  int _commentsCount = 0;
+  List<Map<String, dynamic>> _comments = [];
+  
+  // Loading states
+  bool _isLoadingPost = true;
+  bool _isLoadingLikes = true;
+  bool _isLoadingComments = true;
+  
+  // Direct access to postId
+  String get postId => widget.postId;
 
   // Default API key - replace with your actual API key
   static const String _defaultApiKey = "AIzaSyCFbprhDc_fKXUHl-oYEVGXKD1HciiAsz0";
@@ -75,6 +50,8 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   void initState() {
     super.initState();
     _loadJourneyData();
+    _loadLikeStatus();
+    _loadComments();
   }
 
   @override
@@ -84,18 +61,118 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
     super.dispose();
   }
 
-  void _loadJourneyData() {
-    // Find journey data by ID
-    journeyData = journeyDetailsData.firstWhere(
-      (journey) => journey['id'] == widget.journeyId,
-      orElse: () => journeyDetailsData.first,
-    );
+  Future<void> _loadJourneyData() async {
+    try {
+      setState(() {
+        _isLoadingPost = true;
+      });
+
+      final postData = await PostRepository.getPostDetails(postId);
+      
+      setState(() {
+        journeyData = _mapPostDataToJourneyData(postData);
+        _isLoadingPost = false;
+      });
+    } catch (e) {
+      print('Error loading journey data: $e');
+      setState(() {
+        _isLoadingPost = false;
+        // Use fallback data or show error
+      });
+    }
+  }
+
+  Future<void> _loadLikeStatus() async {
+    try {
+      setState(() {
+        _isLoadingLikes = true;
+      });
+
+      final likeData = await PostRepository.getLikeStatus(postId);
+      
+      setState(() {
+        _isLiked = likeData['isLiked'] ?? false;
+        _likesCount = likeData['likesCount'] ?? 0;
+        _isLoadingLikes = false;
+      });
+    } catch (e) {
+      print('Error loading like status: $e');
+      setState(() {
+        _isLoadingLikes = false;
+      });
+    }
+  }
+
+  Future<void> _loadComments() async {
+    try {
+      setState(() {
+        _isLoadingComments = true;
+      });
+
+      final comments = await PostRepository.getComments(postId);
+      final commentsCount = await PostRepository.getCommentsCount(postId);
+      
+      setState(() {
+        _comments = comments;
+        _commentsCount = commentsCount;
+        _isLoadingComments = false;
+      });
+    } catch (e) {
+      print('Error loading comments: $e');
+      setState(() {
+        _isLoadingComments = false;
+      });
+    }
+  }
+
+  Map<String, dynamic> _mapPostDataToJourneyData(Map<String, dynamic> postData) {
+    // Map the backend post data to the format expected by the UI
+    final placeWiseContent = postData['placeWiseContent'] as List? ?? [];
+    
+    return {
+      'id': postData['postId']?.toString() ?? postId,
+      'tripTitle': postData['journeyTitle'] ?? 'Unknown Journey',
+      'authorName': postData['creatorUsername'] ?? 'Unknown Author',
+      'authorImage': postData['creatorProfileUrl'] ?? '',
+      'totalDays': postData['numberOfDays'] ?? 1,
+      'totalBudget': postData['budgetInfo']?['totalBudget'] ?? 0,
+      'places': placeWiseContent.map((place) => {
+        'name': place['placeName'] ?? '',
+        'trip_mood': place['tripMood'] ?? '',
+        'activities': place['activities'] ?? [],
+        'experiences': (place['experiences'] as List? ?? []).map((exp) => {
+          'description': exp.toString(),
+        }).toList(),
+        'images': place['imageUrls'] ?? [],
+        'latitude': place['latitude'],
+        'longitude': place['longitude'],
+        'address': place['address'] ?? '',
+      }).toList(),
+      'overallRecommendations': {
+        'hotels': postData['hotelRecommendations'] ?? [],
+        'restaurants': postData['restaurantRecommendations'] ?? [],
+      },
+      'tips': postData['travelTips'] ?? [],
+      'budgetBreakdown': postData['budgetInfo']?['budgetBreakdown'] ?? {},
+    };
   }
 
   @override
   Widget build(BuildContext context) {
-    if (journeyData == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_isLoadingPost || journeyData == null) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Loading journey details...'),
+            ],
+          ),
+        ),
+      );
     }
 
     return Scaffold(
@@ -329,9 +406,29 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   }
 
   Widget _buildSliverAppBar() {
-    final places = journeyData!['places'] as List;
+    final placesList = journeyData!['places'] as List?;
+    final places = placesList ?? [];
+    if (places.isEmpty) {
+      return SliverAppBar(
+        expandedHeight: 200,
+        pinned: true,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: FlexibleSpaceBar(
+          background: Container(
+            color: Colors.grey[300],
+            child: const Center(
+              child: Text('No places available'),
+            ),
+          ),
+        ),
+      );
+    }
     final firstPlace = places.first;
-    final images = firstPlace['images'] as List<String>;
+    final imagesList = firstPlace['images'] as List?;
+    final images = imagesList?.cast<String>() ?? <String>[];
 
     return SliverAppBar(
       expandedHeight: 200,
@@ -510,7 +607,8 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   }
 
   Widget _buildTripStats() {
-    final places = journeyData!['places'] as List;
+    final placesList = journeyData!['places'] as List?;
+    final places = placesList ?? [];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Row(
@@ -565,7 +663,8 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   }
 
   Widget _buildAllPlacesSection() {
-    final places = journeyData!['places'] as List;
+    final placesList = journeyData!['places'] as List?;
+    final places = placesList ?? [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -619,9 +718,12 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   }
 
   Widget _buildPlaceCard(Map<String, dynamic> place) {
-    final images = place['images'] as List<String>;
-    final activities = place['activities'] as List<String>;
-    final experiences = place['experiences'] as List<Map<String, dynamic>>;
+    final imagesList = place['images'] as List?;
+    final images = imagesList?.cast<String>() ?? <String>[];
+    final activitiesList = place['activities'] as List?;
+    final activities = activitiesList?.cast<String>() ?? <String>[];
+    final experiencesList = place['experiences'] as List?;
+    final experiences = experiencesList?.cast<Map<String, dynamic>>() ?? <Map<String, dynamic>>[];
     final placeName = place['name'];
     final tripMood = place['trip_mood'] ?? '';
 
@@ -784,13 +886,13 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
             _buildRecommendationCategory(
               'Hotels',
               LucideIcons.building,
-              recommendations['hotels'] as List,
+              (recommendations['hotels'] as List?) ?? [],
             ),
           if (recommendations.containsKey('restaurants'))
             _buildRecommendationCategory(
               'Restaurants',
               LucideIcons.utensils,
-              recommendations['restaurants'] as List,
+              (recommendations['restaurants'] as List?) ?? [],
             ),
         ],
       ),
@@ -865,7 +967,8 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   }
 
   Widget _buildTipsSection() {
-    final tips = journeyData!['tips'] as List<String>;
+    final tipsList = journeyData!['tips'] as List?;
+    final tips = tipsList?.cast<String>() ?? <String>[];
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(20),
@@ -1114,34 +1217,55 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
     );
   }
 
-  void _handleLike() {
-    setState(() {
-      _isLiked = !_isLiked;
-      if (_isLiked) {
-        _likesCount++;
-      } else {
-        _likesCount--;
+  Future<void> _handleLike() async {
+    // Optimistically update UI
+    final previousLiked = _isLiked;
+    final previousCount = _likesCount;
+    try {
+      setState(() {
+        _isLiked = !_isLiked;
+        if (_isLiked) {
+          _likesCount++;
+        } else {
+          _likesCount--;
+        }
+      });
+
+      // Make API call
+      await PostRepository.toggleLike(postId);
+      
+      // Reload like status to ensure consistency
+      _loadLikeStatus();
+    } catch (e) {
+      print('Error toggling like: $e');
+      
+      // Revert optimistic update on error
+      setState(() {
+        _isLiked = previousLiked;
+        _likesCount = previousCount;
+      });
+      
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to update like status'),
+            duration: Duration(seconds: 2),
+          ),
+        );
       }
-    });
+    }
   }
 
   void _handleComment() {
     _showCommentsBottomSheet(
       context,
-      postId: widget.journeyId,
+      postId: postId,
       comments: _comments,
       postOwnerName: journeyData!['authorName'],
-      onCommentsUpdated: () {
-        setState(() {
-          int totalComments = 0;
-          for (var comment in _comments) {
-            totalComments++;
-            if (comment['replies'] != null) {
-              totalComments += (comment['replies'] as List).length;
-            }
-          }
-          _commentsCount = totalComments;
-        });
+      onCommentsUpdated: () async {
+        // Reload comments from backend
+        await _loadComments();
       },
     );
   }
@@ -1381,12 +1505,12 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
                 radius: isReply ? 14 : 16,
                 backgroundImage:
                     comment['userImage'] != null &&
-                        comment['userImage'].isNotEmpty
-                    ? NetworkImage(comment['userImage'])
+                        comment['userImage'].toString().isNotEmpty
+                    ? NetworkImage(comment['userImage'].toString())
                     : null,
                 backgroundColor: Colors.grey[300],
                 child:
-                    comment['userImage'] == null || comment['userImage'].isEmpty
+                    comment['userImage'] == null || comment['userImage'].toString().isEmpty
                     ? Icon(
                         Icons.person,
                         color: Colors.grey[600],
@@ -1403,7 +1527,7 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
                       text: TextSpan(
                         children: [
                           TextSpan(
-                            text: comment['userName'],
+                            text: comment['userName']?.toString() ?? 'Anonymous',
                             style: const TextStyle(
                               fontWeight: FontWeight.w600,
                               color: Colors.black,
@@ -1412,7 +1536,7 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
                           ),
                           const TextSpan(text: ' '),
                           TextSpan(
-                            text: comment['comment'],
+                            text: comment['comment']?.toString() ?? '',
                             style: const TextStyle(
                               color: Colors.black,
                               fontSize: 14,
@@ -1425,16 +1549,16 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
                     Row(
                       children: [
                         Text(
-                          comment['timeAgo'],
+                          comment['timeAgo']?.toString() ?? 'now',
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 12,
                           ),
                         ),
                         const SizedBox(width: 16),
-                        if (comment['likesCount'] > 0) ...[
+                        if ((comment['likesCount'] ?? 0) > 0) ...[
                           Text(
-                            '${comment['likesCount']} likes',
+                            '${comment['likesCount'] ?? 0} likes',
                             style: TextStyle(
                               color: Colors.grey[600],
                               fontSize: 12,
@@ -1446,7 +1570,7 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
                         if (!isReply) ...[
                           GestureDetector(
                             onTap: () =>
-                                _startReply(comment['userName'], comment['id']),
+                                _startReply(comment['userName']?.toString() ?? 'Anonymous', comment['id']?.toString() ?? ''),
                             child: Text(
                               'Reply',
                               style: TextStyle(
@@ -1467,9 +1591,9 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   child: Icon(
-                    comment['isLiked'] ? Icons.favorite : Icons.favorite_border,
+                    (comment['isLiked'] ?? false) ? Icons.favorite : Icons.favorite_border,
                     size: 16,
-                    color: comment['isLiked'] ? Colors.red : Colors.grey[600],
+                    color: (comment['isLiked'] ?? false) ? Colors.red : Colors.grey[600],
                   ),
                 ),
               ),
@@ -1477,10 +1601,10 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
           ),
           if (!isReply &&
               comment['replies'] != null &&
-              comment['replies'].isNotEmpty) ...[
+              (comment['replies'] as List).isNotEmpty) ...[
             const SizedBox(height: 8),
-            ...comment['replies']
-                .map<Widget>((reply) => _buildCommentItem(reply, true))
+            ...(comment['replies'] as List? ?? [])
+                .map<Widget>((reply) => _buildCommentItem(reply as Map<String, dynamic>, true))
                 .toList(),
           ],
         ],
@@ -1600,48 +1724,77 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
     });
   }
 
-  void _postComment() {
+  Future<void> _postComment() async {
     final commentText = _commentController.text.trim();
     if (commentText.isEmpty) return;
 
-    final newComment = {
-      'id': 'new_${DateTime.now().millisecondsSinceEpoch}',
-      'userName': 'You',
-      'userImage': '',
-      'comment': commentText,
-      'timeAgo': 'now',
-      'likesCount': 0,
-      'isLiked': false,
-      'replies': [],
-    };
+    try {
+      // Show loading state
+      setState(() {
+        _commentController.clear();
+      });
 
-    setState(() {
       if (_replyingTo != null && _replyingToCommentId != null) {
-        final commentIndex = _comments.indexWhere(
-          (c) => c['id'] == _replyingToCommentId,
+        // Reply to comment
+        await PostRepository.replyToComment(
+          widget.postId,
+          _replyingToCommentId!,
+          commentText,
         );
-        if (commentIndex != -1) {
-          _comments[commentIndex]['replies'].add(newComment);
-        }
       } else {
-        _comments.insert(0, newComment);
+        // Add new comment
+        await PostRepository.addComment(widget.postId, commentText);
       }
 
-      _commentController.clear();
-      _cancelReply();
-    });
+      // Reload comments after successful post
+      // This will be handled by the callback from parent
+      
+      setState(() {
+        _cancelReply();
+      });
 
-    _commentFocusNode.unfocus();
-    widget.onCommentsUpdated?.call();
+      _commentFocusNode.unfocus();
+      widget.onCommentsUpdated?.call();
+      
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Comment posted successfully'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error posting comment: $e');
+      
+      // Restore text on error
+      setState(() {
+        _commentController.text = commentText;
+      });
+      
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to post comment'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
   }
 
   void _toggleCommentLike(Map<String, dynamic> comment) {
     setState(() {
-      comment['isLiked'] = !comment['isLiked'];
+      final currentLiked = comment['isLiked'] ?? false;
+      comment['isLiked'] = !currentLiked;
+      
+      final currentCount = comment['likesCount'] ?? 0;
       if (comment['isLiked']) {
-        comment['likesCount']++;
+        comment['likesCount'] = currentCount + 1;
       } else {
-        comment['likesCount']--;
+        comment['likesCount'] = currentCount - 1;
       }
     });
   }
