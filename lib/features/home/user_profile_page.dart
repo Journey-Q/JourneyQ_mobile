@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:journeyq/data/repositories/profile_repository/profile_repository.dart';
 import 'package:journeyq/data/repositories/post_repository/post_repository.dart';
+import 'package:journeyq/data/repositories/chat_repository/chat_repository.dart';
+import 'package:journeyq/data/repositories/chat_repository/models/chat_models.dart';
+import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 
 class UserProfilePage extends StatefulWidget {
   final String userId;
@@ -786,12 +790,107 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
-  void _sendMessage() {
-    // Navigate to chat or show message composer
+  void _sendMessage() async {
+    try {
+      // Get current user ID from auth provider
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final currentUserId = authProvider.user?.userId?.toString();
+      
+      if (currentUserId == null) {
+        _showErrorMessage('Please log in to send messages');
+        return;
+      }
+
+      if (currentUserId == widget.userId) {
+        _showErrorMessage('You cannot message yourself');
+        return;
+      }
+
+      // Show loading indicator
+      _showLoadingDialog('Starting chat...');
+
+      // Initialize chat repository with AuthProvider
+      final chatRepository = ChatRepository();
+      await chatRepository.initialize(authProvider);
+
+      // Ensure both user profiles exist in Firebase
+      await chatRepository.ensureBothUserProfilesExist(
+        currentUserId, 
+        widget.userId, 
+        authProvider,
+        otherUserName: _userProfile['name'] ?? widget.userName,
+        otherUserProfileUrl: _userProfile['profileImage'],
+      );
+
+      // Create or get existing chat between users
+      final chatId = chatRepository.createChatId(currentUserId, widget.userId);
+      
+      // Check if chat already exists or create new one
+      bool chatExists = await chatRepository.chatExists(currentUserId, widget.userId);
+      
+      if (!chatExists) {
+        // Initialize the chat in Firebase
+        await chatRepository.initializeChat(currentUserId, widget.userId);
+        print('💬 New chat created: $chatId');
+      } else {
+        print('💬 Existing chat found: $chatId');
+      }
+
+      // Hide loading dialog
+      Navigator.of(context).pop();
+
+      // Navigate to individual chat page
+      context.push(
+        '/chat/individual',
+        extra: {
+          'chatId': chatId,
+          'otherUserId': widget.userId,
+          'currentUserId': currentUserId,
+          'otherUserName': _userProfile['name'] ?? widget.userName, // Use loaded profile name
+          'otherUserProfileUrl': _userProfile['profileImage'], // Pass profile image URL
+          'otherUserDisplayName': _userProfile['name'] ?? widget.userName, // Pass display name
+        },
+      );
+
+      print('✅ Successfully navigated to chat with ${widget.userName}');
+      print('📋 Profile data passed to chat:');
+      print('   - User ID: ${widget.userId}');
+      print('   - Display Name: ${_userProfile['name'] ?? widget.userName}');
+      print('   - Profile Image: ${_userProfile['profileImage'] ?? 'No image'}');
+
+    } catch (e) {
+      // Hide loading dialog if it's showing
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+      
+      print('❌ Error starting chat: $e');
+      _showErrorMessage('Failed to start chat: ${e.toString()}');
+    }
+  }
+
+  void _showLoadingDialog(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        content: Row(
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(width: 16),
+            Expanded(child: Text(message)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showErrorMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Opening chat with ${widget.userName.isNotEmpty ? widget.userName : 'User'}'),
-        duration: const Duration(seconds: 2),
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
       ),
     );
   }

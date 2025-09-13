@@ -1,39 +1,344 @@
-// individual_chat_page.dart
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
+import 'package:journeyq/data/repositories/chat_repository/chat_repository.dart';
+import 'package:journeyq/data/repositories/chat_repository/models/chat_models.dart';
+import 'dart:async';
 
+/// Instagram-style Individual Chat Page
+/// Fully functional real-time messaging with profile integration
 class IndividualChatPage extends StatefulWidget {
   final String chatId;
-  final Map<String, dynamic> chatData;
+  final String currentUserId;
+  final String otherUserId;
+  final String? otherUserName;
+  final String? otherUserProfileUrl;
 
   const IndividualChatPage({
     super.key,
     required this.chatId,
-    required this.chatData,
+    required this.currentUserId,
+    required this.otherUserId,
+    this.otherUserName,
+    this.otherUserProfileUrl,
   });
 
   @override
   State<IndividualChatPage> createState() => _IndividualChatPageState();
 }
 
-class _IndividualChatPageState extends State<IndividualChatPage> {
+class _IndividualChatPageState extends State<IndividualChatPage> with WidgetsBindingObserver {
+  // Instagram-style messaging
+  List<ChatMessage> _messages = [];
+  UserStatus? _otherUserStatus;
+  Map<String, bool> _typingStatuses = {};
+  
+  bool _isLoading = true;
+  bool _hasError = false;
+  bool _isCurrentUserTyping = false;
+  
+  // Controllers
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  late List<Map<String, dynamic>> _messages;
-  bool _isTyping = false;
+  
+  // Subscriptions
+  StreamSubscription<List<ChatMessage>>? _messagesSubscription;
+  StreamSubscription<UserStatus>? _userStatusSubscription;
+  StreamSubscription<Map<String, bool>>? _typingSubscription;
+  
+  // Typing timer
+  Timer? _typingTimer;
+  
+  final ChatRepository _chatRepository = ChatRepository();
+
+  // User profile information
+  String? _otherUserActualName;
+  String? _otherUserActualProfileUrl;
 
   @override
   void initState() {
     super.initState();
-    _messages = List.from(widget.chatData['messages'] ?? []);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    WidgetsBinding.instance.addObserver(this);
+    _initializeInstagramChat();
   }
 
   @override
   void dispose() {
+    print('🗑️ Disposing Instagram-style Individual Chat Page');
+    
+    _messagesSubscription?.cancel();
+    _userStatusSubscription?.cancel();
+    _typingSubscription?.cancel();
+    _typingTimer?.cancel();
+    
+    // Stop typing if currently typing
+    if (_isCurrentUserTyping) {
+      _setTypingStatus(false);
+    }
+    
     _messageController.dispose();
     _scrollController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    switch (state) {
+      case AppLifecycleState.resumed:
+        _chatRepository.setUserOnlineStatus(widget.currentUserId, true);
+        break;
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+        _chatRepository.setUserOnlineStatus(widget.currentUserId, false);
+        break;
+      case AppLifecycleState.hidden:
+        break;
+    }
+  }
+
+  // Instagram-style initialization
+  Future<void> _initializeInstagramChat() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _hasError = false;
+      });
+      
+      print('📱 Initializing Instagram-style chat: ${widget.chatId}');
+      
+      // Get AuthProvider for ChatRepository initialization
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      await _chatRepository.initialize(authProvider);
+      
+      // Ensure both user profiles exist before loading
+      await _chatRepository.ensureBothUserProfilesExist(
+        widget.currentUserId, 
+        widget.otherUserId, 
+        authProvider,
+        otherUserName: widget.otherUserName,
+        otherUserProfileUrl: widget.otherUserProfileUrl,
+      );
+      
+      // Get user profiles for proper display
+      await _loadUserProfiles();
+      
+      // Set user online when opening chat
+      await _chatRepository.setUserOnlineStatus(widget.currentUserId, true);
+      
+      // Mark messages as read when opening chat
+      await _chatRepository.markMessagesAsRead(widget.chatId, widget.currentUserId);
+      
+      // Start listening to real-time updates
+      _startListeningToMessages();
+      _startListeningToUserStatus();
+      _startListeningToTyping();
+      
+      setState(() {
+        _isLoading = false;
+      });
+      
+      // Auto-scroll to bottom
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+      
+      print('✅ Instagram-style chat initialized successfully');
+      
+    } catch (e) {
+      print('❌ Error initializing Instagram-style chat: $e');
+      setState(() {
+        _isLoading = false;
+        _hasError = true;
+      });
+    }
+  }
+
+  Future<void> _loadUserProfiles() async {
+    try {
+      // Get other user's profile
+      final otherUserProfile = await _chatRepository.getUserProfile(widget.otherUserId);
+      
+      if (otherUserProfile != null) {
+        setState(() {
+          _otherUserActualName = otherUserProfile.displayName;
+          _otherUserActualProfileUrl = otherUserProfile.profileUrl;
+        });
+        print('👤 Loaded other user profile: ${otherUserProfile.displayName}');
+        print('   Profile URL: ${otherUserProfile.profileUrl ?? 'No profile URL'}');
+      } else {
+        print('⚠️ Could not load other user profile, using provided data');
+        setState(() {
+          _otherUserActualName = widget.otherUserName;
+          _otherUserActualProfileUrl = widget.otherUserProfileUrl;
+        });
+      }
+    } catch (e) {
+      print('❌ Error loading user profiles: $e');
+      setState(() {
+        _otherUserActualName = widget.otherUserName;
+        _otherUserActualProfileUrl = widget.otherUserProfileUrl;
+      });
+    }
+  }
+  
+  void _startListeningToMessages() {
+    print('🔄 Starting Instagram-style message stream for chat: ${widget.chatId}');
+    
+    _messagesSubscription = _chatRepository
+        .streamChatMessages(widget.chatId, requestingUserId: widget.currentUserId)
+        .listen(
+      (messages) {
+        print('📨 Received ${messages.length} messages for chat: ${widget.chatId}');
+        print('📋 Message details:');
+        for (int i = 0; i < messages.length && i < 3; i++) {
+          final msg = messages[i];
+          print('   - ${msg.id}: "${msg.content}" from ${msg.senderId}');
+        }
+        
+        if (mounted) {
+          final previousMessageCount = _messages.length;
+          print('📊 UI State: Previous count: $previousMessageCount, New count: ${messages.length}');
+          
+          setState(() {
+            _messages = List<ChatMessage>.from(messages);
+          });
+          
+          // Auto-scroll to bottom when new message arrives or on initial load
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_messages.isNotEmpty && (previousMessageCount == 0 || messages.length > previousMessageCount)) {
+              _scrollToBottom();
+              
+              // Mark new messages as read
+              _markNewMessagesAsRead();
+            }
+          });
+        }
+      },
+      onError: (error) {
+        print('❌ Error streaming messages: $error');
+        if (mounted) {
+          setState(() {
+            _hasError = true;
+          });
+        }
+      },
+    );
+  }
+  
+  void _startListeningToUserStatus() {
+    print('🔄 Starting user status stream for: ${widget.otherUserId}');
+    
+    _userStatusSubscription = _chatRepository
+        .streamUserStatus(widget.otherUserId)
+        .listen(
+      (status) {
+        if (mounted) {
+          setState(() {
+            _otherUserStatus = status;
+          });
+        }
+      },
+      onError: (error) {
+        print('❌ Error streaming user status: $error');
+      },
+    );
+  }
+  
+  void _startListeningToTyping() {
+    print('🔄 Starting typing status stream for chat: ${widget.chatId}');
+    
+    _typingSubscription = _chatRepository
+        .streamTypingStatus(widget.chatId)
+        .listen(
+      (typingUsers) {
+        if (mounted) {
+          setState(() {
+            _typingStatuses = typingUsers;
+          });
+        }
+      },
+      onError: (error) {
+        print('❌ Error streaming typing status: $error');
+      },
+    );
+  }
+
+  Future<void> _markNewMessagesAsRead() async {
+    try {
+      await _chatRepository.markMessagesAsRead(widget.chatId, widget.currentUserId);
+    } catch (e) {
+      print('❌ Error marking messages as read: $e');
+    }
+  }
+
+  Future<void> _sendInstagramMessage() async {
+    final messageText = _messageController.text.trim();
+    if (messageText.isEmpty) return;
+
+    print('📤 Sending Instagram-style message: "$messageText"');
+
+    // Stop typing indicator
+    if (_isCurrentUserTyping) {
+      _setTypingStatus(false);
+    }
+
+    try {
+      // Clear input immediately for better UX
+      _messageController.clear();
+
+      // Send message through repository
+      print('🚀 Attempting to send message to chat: ${widget.chatId}');
+      final sentMessage = await _chatRepository.sendMessage(
+        chatId: widget.chatId,
+        senderId: widget.currentUserId,
+        content: messageText,
+      );
+      
+      print('✅ Instagram-style message sent successfully!');
+      print('   - Message ID: ${sentMessage.id}');
+      print('   - Content: "${sentMessage.content}"');
+      print('   - Chat ID: ${widget.chatId}');
+      
+      // Auto-scroll to bottom
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+      
+    } catch (e) {
+      print('❌ Error sending Instagram-style message: $e');
+      
+      // Restore message text if sending failed
+      if (_messageController.text.isEmpty) {
+        _messageController.text = messageText;
+      }
+      
+      // Show error to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to send message. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _setTypingStatus(bool isTyping) {
+    _chatRepository.setTypingStatus(widget.chatId, widget.currentUserId, isTyping);
+    setState(() {
+      _isCurrentUserTyping = isTyping;
+    });
+    
+    if (isTyping) {
+      // Auto-stop typing after 3 seconds
+      _typingTimer?.cancel();
+      _typingTimer = Timer(const Duration(seconds: 3), () {
+        if (_isCurrentUserTyping) {
+          _setTypingStatus(false);
+        }
+      });
+    }
   }
 
   void _scrollToBottom() {
@@ -49,84 +354,88 @@ class _IndividualChatPageState extends State<IndividualChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: _buildAppBar(),
+      backgroundColor: Colors.white,
+      appBar: _buildInstagramAppBar(),
       body: Column(
         children: [
-          // Messages List
-          Expanded(
-            child: _buildMessagesList(),
-          ),
-          
-          // Message Input
-          _buildMessageInput(),
+          Expanded(child: _buildInstagramMessagesList()),
+          _buildInstagramMessageInput(),
         ],
       ),
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  // Instagram-style App Bar
+  PreferredSizeWidget _buildInstagramAppBar() {
+    final isOnline = _otherUserStatus?.isOnline ?? false;
+    final isOtherUserTyping = _typingStatuses.containsKey(widget.otherUserId) && 
+                              _typingStatuses[widget.otherUserId] == true;
+    
     return AppBar(
       backgroundColor: Colors.white,
-      elevation: 1,
+      elevation: 0,
+      scrolledUnderElevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.black),
-        onPressed: () => context.pop(),
+        onPressed: () => Navigator.pop(context),
       ),
       title: Row(
         children: [
-          // User Avatar
-          CircleAvatar(
-            radius: 18,
-            backgroundImage: widget.chatData['userImage'].isNotEmpty
-                ? NetworkImage(widget.chatData['userImage'])
-                : null,
-            backgroundColor: Colors.grey[300],
-            child: widget.chatData['userImage'].isEmpty
-                ? Icon(
-                    widget.chatData['type'] == 'marketplace' ? Icons.storefront : Icons.person,
-                    color: Colors.grey[600],
-                    size: 18,
-                  )
-                : null,
+          // Instagram-style profile picture
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.grey[300]!, width: 0.5),
+            ),
+            child: ClipOval(
+              child: _otherUserActualProfileUrl != null
+                  ? Image.network(
+                      _otherUserActualProfileUrl!,
+                      width: 32,
+                      height: 32,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) {
+                          print('✅ Profile image loaded: $_otherUserActualProfileUrl');
+                          return child;
+                        }
+                        print('⏳ Loading profile image: $_otherUserActualProfileUrl');
+                        return const Center(
+                          child: CircularProgressIndicator(strokeWidth: 1),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        print('❌ Profile image failed to load: $_otherUserActualProfileUrl');
+                        print('   Error: $error');
+                        return _buildDefaultAppBarAvatar();
+                      },
+                    )
+                  : _buildDefaultAppBarAvatar(),
+            ),
           ),
+          
           const SizedBox(width: 12),
           
-          // User Info
+          // User info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        widget.chatData['userName'],
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (widget.chatData['type'] == 'marketplace' && 
-                        (widget.chatData['isVerified'] ?? false)) ...[
-                      const SizedBox(width: 4),
-                      const Icon(
-                        Icons.verified,
-                        color: Colors.blue,
-                        size: 16,
-                      ),
-                    ],
-                  ],
+                Text(
+                  _getDisplayName(),
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  _isTyping ? 'typing...' : 
-                  widget.chatData['isOnline'] ? 'Online' : 'Last seen recently',
+                  _getStatusText(isOtherUserTyping, isOnline),
                   style: TextStyle(
-                    color: _isTyping ? Colors.blue : 
-                           widget.chatData['isOnline'] ? Colors.green : Colors.grey[600],
+                    color: isOtherUserTyping ? Colors.blue : Colors.grey[600],
                     fontSize: 12,
                   ),
                 ),
@@ -135,57 +444,71 @@ class _IndividualChatPageState extends State<IndividualChatPage> {
           ),
         ],
       ),
-      actions: [
-        
-        IconButton(
-          icon: const Icon(Icons.more_vert, color: Colors.black),
-          onPressed: _showChatInfo,
-        ),
-      ],
+      // Removed call and video buttons
     );
   }
 
-  Widget _buildMessagesList() {
-    if (_messages.isEmpty) {
-      return Center(
+  Widget _buildDefaultAppBarAvatar() {
+    final name = _getDisplayName();
+    final initials = name.split(' ').map((n) => n.isNotEmpty ? n[0] : '').take(2).join().toUpperCase();
+    
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          initials.isNotEmpty ? initials : '?',
+          style: const TextStyle(
+            color: Colors.grey,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Instagram-style Messages List
+  Widget _buildInstagramMessagesList() {
+    if (_isLoading) {
+      return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircleAvatar(
-              radius: 40,
-              backgroundImage: widget.chatData['userImage'].isNotEmpty
-                  ? NetworkImage(widget.chatData['userImage'])
-                  : null,
-              backgroundColor: Colors.grey[200],
-              child: widget.chatData['userImage'].isEmpty
-                  ? Icon(
-                      widget.chatData['type'] == 'marketplace' ? Icons.storefront : Icons.person,
-                      color: Colors.grey[600],
-                      size: 40,
-                    )
-                  : null,
-            ),
-            const SizedBox(height: 16),
+            CircularProgressIndicator(color: Colors.black),
+            SizedBox(height: 16),
             Text(
-              widget.chatData['userName'],
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              widget.chatData['type'] == 'marketplace'
-                  ? 'Start chatting about products or services'
-                  : 'Start your travel conversation',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 16,
-              ),
+              'Loading messages...',
+              style: TextStyle(color: Colors.grey),
             ),
           ],
         ),
       );
+    }
+    
+    if (_hasError) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            const Text('Failed to load messages'),
+            ElevatedButton(
+              onPressed: _initializeInstagramChat,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    if (_messages.isEmpty) {
+      return _buildEmptyMessagesState();
     }
 
     return ListView.builder(
@@ -194,41 +517,92 @@ class _IndividualChatPageState extends State<IndividualChatPage> {
       itemCount: _messages.length,
       itemBuilder: (context, index) {
         final message = _messages[index];
-        final isMe = message['senderId'] == 'user';
+        final isMe = message.senderId == widget.currentUserId;
         final showTimestamp = index == 0 || 
             _shouldShowTimestamp(_messages[index - 1], message);
         
         return Column(
           children: [
-            if (showTimestamp) _buildTimestamp(message['timestamp']),
-            _buildMessageBubble(message, isMe),
+            if (showTimestamp) _buildTimestamp(message.timestamp),
+            _buildInstagramMessageBubble(message, isMe),
           ],
         );
       },
     );
   }
 
-  Widget _buildTimestamp(String timestamp) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.grey[300],
-          borderRadius: BorderRadius.circular(12),
-        ),
+  Widget _buildEmptyMessagesState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.grey[300]!, width: 0.5),
+            ),
+            child: ClipOval(
+              child: _otherUserActualProfileUrl != null
+                  ? Image.network(
+                      _otherUserActualProfileUrl!,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return _buildDefaultLargeAvatar();
+                      },
+                    )
+                  : _buildDefaultLargeAvatar(),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _getDisplayName(),
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Say hello! 👋',
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDefaultLargeAvatar() {
+    final name = _getDisplayName();
+    final initials = name.split(' ').map((n) => n.isNotEmpty ? n[0] : '').take(2).join().toUpperCase();
+    
+    return Container(
+      width: 80,
+      height: 80,
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        shape: BoxShape.circle,
+      ),
+      child: Center(
         child: Text(
-          timestamp,
-          style: TextStyle(
-            color: Colors.grey[700],
-            fontSize: 12,
+          initials.isNotEmpty ? initials : '?',
+          style: const TextStyle(
+            color: Colors.grey,
+            fontSize: 24,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildMessageBubble(Map<String, dynamic> message, bool isMe) {
+  Widget _buildInstagramMessageBubble(ChatMessage message, bool isMe) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -236,19 +610,26 @@ class _IndividualChatPageState extends State<IndividualChatPage> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe) ...[
-            CircleAvatar(
-              radius: 14,
-              backgroundImage: widget.chatData['userImage'].isNotEmpty
-                  ? NetworkImage(widget.chatData['userImage'])
-                  : null,
-              backgroundColor: Colors.grey[300],
-              child: widget.chatData['userImage'].isEmpty
-                  ? Icon(
-                      widget.chatData['type'] == 'marketplace' ? Icons.storefront : Icons.person,
-                      color: Colors.grey[600],
-                      size: 14,
-                    )
-                  : null,
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.grey[300]!, width: 0.5),
+              ),
+              child: ClipOval(
+                child: _otherUserActualProfileUrl != null
+                    ? Image.network(
+                        _otherUserActualProfileUrl!,
+                        width: 24,
+                        height: 24,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return _buildSmallDefaultAvatar();
+                        },
+                      )
+                    : _buildSmallDefaultAvatar(),
+              ),
             ),
             const SizedBox(width: 8),
           ],
@@ -260,30 +641,29 @@ class _IndividualChatPageState extends State<IndividualChatPage> {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: isMe ? Colors.blue : Colors.white,
+                color: isMe ? Colors.blue : Colors.grey[100],
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(18),
                   topRight: const Radius.circular(18),
                   bottomLeft: Radius.circular(isMe ? 18 : 4),
                   bottomRight: Radius.circular(isMe ? 4 : 18),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 5,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
               ),
-              child: _buildMessageContent(message, isMe),
+              child: Text(
+                message.content,
+                style: TextStyle(
+                  color: isMe ? Colors.white : Colors.black,
+                  fontSize: 15,
+                ),
+              ),
             ),
           ),
           
           if (isMe) ...[
             const SizedBox(width: 8),
             Icon(
-              message['isRead'] ? Icons.done_all : Icons.done,
-              color: message['isRead'] ? Colors.blue : Colors.grey,
+              _isMessageRead(message) ? Icons.done_all : Icons.done,
+              color: _isMessageRead(message) ? Colors.blue : Colors.grey,
               size: 16,
             ),
           ],
@@ -292,271 +672,161 @@ class _IndividualChatPageState extends State<IndividualChatPage> {
     );
   }
 
-  Widget _buildMessageContent(Map<String, dynamic> message, bool isMe) {
-    if (message['messageType'] == 'image') {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.network(
-          message['message'],
-          fit: BoxFit.cover,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container(
-              height: 200,
-              color: Colors.grey[200],
-              child: const Center(
-                child: CircularProgressIndicator(),
-              ),
-            );
-          },
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              height: 200,
-              color: Colors.grey[200],
-              child: const Center(
-                child: Icon(Icons.error, color: Colors.grey),
-              ),
-            );
-          },
-        ),
-      );
-    }
+  Widget _buildSmallDefaultAvatar() {
+    final name = _getDisplayName();
+    final initials = name.split(' ').map((n) => n.isNotEmpty ? n[0] : '').take(1).join().toUpperCase();
     
-    return Text(
-      message['message'],
-      style: TextStyle(
-        color: isMe ? Colors.white : Colors.black87,
-        fontSize: 16,
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          initials.isNotEmpty ? initials : '?',
+          style: const TextStyle(
+            color: Colors.grey,
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildMessageInput() {
-    return Container(
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 8,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 8,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Colors.grey[200]!),
+  Widget _buildTimestamp(int timestamp) {
+    final dateTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
+    final formattedTime = _formatMessageTime(dateTime);
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            formattedTime,
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+            ),
+          ),
         ),
       ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            // Message input field
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(25),
-                ),
-                child: TextField(
-                  controller: _messageController,
-                  decoration: const InputDecoration(
-                    hintText: 'Type a message...',
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                  ),
-                  maxLines: null,
-                  textCapitalization: TextCapitalization.sentences,
-                  onChanged: _onMessageChanged,
-                  onSubmitted: (_) => _sendMessage(),
-                ),
-              ),
-            ),
-            
-            const SizedBox(width: 8),
-            
-            // Send button
-            GestureDetector(
-              onTap: _sendMessage,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.send,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-            ),
-          ],
+    );
+  }
+
+  // Instagram-style Message Input
+  Widget _buildInstagramMessageInput() {
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32), // Added extra bottom padding
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: Colors.grey[200]!)),
         ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: TextField(
+                controller: _messageController,
+                decoration: const InputDecoration(
+                  hintText: 'Message...',
+                  hintStyle: TextStyle(color: Colors.grey),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                ),
+                onChanged: (text) {
+                  if (text.isNotEmpty && !_isCurrentUserTyping) {
+                    _setTypingStatus(true);
+                  } else if (text.isEmpty && _isCurrentUserTyping) {
+                    _setTypingStatus(false);
+                  }
+                },
+                onSubmitted: (_) => _sendInstagramMessage(),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(
+              color: Colors.blue,
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.send, color: Colors.white, size: 18),
+              onPressed: _sendInstagramMessage,
+            ),
+          ),
+        ],
+      ),
       ),
     );
   }
 
   // Helper methods
-  bool _shouldShowTimestamp(Map<String, dynamic> prevMessage, Map<String, dynamic> currentMessage) {
-    // Show timestamp if messages are far apart or from different days
-    // This is a simplified version - you'd want more sophisticated logic
-    return prevMessage['timestamp'] != currentMessage['timestamp'];
+  String _getDisplayName() {
+    return _otherUserActualName?.isNotEmpty == true 
+        ? _otherUserActualName!
+        : widget.otherUserName?.isNotEmpty == true 
+        ? widget.otherUserName!
+        : 'User ${widget.otherUserId}';
   }
 
-  void _onMessageChanged(String text) {
-    // Simulate typing indicator
-    if (text.isNotEmpty && !_isTyping) {
-      setState(() {
-        _isTyping = true;
-      });
+  String _getStatusText(bool isTyping, bool isOnline) {
+    if (isTyping) return 'typing...';
+    if (isOnline) return 'Active now';
+    
+    if (_otherUserStatus?.lastSeen != null) {
+      final lastSeen = DateTime.fromMillisecondsSinceEpoch(_otherUserStatus!.lastSeen);
+      final now = DateTime.now();
+      final difference = now.difference(lastSeen);
       
-      // Reset typing after 2 seconds
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted && _messageController.text.isEmpty) {
-          setState(() {
-            _isTyping = false;
-          });
-        }
-      });
+      if (difference.inMinutes < 60) {
+        return 'Active ${difference.inMinutes}m ago';
+      } else if (difference.inHours < 24) {
+        return 'Active ${difference.inHours}h ago';
+      } else {
+        return 'Active ${difference.inDays}d ago';
+      }
     }
+    
+    return '';
   }
 
-  void _sendMessage() {
-    final messageText = _messageController.text.trim();
-    if (messageText.isEmpty) return;
-
-    final newMessage = {
-      'id': 'msg_${DateTime.now().millisecondsSinceEpoch}',
-      'senderId': 'user',
-      'message': messageText,
-      'timestamp': _formatTimestamp(DateTime.now()),
-      'isRead': false,
-      'messageType': 'text',
-    };
-
-    setState(() {
-      _messages.add(newMessage);
-      _messageController.clear();
-      _isTyping = false;
-    });
-
-    // Scroll to bottom
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-
-    // Simulate reply for demo
-    _simulateReply();
+  bool _shouldShowTimestamp(ChatMessage prevMessage, ChatMessage currentMessage) {
+    final prevTime = DateTime.fromMillisecondsSinceEpoch(prevMessage.timestamp);
+    final currentTime = DateTime.fromMillisecondsSinceEpoch(currentMessage.timestamp);
+    return currentTime.difference(prevTime).inMinutes > 15;
   }
 
-  void _simulateReply() {
-    Future.delayed(const Duration(seconds: 2), () {
-      if (!mounted) return;
-      
-      final replies = [
-        'Thanks for the message! 😊',
-        'That sounds great!',
-        'I\'ll get back to you soon',
-        'Perfect! Let me check that for you',
-        'Absolutely! I agree',
-      ];
-      
-      final randomReply = replies[DateTime.now().millisecond % replies.length];
-      
-      final replyMessage = {
-        'id': 'reply_${DateTime.now().millisecondsSinceEpoch}',
-        'senderId': 'other',
-        'message': randomReply,
-        'timestamp': _formatTimestamp(DateTime.now()),
-        'isRead': false,
-        'messageType': 'text',
-      };
-
-      setState(() {
-        _messages.add(replyMessage);
-      });
-
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-    });
+  bool _isMessageRead(ChatMessage message) {
+    return message.readBy?.containsKey(widget.otherUserId) == true;
   }
 
-  String _formatTimestamp(DateTime dateTime) {
+  String _formatMessageTime(DateTime dateTime) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final messageDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
     
     if (messageDate == today) {
-      return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+      return 'Today ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+    } else if (messageDate == today.subtract(const Duration(days: 1))) {
+      return 'Yesterday ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
     } else {
-      return 'Yesterday';
+      return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
     }
-  }
-
-
-  
-
-  
-
-  void _showChatInfo() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            CircleAvatar(
-              radius: 40,
-              backgroundImage: widget.chatData['userImage'].isNotEmpty
-                  ? NetworkImage(widget.chatData['userImage'])
-                  : null,
-              backgroundColor: Colors.grey[200],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              widget.chatData['userName'],
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.block),
-              title: const Text('Block User'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.report),
-              title: const Text('Report User'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete),
-              title: const Text('Delete Chat'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
   }
 }

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:journeyq/data/repositories/search_repositories/search_repo.dart';
 
 // Search widget for the search bar (without back button)
@@ -160,10 +162,28 @@ class _SearchPageState extends State<SearchPage> {
       );
       
       if (mounted) {
+        // Get current user ID to filter out self from results
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        final currentUserId = authProvider.user?.userId?.toString();
+        
+        // Filter out current user from search results
+        final filteredResults = results.where((item) {
+          if (item['type'] == 'traveller' && currentUserId != null) {
+            return item['id']?.toString() != currentUserId;
+          }
+          return true; // Keep other types (journeys, etc.)
+        }).toList();
+        
         setState(() {
-          filteredItems = results;
+          filteredItems = filteredResults;
           isLoading = false;
         });
+        
+        // Debug logging
+        if (currentUserId != null) {
+          print('🔍 Search results filtered - excluded current user ID: $currentUserId');
+          print('📊 Original results: ${results.length}, Filtered results: ${filteredResults.length}');
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -184,6 +204,20 @@ class _SearchPageState extends State<SearchPage> {
         // Validate required data before navigation
         final userId = item['id']?.toString();
         final userName = item['title']?.toString();
+        
+        // Additional safety check: prevent navigation to self profile
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        final currentUserId = authProvider.user?.userId?.toString();
+        
+        if (userId == currentUserId) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Cannot view your own profile from search'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          return;
+        }
         
         if (userId != null && userId.isNotEmpty && userName != null && userName.isNotEmpty) {
           final encodedUserName = Uri.encodeComponent(userName);

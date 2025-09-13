@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dir \"C:\\Users\\lagit\\Desktop\\Journeyq_mobile_git\\assets\\posts_images\")"
+      "Bash(dir \"C:\\Users\\lagit\\Desktop\\Journeyq_mobile_git\\assets\\posts_images\")",
+      "Bash(flutter analyze:*)",
+      "Bash(flutter build:*)"
     ],
     "deny": [],
     "ask": []

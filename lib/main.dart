@@ -4,6 +4,7 @@ import 'app/app.dart';
 import 'core/config/app_config.dart';
 import 'package:journeyq/core/services/notification_service.dart';
 import 'package:journeyq/core/services/api_service.dart';
+import 'package:journeyq/data/repositories/chat_repository/chat_repository.dart';
 import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 
 void main() async {
@@ -21,6 +22,9 @@ void main() async {
 
   // Initialize ApiService with the auth provider
   ApiService.initialize(authProvider);
+
+  // Initialize ChatRepository with the auth provider
+  await ChatRepository().initialize(authProvider);
 
   runApp(TravelApp());
 }
