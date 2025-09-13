@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:journeyq/shared/components/app_bar.dart';
 import 'package:journeyq/features/home/pages/search_wiget.dart';
 import 'package:journeyq/features/home/pages/widget.dart';
 import 'package:journeyq/features/home/pages/travel_post_widget.dart';
 import 'package:journeyq/shared/widgets/dialog/show_dialog.dart';
 import 'package:journeyq/features/home/data.dart';
+import 'package:journeyq/data/repositories/chat_repository/chat_repository.dart';
+import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
 
 class HomePage extends StatefulWidget {
@@ -16,14 +19,35 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final ScrollController _scrollController = ScrollController();
+  final ChatRepository _chatRepository = ChatRepository();
 
   // Using the imported post_data from data.dart
   late List<Map<String, dynamic>> _posts;
+  bool _isChatInitialized = false;
 
   @override
   void initState() {
     super.initState();
     _posts = List.from(post_data); // Create a mutable copy
+    _initializeChat();
+  }
+
+  Future<void> _initializeChat() async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (authProvider.isAuthenticated) {
+        await _chatRepository.initialize(authProvider);
+        await _chatRepository.initializeUserProfileIfNeeded(authProvider);
+        
+        if (mounted) {
+          setState(() {
+            _isChatInitialized = true;
+          });
+        }
+      }
+    } catch (e) {
+      print('❌ Error initializing chat in home page: $e');
+    }
   }
 
   @override
@@ -32,14 +56,53 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
+  PreferredSizeWidget _buildDynamicAppBar() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final currentUserId = authProvider.user?.userId?.toString();
+    
+    if (currentUserId == null) {
+      return JourneyQAppBar(
+        notificationCount: 3,
+        chatCount: 0,
+        onNotificationTap: () {
+          context.push('/notification');
+        },
+        onChatTap: () {
+          context.push('/chat');
+        },
+      );
+    }
+
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(55),
+      child: StreamBuilder<int>(
+        stream: _chatRepository.streamUnreadMessageCount(currentUserId),
+        builder: (context, snapshot) {
+          final unreadCount = snapshot.data ?? 0;
+          
+          return JourneyQAppBar(
+            notificationCount: 3,
+            chatCount: unreadCount,
+            onNotificationTap: () {
+              context.push('/notification');
+            },
+            onChatTap: () {
+              context.push('/chat');
+            },
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
-      appBar: JourneyQAppBar(
+      appBar: _isChatInitialized ? _buildDynamicAppBar() : JourneyQAppBar(
         notificationCount: 3,
-        chatCount: 7,
+        chatCount: 0, // Show 0 while loading
         onNotificationTap: () {
           context.push('/notification');
         },

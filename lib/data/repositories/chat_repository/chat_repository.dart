@@ -375,6 +375,22 @@ class ChatRepository {
     }
   }
 
+  /// Stream unread message count for real-time updates
+  Stream<int> streamUnreadMessageCount(String userId) {
+    _ensureInitialized();
+    
+    return streamUserChats(userId).map((chats) {
+      try {
+        final total = chats.fold<int>(0, (total, chat) => total + chat.unreadCount);
+        print('📊 Total unread count for $userId: $total');
+        return total;
+      } catch (e) {
+        print('❌ Error calculating unread count: $e');
+        return 0;
+      }
+    });
+  }
+
   // UTILITY METHODS
 
   /// Create chat ID for two users (consistent ordering)
