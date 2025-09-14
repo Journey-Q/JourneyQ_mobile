@@ -59,8 +59,8 @@ class _HomePageState extends State<HomePage> {
   PreferredSizeWidget _buildDynamicAppBar() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final currentUserId = authProvider.user?.userId?.toString();
-    
-    if (currentUserId == null) {
+
+    if (currentUserId == null || !_isChatInitialized) {
       return JourneyQAppBar(
         notificationCount: 3,
         chatCount: 0,
@@ -78,8 +78,13 @@ class _HomePageState extends State<HomePage> {
       child: StreamBuilder<int>(
         stream: _chatRepository.streamUnreadMessageCount(currentUserId),
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            print('❌ Error in unread count stream: ${snapshot.error}');
+          }
+
           final unreadCount = snapshot.data ?? 0;
-          
+          print('📱 App bar unread count updated: $unreadCount');
+
           return JourneyQAppBar(
             notificationCount: 3,
             chatCount: unreadCount,

@@ -184,20 +184,39 @@ class FirebaseChatService {
       if (!chatSnapshot.exists) {
         print('🆕 Creating new chat between $user1Id and $user2Id');
         
-        // Get both user profiles
+        // Get both user profiles, create fallbacks if they don't exist
         final user1Profile = await getUserProfile(user1Id);
         final user2Profile = await getUserProfile(user2Id);
-        
-        if (user1Profile == null || user2Profile == null) {
-          throw Exception('User profiles not found. Please ensure both users are registered.');
-        }
-        
-        // Create chat with full profile information
+
+        print('🔍 User profiles: user1=${user1Profile != null}, user2=${user2Profile != null}');
+
+        // Create participant data (with fallbacks for missing profiles)
+        final user1Data = user1Profile?.toParticipantJson() ?? {
+          'userId': user1Id,
+          'username': 'User $user1Id',
+          'displayName': 'User $user1Id',
+          'profileUrl': null,
+          'isOnline': false,
+          'lastSeen': DateTime.now().millisecondsSinceEpoch,
+        };
+
+        final user2Data = user2Profile?.toParticipantJson() ?? {
+          'userId': user2Id,
+          'username': 'User $user2Id',
+          'displayName': 'User $user2Id',
+          'profileUrl': null,
+          'isOnline': false,
+          'lastSeen': DateTime.now().millisecondsSinceEpoch,
+        };
+
+        print('🔍 Using participant data: user1=${user1Data['displayName']}, user2=${user2Data['displayName']}');
+
+        // Create chat with participant information
         final chatData = {
           'chatId': chatId,
           'participants': {
-            user1Id: user1Profile.toParticipantJson(),
-            user2Id: user2Profile.toParticipantJson(),
+            user1Id: user1Data,
+            user2Id: user2Data,
           },
           'createdAt': DateTime.now().millisecondsSinceEpoch,
           'lastMessage': null,
@@ -366,69 +385,94 @@ class FirebaseChatService {
     }
   }
 
-  // Stream user's chats with full profile information
+  // Stream user's chats by directly querying chats table for participant matches
   Stream<List<InstagramChat>> streamUserChats(String userId) {
     _ensureInitialized();
-    
-    print('🔄 Starting chat stream for user: $userId');
-    
-    return _usersRef!.child(userId).child('chats').onValue.asyncMap((event) async {
+
+    print('🔄 Starting DIRECT chat stream for user: $userId');
+    print('🔄 Querying chats table directly for participant matches');
+
+    return _chatsRef!.onValue.asyncMap((event) async {
       try {
+        print('🔄 Direct chat stream event received for user: $userId');
+
         if (!event.snapshot.exists) {
-          print('📭 No chats found for user: $userId');
+          print('📭 No chats found in database');
           return <InstagramChat>[];
         }
-        
-        final chatRefs = Map<String, dynamic>.from(event.snapshot.value as Map);
-        final chats = <InstagramChat>[];
-        
-        // Get detailed info for each chat
-        for (final entry in chatRefs.entries) {
-          final chatId = entry.value['chatId'] ?? entry.key;
-          
+
+        final allChatsData = Map<String, dynamic>.from(event.snapshot.value as Map);
+        print('🔄 Found ${allChatsData.length} total chats in database');
+
+        final userChats = <InstagramChat>[];
+
+        // Check each chat to see if user is a participant
+        for (final entry in allChatsData.entries) {
+          final chatId = entry.key;
+          final chatData = Map<String, dynamic>.from(entry.value);
+
           try {
-            final chatSnapshot = await _chatsRef!.child(chatId).get();
-            if (chatSnapshot.exists) {
-              final chatData = Map<String, dynamic>.from(chatSnapshot.value as Map);
-              
-              // Get other participant info
-              final participants = Map<String, dynamic>.from(chatData['participants'] ?? {});
+            print('🔍 Checking chat: $chatId');
+
+            // Get participants from this chat
+            final participants = Map<String, dynamic>.from(chatData['participants'] ?? {});
+            print('🔍 Chat $chatId participants: ${participants.keys.toList()}');
+
+            // Check if current user is a participant
+            if (participants.containsKey(userId)) {
+              print('✅ User $userId is participant in chat $chatId');
+
+              // Find the other participant
               final otherUserId = participants.keys.firstWhere((id) => id != userId, orElse: () => '');
-              
+
               if (otherUserId.isNotEmpty) {
-                final otherUser = participants[otherUserId];
-                
+                final otherUser = Map<String, dynamic>.from(participants[otherUserId]);
+                print('🔍 Other user in chat $chatId: ${otherUser['displayName'] ?? otherUser['username']}');
+
                 final chat = InstagramChat(
                   chatId: chatId,
                   otherUserId: otherUserId,
                   otherUserName: otherUser['displayName'] ?? otherUser['username'] ?? 'Unknown User',
                   otherUserProfileUrl: otherUser['profileUrl'],
-                  lastMessage: chatData['lastMessage'] != null ? ChatMessage.fromJson(chatData['lastMessage']) : null,
+                  lastMessage: chatData['lastMessage'] != null ? ChatMessage.fromJson(Map<String, dynamic>.from(chatData['lastMessage'])) : null,
                   lastMessageTime: chatData['lastMessageTime'],
                   unreadCount: chatData['unreadCounts']?[userId] ?? 0,
-                  isOnline: false, // Will be updated by status stream
+                  isOnline: otherUser['isOnline'] ?? false,
                   lastSeen: otherUser['lastSeen'],
                   createdAt: chatData['createdAt'] ?? DateTime.now().millisecondsSinceEpoch,
                 );
-                
-                chats.add(chat);
+
+                userChats.add(chat);
+                print('✅ Added chat: ${chat.chatId} with ${chat.otherUserName}');
+              } else {
+                print('⚠️ No other participant found in chat $chatId');
               }
+            } else {
+              print('⏭️ User $userId not a participant in chat $chatId');
             }
           } catch (e) {
-            print('❌ Error loading chat $chatId: $e');
+            print('❌ Error processing chat $chatId: $e');
           }
         }
-        
-        // Sort by last message time
-        chats.sort((a, b) => (b.lastMessageTime ?? 0).compareTo(a.lastMessageTime ?? 0));
-        
-        print('✅ Loaded ${chats.length} chats for user: $userId');
-        return chats;
-        
+
+        // Sort by last message time (most recent first)
+        userChats.sort((a, b) => (b.lastMessageTime ?? 0).compareTo(a.lastMessageTime ?? 0));
+
+        print('✅ DIRECT QUERY: Found ${userChats.length} chats for user $userId');
+        for (final chat in userChats) {
+          print('   - ${chat.chatId}: ${chat.otherUserName} (unread: ${chat.unreadCount})');
+        }
+
+        return userChats;
+
       } catch (e) {
-        print('❌ Error in chat stream: $e');
+        print('❌ Error in direct chat stream for user $userId: $e');
+        print('❌ Stack trace: ${StackTrace.current}');
         return <InstagramChat>[];
       }
+    }).handleError((error) {
+      print('❌ Direct chat stream error for user $userId: $error');
+      return <InstagramChat>[];
     });
   }
 

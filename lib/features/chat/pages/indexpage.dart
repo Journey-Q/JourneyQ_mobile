@@ -74,75 +74,86 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     }
   }
 
-  // Instagram-style initialization
+  // Simplified chat system initialization - no user profile dependencies
   Future<void> _initializeChatSystem() async {
     try {
       setState(() {
         _isLoading = true;
         _hasError = false;
       });
-      
-      print('📱 Initializing Instagram-style chat system...');
-      
+
+      print('📱 Initializing SIMPLIFIED chat system...');
+
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       _currentUserId = authProvider.user?.userId?.toString();
-      
+
       if (_currentUserId == null) {
         throw Exception('User not authenticated');
       }
-      
-      // Initialize chat repository with Instagram-like features
+
+      print('🔍 Current user ID: $_currentUserId');
+
+      // Initialize chat repository - minimal setup
       await _chatRepository.initialize(authProvider);
-      
-      // Initialize user profile if needed
-      await _chatRepository.initializeUserProfileIfNeeded(authProvider);
-      
-      print('✅ User profile initialization completed for chat index');
-      
-      // Set user online status
-      await _chatRepository.setUserOnlineStatus(_currentUserId!, true);
-      
-      // Start listening to Instagram-style chat updates
+
+      // Set user online status (optional)
+      try {
+        await _chatRepository.setUserOnlineStatus(_currentUserId!, true);
+        print('✅ User online status set');
+      } catch (e) {
+        print('⚠️ Could not set online status: $e (continuing anyway)');
+      }
+
+      // Start listening to chats directly from chats table
       _startListeningToInstagramChats();
-      
+
       setState(() {
         _isLoading = false;
       });
-      
-      print('✅ Instagram-style chat system initialized successfully');
-      
+
+      print('✅ SIMPLIFIED chat system initialized successfully');
+
     } catch (e) {
-      print('❌ Error initializing Instagram-style chat system: $e');
+      print('❌ Error initializing SIMPLIFIED chat system: $e');
       setState(() {
         _isLoading = false;
         _hasError = true;
       });
     }
   }
+
   
   void _startListeningToInstagramChats() {
-    if (_currentUserId == null) return;
-    
-    print('🔄 Starting Instagram-style chat stream...');
-    
-    // Listen to Instagram-style chats
+    if (_currentUserId == null) {
+      print('❌ Cannot start chat stream - current user ID is null');
+      return;
+    }
+
+    print('🔄 Starting DIRECT chat stream for user: $_currentUserId');
+    print('🔄 This will scan all chats for participant matches');
+
+    // Listen to chats directly from chats table
     _chatsSubscription = _chatRepository
         .streamUserChats(_currentUserId!)
         .listen(
       (chats) {
-        print('📱 Received ${chats.length} Instagram-style chats');
-        
+        print('📱 DIRECT QUERY RESULT: ${chats.length} chats found for user: $_currentUserId');
+
+        for (final chat in chats) {
+          print('   ✅ ${chat.chatId}: ${chat.otherUserName} (unread: ${chat.unreadCount})');
+        }
+
         if (mounted) {
           setState(() {
             _instagramChats = chats;
           });
-          
-          // Subscribe to user status updates
+
+          // Subscribe to user status updates for online indicators
           _subscribeToUserStatuses(chats);
         }
       },
       onError: (error) {
-        print('❌ Error streaming Instagram-style chats: $error');
+        print('❌ Error in DIRECT chat stream: $error');
         if (mounted) {
           setState(() {
             _hasError = true;
@@ -358,33 +369,105 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
           ),
           const SizedBox(height: 8),
           Text(
-            'When you message someone, it will\nappear here',
+            'No conversations found.\nMessages will appear here when you have chats.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 14, 
+              fontSize: 14,
               color: Colors.grey[600],
               height: 1.4,
             ),
           ),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Text(
-              'Send message',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
+          const SizedBox(height: 16),
+          Text(
+            'The system is scanning for chats where you are a participant.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[500],
             ),
           ),
+          const SizedBox(height: 24),
+          // Debug button for testing (remove in production)
+          if (_currentUserId != null) ...[
+            ElevatedButton(
+              onPressed: _createTestChat,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Create Test Chat'),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Debug: Create a test chat to verify the system works',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  // Simplified test chat creation that works directly with chats table
+  Future<void> _createTestChat() async {
+    if (_currentUserId == null) return;
+
+    try {
+      print('🧪 Creating SIMPLIFIED test chat...');
+
+      // Create a unique test user ID
+      final testOtherUserId = 'test_user_${DateTime.now().millisecondsSinceEpoch}';
+      const testUserName = 'Test User';
+
+      print('🧪 Test other user ID: $testOtherUserId');
+
+      // Create chat directly - this will automatically create the participant entries
+      final chatId = await _chatRepository.createOrGetChat(_currentUserId!, testOtherUserId);
+      print('🧪 Chat created: $chatId');
+
+      // Send a test message FROM the test user TO current user
+      await _chatRepository.sendMessage(
+        chatId: chatId,
+        senderId: testOtherUserId,
+        content: 'Hello! This is a test message.',
+      );
+
+      // Send a reply FROM current user
+      await _chatRepository.sendMessage(
+        chatId: chatId,
+        senderId: _currentUserId!,
+        content: 'Test reply message.',
+      );
+
+      print('✅ SIMPLIFIED test chat created successfully');
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Test chat created! Check your chat list.'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+
+    } catch (e) {
+      print('❌ Error creating SIMPLIFIED test chat: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
   }
 
   // Instagram-style Chat Item
@@ -596,20 +679,32 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   }
 
   // Event Handlers
-  void _openInstagramChat(InstagramChat chat) {
+  void _openInstagramChat(InstagramChat chat) async {
     print('📱 Opening Instagram-style chat: ${chat.chatId}');
-    
+
+    // Mark messages as read when opening chat
+    if (_currentUserId != null) {
+      try {
+        await _chatRepository.markMessagesAsRead(chat.chatId, _currentUserId!);
+        print('✅ Messages marked as read for chat: ${chat.chatId}');
+      } catch (e) {
+        print('❌ Error marking messages as read: $e');
+      }
+    }
+
     // Navigate to individual chat page
-    context.push(
-      '/chat/individual',
-      extra: {
-        'chatId': chat.chatId,
-        'otherUserId': chat.otherUserId,
-        'currentUserId': _currentUserId,
-        'otherUserName': chat.otherUserName,
-        'otherUserProfileUrl': chat.otherUserProfileUrl,
-      },
-    );
+    if (mounted) {
+      context.push(
+        '/chat/individual',
+        extra: {
+          'chatId': chat.chatId,
+          'otherUserId': chat.otherUserId,
+          'currentUserId': _currentUserId,
+          'otherUserName': chat.otherUserName,
+          'otherUserProfileUrl': chat.otherUserProfileUrl,
+        },
+      );
+    }
   }
 
   Future<void> _handleRefresh() async {

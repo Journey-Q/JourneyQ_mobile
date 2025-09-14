@@ -54,6 +54,9 @@ class _IndividualChatPageState extends State<IndividualChatPage> with WidgetsBin
   // User profile information
   String? _otherUserActualName;
   String? _otherUserActualProfileUrl;
+  
+  // Actual chat ID (in case widget.chatId is invalid)
+  String? _actualChatId;
 
   @override
   void initState() {
@@ -109,6 +112,10 @@ class _IndividualChatPageState extends State<IndividualChatPage> with WidgetsBin
       });
       
       print('📱 Initializing Instagram-style chat: ${widget.chatId}');
+      print('🔍 DEBUGGING Chat IDs:');
+      print('   - Provided chatId: ${widget.chatId}');
+      print('   - Current user: ${widget.currentUserId}');
+      print('   - Other user: ${widget.otherUserId}');
       
       // Get AuthProvider for ChatRepository initialization
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -123,6 +130,17 @@ class _IndividualChatPageState extends State<IndividualChatPage> with WidgetsBin
         otherUserProfileUrl: widget.otherUserProfileUrl,
       );
       
+      // FIX: If chatId is invalid, generate the correct one
+      String actualChatId = widget.chatId;
+      if (widget.chatId == 'individual' || widget.chatId.isEmpty || !widget.chatId.startsWith('chat_')) {
+        print('⚠️ FIXING: Invalid chatId detected, generating correct one');
+        actualChatId = await _chatRepository.createOrGetChat(widget.currentUserId, widget.otherUserId);
+        print('✅ Generated correct chatId: $actualChatId');
+        
+        // Update the internal reference
+        _actualChatId = actualChatId;
+      }
+      
       // Get user profiles for proper display
       await _loadUserProfiles();
       
@@ -130,7 +148,7 @@ class _IndividualChatPageState extends State<IndividualChatPage> with WidgetsBin
       await _chatRepository.setUserOnlineStatus(widget.currentUserId, true);
       
       // Mark messages as read when opening chat
-      await _chatRepository.markMessagesAsRead(widget.chatId, widget.currentUserId);
+      await _chatRepository.markMessagesAsRead(_getChatId(), widget.currentUserId);
       
       // Start listening to real-time updates
       _startListeningToMessages();
@@ -184,17 +202,26 @@ class _IndividualChatPageState extends State<IndividualChatPage> with WidgetsBin
   }
   
   void _startListeningToMessages() {
-    print('🔄 Starting Instagram-style message stream for chat: ${widget.chatId}');
+    final chatId = _getChatId();
+    print('🔄 Starting Instagram-style message stream for chat: $chatId');
     
     _messagesSubscription = _chatRepository
-        .streamChatMessages(widget.chatId, requestingUserId: widget.currentUserId)
+        .streamChatMessages(chatId, requestingUserId: widget.currentUserId)
         .listen(
       (messages) {
-        print('📨 Received ${messages.length} messages for chat: ${widget.chatId}');
+        print('📨 Received ${messages.length} messages for chat: ${_getChatId()}');
         print('📋 Message details:');
         for (int i = 0; i < messages.length && i < 3; i++) {
           final msg = messages[i];
           print('   - ${msg.id}: "${msg.content}" from ${msg.senderId}');
+        }
+        
+        print('🔍 DEBUGGING: Looking for message with ID: -O_2cGd3O-uihb9wtavE');
+        final targetMessage = messages.where((m) => m.id.contains('O_2cGd3O-uihb9wtavE')).toList();
+        if (targetMessage.isNotEmpty) {
+          print('✅ FOUND target message: ${targetMessage.first.content}');
+        } else {
+          print('❌ Target message NOT FOUND in stream');
         }
         
         if (mounted) {
@@ -247,10 +274,11 @@ class _IndividualChatPageState extends State<IndividualChatPage> with WidgetsBin
   }
   
   void _startListeningToTyping() {
-    print('🔄 Starting typing status stream for chat: ${widget.chatId}');
+    final chatId = _getChatId();
+    print('🔄 Starting typing status stream for chat: $chatId');
     
     _typingSubscription = _chatRepository
-        .streamTypingStatus(widget.chatId)
+        .streamTypingStatus(chatId)
         .listen(
       (typingUsers) {
         if (mounted) {
@@ -267,7 +295,7 @@ class _IndividualChatPageState extends State<IndividualChatPage> with WidgetsBin
 
   Future<void> _markNewMessagesAsRead() async {
     try {
-      await _chatRepository.markMessagesAsRead(widget.chatId, widget.currentUserId);
+      await _chatRepository.markMessagesAsRead(_getChatId(), widget.currentUserId);
     } catch (e) {
       print('❌ Error marking messages as read: $e');
     }
@@ -289,9 +317,10 @@ class _IndividualChatPageState extends State<IndividualChatPage> with WidgetsBin
       _messageController.clear();
 
       // Send message through repository
-      print('🚀 Attempting to send message to chat: ${widget.chatId}');
+      final chatId = _getChatId();
+      print('🚀 Attempting to send message to chat: $chatId');
       final sentMessage = await _chatRepository.sendMessage(
-        chatId: widget.chatId,
+        chatId: chatId,
         senderId: widget.currentUserId,
         content: messageText,
       );
@@ -299,7 +328,7 @@ class _IndividualChatPageState extends State<IndividualChatPage> with WidgetsBin
       print('✅ Instagram-style message sent successfully!');
       print('   - Message ID: ${sentMessage.id}');
       print('   - Content: "${sentMessage.content}"');
-      print('   - Chat ID: ${widget.chatId}');
+      print('   - Chat ID: $chatId');
       
       // Auto-scroll to bottom
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
@@ -325,20 +354,33 @@ class _IndividualChatPageState extends State<IndividualChatPage> with WidgetsBin
   }
 
   void _setTypingStatus(bool isTyping) {
-    _chatRepository.setTypingStatus(widget.chatId, widget.currentUserId, isTyping);
-    setState(() {
-      _isCurrentUserTyping = isTyping;
-    });
-    
+    final chatId = _getChatId();
+    print('🔄 Setting typing status: $isTyping for user ${widget.currentUserId} in chat $chatId');
+
+    _chatRepository.setTypingStatus(chatId, widget.currentUserId, isTyping);
+
+    if (mounted) {
+      setState(() {
+        _isCurrentUserTyping = isTyping;
+      });
+    }
+
     if (isTyping) {
       // Auto-stop typing after 3 seconds
       _typingTimer?.cancel();
       _typingTimer = Timer(const Duration(seconds: 3), () {
-        if (_isCurrentUserTyping) {
+        if (_isCurrentUserTyping && mounted) {
           _setTypingStatus(false);
         }
       });
+    } else {
+      _typingTimer?.cancel();
     }
+  }
+
+  // Helper to get the correct chat ID
+  String _getChatId() {
+    return _actualChatId ?? widget.chatId;
   }
 
   void _scrollToBottom() {
@@ -747,9 +789,21 @@ class _IndividualChatPageState extends State<IndividualChatPage> with WidgetsBin
                   contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 ),
                 onChanged: (text) {
-                  if (text.isNotEmpty && !_isCurrentUserTyping) {
-                    _setTypingStatus(true);
-                  } else if (text.isEmpty && _isCurrentUserTyping) {
+                  // Reset typing timer on every keystroke
+                  _typingTimer?.cancel();
+
+                  if (text.trim().isNotEmpty) {
+                    if (!_isCurrentUserTyping) {
+                      _setTypingStatus(true);
+                    } else {
+                      // Extend typing status
+                      _typingTimer = Timer(const Duration(seconds: 3), () {
+                        if (_isCurrentUserTyping && mounted) {
+                          _setTypingStatus(false);
+                        }
+                      });
+                    }
+                  } else if (_isCurrentUserTyping) {
                     _setTypingStatus(false);
                   }
                 },
