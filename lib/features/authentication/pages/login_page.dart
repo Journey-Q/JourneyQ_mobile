@@ -204,7 +204,12 @@ class _LoginPageState extends State<LoginPage> {
       labelText: 'Password',
       hintText: 'Enter your password',
       prefixIcon: Icons.lock_outline,
-      validator: Validator.validatePassword,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter a password';
+        }
+        return null;
+      },
       obscureText: _obscurePassword,
       suffixIcon: IconButton(
         icon: Container(
