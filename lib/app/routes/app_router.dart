@@ -25,14 +25,11 @@ import 'route_transistion.dart';
 import 'package:journeyq/features/profile/pages/index.dart';
 import 'package:journeyq/features/profile/pages/Setting/SettingsPage.dart';
 import 'package:journeyq/features/profile/pages/Setting/ChangePasswordPage.dart';
-
 import 'package:journeyq/features/profile/pages/Setting/PointExplainationPage.dart';
-
 import 'package:journeyq/features/profile/pages/EditProfilePage.dart';
 import 'package:journeyq/features/profile/pages/PostDetailPage.dart';
 import 'package:journeyq/features/profile/pages/BucketListPage.dart';
 import 'package:journeyq/features/home/user_profile_page.dart';
-// ADD THESE NEW IMPOR
 import 'package:journeyq/features/profile/pages/FollowersFollowingPage.dart';
 import 'package:journeyq/features/profile/pages/PaymentPage.dart';
 import 'package:journeyq/app/app.dart';

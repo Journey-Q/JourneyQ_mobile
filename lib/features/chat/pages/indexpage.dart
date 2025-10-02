@@ -385,89 +385,10 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
               fontSize: 12,
               color: Colors.grey[500],
             ),
-          ),
-          const SizedBox(height: 24),
-          // Debug button for testing (remove in production)
-          if (_currentUserId != null) ...[
-            ElevatedButton(
-              onPressed: _createTestChat,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Create Test Chat'),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Debug: Create a test chat to verify the system works',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[500],
-              ),
-            ),
-          ],
+          )
         ],
       ),
     );
-  }
-
-  // Simplified test chat creation that works directly with chats table
-  Future<void> _createTestChat() async {
-    if (_currentUserId == null) return;
-
-    try {
-      print('🧪 Creating SIMPLIFIED test chat...');
-
-      // Create a unique test user ID
-      final testOtherUserId = 'test_user_${DateTime.now().millisecondsSinceEpoch}';
-      const testUserName = 'Test User';
-
-      print('🧪 Test other user ID: $testOtherUserId');
-
-      // Create chat directly - this will automatically create the participant entries
-      final chatId = await _chatRepository.createOrGetChat(_currentUserId!, testOtherUserId);
-      print('🧪 Chat created: $chatId');
-
-      // Send a test message FROM the test user TO current user
-      await _chatRepository.sendMessage(
-        chatId: chatId,
-        senderId: testOtherUserId,
-        content: 'Hello! This is a test message.',
-      );
-
-      // Send a reply FROM current user
-      await _chatRepository.sendMessage(
-        chatId: chatId,
-        senderId: _currentUserId!,
-        content: 'Test reply message.',
-      );
-
-      print('✅ SIMPLIFIED test chat created successfully');
-
-      // Show success message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Test chat created! Check your chat list.'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-
-    } catch (e) {
-      print('❌ Error creating SIMPLIFIED test chat: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 5),
-          ),
-        );
-      }
-    }
   }
 
   // Instagram-style Chat Item
