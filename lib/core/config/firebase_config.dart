@@ -42,12 +42,13 @@ class FirebaseConfig {
         // Use existing app but create separate database instance
         print('🔄 Using existing Firebase app for chat database...');
         _app = existingApp;
-        
+
         // Get database instance with your specific database URL
         _database = FirebaseDatabase.instanceFor(
           app: _app!,
           databaseURL: _databaseUrl,
         );
+
       } else {
         // Create new Firebase app if none exists
         final firebaseOptions = FirebaseOptions(
@@ -72,6 +73,7 @@ class FirebaseConfig {
           app: _app!,
           databaseURL: _databaseUrl,
         );
+
       }
 
       // Configure database settings
@@ -81,7 +83,7 @@ class FirebaseConfig {
       print('✅ Firebase initialized successfully');
       print('📍 Project ID: $_projectId');
       print('📍 Database URL: $_databaseUrl');
-      
+
       // Verify connection
       await _verifyConnection();
       
@@ -91,6 +93,7 @@ class FirebaseConfig {
       throw Exception('Firebase initialization failed: $e');
     }
   }
+
 
   /// Configure database settings for better performance
   Future<void> _configureDatabaseSettings() async {
@@ -119,40 +122,43 @@ class FirebaseConfig {
     }
   }
 
-  /// Verify database connection with open access (no auth required)
+  /// Verify database connection with open access
   Future<void> _verifyConnection() async {
     try {
-      print('🔍 Verifying database connection (open access)...');
-      
+      print('🔍 Verifying database connection with open access...');
+
       // Test with a simple write/read to verify open access
       final testRef = _database!.ref('connection_test');
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      
+
       // Try to write test data (this will work if database rules allow open access)
       await testRef.set({
         'timestamp': timestamp,
         'status': 'connected',
-        'message': 'Firebase chat database connection test'
+        'message': 'Firebase chat database connection test - no auth required'
       });
-      
+
       // Try to read it back
       final snapshot = await testRef.get();
       if (snapshot.exists && snapshot.value != null) {
         print('✅ Database connection verified - open access working');
-        
+
         // Clean up test data
         await testRef.remove();
         print('✅ Test data cleaned up');
       } else {
         print('⚠️ Could not verify database read access');
       }
-      
+
       print('✅ Firebase chat database setup complete');
-      
+
     } catch (e) {
       print('❌ Database connection verification failed: $e');
-      print('⚠️ This might be due to restrictive database rules');
-      print('📋 Please set your Firebase Database Rules to:');
+      print('⚠️ Please set your Firebase Database Rules to allow open access:');
+      print('1. Go to https://console.firebase.google.com/');
+      print('2. Select your project: journeyq-bfbbd');
+      print('3. Go to Realtime Database > Rules');
+      print('4. Replace the rules with:');
       print('''
 {
   "rules": {
@@ -161,7 +167,7 @@ class FirebaseConfig {
   }
 }
       ''');
-      // Don't throw error - continue with setup
+      print('5. Click "Publish" to save the rules');
       print('⚠️ Continuing with Firebase setup');
     }
   }
@@ -181,6 +187,7 @@ class FirebaseConfig {
     }
     return _app!;
   }
+
 
   /// Get database reference with specific path
   DatabaseReference getDatabaseReference([String? path]) {
@@ -313,7 +320,7 @@ class FirebaseCredentials {
 }
     ''');
     print('5. Click "Publish" to save the rules');
-    print('⚠️  WARNING: These rules allow anyone to read/write to your database');
-    print('⚠️  Use only for development or implement proper security later');
+    print('ℹ️  This allows the chat functionality to work without authentication');
+    print('ℹ️  Perfect for development and testing');
   }
 }

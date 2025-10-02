@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:journeyq/features/Trip_planner/pages/routemap.dart';
+import 'package:journeyq/features/journey_view/pages/Journeyroute.dart';
 
 class TripPlanViewPage extends StatefulWidget {
   final Map<String, dynamic> tripData;
@@ -13,8 +13,9 @@ class TripPlanViewPage extends StatefulWidget {
 class _TripPlanViewPageState extends State<TripPlanViewPage>
     with TickerProviderStateMixin {
   late TabController _tabController;
-  final GlobalKey<MapRouteWidgetState> _mapKey =
-      GlobalKey<MapRouteWidgetState>();
+  // Using JourneyRouteMapWidget from journey view
+  // API key from journey view for consistency
+  static const String _googleMapsApiKey = 'AIzaSyCFbprhDc_fKXUHl-oYEVGXKD1HciiAsz0';
 
   // Professional Color Scheme
   static const _primaryColor = Color(0xFF2563EB);
@@ -35,6 +36,105 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  // Convert trip planner data to journey data format for the route map
+  Map<String, dynamic> _convertTripToJourneyData() {
+    final itinerary = widget.tripData['dayByDayItinerary'] as List? ?? [];
+    List<Map<String, dynamic>> journeyPlaces = [];
+
+    // Real coordinates for Sri Lankan destinations (from the route map)
+    final Map<String, Map<String, double>> _locationCoordinates = {
+      // Major Cities
+      'colombo': {'latitude': 6.9271, 'longitude': 79.8612},
+      'kandy': {'latitude': 7.2906, 'longitude': 80.6337},
+      'galle': {'latitude': 6.0535, 'longitude': 80.2210},
+      'jaffna': {'latitude': 9.6615, 'longitude': 80.0255},
+      'anuradhapura': {'latitude': 8.3114, 'longitude': 80.4037},
+      'polonnaruwa': {'latitude': 7.9403, 'longitude': 81.0188},
+      'negombo': {'latitude': 7.2084, 'longitude': 79.8438},
+      'trincomalee': {'latitude': 8.5874, 'longitude': 81.2152},
+      'batticaloa': {'latitude': 7.7210, 'longitude': 81.7000},
+      'matara': {'latitude': 5.9549, 'longitude': 80.5550},
+
+      // Popular Tourist Destinations
+      'nuwara eliya': {'latitude': 6.9497, 'longitude': 80.7891},
+      'ella': {'latitude': 6.8667, 'longitude': 81.0463},
+      'sigiriya': {'latitude': 7.9568, 'longitude': 80.7603},
+      'dambulla': {'latitude': 7.8562, 'longitude': 80.6518},
+      'hikkaduwa': {'latitude': 6.1391, 'longitude': 80.0992},
+      'unawatuna': {'latitude': 6.0108, 'longitude': 80.2494},
+      'mirissa': {'latitude': 5.9487, 'longitude': 80.4617},
+      'bentota': {'latitude': 6.4258, 'longitude': 79.9919},
+      'arugam bay': {'latitude': 6.8407, 'longitude': 81.8344},
+      'yala': {'latitude': 6.3725, 'longitude': 81.5067},
+      'udawalawe': {'latitude': 6.4458, 'longitude': 80.8883},
+      'horton plains': {'latitude': 6.8089, 'longitude': 80.8052},
+      'adams peak': {'latitude': 6.8092, 'longitude': 80.4989},
+      'pidurangala': {'latitude': 7.9697, 'longitude': 80.7542},
+    };
+
+    // Function to get coordinates for a place name
+    Map<String, double> _getCoordinatesForPlace(String placeName, int dayIndex, int placeIndex) {
+      String searchKey = placeName.toLowerCase().trim();
+
+      // Direct match
+      if (_locationCoordinates.containsKey(searchKey)) {
+        return _locationCoordinates[searchKey]!;
+      }
+
+      // Partial match
+      for (String key in _locationCoordinates.keys) {
+        if (key.contains(searchKey) || searchKey.contains(key)) {
+          return _locationCoordinates[key]!;
+        }
+      }
+
+      // If no match found, generate coordinates in a realistic spread around Sri Lanka
+      List<Map<String, double>> baseLocations = [
+        {'latitude': 6.9271, 'longitude': 79.8612}, // Colombo
+        {'latitude': 7.2906, 'longitude': 80.6337}, // Kandy
+        {'latitude': 6.9497, 'longitude': 80.7891}, // Nuwara Eliya
+        {'latitude': 6.0535, 'longitude': 80.2210}, // Galle
+        {'latitude': 8.3114, 'longitude': 80.4037}, // Anuradhapura
+      ];
+
+      Map<String, double> base = baseLocations[dayIndex % baseLocations.length];
+      double latOffset = (placeIndex * 0.02) - 0.01;
+      double lngOffset = (placeIndex * 0.02) - 0.01;
+
+      return {
+        'latitude': base['latitude']! + latOffset,
+        'longitude': base['longitude']! + lngOffset,
+      };
+    }
+
+    // Convert each day's places to journey format
+    for (int dayIndex = 0; dayIndex < itinerary.length; dayIndex++) {
+      final dayData = itinerary[dayIndex];
+      final places = dayData['places'] as List? ?? [];
+
+      for (int placeIndex = 0; placeIndex < places.length; placeIndex++) {
+        final place = places[placeIndex];
+        final placeName = place['name'] ?? 'Unknown Place';
+        final coordinates = _getCoordinatesForPlace(placeName, dayIndex, placeIndex);
+
+        journeyPlaces.add({
+          'name': placeName,
+          'location': {
+            'latitude': coordinates['latitude'],
+            'longitude': coordinates['longitude'],
+          },
+          'trip_mood': (place['activities'] as List?)?.join(', ') ?? '',
+          'images': ['placeholder_profile.png'], // Default placeholder
+          'profileImage': 'placeholder_profile.png',
+        });
+      }
+    }
+
+    return {
+      'places': journeyPlaces,
+    };
   }
 
   // Professional Card Widget
@@ -211,9 +311,6 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
   // Show specific day on map
   void _showDayOnMap(Map<String, dynamic> dayData) {
     _tabController.animateTo(1);
-    Future.delayed(const Duration(milliseconds: 300), () {
-      _mapKey.currentState?.focusOnDay(dayData);
-    });
   }
 
   // Enhanced Itinerary Section with Header
@@ -608,10 +705,13 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
             padding: const EdgeInsets.all(16),
             child: _buildEnhancedItinerary(),
           ),
-          // Map Tab - Using the separated MapRouteWidget
+          // Map Tab - Using the JourneyRouteMapWidget from journey view
           SingleChildScrollView(
             padding: const EdgeInsets.all(16),
-            child: MapRouteWidget(key: _mapKey, tripData: widget.tripData),
+            child: JourneyRouteMapWidget(
+              journeyData: _convertTripToJourneyData(),
+              googleMapsApiKey: _googleMapsApiKey,
+            ),
           ),
           // Tips Tab
           SingleChildScrollView(

@@ -24,7 +24,12 @@ void main() async {
   ApiService.initialize(authProvider);
 
   // Initialize ChatRepository with the auth provider
-  await ChatRepository().initialize(authProvider);
+  try {
+    await ChatRepository().initialize(authProvider);
+  } catch (e) {
+    print('❌ Failed to initialize Chat Repository: $e');
+    print('ℹ️ Chat functionality may be limited');
+  }
 
   runApp(TravelApp());
 }

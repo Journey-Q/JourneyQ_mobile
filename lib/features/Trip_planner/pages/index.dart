@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:journeyq/features/Trip_planner/data.dart';
 import 'package:journeyq/features/Trip_planner/pages/planpage.dart';
+import 'package:journeyq/core/services/gemini_ai_service.dart';
+import 'package:journeyq/core/config/gemini_config.dart';
 
 class TripPlannerPage extends StatefulWidget {
   const TripPlannerPage({Key? key}) : super(key: key);
@@ -25,6 +27,7 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
   String _selectedBudget = 'Mid-range (Rs.5,000-25,000/day)'; // Fixed: Changed to match exact string from list
   List<String> _selectedMoods = [];
   bool _isLoading = false;
+  List<String> _parsedDestinations = [];
 
   // Options - Fixed: Removed duplicate and corrected budget ranges
   final List<String> _budgetOptions = [
@@ -45,10 +48,41 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // Listen to destination changes to parse destinations
+    _destinationController.addListener(_parseDestinations);
+  }
+
+  @override
   void dispose() {
     _destinationController.dispose();
     _tripDescriptionController.dispose();
     super.dispose();
+  }
+
+  // Parse destinations from comma-separated input
+  void _parseDestinations() {
+    final input = _destinationController.text.trim();
+    if (input.isNotEmpty) {
+      final destinations = input
+          .split(',')
+          .map((d) => d.trim())
+          .where((d) => d.isNotEmpty)
+          .toList();
+
+      if (destinations != _parsedDestinations) {
+        setState(() {
+          _parsedDestinations = destinations;
+        });
+      }
+    } else {
+      if (_parsedDestinations.isNotEmpty) {
+        setState(() {
+          _parsedDestinations = [];
+        });
+      }
+    }
   }
 
   // UI Helper Methods
@@ -161,7 +195,7 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Where would you like to explore?',
+            'Enter destinations separated by commas (e.g., Kandy, Ella, Galle)',
             style: TextStyle(
               fontSize: 13,
               color: Colors.grey[600],
@@ -177,7 +211,7 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
               color: Colors.black87,
             ),
             decoration: InputDecoration(
-              hintText: 'Kandy, Nuwareliya, Jaffna, Colombo...',
+              hintText: 'Kandy, Ella, Galle, Colombo, Sigiriya...',
               hintStyle: TextStyle(
                 color: Colors.grey[400],
                 fontSize: 15,
@@ -224,6 +258,52 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
               return null;
             },
           ),
+          // Show parsed destinations preview
+          if (_parsedDestinations.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              'Destinations (${_parsedDestinations.length}):',
+              style: const TextStyle(
+                fontSize: 12,
+                color: primaryBlue,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: _parsedDestinations.map((destination) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: primaryBlue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: primaryBlue.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.location_on_rounded,
+                        color: primaryBlue,
+                        size: 12,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        destination,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: primaryBlue,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
         ],
       ),
     );
@@ -673,16 +753,102 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
     }
 
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 2));
-    setState(() => _isLoading = false);
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            TripPlanViewPage(tripData: TripPlannerData.sampleItinerary),
-      ),
-    );
+    try {
+      print('🤖 Generating itinerary with Gemini AI...');
+
+      // Check if Gemini API is configured
+      if (!GeminiConfig.isConfigured) {
+        print('⚠️ Gemini API key not configured, using sample data');
+        setState(() => _isLoading = false);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('AI generation requires API key configuration. Using sample itinerary.'),
+              backgroundColor: Colors.orange,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          );
+
+          // Navigate with sample data
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  TripPlanViewPage(tripData: TripPlannerData.sampleItinerary),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Generate itinerary using Gemini AI
+      final aiItinerary = await GeminiAIService.generateTripItinerary(
+        destinations: _destinationController.text.trim(),
+        numberOfDays: _numberOfDays,
+        numberOfPersons: _numberOfPersons,
+        budget: _selectedBudget,
+        tripMoods: _selectedMoods,
+        tripDescription: _tripDescriptionController.text.trim().isNotEmpty
+            ? _tripDescriptionController.text.trim()
+            : null,
+      );
+
+      setState(() => _isLoading = false);
+
+      if (aiItinerary != null) {
+        print('✅ AI itinerary generated successfully');
+
+        // Navigate to the generated itinerary
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TripPlanViewPage(tripData: aiItinerary),
+            ),
+          );
+        }
+      } else {
+        print('❌ Failed to generate AI itinerary, using sample data');
+
+        // Show error and fallback to sample data
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('AI generation failed. Using sample itinerary.'),
+              backgroundColor: Colors.orange,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          );
+
+          // Navigate with sample data as fallback
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  TripPlanViewPage(tripData: TripPlannerData.sampleItinerary),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('❌ Error in itinerary generation: $e');
+      setState(() => _isLoading = false);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Error generating itinerary. Please try again.'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -745,7 +911,7 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
               const SizedBox(height: 24),
               _buildGradientButton(
                 onPressed: _generateItinerary,
-                text: 'Generate journey',
+                text: _isLoading ? 'Generating with AI...' : 'Generate AI Journey',
                 isLoading: _isLoading,
               ),
               const SizedBox(height: 20),
