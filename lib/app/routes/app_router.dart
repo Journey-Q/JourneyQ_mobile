@@ -474,10 +474,16 @@ class AppRouter {
         TransitionGoRoute(
           path: '/user-profile/:userId/:userName',
           builder: (context, state) {
-            final userId = state.pathParameters['userId']!;
-            final userName = Uri.decodeComponent(
-              state.pathParameters['userName']!,
-            );
+            final userId = state.pathParameters['userId'] ?? '';
+            final userNameParam = state.pathParameters['userName'] ?? '';
+            
+            // Validate parameters before creating the page
+            if (userId.isEmpty || userNameParam.isEmpty) {
+              // Redirect to home if parameters are invalid
+              return AppWrapper(currentRoute: '/home', child: HomePage());
+            }
+            
+            final userName = Uri.decodeComponent(userNameParam);
             return UserProfilePage(userId: userId, userName: userName);
           },
           transitionType: PageTransitionType.slide,
@@ -511,7 +517,7 @@ class AppRouter {
           path: '/journey/:journeyId',
           builder: (context, state) {
             final journeyId = state.pathParameters['journeyId']!;
-            return JourneyDetailsPage(journeyId: journeyId);
+            return JourneyDetailsPage(postId: journeyId); // journeyId is actually postId
           },
           transitionType: PageTransitionType.slide,
         ),
@@ -526,8 +532,49 @@ class AppRouter {
           path: '/chat/:chatId',
           builder: (context, state) {
             final chatId = state.pathParameters['chatId']!;
-            final chatData = state.extra as Map<String, dynamic>;
-            return IndividualChatPage(chatId: chatId, chatData: chatData);
+            final extraData = state.extra as Map<String, dynamic>?;
+            
+            // Extract required parameters from extra data
+            final otherUserId = extraData?['otherUserId'] ?? '';
+            final currentUserId = extraData?['currentUserId'] ?? '';
+            final otherUserName = extraData?['otherUserName'];
+            
+            return IndividualChatPage(
+              chatId: chatId,
+              otherUserId: otherUserId,
+              currentUserId: currentUserId,
+              otherUserName: otherUserName,
+            );
+          },
+          transitionType: PageTransitionType.slide,
+          // Custom animation duration
+        ),
+
+        TransitionGoRoute(
+          path: '/chat/individual',
+          builder: (context, state) {
+            final extraData = state.extra as Map<String, dynamic>?;
+            
+            // Extract required parameters from extra data
+            final chatId = extraData?['chatId'] ?? '';
+            final otherUserId = extraData?['otherUserId'] ?? '';
+            final currentUserId = extraData?['currentUserId'] ?? '';
+            final otherUserName = extraData?['otherUserName'] ?? extraData?['otherUserDisplayName'];
+            final otherUserProfileUrl = extraData?['otherUserProfileUrl'];
+            
+            // Validate required parameters
+            if (chatId.isEmpty || otherUserId.isEmpty || currentUserId.isEmpty) {
+              print('❌ Invalid chat parameters - redirecting to chat index');
+              return const ChatPage(); // Fallback to chat list
+            }
+            
+            return IndividualChatPage(
+              chatId: chatId,
+              otherUserId: otherUserId,
+              currentUserId: currentUserId,
+              otherUserName: otherUserName,
+              otherUserProfileUrl: otherUserProfileUrl,
+            );
           },
           transitionType: PageTransitionType.slide,
           // Custom animation duration

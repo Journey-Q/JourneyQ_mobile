@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:journeyq/core/config/google_maps_config.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'dart:math' as math;
 
 class MapRouteWidget extends StatefulWidget {
@@ -17,9 +20,13 @@ class MapRouteWidgetState extends State<MapRouteWidget> {
   Set<Polyline> _polylines = {};
   List<LatLng> _routePoints = [];
   bool _isMapLoading = true;
+  bool _isCalculatingRoute = false;
   String _routeInfo = "";
+  String _totalDistance = "";
+  String _estimatedTime = "";
   Map<int, List<LatLng>> _dayRoutes = {}; // Store routes for each day
   MapType _currentMapType = MapType.normal; // Track current map type
+  bool _hasGoogleRoute = false; // Track if we have a Google Maps route
   
   // Professional Color Scheme
   static const _primaryColor = Color(0xFF2563EB);
@@ -150,92 +157,174 @@ class MapRouteWidgetState extends State<MapRouteWidget> {
     );
   }
 
-  // Initialize map markers and routes from trip data
-  void _initializeMapMarkers() {
+  // Initialize map markers and routes from trip data with Google Maps routing
+  void _initializeMapMarkers() async {
     final itinerary = widget.tripData['dayByDayItinerary'] as List? ?? [];
     List<LatLng> allPoints = [];
     int totalPlaces = 0;
-    
-    for (int dayIndex = 0; dayIndex < itinerary.length; dayIndex++) {
-      final dayData = itinerary[dayIndex];
-      final places = dayData['places'] as List? ?? [];
-      List<LatLng> dayPoints = [];
-      
-      for (int placeIndex = 0; placeIndex < places.length; placeIndex++) {
-        final place = places[placeIndex];
-        final placeName = place['name'] ?? 'Unknown Place';
-        
-        // Get real coordinates for the place
-        final position = _getCoordinatesForPlace(placeName, dayIndex, placeIndex);
-        
-        allPoints.add(position);
-        dayPoints.add(position);
-        totalPlaces++;
-        
-        // Create custom marker icon based on day and position
-        BitmapDescriptor markerIcon;
-        if (dayIndex == 0 && placeIndex == 0) {
-          markerIcon = BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen); // Start
-        } else if (dayIndex == itinerary.length - 1 && placeIndex == places.length - 1) {
-          markerIcon = BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed); // End
-        } else {
-          // Different colors for different days
-          markerIcon = BitmapDescriptor.defaultMarkerWithHue(_getDayMarkerHue(dayIndex));
-        }
-        
-        _markers.add(
-          Marker(
-            markerId: MarkerId('day_${dayIndex}_place_$placeIndex'),
-            position: position,
-            infoWindow: InfoWindow(
-              title: placeName,
-              snippet: 'Day ${dayData['day']} - ${dayData['city']} - Stop $totalPlaces',
-            ),
-            icon: markerIcon,
-          ),
-        );
-      }
-      
-      // Store day routes
-      if (dayPoints.isNotEmpty) {
-        _dayRoutes[dayIndex] = dayPoints;
-        
-        // Create polyline for each day with distinct colors
-        if (dayPoints.length > 1) {
-          _polylines.add(
-            Polyline(
-              polylineId: PolylineId('day_$dayIndex'),
-              points: dayPoints,
-              color: _getDayRouteColor(dayIndex),
-              width: 4,
-              patterns: [], // Solid line for day routes
+
+    try {
+      // Create markers first
+      for (int dayIndex = 0; dayIndex < itinerary.length; dayIndex++) {
+        final dayData = itinerary[dayIndex];
+        final places = dayData['places'] as List? ?? [];
+        List<LatLng> dayPoints = [];
+
+        for (int placeIndex = 0; placeIndex < places.length; placeIndex++) {
+          final place = places[placeIndex];
+          final placeName = place['name'] ?? 'Unknown Place';
+
+          // Get real coordinates for the place
+          final position = _getCoordinatesForPlace(placeName, dayIndex, placeIndex);
+
+          allPoints.add(position);
+          dayPoints.add(position);
+          totalPlaces++;
+
+          // Create marker icon using journey view approach
+          BitmapDescriptor markerIcon;
+          if (dayIndex == 0 && placeIndex == 0) {
+            markerIcon = BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen); // Start
+          } else if (dayIndex == itinerary.length - 1 && placeIndex == places.length - 1) {
+            markerIcon = BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed); // End
+          } else {
+            // Different colors for different days
+            markerIcon = BitmapDescriptor.defaultMarkerWithHue(_getDayMarkerHue(dayIndex));
+          }
+
+          _markers.add(
+            Marker(
+              markerId: MarkerId('day_${dayIndex}_place_$placeIndex'),
+              position: position,
+              infoWindow: InfoWindow(
+                title: placeName,
+                snippet: 'Day ${dayData['day']} - ${dayData['city']}',
+              ),
+              icon: markerIcon,
             ),
           );
         }
+
+        // Store day routes
+        if (dayPoints.isNotEmpty) {
+          _dayRoutes[dayIndex] = dayPoints;
+        }
       }
+
+      // Calculate Google Maps route using journey view approach
+      if (allPoints.length > 1) {
+        _routePoints = allPoints;
+        await _getDirectionsForTrip(allPoints, totalPlaces, itinerary.length);
+      }
+
+    } catch (e) {
+      print('❌ Error initializing map markers: $e');
+      // Error handled gracefully with fallback routes
     }
-    
-    // Create main route connecting all points in BLUE
-    if (allPoints.length > 1) {
-      _routePoints = allPoints;
-      _polylines.add(
-        Polyline(
-          polylineId: const PolylineId('main_route'),
-          points: allPoints,
-          color: const Color(0xFF2196F3), // Blue color for main route
-          width: 5,
-          patterns: [PatternItem.dash(15), PatternItem.gap(8)], // Dashed line for main route
-        ),
-      );
-      
-      // Calculate route info
-      double totalDistance = _calculateTotalDistance(allPoints);
-      _routeInfo = "${totalPlaces} stops • ${totalDistance.toStringAsFixed(1)} km estimated • ${itinerary.length} days";
-    }
-    
+
     setState(() {
       _isMapLoading = false;
     });
+  }
+
+  // Calculate Google Maps route using the same approach as journey view
+  Future<void> _getDirectionsForTrip(List<LatLng> points, int totalPlaces, int totalDays) async {
+    if (points.length < 2) return;
+
+    setState(() {
+      _isCalculatingRoute = true;
+    });
+
+    try {
+      String origin = '${points.first.latitude},${points.first.longitude}';
+      String destination = '${points.last.latitude},${points.last.longitude}';
+
+      String waypoints = '';
+      if (points.length > 2) {
+        List<String> waypointStrings = [];
+        for (int i = 1; i < points.length - 1; i++) {
+          waypointStrings.add('${points[i].latitude},${points[i].longitude}');
+        }
+        waypoints = '&waypoints=' + waypointStrings.join('|');
+      }
+
+      final String url = 'https://maps.googleapis.com/maps/api/directions/json?'
+          'origin=$origin'
+          '&destination=$destination'
+          '$waypoints'
+          '&key=${GoogleMapsConfig.apiKey}'
+          '&mode=driving'
+          '&optimize=true';
+
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        if (data['status'] == 'OK' && data['routes'].isNotEmpty) {
+          final route = data['routes'][0];
+          final polylinePoints = _decodePolyline(route['overview_polyline']['points']);
+
+          int totalDistanceValue = 0;
+          int totalDurationValue = 0;
+
+          for (var leg in route['legs']) {
+            totalDistanceValue += leg['distance']['value'] as int;
+            totalDurationValue += leg['duration']['value'] as int;
+          }
+
+          _totalDistance = _formatDistance(totalDistanceValue);
+          _estimatedTime = _formatDuration(totalDurationValue);
+
+          setState(() {
+            _polylines = {
+              Polyline(
+                polylineId: const PolylineId('google_route'),
+                points: polylinePoints,
+                color: const Color(0xFF2196F3),
+                width: 5,
+                patterns: [],
+              ),
+            };
+            _hasGoogleRoute = true;
+          });
+
+          _routeInfo = "${totalPlaces} stops • $_totalDistance • $_estimatedTime • ${totalDays} days";
+        } else {
+          _createFallbackRoute(points, totalPlaces, totalDays);
+        }
+      } else {
+        _createFallbackRoute(points, totalPlaces, totalDays);
+      }
+
+    } catch (e) {
+      _createFallbackRoute(points, totalPlaces, totalDays);
+    } finally {
+      setState(() {
+        _isCalculatingRoute = false;
+      });
+    }
+  }
+
+  // Fallback route using straight lines
+  void _createFallbackRoute(List<LatLng> points, int totalPlaces, int totalDays) {
+    setState(() {
+      _polylines = {
+        Polyline(
+          polylineId: const PolylineId('fallback_route'),
+          points: points,
+          color: const Color(0xFF2196F3),
+          width: 4,
+          patterns: [PatternItem.dash(10), PatternItem.gap(5)],
+        ),
+      };
+      _hasGoogleRoute = false;
+    });
+
+    double totalDistance = _calculateTotalDistance(points);
+    _totalDistance = "~${totalDistance.toStringAsFixed(1)} km";
+    _estimatedTime = "~${(totalDistance / 60 * 60).toStringAsFixed(0)} min";
+    _routeInfo = "${totalPlaces} stops • $_totalDistance • $_estimatedTime • ${totalDays} days";
   }
 
   // Get marker hue for different days
@@ -278,18 +367,79 @@ class MapRouteWidgetState extends State<MapRouteWidget> {
   // Calculate distance between two points using Haversine formula
   double _calculateDistance(LatLng point1, LatLng point2) {
     const double earthRadius = 6371; // Earth's radius in kilometers
-    
+
     double lat1Rad = point1.latitude * (math.pi / 180);
     double lat2Rad = point2.latitude * (math.pi / 180);
     double deltaLatRad = (point2.latitude - point1.latitude) * (math.pi / 180);
     double deltaLngRad = (point2.longitude - point1.longitude) * (math.pi / 180);
-    
+
     double a = math.sin(deltaLatRad / 2) * math.sin(deltaLatRad / 2) +
         math.cos(lat1Rad) * math.cos(lat2Rad) *
         math.sin(deltaLngRad / 2) * math.sin(deltaLngRad / 2);
     double c = 2 * math.asin(math.sqrt(a));
-    
+
     return earthRadius * c;
+  }
+
+  // Decode Google Maps polyline (same as journey view)
+  List<LatLng> _decodePolyline(String polyline) {
+    List<LatLng> points = [];
+    int index = 0;
+    int len = polyline.length;
+    int lat = 0;
+    int lng = 0;
+
+    while (index < len) {
+      int b;
+      int shift = 0;
+      int result = 0;
+
+      do {
+        b = polyline.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+
+      int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+
+      do {
+        b = polyline.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+
+      int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
+
+      points.add(LatLng(lat / 1E5, lng / 1E5));
+    }
+
+    return points;
+  }
+
+  // Format distance (same as journey view)
+  String _formatDistance(int meters) {
+    if (meters < 1000) {
+      return '${meters}m';
+    } else {
+      return '${(meters / 1000).toStringAsFixed(1)}km';
+    }
+  }
+
+  // Format duration (same as journey view)
+  String _formatDuration(int seconds) {
+    int hours = seconds ~/ 3600;
+    int minutes = (seconds % 3600) ~/ 60;
+
+    if (hours > 0) {
+      return '${hours}h ${minutes}m';
+    } else {
+      return '${minutes}m';
+    }
   }
 
   // Professional Card Widget
@@ -371,7 +521,7 @@ class MapRouteWidgetState extends State<MapRouteWidget> {
 
   // Google Maps View with Professional Route
   Widget _buildMapView() {
-    if (_isMapLoading) {
+    if (_isMapLoading || _isCalculatingRoute) {
       return Container(
         height: 450,
         child: Center(
@@ -381,12 +531,25 @@ class MapRouteWidgetState extends State<MapRouteWidget> {
               const CircularProgressIndicator(),
               const SizedBox(height: 16),
               Text(
-                'Loading your route map...',
+                _isCalculatingRoute
+                    ? 'Calculating optimal route with Google Maps...'
+                    : 'Loading your route map...',
                 style: TextStyle(
                   color: _textSecondary,
                   fontSize: 16,
                 ),
+                textAlign: TextAlign.center,
               ),
+              if (_isCalculatingRoute) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Finding the shortest path between destinations',
+                  style: TextStyle(
+                    color: _textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -450,7 +613,7 @@ class MapRouteWidgetState extends State<MapRouteWidget> {
                 minMaxZoomPreference: const MinMaxZoomPreference(5.0, 18.0),
               ),
               
-              // Enhanced Route Info Panel
+              // Route Info Panel (journey view style)
               if (_routeInfo.isNotEmpty)
                 Positioned(
                   top: 16,
@@ -487,13 +650,27 @@ class MapRouteWidgetState extends State<MapRouteWidget> {
                         ),
                         const SizedBox(width: 14),
                         Expanded(
-                          child: Text(
-                            _routeInfo,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: _textPrimary,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _routeInfo,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: _textPrimary,
+                                ),
+                              ),
+                              if (_hasGoogleRoute)
+                                Text(
+                                  'Google Route',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.green[700],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                         Container(
@@ -584,7 +761,7 @@ class MapRouteWidgetState extends State<MapRouteWidget> {
               
 
               
-              // Enhanced Route Legend
+              // Enhanced Route Legend with Google Maps info
               Positioned(
                 bottom: 16,
                 left: 16,
@@ -605,19 +782,45 @@ class MapRouteWidgetState extends State<MapRouteWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        'Route Legend',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: _textPrimary,
-                        ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.info_outline, size: 14, color: _textPrimary),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Route Legend',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: _textPrimary,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
-                      _buildLegendItem(Colors.green, 'Start'),
-                      _buildLegendItem(const Color(0xFF2196F3), 'Main Route'),
-                      _buildLegendItem(Colors.red, 'End'),
-                      _buildLegendItem(Colors.orange, 'Day Stops'),
+                      _buildLegendItem(Colors.green, 'Start Point'),
+                      _buildLegendItem(const Color(0xFF2196F3), _hasGoogleRoute ? 'Optimal Route' : 'Estimated Route'),
+                      _buildLegendItem(Colors.red, 'End Point'),
+                      _buildLegendItem(Colors.orange, 'Attractions'),
+                      _buildLegendItem(Colors.indigo, 'Hotels'),
+                      if (_hasGoogleRoute) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.check_circle, size: 12, color: Colors.green),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Google Maps Powered',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.green[700],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -727,7 +930,7 @@ class MapRouteWidgetState extends State<MapRouteWidget> {
     }
   }
   
-  // Show enhanced route details
+  // Show route details (journey view style)
   void _showRouteDetails() {
     showDialog(
       context: context,
@@ -747,15 +950,19 @@ class MapRouteWidgetState extends State<MapRouteWidget> {
             children: [
               _buildDetailRow('Total Stops', '${_routePoints.length}'),
               _buildDetailRow('Total Days', '${_dayRoutes.length}'),
-              _buildDetailRow('Estimated Distance', '${_calculateTotalDistance(_routePoints).toStringAsFixed(1)} km'),
+              if (_totalDistance.isNotEmpty)
+                _buildDetailRow('Distance', _totalDistance),
+              if (_estimatedTime.isNotEmpty)
+                _buildDetailRow('Travel Time', _estimatedTime),
+              _buildDetailRow('Route Type', _hasGoogleRoute ? 'Google Maps Route' : 'Estimated Route'),
+
               const SizedBox(height: 16),
               const Text(
                 'Route Details:',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              const Text('• Blue dashed line: Complete journey route'),
-              const Text('• Colored solid lines: Daily routes'),
+              Text('• ${_hasGoogleRoute ? 'Blue solid line: Optimized Google route' : 'Blue dashed line: Estimated route'}'),
               const Text('• Green marker: Starting point'),
               const Text('• Colored markers: Daily stops'),
               const Text('• Red marker: Final destination'),

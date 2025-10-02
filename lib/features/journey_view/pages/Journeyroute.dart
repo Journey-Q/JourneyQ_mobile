@@ -61,6 +61,9 @@ class _JourneyRouteMapWidgetState extends State<JourneyRouteMapWidget> {
       _isLoadingLocation = true;
     });
 
+    // Test API first
+    await _testDirectionsAPI();
+
     await _getCurrentLocation();
     
     final places = widget.journeyData['places'] as List? ?? [];
@@ -540,29 +543,39 @@ class _JourneyRouteMapWidgetState extends State<JourneyRouteMapWidget> {
           '&destination=$destination'
           '$waypoints'
           '&key=${widget.googleMapsApiKey}'
-          '&mode=driving'
-          '&optimize=true';
-      
+          '&mode=driving';
+
+      if (kDebugMode) {
+        print('🚀 Requesting Google Maps route through ${_journeyPlaces.length} waypoints in order');
+        print('📍 API Key: ${widget.googleMapsApiKey.substring(0, 10)}...');
+        print('🔗 Full URL: $url');
+      }
+
       final response = await http.get(Uri.parse(url));
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        
+
+        if (kDebugMode) {
+          print('📋 API Response Status: ${data['status']}');
+          print('📋 API Response: ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}...');
+        }
+
         if (data['status'] == 'OK' && data['routes'].isNotEmpty) {
           final route = data['routes'][0];
           final polylinePoints = _decodePolyline(route['overview_polyline']['points']);
-          
+
           int totalDistanceValue = 0;
           int totalDurationValue = 0;
-          
+
           for (var leg in route['legs']) {
             totalDistanceValue += leg['distance']['value'] as int;
             totalDurationValue += leg['duration']['value'] as int;
           }
-          
+
           _totalDistance = _formatDistance(totalDistanceValue);
           _estimatedTime = _formatDuration(totalDurationValue);
-          
+
           setState(() {
             _polylines = {
               Polyline(
@@ -574,14 +587,27 @@ class _JourneyRouteMapWidgetState extends State<JourneyRouteMapWidget> {
               ),
             };
           });
+
+          if (kDebugMode) {
+            print('✅ Google Maps: Successfully loaded natural route with ${polylinePoints.length} road points');
+          }
         } else {
+          if (kDebugMode) {
+            print('❌ Google Directions API: ${data['status']} - ${data['error_message'] ?? 'No routes found'}');
+          }
           _createFallbackRoute();
         }
       } else {
+        if (kDebugMode) {
+          print('❌ Google Directions API: HTTP ${response.statusCode} - ${response.body}');
+        }
         _createFallbackRoute();
       }
       
     } catch (e) {
+      if (kDebugMode) {
+        print('❌ Google Directions API: Exception occurred - $e');
+      }
       _createFallbackRoute();
     } finally {
       setState(() {
@@ -592,22 +618,135 @@ class _JourneyRouteMapWidgetState extends State<JourneyRouteMapWidget> {
 
   void _createFallbackRoute() {
     if (_userCurrentLocation == null) return;
-    
-    List<LatLng> routePoints = [_userCurrentLocation!, ..._journeyPlaces];
-    
+
+    if (kDebugMode) {
+      print('⚠️ Attempting enhanced fallback route with individual segments');
+    }
+
+    _createEnhancedFallbackRoute();
+  }
+
+  Future<void> _createEnhancedFallbackRoute() async {
+    if (_userCurrentLocation == null || _journeyPlaces.isEmpty) return;
+
+    List<LatLng> allRoutePoints = [];
+    List<LatLng> allPoints = [_userCurrentLocation!, ..._journeyPlaces];
+    double totalDistance = 0;
+
+    // Try to get routes for individual segments
+    for (int i = 0; i < allPoints.length - 1; i++) {
+      LatLng start = allPoints[i];
+      LatLng end = allPoints[i + 1];
+
+      try {
+        final segmentPoints = await _getRouteSegment(start, end);
+        if (segmentPoints.isNotEmpty) {
+          // Remove duplicate points at connections
+          if (allRoutePoints.isNotEmpty && segmentPoints.first == allRoutePoints.last) {
+            allRoutePoints.addAll(segmentPoints.skip(1));
+          } else {
+            allRoutePoints.addAll(segmentPoints);
+          }
+        } else {
+          // Fallback to straight line for this segment
+          if (allRoutePoints.isEmpty || allRoutePoints.last != start) {
+            allRoutePoints.add(start);
+          }
+          allRoutePoints.add(end);
+        }
+      } catch (e) {
+        // Fallback to straight line for this segment
+        if (allRoutePoints.isEmpty || allRoutePoints.last != start) {
+          allRoutePoints.add(start);
+        }
+        allRoutePoints.add(end);
+      }
+
+      totalDistance += _calculateDistance(start, end);
+    }
+
+    if (allRoutePoints.isEmpty) {
+      // Ultimate fallback - straight lines
+      allRoutePoints = allPoints;
+      if (kDebugMode) {
+        print('⚠️ Using straight line fallback');
+      }
+    }
+
     setState(() {
       _polylines = {
         Polyline(
-          polylineId: const PolylineId('fallback_route'),
-          points: routePoints,
+          polylineId: const PolylineId('enhanced_route'),
+          points: allRoutePoints,
           color: _primaryBlue,
           width: 4,
-          patterns: [PatternItem.dash(10), PatternItem.gap(5)],
+          patterns: [], // Solid line for enhanced route
         ),
       };
-      _totalDistance = "~${_calculateApproximateDistance(routePoints).toStringAsFixed(1)} km";
-      _estimatedTime = "~${(_calculateApproximateDistance(routePoints) / 60 * 60).toStringAsFixed(0)} min";
+      _totalDistance = "~${totalDistance.toStringAsFixed(1)} km";
+      _estimatedTime = "~${(totalDistance / 60 * 60).toStringAsFixed(0)} min";
     });
+  }
+
+  Future<List<LatLng>> _getRouteSegment(LatLng start, LatLng end) async {
+    try {
+      final String url = 'https://maps.googleapis.com/maps/api/directions/json?'
+          'origin=${start.latitude},${start.longitude}'
+          '&destination=${end.latitude},${end.longitude}'
+          '&key=${widget.googleMapsApiKey}'
+          '&mode=driving';
+
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        if (data['status'] == 'OK' && data['routes'].isNotEmpty) {
+          final route = data['routes'][0];
+          return _decodePolyline(route['overview_polyline']['points']);
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to get segment route: $e');
+      }
+    }
+
+    return []; // Return empty list if failed
+  }
+
+  Future<void> _testDirectionsAPI() async {
+    if (kDebugMode) {
+      print('🧪 Testing Google Directions API...');
+
+      // Test with simple Colombo to Kandy route
+      final testUrl = 'https://maps.googleapis.com/maps/api/directions/json?'
+          'origin=6.9271,79.8612'  // Colombo
+          '&destination=7.2906,80.6337'  // Kandy
+          '&key=${widget.googleMapsApiKey}';
+
+      try {
+        final response = await http.get(Uri.parse(testUrl));
+        print('🧪 Test API Response Status: ${response.statusCode}');
+
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          print('🧪 Test API Data Status: ${data['status']}');
+
+          if (data['status'] == 'REQUEST_DENIED') {
+            print('❌ API KEY ISSUE: ${data['error_message']}');
+          } else if (data['status'] == 'OK') {
+            print('✅ Directions API is working correctly!');
+          } else {
+            print('⚠️ API Status: ${data['status']} - ${data['error_message'] ?? 'Unknown error'}');
+          }
+        } else {
+          print('❌ HTTP Error: ${response.statusCode} - ${response.body}');
+        }
+      } catch (e) {
+        print('❌ Exception during API test: $e');
+      }
+    }
   }
 
   List<LatLng> _decodePolyline(String polyline) {
@@ -1194,8 +1333,8 @@ class _JourneyRouteMapWidgetState extends State<JourneyRouteMapWidget> {
                                 }
                               },
                               initialCameraPosition: CameraPosition(
-                                target: _journeyPlaces.isNotEmpty 
-                                    ? _journeyPlaces.first 
+                                target: _journeyPlaces.isNotEmpty
+                                    ? _journeyPlaces.first
                                     : _userCurrentLocation ?? const LatLng(6.9271, 79.8612),
                                 zoom: 10.0,
                               ),
@@ -1213,6 +1352,11 @@ class _JourneyRouteMapWidgetState extends State<JourneyRouteMapWidget> {
                               mapToolbarEnabled: false,
                               buildingsEnabled: true,
                               minMaxZoomPreference: const MinMaxZoomPreference(6.0, 18.0),
+                              gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                                Factory<OneSequenceGestureRecognizer>(
+                                  () => EagerGestureRecognizer(),
+                                ),
+                              },
                             ),
                             
                             Positioned(

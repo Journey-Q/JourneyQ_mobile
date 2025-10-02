@@ -3,24 +3,22 @@ import 'package:journeyq/features/create_trip/pages/widget.dart';
 import 'package:journeyq/data/models/journey_model/joureny_model.dart';
 import 'package:journeyq/features/create_trip/pages/add_place.dart';
 import 'package:journeyq/shared/widgets/dialog/show_dialog.dart';
+import 'package:journeyq/data/repositories/post_repository/post_repository.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
 import 'dart:ui';
 
-// Comprehensive Submission Data Model
+// Backend Submission Data Model
 class JourneySubmissionData {
   final String journeyTitle;
   final int numberOfDays;
-  final List<String> placesVisited; // Array of place names
-  final List<PlaceWiseContent> placeWiseContent; // Detailed content for each place
+  final List<String> placesVisited;
+  final List<PlaceWiseContent> placeWiseContent;
   final BudgetInfo budgetInfo;
   final List<String> travelTips;
-  final String authorName;
-  final String authorImage;
-  final String currency;
   final List<String> transportationOptions;
-  final List<RecommendationItem> hotelRecommendations;
-  final List<RecommendationItem> restaurantRecommendations;
+  final List<HotelRecommendation> hotelRecommendations;
+  final List<RestaurantRecommendation> restaurantRecommendations;
 
   JourneySubmissionData({
     required this.journeyTitle,
@@ -29,9 +27,6 @@ class JourneySubmissionData {
     required this.placeWiseContent,
     required this.budgetInfo,
     required this.travelTips,
-    required this.authorName,
-    required this.authorImage,
-    required this.currency,
     required this.transportationOptions,
     required this.hotelRecommendations,
     required this.restaurantRecommendations,
@@ -45,13 +40,9 @@ class JourneySubmissionData {
       'placeWiseContent': placeWiseContent.map((place) => place.toJson()).toList(),
       'budgetInfo': budgetInfo.toJson(),
       'travelTips': travelTips,
-      'authorName': authorName,
-      'authorImage': authorImage,
-      'currency': currency,
       'transportationOptions': transportationOptions,
       'hotelRecommendations': hotelRecommendations.map((item) => item.toJson()).toList(),
       'restaurantRecommendations': restaurantRecommendations.map((item) => item.toJson()).toList(),
-      'createdAt': DateTime.now().toIso8601String(),
     };
   }
 }
@@ -64,7 +55,8 @@ class PlaceWiseContent {
   final String tripMood;
   final List<String> activities;
   final List<String> experiences;
-  final List<String> imageUrls; // File paths
+  final List<String> imageUrls;
+  final int sequenceOrder;
 
   PlaceWiseContent({
     required this.placeName,
@@ -75,37 +67,86 @@ class PlaceWiseContent {
     required this.activities,
     required this.experiences,
     required this.imageUrls,
+    required this.sequenceOrder,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'placeName': placeName,
-      'coordinates': {
-        'latitude': latitude,
-        'longitude': longitude,
-      },
+      'latitude': latitude,
+      'longitude': longitude,
       'address': address,
       'tripMood': tripMood,
       'activities': activities,
       'experiences': experiences,
       'imageUrls': imageUrls,
+      'sequenceOrder': sequenceOrder,
     };
   }
 }
 
 class BudgetInfo {
   final double totalBudget;
-  final Map<String, double> budgetBreakdown;
+  final String currency;
+  final Map<String, double> breakdown;
 
   BudgetInfo({
     required this.totalBudget,
-    required this.budgetBreakdown,
+    required this.currency,
+    required this.breakdown,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'totalBudget': totalBudget,
-      'budgetBreakdown': budgetBreakdown,
+      'currency': currency,
+      'breakdown': breakdown,
+    };
+  }
+}
+
+class HotelRecommendation {
+  final String name;
+  final double rating;
+  final double pricePerNight;
+  final String currency;
+
+  HotelRecommendation({
+    required this.name,
+    required this.rating,
+    required this.pricePerNight,
+    required this.currency,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'rating': rating,
+      'pricePerNight': pricePerNight,
+      'currency': currency,
+    };
+  }
+}
+
+class RestaurantRecommendation {
+  final String name;
+  final String type;
+  final double averagePrice;
+  final String currency;
+
+  RestaurantRecommendation({
+    required this.name,
+    required this.type,
+    required this.averagePrice,
+    required this.currency,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'type': type,
+      'averagePrice': averagePrice,
+      'currency': currency,
     };
   }
 }
@@ -365,8 +406,11 @@ class _CreateTripPageState extends State<CreateTripPage> {
     // Extract place names
     List<String> placesVisited = _currentTrip.places.map((place) => place.name).toList();
 
-    // Create place-wise content with coordinates
-    List<PlaceWiseContent> placeWiseContent = _currentTrip.places.map((place) {
+    // Create place-wise content with coordinates and sequence order
+    List<PlaceWiseContent> placeWiseContent = _currentTrip.places.asMap().entries.map((entry) {
+      int index = entry.key;
+      PlaceModel place = entry.value;
+      
       return PlaceWiseContent(
         placeName: place.name,
         latitude: place.location.latitude,
@@ -376,19 +420,41 @@ class _CreateTripPageState extends State<CreateTripPage> {
         activities: place.activities,
         experiences: place.experiences.map((exp) => exp.description).toList(),
         imageUrls: place.images,
+        sequenceOrder: index + 1, // 1-based sequence
       );
     }).toList();
 
     // Create budget info
     BudgetInfo budgetInfo = BudgetInfo(
       totalBudget: double.tryParse(_totalBudgetController.text) ?? 0,
-      budgetBreakdown: {
+      currency: 'USD',
+      breakdown: {
+        'transportation': _transportPercentage,
         'accommodation': _accommodationPercentage,
         'food': _foodPercentage,
-        'transport': _transportPercentage,
-        'activities': _activitiesPercentage,
+        'entryFees': _activitiesPercentage,
       },
     );
+
+    // Create hotel recommendations
+    List<HotelRecommendation> hotelRecommendations = _hotelsList.map((name) => 
+      HotelRecommendation(
+        name: name,
+        rating: 4.5,
+        pricePerNight: 100.0, // Default price
+        currency: 'USD',
+      )
+    ).toList();
+
+    // Create restaurant recommendations
+    List<RestaurantRecommendation> restaurantRecommendations = _restaurantsList.map((name) => 
+      RestaurantRecommendation(
+        name: name,
+        type: 'Local Cuisine',
+        averagePrice: 15.0, // Default price
+        currency: 'USD',
+      )
+    ).toList();
 
     // Create the comprehensive submission object
     return JourneySubmissionData(
@@ -398,16 +464,9 @@ class _CreateTripPageState extends State<CreateTripPage> {
       placeWiseContent: placeWiseContent,
       budgetInfo: budgetInfo,
       travelTips: _currentTrip.tips,
-      authorName: _currentTrip.authorName,
-      authorImage: _currentTrip.authorImage,
-      currency: _currentTrip.currency,
       transportationOptions: _selectedTransports,
-      hotelRecommendations: _hotelsList
-          .map((name) => RecommendationItem(name: name, rating: 4.0))
-          .toList(),
-      restaurantRecommendations: _restaurantsList
-          .map((name) => RecommendationItem(name: name, rating: 4.0))
-          .toList(),
+      hotelRecommendations: hotelRecommendations,
+      restaurantRecommendations: restaurantRecommendations,
     );
   }
 
@@ -437,10 +496,12 @@ class _CreateTripPageState extends State<CreateTripPage> {
       print('Journey Data: ${submissionData.toJson()}');
       print('===============================================');
 
-      // Here you would send the submissionData to your backend
-      // Example: await journeyService.submitJourney(submissionData.toJson());
-
-      await Future.delayed(const Duration(seconds: 2));
+      // Send the data to the backend using PostRepository
+      final response = await PostRepository.createPost(submissionData.toJson());
+      
+      print('=== POST CREATION RESPONSE ===');
+      print('Response: $response');
+      print('===============================');
 
       setState(() {
         _isLoading = false;
@@ -457,6 +518,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
         _isLoading = false;
       });
 
+      print('Error publishing journey: $error');
       SnackBarService.showError(context, 'Failed to publish journey: $error');
     }
   }
@@ -478,7 +540,7 @@ class _CreateTripPageState extends State<CreateTripPage> {
               const Text('Places:', style: TextStyle(fontWeight: FontWeight.bold)),
               ...data.placesVisited.map((place) => Text('• $place')),
               const SizedBox(height: 8),
-              Text('Budget: ${data.budgetInfo.totalBudget} ${data.currency}'),
+              Text('Budget: ${data.budgetInfo.totalBudget} ${data.budgetInfo.currency}'),
               Text('Travel Tips: ${data.travelTips.length}'),
             ],
           ),

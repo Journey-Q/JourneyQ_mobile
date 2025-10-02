@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:journeyq/core/services/api_service.dart';
 import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
@@ -18,6 +17,9 @@ class ProfileRepository {
   static Future<Map<String, dynamic>> completeUserSetup(
   Map<String, dynamic> setupData,
 ) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setBool('is_setup', true);
+
   try {
     String? profileImageUrl;
     
@@ -38,6 +40,10 @@ class ProfileRepository {
       '/profile/setup',
       data: setupData,
     );
+
+
+
+
     
     // Save updated user data and mark setup as complete
     if (response.data != null) {
@@ -310,6 +316,24 @@ static Future<Map<String, dynamic>> updateCompleteProfile(
     try {
       final response = await ApiService.get('/user/travel-stats');
       return response.data;
+    } on AppException catch (e) {
+      rethrow;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Get user statistics by user ID
+  static Future<Map<String, dynamic>> getUserStats(String userId) async {
+    try {
+      final response = await ApiService.get('/stats/$userId');
+      
+      // Handle direct object response
+      if (response.data is Map<String, dynamic>) {
+        return response.data as Map<String, dynamic>;
+      }
+      
+      return {};
     } on AppException catch (e) {
       rethrow;
     } catch (e) {
