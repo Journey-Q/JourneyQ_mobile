@@ -1,457 +1,287 @@
 import 'package:journeyq/core/services/marketplace_service.dart';
-import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:journeyq/core/errors/exception.dart';
-import 'package:dio/dio.dart';
 
 class HomepageRepository {
-  static final authProvider = AuthProvider();
-
-  // API endpoints
+  // Hotel Profile API endpoints
   static const String _hotelProfilesBasePath = '/service/hotel-profiles';
-  static const String _agencyProfilesBasePath = '/service/agency-profiles';
-  static const String _tourGuideProfilesBasePath = '/service/tour-guide-profiles';
 
-  /// Initialize the service
-  static Future<void> initialize() async {
+  /// Get hotel profile by ID
+  static Future<HotelProfile> getHotelProfileById(String hotelId) async {
     try {
-      await MarketplaceService.initialize(authProvider);
+      final response = await MarketplaceService.get('$_hotelProfilesBasePath/$hotelId');
+
+      print('Get Hotel by ID Response: ${response.data}'); // Debug log
+
+      // Extract hotel profile data from response
+      if (response.data is Map<String, dynamic>) {
+        final responseData = response.data as Map<String, dynamic>;
+
+        if (responseData.containsKey('data') && responseData['data'] != null) {
+          return HotelProfile.fromJson(responseData['data'] as Map<String, dynamic>);
+        } else {
+          return HotelProfile.fromJson(responseData); // Fallback if response is not wrapped
+        }
+      } else {
+        throw ServerException('Invalid response format from server');
+      }
+    } on AppException catch (e) {
+      print('AppException in getHotelProfileById: $e');
+      rethrow;
     } catch (e) {
-      throw ServerException('Failed to initialize service: $e');
+      print('General Exception in getHotelProfileById: $e');
+      throw ServerException('Failed to fetch hotel profile: $e');
     }
   }
 
-  /// Get homepage data (all three categories) with fallback
-  static Future<Map<String, dynamic>> getHomepageData() async {
+  /// Get all hotel profiles
+  static Future<List<HotelProfile>> getAllHotelProfiles() async {
     try {
-      // Initialize service if not already done
-      try {
-        await initialize();
-      } catch (e) {
-        // Continue even if initialization fails
+      print('Fetching all hotel profiles from: $_hotelProfilesBasePath/all'); // Debug log
+
+      final response = await MarketplaceService.get('$_hotelProfilesBasePath/all');
+
+      print('Get All Hotels Response: ${response.data}'); // Debug log
+      print('Response Type: ${response.data.runtimeType}'); // Debug log
+
+      // Handle different response formats
+      List<dynamic> hotelData;
+
+      if (response.data is List) {
+        // If response is directly a list
+        hotelData = response.data as List<dynamic>;
+        print('Response is a List with ${hotelData.length} items');
+      } else if (response.data is Map<String, dynamic>) {
+        final responseMap = response.data as Map<String, dynamic>;
+
+        if (responseMap.containsKey('data') && responseMap['data'] != null) {
+          // If response has data wrapper
+          if (responseMap['data'] is List) {
+            hotelData = responseMap['data'] as List<dynamic>;
+            print('Response has data wrapper with ${hotelData.length} items');
+          } else {
+            print('Data field is not a list: ${responseMap['data']}');
+            hotelData = [];
+          }
+        } else {
+          // Try to find any list in the response
+          hotelData = _findListInResponse(responseMap);
+          print('Found list in response with ${hotelData.length} items');
+        }
+      } else {
+        print('Unexpected response format: ${response.data.runtimeType}');
+        hotelData = [];
       }
 
-      // Try to fetch all data, but continue even if some fail
-      List<HotelProfile> hotels = [];
-      List<TravelAgency> agencies = [];
-      List<TourGuide> tourGuides = [];
-
-      try {
-        hotels = await getPopularHotels();
-        print('✅ Hotels loaded: ${hotels.length}');
-      } catch (e) {
-        print('❌ Error loading hotels: $e');
-        hotels = [];
+      if (hotelData.isEmpty) {
+        print('No hotel data found in response');
+        return [];
       }
 
-      try {
-        agencies = await getPopularTravelAgencies();
-        print('✅ Agencies loaded: ${agencies.length}');
-      } catch (e) {
-        print('❌ Error loading agencies: $e');
-        agencies = [];
+      final hotels = hotelData.map((hotelJson) {
+        try {
+          return HotelProfile.fromJson(hotelJson as Map<String, dynamic>);
+        } catch (e) {
+          print('Error parsing hotel JSON: $hotelJson, Error: $e');
+          return HotelProfile(
+            id: 'error',
+            name: 'Error Hotel',
+            location: 'Unknown Location',
+            imageUrl: null,
+          );
+        }
+      }).toList();
+
+      print('Successfully parsed ${hotels.length} hotels');
+      return hotels;
+    } on AppException catch (e) {
+      print('AppException in getAllHotelProfiles: $e');
+      rethrow;
+    } catch (e) {
+      print('General Exception in getAllHotelProfiles: $e');
+      throw ServerException('Failed to fetch hotel profiles: $e');
+    }
+  }
+
+  /// Helper method to find list in response
+  static List<dynamic> _findListInResponse(Map<String, dynamic> response) {
+    for (var key in response.keys) {
+      if (response[key] is List) {
+        return response[key] as List<dynamic>;
+      } else if (response[key] is Map<String, dynamic>) {
+        final nestedList = _findListInResponse(response[key] as Map<String, dynamic>);
+        if (nestedList.isNotEmpty) {
+          return nestedList;
+        }
+      }
+    }
+    return [];
+  }
+
+  /// Get popular hotels (limited number for homepage)
+  static Future<List<HotelProfile>> getPopularHotels({int limit = 6}) async {
+    try {
+      print('Fetching popular hotels with limit: $limit'); // Debug log
+
+      final allHotels = await getAllHotelProfiles();
+
+      print('Total hotels fetched: ${allHotels.length}'); // Debug log
+
+      // If we have hotels, return limited number
+      if (allHotels.isNotEmpty) {
+        final popularHotels = allHotels.take(limit).toList();
+        print('Returning ${popularHotels.length} popular hotels');
+        return popularHotels;
       }
 
-      try {
-        tourGuides = await getPopularTourGuides();
-        print('✅ Tour Guides loaded: ${tourGuides.length}');
-      } catch (e) {
-        print('❌ Error loading tour guides: $e');
-        tourGuides = [];
-      }
+      print('No hotels found, returning empty list');
+      return [];
+    } on AppException catch (e) {
+      print('AppException in getPopularHotels: $e');
+      rethrow;
+    } catch (e) {
+      print('General Exception in getPopularHotels: $e');
+      throw ServerException('Failed to fetch popular hotels: $e');
+    }
+  }
 
-      return {
-        'hotels': hotels,
-        'agencies': agencies,
-        'tourGuides': tourGuides,
-      };
+  /// Get hotels by location
+  static Future<List<HotelProfile>> getHotelsByLocation(String location) async {
+    try {
+      final allHotels = await getAllHotelProfiles();
+
+      final filteredHotels = allHotels.where((hotel) =>
+          hotel.location.toLowerCase().contains(location.toLowerCase())
+      ).toList();
+
+      print('Found ${filteredHotels.length} hotels in $location');
+      return filteredHotels;
     } on AppException catch (e) {
       rethrow;
     } catch (e) {
-      throw ServerException('Failed to fetch homepage data: $e');
+      throw ServerException('Failed to fetch hotels by location: $e');
     }
   }
 
-  /// Get popular hotels with comprehensive field mapping
-  static Future<List<HotelProfile>> getPopularHotels({int limit = 6}) async {
+  /// Search hotels by name or location
+  static Future<List<HotelProfile>> searchHotels(String query) async {
     try {
-      print('🔍 Fetching hotels from: $_hotelProfilesBasePath/all');
-      final response = await MarketplaceService.get('$_hotelProfilesBasePath/all');
+      final allHotels = await getAllHotelProfiles();
 
-      print('📡 Response status: ${response.statusCode}');
+      final searchResults = allHotels.where((hotel) =>
+      hotel.name.toLowerCase().contains(query.toLowerCase()) ||
+          hotel.location.toLowerCase().contains(query.toLowerCase())
+      ).toList();
 
-      if (response.statusCode == 200) {
-        List<dynamic> hotelData = [];
-
-        // Extract data based on response structure
-        if (response.data is List) {
-          hotelData = response.data as List<dynamic>;
-          print('📊 Found ${hotelData.length} hotels in list response');
-        } else if (response.data is Map) {
-          // Try common response wrappers
-          if (response.data.containsKey('data')) {
-            hotelData = response.data['data'] as List<dynamic>;
-            print('📊 Found ${hotelData.length} hotels in data field');
-          } else if (response.data.containsKey('hotels')) {
-            hotelData = response.data['hotels'] as List<dynamic>;
-            print('📊 Found ${hotelData.length} hotels in hotels field');
-          } else if (response.data.containsKey('content')) {
-            hotelData = response.data['content'] as List<dynamic>;
-            print('📊 Found ${hotelData.length} hotels in content field');
-          } else {
-            // If it's a single hotel object, wrap in list
-            hotelData = [response.data];
-            print('📊 Single hotel object wrapped in list');
-          }
-        }
-
-        // Debug: Print first hotel to see actual fields
-        if (hotelData.isNotEmpty) {
-          print('🔍 First hotel raw data:');
-          print(hotelData[0]);
-          if (hotelData[0] is Map) {
-            final firstHotel = hotelData[0] as Map;
-            print('🔍 First hotel keys: ${firstHotel.keys.toList()}');
-            print('🔍 First hotel values:');
-            firstHotel.forEach((key, value) {
-              print('   $key: $value (${value.runtimeType})');
-            });
-          }
-        } else {
-          print('⚠️ No hotel data found in response');
-          return [];
-        }
-
-        // Parse hotels with comprehensive field mapping
-        final hotels = hotelData.map((hotelJson) {
-          try {
-            Map<String, dynamic> jsonMap = {};
-
-            if (hotelJson is Map<String, dynamic>) {
-              jsonMap = hotelJson;
-            } else if (hotelJson is Map) {
-              jsonMap = Map<String, dynamic>.from(hotelJson);
-            } else {
-              print('❌ Invalid hotel data type: ${hotelJson.runtimeType}');
-              return null;
-            }
-
-            final hotel = HotelProfile.fromJson(jsonMap);
-            print('✅ Parsed hotel: ${hotel.name}');
-            return hotel;
-          } catch (e) {
-            print('❌ Error parsing hotel: $e');
-            print('❌ Problematic hotel data: $hotelJson');
-            return null;
-          }
-        }).where((hotel) => hotel != null).cast<HotelProfile>().toList();
-
-        print('✅ Successfully parsed ${hotels.length} hotels');
-
-        // Sort by rating (highest first) and limit
-        hotels.sort((a, b) => b.rating.compareTo(a.rating));
-        final result = hotels.take(limit).toList();
-
-        // Debug final result
-        print('🎯 Final hotel results:');
-        for (var hotel in result) {
-          print('🏨 ${hotel.name} | ${hotel.location} | ⭐${hotel.rating} | Image: ${hotel.imageUrl != null ? "Yes" : "No"}');
-        }
-
-        return result;
-
-      } else {
-        print('❌ API error: ${response.statusCode}');
-        throw ServerException('Hotel API returned ${response.statusCode}');
-      }
-    } catch (e) {
-      print('❌ Error in getPopularHotels: $e');
-      print('❌ Stack trace: ${e.toString()}');
+      print('Search found ${searchResults.length} hotels for query: $query');
+      return searchResults;
+    } on AppException catch (e) {
       rethrow;
+    } catch (e) {
+      throw ServerException('Failed to search hotels: $e');
     }
   }
 
-  /// Get popular travel agencies
-  static Future<List<TravelAgency>> getPopularTravelAgencies({int limit = 6}) async {
+  /// Get featured hotels (you can customize the logic for featuring hotels)
+  static Future<List<HotelProfile>> getFeaturedHotels({int limit = 4}) async {
     try {
-      print('🚗 Fetching agencies...');
-      final response = await MarketplaceService.get('$_agencyProfilesBasePath/all');
+      final allHotels = await getAllHotelProfiles();
 
-      if (response.statusCode == 200) {
-        List<dynamic> agencyData = [];
+      // For now, just return first few hotels as featured
+      // You can add custom logic later based on ratings, reviews, etc.
+      final featuredHotels = allHotels.take(limit).toList();
 
-        if (response.data is List) {
-          agencyData = response.data as List<dynamic>;
-        } else if (response.data is Map) {
-          if (response.data.containsKey('data')) {
-            agencyData = response.data['data'] as List<dynamic>;
-          } else if (response.data.containsKey('agencies')) {
-            agencyData = response.data['agencies'] as List<dynamic>;
-          } else if (response.data.containsKey('content')) {
-            agencyData = response.data['content'] as List<dynamic>;
-          } else {
-            agencyData = response.data.values.where((item) => item is Map).toList();
-          }
-        }
-
-        if (agencyData.isEmpty) {
-          print('⚠️ No agency data found');
-          return [];
-        }
-
-        final agencies = agencyData.map((agencyJson) {
-          try {
-            if (agencyJson is! Map<String, dynamic>) {
-              if (agencyJson is Map) {
-                return TravelAgency.fromJson(Map<String, dynamic>.from(agencyJson));
-              }
-              return null;
-            }
-            return TravelAgency.fromJson(agencyJson);
-          } catch (e) {
-            return null;
-          }
-        }).where((agency) => agency != null).cast<TravelAgency>().toList();
-
-        if (agencies.isEmpty) {
-          return [];
-        }
-
-        agencies.sort((a, b) => b.rating.compareTo(a.rating));
-        final result = agencies.take(limit).toList();
-        print('✅ Agencies loaded: ${result.length}');
-        return result;
-      } else {
-        throw ServerException('Agency API returned ${response.statusCode}');
-      }
+      print('Returning ${featuredHotels.length} featured hotels');
+      return featuredHotels;
+    } on AppException catch (e) {
+      rethrow;
     } catch (e) {
-      print('❌ Error loading agencies: $e');
-      return [];
+      throw ServerException('Failed to fetch featured hotels: $e');
     }
   }
 
-  /// Get popular tour guides
-  static Future<List<TourGuide>> getPopularTourGuides({int limit = 6}) async {
+  /// Test API connection
+  static Future<bool> testApiConnection() async {
     try {
-      print('👨‍🏫 Fetching tour guides...');
-      final response = await MarketplaceService.get('$_tourGuideProfilesBasePath/all');
-
-      if (response.statusCode == 200) {
-        List<dynamic> tourGuideData = [];
-
-        if (response.data is List) {
-          tourGuideData = response.data as List<dynamic>;
-        } else if (response.data is Map) {
-          if (response.data.containsKey('data')) {
-            tourGuideData = response.data['data'] as List<dynamic>;
-          } else if (response.data.containsKey('tourGuides')) {
-            tourGuideData = response.data['tourGuides'] as List<dynamic>;
-          } else if (response.data.containsKey('content')) {
-            tourGuideData = response.data['content'] as List<dynamic>;
-          } else {
-            tourGuideData = response.data.values.where((item) => item is Map).toList();
-          }
-        }
-
-        if (tourGuideData.isEmpty) {
-          print('⚠️ No tour guide data found');
-          return [];
-        }
-
-        final tourGuides = tourGuideData.map((tourGuideJson) {
-          try {
-            if (tourGuideJson is! Map<String, dynamic>) {
-              if (tourGuideJson is Map) {
-                return TourGuide.fromJson(Map<String, dynamic>.from(tourGuideJson));
-              }
-              return null;
-            }
-            return TourGuide.fromJson(tourGuideJson);
-          } catch (e) {
-            return null;
-          }
-        }).where((guide) => guide != null).cast<TourGuide>().toList();
-
-        if (tourGuides.isEmpty) {
-          return [];
-        }
-
-        tourGuides.sort((a, b) => b.rating.compareTo(a.rating));
-        final result = tourGuides.take(limit).toList();
-        print('✅ Tour Guides loaded: ${result.length}');
-        return result;
-      } else {
-        throw ServerException('Tour Guide API returned ${response.statusCode}');
-      }
+      final response = await MarketplaceService.get('$_hotelProfilesBasePath/all');
+      return response.statusCode == 200;
     } catch (e) {
-      print('❌ Error loading tour guides: $e');
-      return [];
+      print('API Connection Test Failed: $e');
+      return false;
     }
   }
 }
 
-// Enhanced HotelProfile model with comprehensive field mapping
+/// Simplified Hotel Profile Model - Only what we need for frontend
 class HotelProfile {
   final String id;
   final String name;
   final String location;
-  final double rating;
   final String? imageUrl;
 
   HotelProfile({
     required this.id,
     required this.name,
     required this.location,
-    required this.rating,
     this.imageUrl,
   });
 
   factory HotelProfile.fromJson(Map<String, dynamic> json) {
-    print('🔧 Parsing hotel JSON with keys: ${json.keys.toList()}');
+    // Debug: Print the JSON we're trying to parse
+    print('Parsing hotel JSON: $json');
 
-    // Parse ID - try multiple possible field names
-    String parseId() {
-      // Try all possible ID field names
-      final possibleIdFields = [
-        'service_provider_id',
-        'id',
-        'hotelId',
-        'hotel_id',
-        'profileId',
-        'profile_id'
-      ];
-
-      for (var field in possibleIdFields) {
-        if (json[field] != null) {
-          final id = json[field].toString();
-          print('   🆔 Using ID from $field: $id');
-          return id;
-        }
-      }
-
-      // Fallback: generate unique ID
-      final fallbackId = 'hotel-${DateTime.now().millisecondsSinceEpoch}';
-      print('   ⚠️ No ID found, using fallback: $fallbackId');
-      return fallbackId;
+    // Extract ID from various possible fields
+    String id = '';
+    if (json['id'] != null) {
+      id = json['id'].toString();
+    } else if (json['service_provider_id'] != null) {
+      id = json['service_provider_id'].toString();
+    } else if (json['hotelId'] != null) {
+      id = json['hotelId'].toString();
     }
 
-    // Parse name - try multiple possible field names
-    String parseName() {
-      final possibleNameFields = [
-        'hotel_name',
-        'name',
-        'hotelName',
-        'title',
-        'hotelTitle',
-        'establishment_name'
-      ];
-
-      for (var field in possibleNameFields) {
-        if (json[field] != null && json[field].toString().isNotEmpty) {
-          final name = json[field].toString();
-          print('   🏷️ Using name from $field: $name');
-          return name;
-        }
-      }
-
-      print('   ⚠️ No name found, using fallback');
-      return 'Unknown Hotel';
+    // Extract name from various possible fields
+    String name = 'Unknown Hotel';
+    if (json['hotel_name'] != null) {
+      name = json['hotel_name'].toString();
+    } else if (json['name'] != null) {
+      name = json['name'].toString();
+    } else if (json['hotelName'] != null) {
+      name = json['hotelName'].toString();
     }
 
-    // Parse location - try multiple possible field names
-    String parseLocation() {
-      final possibleLocationFields = [
-        'location',
-        'address',
-        'city',
-        'district',
-        'area',
-        'establishment_location'
-      ];
-
-      for (var field in possibleLocationFields) {
-        if (json[field] != null && json[field].toString().isNotEmpty) {
-          final location = json[field].toString();
-          print('   📍 Using location from $field: $location');
-          return location;
-        }
-      }
-
-      print('   ⚠️ No location found, using fallback');
-      return 'Unknown Location';
+    // Extract location
+    String location = 'Unknown Location';
+    if (json['location'] != null) {
+      location = json['location'].toString();
+    } else if (json['address'] != null) {
+      location = json['address'].toString();
+    } else if (json['city'] != null) {
+      location = json['city'].toString();
     }
 
-    // Parse rating - try multiple possible field names with default
-    double parseRating() {
-      final possibleRatingFields = [
-        'rating',
-        'average_rating',
-        'averageRating',
-        'star_rating',
-        'starRating',
-        'review_rating'
-      ];
-
-      for (var field in possibleRatingFields) {
-        if (json[field] != null) {
-          try {
-            double rating;
-            if (json[field] is double) {
-              rating = json[field];
-            } else if (json[field] is int) {
-              rating = json[field].toDouble();
-            } else if (json[field] is String) {
-              rating = double.tryParse(json[field]) ?? 4.0;
-            } else {
-              continue;
-            }
-            print('   ⭐ Using rating from $field: $rating');
-            return rating;
-          } catch (e) {
-            continue;
-          }
-        }
-      }
-
-      print('   ⚠️ No rating found, using default 4.0');
-      return 4.0; // Default rating
+    // Extract image URL from various possible fields
+    String? imageUrl;
+    if (json['hotel_photo'] != null) {
+      imageUrl = json['hotel_photo'].toString();
+    } else if (json['imageUrl'] != null) {
+      imageUrl = json['imageUrl'].toString();
+    } else if (json['profileImageUrl'] != null) {
+      imageUrl = json['profileImageUrl'].toString();
+    } else if (json['image'] != null) {
+      imageUrl = json['image'].toString();
+    } else if (json['photo'] != null) {
+      imageUrl = json['photo'].toString();
     }
 
-    // Parse image URL - try multiple possible field names
-    String? parseImageUrl() {
-      final possibleImageFields = [
-        'hotel_photo',
-        'imageUrl',
-        'image_url',
-        'image',
-        'photo',
-        'profile_image',
-        'profile_image_url',
-        'hotel_image',
-        'main_photo'
-      ];
+    // Print what we extracted for debugging
+    print('Extracted - ID: $id, Name: $name, Location: $location, Image: $imageUrl');
 
-      for (var field in possibleImageFields) {
-        if (json[field] != null && json[field].toString().isNotEmpty) {
-          final imageUrl = json[field].toString();
-          print('   🖼️ Using image from $field: $imageUrl');
-          return imageUrl;
-        }
-      }
-
-      print('   ⚠️ No image URL found');
-      return null;
-    }
-
-    final hotel = HotelProfile(
-      id: parseId(),
-      name: parseName(),
-      location: parseLocation(),
-      rating: parseRating(),
-      imageUrl: parseImageUrl(),
+    return HotelProfile(
+      id: id,
+      name: name,
+      location: location,
+      imageUrl: imageUrl,
     );
-
-    print('   ✅ Created Hotel: ${hotel.name}');
-    return hotel;
   }
 
   Map<String, dynamic> toJson() {
@@ -459,257 +289,70 @@ class HotelProfile {
       'id': id,
       'name': name,
       'location': location,
-      'rating': rating,
       'imageUrl': imageUrl,
     };
   }
 
+  HotelProfile copyWith({
+    String? id,
+    String? name,
+    String? location,
+    String? imageUrl,
+  }) {
+    return HotelProfile(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      location: location ?? this.location,
+      imageUrl: imageUrl ?? this.imageUrl,
+    );
+  }
+
   @override
   String toString() {
-    return 'HotelProfile(id: $id, name: $name, location: $location, rating: $rating, imageUrl: $imageUrl)';
+    return 'HotelProfile(id: $id, name: $name, location: $location, imageUrl: $imageUrl)';
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is HotelProfile && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
-class TravelAgency {
-  final String id;
-  final String name;
-  final String location;
-  final double rating;
-  final int reviewCount;
-  final String? description;
-  final String? imageUrl;
-  final List<String> services;
-  final String contactNumber;
-  final String email;
-  final String? website;
-  final int yearsOfExperience;
-  final bool isActive;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+/// Response wrapper for hotel profile API (if needed for other endpoints)
+class HotelProfileResponse {
+  final bool success;
+  final String message;
+  final HotelProfile? hotel;
+  final List<HotelProfile>? hotels;
 
-  TravelAgency({
-    required this.id,
-    required this.name,
-    required this.location,
-    required this.rating,
-    required this.reviewCount,
-    this.description,
-    this.imageUrl,
-    required this.services,
-    required this.contactNumber,
-    required this.email,
-    this.website,
-    required this.yearsOfExperience,
-    required this.isActive,
-    required this.createdAt,
-    required this.updatedAt,
+  HotelProfileResponse({
+    required this.success,
+    required this.message,
+    this.hotel,
+    this.hotels,
   });
 
-  factory TravelAgency.fromJson(Map<String, dynamic> json) {
-    String parseId(dynamic id) {
-      if (id == null) return 'unknown-${DateTime.now().millisecondsSinceEpoch}';
-      if (id is String) return id;
-      return id.toString();
-    }
-
-    double parseRating(dynamic rating) {
-      if (rating == null) return 0.0;
-      if (rating is double) return rating;
-      if (rating is int) return rating.toDouble();
-      if (rating is String) return double.tryParse(rating) ?? 0.0;
-      return 0.0;
-    }
-
-    int parseReviewCount(dynamic count) {
-      if (count == null) return 0;
-      if (count is int) return count;
-      if (count is String) return int.tryParse(count) ?? 0;
-      return 0;
-    }
-
-    String? parseImageUrl(Map<String, dynamic> json) {
-      return json['imageUrl'] ??
-          json['profileImageUrl'] ??
-          json['image'];
-    }
-
-    List<String> parseServices(dynamic services) {
-      if (services == null) return [];
-      if (services is List) {
-        return services.map((item) => item.toString()).toList();
-      }
-      return [];
-    }
-
-    int parseExperience(dynamic experience) {
-      if (experience == null) return 1;
-      if (experience is int) return experience;
-      if (experience is String) return int.tryParse(experience) ?? 1;
-      return 1;
-    }
-
-    return TravelAgency(
-      id: parseId(json['id']),
-      name: json['name']?.toString() ?? 'Unknown Agency',
-      location: json['location']?.toString() ?? 'Unknown Location',
-      rating: parseRating(json['rating'] ?? json['averageRating']),
-      reviewCount: parseReviewCount(json['reviewCount'] ?? json['totalReviews']),
-      description: json['description']?.toString(),
-      imageUrl: parseImageUrl(json),
-      services: parseServices(json['services']),
-      contactNumber: json['contactNumber']?.toString() ??
-          json['phone']?.toString() ??
-          'Not available',
-      email: json['email']?.toString() ?? 'Not available',
-      website: json['website']?.toString(),
-      yearsOfExperience: parseExperience(json['yearsOfExperience']),
-      isActive: json['isActive'] ?? true,
-      createdAt: DateTime.parse(
-        json['createdAt'] ??
-            json['created_at'] ??
-            DateTime.now().toIso8601String(),
-      ),
-      updatedAt: DateTime.parse(
-        json['updatedAt'] ??
-            json['updated_at'] ??
-            DateTime.now().toIso8601String(),
-      ),
+  factory HotelProfileResponse.fromJson(Map<String, dynamic> json) {
+    return HotelProfileResponse(
+      success: json['success'] ?? false,
+      message: json['message'] ?? '',
+      hotel: json['hotel'] != null ? HotelProfile.fromJson(json['hotel']) : null,
+      hotels: json['hotels'] != null
+          ? (json['hotels'] as List).map((h) => HotelProfile.fromJson(h)).toList()
+          : null,
     );
   }
 
-  String get experienceText {
-    if (yearsOfExperience >= 15) return '15+ years experience';
-    if (yearsOfExperience >= 10) return '10+ years experience';
-    if (yearsOfExperience >= 5) return '5+ years experience';
-    return '$yearsOfExperience years experience';
+  Map<String, dynamic> toJson() {
+    return {
+      'success': success,
+      'message': message,
+      'hotel': hotel?.toJson(),
+      'hotels': hotels?.map((h) => h.toJson()).toList(),
+    };
   }
-}
-
-class TourGuide {
-  final String id;
-  final String name;
-  final String location;
-  final double rating;
-  final int reviewCount;
-  final String? description;
-  final String? imageUrl;
-  final List<String>? specialties;
-  final String contactNumber;
-  final String email;
-  final double hourlyRate;
-  final List<String> languages;
-  final int yearsOfExperience;
-  final bool isActive;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-
-  TourGuide({
-    required this.id,
-    required this.name,
-    required this.location,
-    required this.rating,
-    required this.reviewCount,
-    this.description,
-    this.imageUrl,
-    this.specialties,
-    required this.contactNumber,
-    required this.email,
-    required this.hourlyRate,
-    required this.languages,
-    required this.yearsOfExperience,
-    required this.isActive,
-    required this.createdAt,
-    required this.updatedAt,
-  });
-
-  factory TourGuide.fromJson(Map<String, dynamic> json) {
-    String parseId(dynamic id) {
-      if (id == null) return 'unknown-${DateTime.now().millisecondsSinceEpoch}';
-      if (id is String) return id;
-      return id.toString();
-    }
-
-    double parseRating(dynamic rating) {
-      if (rating == null) return 0.0;
-      if (rating is double) return rating;
-      if (rating is int) return rating.toDouble();
-      if (rating is String) return double.tryParse(rating) ?? 0.0;
-      return 0.0;
-    }
-
-    int parseReviewCount(dynamic count) {
-      if (count == null) return 0;
-      if (count is int) return count;
-      if (count is String) return int.tryParse(count) ?? 0;
-      return 0;
-    }
-
-    String? parseImageUrl(Map<String, dynamic> json) {
-      return json['imageUrl'] ??
-          json['profileImageUrl'] ??
-          json['image'];
-    }
-
-    List<String>? parseSpecialties(dynamic specialties) {
-      if (specialties == null) return [];
-      if (specialties is List) {
-        return specialties.map((item) => item.toString()).toList();
-      }
-      return [];
-    }
-
-    double parseHourlyRate(dynamic rate) {
-      if (rate == null) return 25.0;
-      if (rate is double) return rate;
-      if (rate is int) return rate.toDouble();
-      if (rate is String) return double.tryParse(rate) ?? 25.0;
-      return 25.0;
-    }
-
-    List<String> parseLanguages(dynamic languages) {
-      if (languages == null) return ['English'];
-      if (languages is List) {
-        return languages.map((item) => item.toString()).toList();
-      }
-      return ['English'];
-    }
-
-    int parseExperience(dynamic experience) {
-      if (experience == null) return 1;
-      if (experience is int) return experience;
-      if (experience is String) return int.tryParse(experience) ?? 1;
-      return 1;
-    }
-
-    return TourGuide(
-      id: parseId(json['id']),
-      name: json['name']?.toString() ?? 'Unknown Guide',
-      location: json['location']?.toString() ?? 'Unknown Location',
-      rating: parseRating(json['rating'] ?? json['averageRating']),
-      reviewCount: parseReviewCount(json['reviewCount'] ?? json['totalReviews']),
-      description: json['description']?.toString(),
-      imageUrl: parseImageUrl(json),
-      specialties: parseSpecialties(json['specialties']),
-      contactNumber: json['contactNumber']?.toString() ??
-          json['phone']?.toString() ??
-          'Not available',
-      email: json['email']?.toString() ?? 'Not available',
-      hourlyRate: parseHourlyRate(json['hourlyRate']),
-      languages: parseLanguages(json['languages']),
-      yearsOfExperience: parseExperience(json['yearsOfExperience']),
-      isActive: json['isActive'] ?? true,
-      createdAt: DateTime.parse(
-        json['createdAt'] ??
-            json['created_at'] ??
-            DateTime.now().toIso8601String(),
-      ),
-      updatedAt: DateTime.parse(
-        json['updatedAt'] ??
-            json['updated_at'] ??
-            DateTime.now().toIso8601String(),
-      ),
-    );
-  }
-
-  String get priceText => '\$${hourlyRate.toStringAsFixed(0)}/hour';
 }
