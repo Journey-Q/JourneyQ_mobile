@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:journeyq/features/market_place/pages/searchbar.dart';
-import 'package:journeyq/features/market_place/pages/data.dart'; // Import centralized data
+import 'package:journeyq/data/repositories/marketplace_repository/agency_repository.dart';
 
 class ViewAllTravelAgenciesPage extends StatefulWidget {
   const ViewAllTravelAgenciesPage({Key? key}) : super(key: key);
@@ -14,23 +14,55 @@ class ViewAllTravelAgenciesPage extends StatefulWidget {
 }
 
 class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
-  // Standard distance for price calculation
-  final int standardDistance = 100; // 100km for example
+  List<AgencyProfile> allAgencies = [];
+  bool isLoading = true;
+  String errorMessage = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAllAgencies();
+  }
+
+  Future<void> _loadAllAgencies() async {
+    try {
+      setState(() {
+        isLoading = true;
+        errorMessage = '';
+      });
+
+      print('🚗 Loading all travel agencies from database...');
+      final agencies = await AgencyRepository.getAllAgencyProfiles();
+
+      print('🚗 Successfully loaded ${agencies.length} agencies');
+
+      if (mounted) {
+        setState(() {
+          allAgencies = agencies;
+          isLoading = false;
+        });
+      }
+    } catch (e, stackTrace) {
+      print('❌ Error loading agencies: $e');
+      print('Stack trace: $stackTrace');
+
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+          errorMessage = e.toString();
+        });
+      }
+    }
+  }
 
   void _navigateToAgencyDetails(String agencyId) {
     context.push('/marketplace/travel_agencies/details/$agencyId');
   }
 
-  void _contactAgency(String agencyId) {
-    context.push('/marketplace/travel_agencies/contact/$agencyId');
-  }
-
-  Widget _buildAgencyCard(Map<String, dynamic> agency) {
-    List<Map<String, dynamic>> vehicles = List<Map<String, dynamic>>.from(agency['vehicles']);
-
+  Widget _buildAgencyCard(AgencyProfile agency) {
     return GestureDetector(
       onTap: () {
-        _navigateToAgencyDetails(agency['id']);
+        _navigateToAgencyDetails(agency.id);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
@@ -65,33 +97,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                 ),
                 child: Stack(
                   children: [
-                    Image.asset(
-                      agency['image'],
-                      width: double.infinity,
-                      height: 160,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: double.infinity,
-                          height: 160,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                agency['backgroundColor'],
-                                agency['backgroundColor'].withOpacity(0.8),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.business,
-                            size: 60,
-                            color: Colors.white,
-                          ),
-                        );
-                      },
-                    ),
+                    _buildAgencyImage(agency),
                     // Rating Badge
                     Positioned(
                       top: 12,
@@ -115,7 +121,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              agency['rating'].toString(),
+                              '4.5', // Default rating
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
@@ -126,6 +132,30 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                         ),
                       ),
                     ),
+                    // Availability Status
+                    if (!agency.isActive)
+                      Positioned(
+                        bottom: 12,
+                        left: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            'Not Available',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -136,31 +166,37 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Agency Name and Availability
+                  // Agency Name and Approved Status
                   Row(
                     children: [
                       Expanded(
                         child: Text(
-                          agency['name'],
+                          agency.name,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.black87,
                           ),
                         ),
-                      )
+                      ),
+                      // Approved Status Icon
+                      Icon(
+                        agency.isActive ? Icons.verified : Icons.pending,
+                        color: agency.isActive ? Colors.green : Colors.orange,
+                        size: 20,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
 
-                  // Location and Experience
+                  // Location
                   Row(
                     children: [
                       const Icon(Icons.location_on, size: 14, color: Colors.grey),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          agency['location'],
+                          agency.location ?? 'Location not specified',
                           style: const TextStyle(
                             fontSize: 12,
                             color: Colors.grey,
@@ -170,75 +206,15 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                     ],
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
 
-                  // Vehicle Types and Pricing
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ...vehicles.take(2).map((vehicle) => Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    MarketplaceData.getVehicleIcon(vehicle['type']), // FIXED: Use MarketplaceData
-                                    color: const Color(0xFF0088cc),
-                                    size: 14,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    '${vehicle['type']} (${vehicle['seats']} seats)',
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Text(
-                                'LKR ${MarketplaceData.calculateTotalPrice(vehicle['acPricePerKm'], standardDistance)}', // FIXED: Use MarketplaceData
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF0088cc),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )).toList(),
-                        if (vehicles.length > 2)
-                          Text(
-                            '+${vehicles.length - 2} more vehicle types',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey.shade600,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Drivers count
+                  // Experience
                   Row(
                     children: [
-                      const Icon(Icons.person, size: 14, color: Colors.grey),
+                      const Icon(Icons.work, size: 14, color: Colors.grey),
                       const SizedBox(width: 4),
                       Text(
-                        '${(agency['drivers'] as List).length} professional drivers available',
+                        agency.experience,
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.grey,
@@ -247,29 +223,125 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                     ],
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
 
-                  // Action Buttons
+                  // Contact Info
+                  if (agency.phone != null && agency.phone!.isNotEmpty) ...[
+                    Row(
+                      children: [
+                        const Icon(Icons.phone, size: 14, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Text(
+                          agency.phone!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                  ],
+
+                  if (agency.email != null && agency.email!.isNotEmpty) ...[
+                    Row(
+                      children: [
+                        const Icon(Icons.email, size: 14, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            agency.email!,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+
+                  const SizedBox(height: 12),
+
+                  // Active Status
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            _navigateToAgencyDetails(agency['id']);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: agency['isAvailable']
-                                ? const Color(0xFF0088cc)
-                                : Colors.grey,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
+                      // Active Status Badge
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: agency.isActive
+                                  ? Colors.green.shade50
+                                  : Colors.red.shade50,
                               borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: agency.isActive
+                                    ? Colors.green.shade200
+                                    : Colors.red.shade200,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  agency.isActive
+                                      ? Icons.check_circle
+                                      : Icons.cancel,
+                                  size: 14,
+                                  color: agency.isActive
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  agency.isActive ? 'Active' : 'Inactive',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: agency.isActive
+                                        ? Colors.green
+                                        : Colors.red,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          child: const Text(
-                            'View Details',
-                            style: TextStyle(fontWeight: FontWeight.w600),
+                          const SizedBox(height: 4),
+                          Text(
+                            agency.isActive ? 'Accepting bookings' : 'Not available',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey,
+                            ),
                           ),
+                        ],
+                      ),
+                      ElevatedButton(
+                        onPressed: agency.isActive
+                            ? () {
+                          _navigateToAgencyDetails(agency.id);
+                        }
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: agency.isActive
+                              ? const Color(0xFF0088cc)
+                              : Colors.grey,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          agency.isActive ? 'View Details' : 'Unavailable',
                         ),
                       ),
                     ],
@@ -279,6 +351,94 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAgencyImage(AgencyProfile agency) {
+    if (agency.imageUrl != null && agency.imageUrl!.isNotEmpty) {
+      return Image.network(
+        agency.imageUrl!,
+        width: double.infinity,
+        height: 160,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            width: double.infinity,
+            height: 160,
+            color: Colors.grey.shade200,
+            child: Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                    loadingProgress.expectedTotalBytes!
+                    : null,
+                strokeWidth: 2,
+                color: const Color(0xFF0088cc),
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          print('Image load error for ${agency.name}: $error');
+          return _buildPlaceholderImage(agency);
+        },
+      );
+    }
+
+    return _buildPlaceholderImage(agency);
+  }
+
+  Widget _buildPlaceholderImage(AgencyProfile agency) {
+    // Generate a consistent color based on agency ID
+    final colors = [
+      const Color(0xFF0088cc),
+      const Color(0xFF4CAF50),
+      const Color(0xFF9C27B0),
+      const Color(0xFFF44336),
+      const Color(0xFFFF9800),
+    ];
+    final colorIndex = agency.id.hashCode % colors.length;
+    final backgroundColor = colors[colorIndex];
+
+    return Container(
+      width: double.infinity,
+      height: 160,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            backgroundColor,
+            backgroundColor.withOpacity(0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.business,
+            size: 48,
+            color: Colors.white,
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              agency.name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -335,14 +495,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
   }
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final displayedAgencies = MarketplaceData.travelAgencies; // FIXED: Use MarketplaceData
-
     // Count variables - replace with your actual state variables
     int orderCount = 3; // Number of pending orders
     int chatCount = 7; // Number of unread messages
@@ -389,7 +542,11 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
           const SizedBox(width: 16),
         ],
       ),
-      body: SingleChildScrollView(
+      body: isLoading
+          ? _buildLoadingIndicator()
+          : errorMessage.isNotEmpty
+          ? _buildErrorWidget()
+          : SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -410,7 +567,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'All Travel Agencies (${displayedAgencies.length})',
+                    'All Travel Agencies (${allAgencies.length})',
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -423,14 +580,14 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
               const SizedBox(height: 16),
 
               // Travel Agencies List
-              if (displayedAgencies.isEmpty)
+              if (allAgencies.isEmpty)
                 Center(
                   child: Padding(
                     padding: const EdgeInsets.all(40),
                     child: Column(
                       children: [
                         Icon(
-                          Icons.search_off,
+                          Icons.business,
                           size: 64,
                           color: Colors.grey[400],
                         ),
@@ -445,7 +602,7 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Try adjusting your search criteria',
+                          'Check back later for new listings',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[500],
@@ -459,9 +616,9 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
                 ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: displayedAgencies.length,
+                  itemCount: allAgencies.length,
                   itemBuilder: (context, index) {
-                    return _buildAgencyCard(displayedAgencies[index]);
+                    return _buildAgencyCard(allAgencies[index]);
                   },
                 ),
 
@@ -469,6 +626,74 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
               const SizedBox(height: 80),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(
+            color: Color(0xFF0088cc),
+            strokeWidth: 3,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Loading travel agencies...',
+            style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to load travel agencies',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              errorMessage,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: _loadAllAgencies,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try Again'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0088cc),
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
         ),
       ),
     );

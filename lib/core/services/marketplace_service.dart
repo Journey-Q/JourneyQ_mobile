@@ -22,7 +22,7 @@ class MarketplaceService {
     );
 
     // Add interceptors in order
-    _dio.interceptors.add(AuthInterceptor(authProvider)); // Add auth token
+    //_dio.interceptors.add(AuthInterceptor(authProvider)); // Add auth token
     _dio.interceptors.add(ErrorInterceptor()); // Handle errors
   }
 

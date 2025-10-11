@@ -1,5 +1,6 @@
 // main.dart
 import 'package:flutter/material.dart';
+import 'package:journeyq/core/services/marketplace_service.dart';
 import 'app/app.dart';
 import 'core/config/app_config.dart';
 import 'package:journeyq/core/services/notification_service.dart';
@@ -21,6 +22,7 @@ void main() async {
 
   // Initialize ApiService with the auth provider
   ApiService.initialize(authProvider);
+  MarketplaceService.initialize(authProvider);
 
   runApp(TravelApp());
 }

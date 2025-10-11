@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'booking_room.dart';
-import 'room_details.dart';
-import 'package:journeyq/features/market_place/pages/data.dart'; // Import centralized data
+import 'package:journeyq/data/repositories/marketplace_repository/hotel_repository.dart';
+import 'package:journeyq/data/repositories/marketplace_repository/room_repository.dart';
 
 class HotelDetailsPage extends StatefulWidget {
   final String hotelId;
@@ -14,9 +13,11 @@ class HotelDetailsPage extends StatefulWidget {
 }
 
 class _HotelDetailsPageState extends State<HotelDetailsPage> {
-  late Map<String, dynamic> hotelData;
+  HotelProfile? hotelData;
+  List<Room> rooms = [];
   bool isLoading = true;
   bool hasError = false;
+  String errorMessage = '';
 
   @override
   void initState() {
@@ -24,26 +25,34 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
     _loadHotelData();
   }
 
-  void _loadHotelData() {
+  Future<void> _loadHotelData() async {
     try {
-      // FIXED: Use MarketplaceData.getHotelById instead of _getHotelById
-      final hotel = MarketplaceData.getHotelById(widget.hotelId);
-      if (hotel != null) {
-        hotelData = hotel;
+      print('🏨 Loading hotel details for ID: ${widget.hotelId}');
+
+      // Load hotel profile
+      final hotel = await HotelRepository.getHotelProfileById(widget.hotelId);
+
+      // Load rooms for this hotel
+      final hotelRooms = await RoomRepository.getRoomsByServiceProvider(widget.hotelId);
+
+      if (mounted) {
         setState(() {
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          hasError = true;
+          hotelData = hotel;
+          rooms = hotelRooms;
           isLoading = false;
         });
       }
-    } catch (e) {
-      setState(() {
-        hasError = true;
-        isLoading = false;
-      });
+    } catch (e, stackTrace) {
+      print('❌ Error loading hotel details: $e');
+      print('Stack trace: $stackTrace');
+
+      if (mounted) {
+        setState(() {
+          hasError = true;
+          isLoading = false;
+          errorMessage = e.toString();
+        });
+      }
     }
   }
 
@@ -103,15 +112,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
   }
 
   // Enhanced room card with separate bedroom/bathroom counts
-  Widget _buildRoomCard(Map<String, dynamic> room) {
-    // IMPROVED: Use MarketplaceData utility methods for room status
-    String statusText = MarketplaceData.getRoomStatusText(room['status'] ?? 'available');
-    Color statusColor = MarketplaceData.getRoomStatusColor(room['status'] ?? 'available');
-
-    // Get bedroom and bathroom counts from separate fields
-    int bedrooms = room['bedrooms'] ?? 1;
-    int bathrooms = room['bathrooms'] ?? 1;
-
+  Widget _buildRoomCard(Room room) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -145,33 +146,8 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
               ),
               child: Stack(
                 children: [
-                  Image.asset(
-                    room['image'],
-                    width: double.infinity,
-                    height: 180,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: double.infinity,
-                        height: 180,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              room['backgroundColor'],
-                              room['backgroundColor'].withOpacity(0.8),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.bed,
-                          size: 60,
-                          color: Colors.white,
-                        ),
-                      );
-                    },
-                  ),
+                  // Room image from database
+                  _buildRoomImage(room),
                   // Status Badge
                   Positioned(
                     top: 12,
@@ -182,11 +158,11 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: statusColor,
+                        color: room.statusColor,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        statusText,
+                        room.statusText,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
@@ -210,7 +186,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                   children: [
                     Expanded(
                       child: Text(
-                        room['type'],
+                        room.roomType,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -218,15 +194,40 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                         ),
                       ),
                     ),
-                    Text(
-                      room['size'],
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w600,
+                    if (room.size != null)
+                      Text(
+                        '${room.size} sqm',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
                   ],
+                ),
+                const SizedBox(height: 12),
+
+                // Room Number
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.meeting_room, size: 16, color: Colors.grey.shade600),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Room ${room.roomNumber}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 12),
 
@@ -240,6 +241,35 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                   ),
                   child: Row(
                     children: [
+                      // Capacity
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Icon(Icons.people, size: 18, color: Colors.grey.shade600),
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  room.capacityText,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey.shade800,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                )
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Vertical divider
+                      Container(
+                        height: 30,
+                        width: 1,
+                        color: Colors.grey.shade300,
+                      ),
+                      const SizedBox(width: 12),
                       // Bedrooms
                       Expanded(
                         child: Row(
@@ -250,7 +280,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '$bedrooms Bedroom${bedrooms > 1 ? 's' : ''}',
+                                  '${room.bedrooms ?? 1} Bedroom${(room.bedrooms ?? 1) > 1 ? 's' : ''}',
                                   style: TextStyle(
                                     fontSize: 13,
                                     color: Colors.grey.shade800,
@@ -279,7 +309,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '$bathrooms Bathroom${bathrooms > 1 ? 's' : ''}',
+                                  '${room.bathrooms ?? 1} Bathroom${(room.bathrooms ?? 1) > 1 ? 's' : ''}',
                                   style: TextStyle(
                                     fontSize: 13,
                                     color: Colors.grey.shade800,
@@ -296,30 +326,39 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                 ),
                 const SizedBox(height: 12),
 
-                // Other Amenities
-                if (room['amenities'] != null && room['amenities'].isNotEmpty)
+                // Room Description
+                Text(
+                  room.description,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade700,
+                    height: 1.4,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 12),
+
+                // Room Amenities
+                if (room.amenities.isNotEmpty)
                   Wrap(
                     spacing: 6,
                     runSpacing: 4,
-                    children: room['amenities'].map<Widget>((amenity) {
-                      // Special styling for meal plan options
-                      bool isMealPlan = ['Full Board', 'Half Board', 'Bed and Breakfast', 'All-Inclusive', 'Room Only'].contains(amenity);
-
+                    children: room.amenities.take(4).map<Widget>((amenity) {
                       return Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 6,
                           vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: isMealPlan ? Colors.orange.shade50 : Colors.blue.shade50,
+                          color: Colors.blue.shade50,
                           borderRadius: BorderRadius.circular(8),
-                          border: isMealPlan ? Border.all(color: Colors.orange.shade300) : null,
                         ),
                         child: Text(
                           amenity,
                           style: TextStyle(
                             fontSize: 10,
-                            color: isMealPlan ? Colors.orange.shade700 : Colors.blue.shade700,
+                            color: Colors.blue.shade700,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -331,7 +370,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      room['price'],
+                      room.formattedPrice,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -340,15 +379,13 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        // Navigate to room details page
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RoomDetailsPage(
-                              hotel: hotelData,
-                              room: room,
-                            ),
-                          ),
+                        // Navigate to room booking page
+                        context.push(
+                          '/marketplace/hotels/booking/${widget.hotelId}/room/${room.id}',
+                          extra: {
+                            'hotel': hotelData,
+                            'room': room,
+                          },
                         );
                       },
                       style: ElevatedButton.styleFrom(
@@ -358,7 +395,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const Text('View Details'),
+                      child: const Text('Book Now'),
                     ),
                   ],
                 ),
@@ -369,6 +406,160 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
       ),
     );
   }
+
+  Widget _buildRoomImage(Room room) {
+    if (room.imageUrl != null && room.imageUrl!.isNotEmpty) {
+      return Image.network(
+        room.imageUrl!,
+        width: double.infinity,
+        height: 180,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            width: double.infinity,
+            height: 180,
+            color: Colors.grey.shade200,
+            child: Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                    loadingProgress.expectedTotalBytes!
+                    : null,
+                strokeWidth: 2,
+                color: const Color(0xFF0088cc),
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return _buildRoomPlaceholder(room);
+        },
+      );
+    }
+    return _buildRoomPlaceholder(room);
+  }
+
+  Widget _buildRoomPlaceholder(Room room) {
+    // Generate consistent color based on room ID
+    final colors = [
+      const Color(0xFF0088cc),
+      const Color(0xFF4CAF50),
+      const Color(0xFF9C27B0),
+      const Color(0xFFF44336),
+      const Color(0xFFFF9800),
+    ];
+    final colorIndex = room.id.hashCode % colors.length;
+    final backgroundColor = colors[colorIndex];
+
+    return Container(
+      width: double.infinity,
+      height: 180,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            backgroundColor,
+            backgroundColor.withOpacity(0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.bed,
+            size: 60,
+            color: Colors.white,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            room.roomType,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHotelImage() {
+    if (hotelData?.imageUrl != null && hotelData!.imageUrl!.isNotEmpty) {
+      return Image.network(
+        hotelData!.imageUrl!,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            color: Colors.grey.shade200,
+            child: Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                    loadingProgress.expectedTotalBytes!
+                    : null,
+                strokeWidth: 2,
+                color: const Color(0xFF0088cc),
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return _buildHotelPlaceholder();
+        },
+      );
+    }
+    return _buildHotelPlaceholder();
+  }
+
+  Widget _buildHotelPlaceholder() {
+    // Generate consistent color based on hotel ID
+    final colors = [
+      const Color(0xFF0088cc),
+      const Color(0xFF4CAF50),
+      const Color(0xFF9C27B0),
+      const Color(0xFFF44336),
+      const Color(0xFFFF9800),
+    ];
+    final colorIndex = hotelData?.id.hashCode ?? 0 % colors.length;
+    final backgroundColor = colors[colorIndex];
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            backgroundColor,
+            backgroundColor.withOpacity(0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: const Icon(
+        Icons.hotel,
+        size: 100,
+        color: Colors.white,
+      ),
+    );
+  }
+
+  // Default review stats (you can replace this with actual data from your API)
+  Map<String, int> get _defaultReviewStats => {
+    '5': 45,
+    '4': 30,
+    '3': 15,
+    '2': 5,
+    '1': 5,
+  };
+
+  int get _totalReviews => _defaultReviewStats.values.reduce((a, b) => a + b);
 
   @override
   Widget build(BuildContext context) {
@@ -389,7 +580,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
       );
     }
 
-    if (hasError) {
+    if (hasError || hotelData == null) {
       return Scaffold(
         backgroundColor: Colors.grey[50],
         appBar: AppBar(
@@ -419,6 +610,14 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                 'Hotel ID: ${widget.hotelId}',
                 style: const TextStyle(color: Colors.grey),
               ),
+              if (errorMessage.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Error: $errorMessage',
+                  style: const TextStyle(color: Colors.red),
+                  textAlign: TextAlign.center,
+                ),
+              ],
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => context.pop(),
@@ -430,7 +629,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
       );
     }
 
-    final rooms = hotelData['rooms'] as List<Map<String, dynamic>>;
+    final hotel = hotelData!;
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -447,29 +646,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
               icon: const Icon(Icons.arrow_back, color: Colors.white),
             ),
             flexibleSpace: FlexibleSpaceBar(
-              background: Image.asset(
-                hotelData['image'],
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          hotelData['backgroundColor'],
-                          hotelData['backgroundColor'].withOpacity(0.8),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.hotel,
-                      size: 100,
-                      color: Colors.white,
-                    ),
-                  );
-                },
-              ),
+              background: _buildHotelImage(),
             ),
           ),
           // Hotel Details Content
@@ -488,7 +665,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              hotelData['name'],
+                              hotel.name,
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -506,7 +683,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
-                                    hotelData['location'],
+                                    hotel.location,
                                     style: const TextStyle(
                                       fontSize: 14,
                                       color: Colors.grey,
@@ -521,15 +698,15 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                       Column(
                         children: [
                           Icon(
-                            hotelData['isAvailable'] ? Icons.check_circle : Icons.cancel,
-                            color: hotelData['isAvailable'] ? Colors.green : Colors.red,
+                            hotel.isActive ? Icons.check_circle : Icons.cancel,
+                            color: hotel.isActive ? Colors.green : Colors.red,
                             size: 24,
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            hotelData['isAvailable'] ? 'Available' : 'Full',
+                            hotel.isActive ? 'Active' : 'Inactive',
                             style: TextStyle(
-                              color: hotelData['isAvailable'] ? Colors.green : Colors.red,
+                              color: hotel.isActive ? Colors.green : Colors.red,
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
                             ),
@@ -540,6 +717,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                   ),
                   const SizedBox(height: 16),
 
+                  // Rating (using default values since they're not in the database)
                   Row(
                     children: [
                       const Icon(
@@ -548,16 +726,16 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                         size: 20,
                       ),
                       const SizedBox(width: 4),
-                      Text(
-                        hotelData['rating'].toString(),
-                        style: const TextStyle(
+                      const Text(
+                        '4.5', // Default rating
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '(${hotelData['reviewCount']} reviews)',
+                        '($_totalReviews reviews)', // Default review count
                         style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 14,
@@ -578,7 +756,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    hotelData['description'],
+                    hotel.description ?? 'No description available for this hotel.',
                     style: const TextStyle(
                       fontSize: 14,
                       color: Colors.black87,
@@ -613,36 +791,40 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                     ),
                     child: Column(
                       children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.phone, color: Color(0xFF0088cc)),
-                            const SizedBox(width: 12),
-                            Text(
-                              hotelData['contact'],
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            const Icon(Icons.email, color: Color(0xFF0088cc)),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                hotelData['email'],
+                        if (hotel.phone != null) ...[
+                          Row(
+                            children: [
+                              const Icon(Icons.phone, color: Color(0xFF0088cc)),
+                              const SizedBox(width: 12),
+                              Text(
+                                hotel.phone!,
                                 style: const TextStyle(fontSize: 14),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                        if (hotel.email != null) ...[
+                          Row(
+                            children: [
+                              const Icon(Icons.email, color: Color(0xFF0088cc)),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  hotel.email!,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                        ],
                         Row(
                           children: [
                             const Icon(Icons.access_time, color: Color(0xFF0088cc)),
                             const SizedBox(width: 12),
                             Text(
-                              'Open: ${hotelData['openTime']}',
+                              'Open: 24/7', // Default open time
                               style: const TextStyle(fontSize: 14),
                             ),
                           ],
@@ -662,31 +844,40 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: hotelData['amenities'].map<Widget>((amenity) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.blue.shade200),
-                        ),
-                        child: Text(
-                          amenity,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.blue.shade700,
-                            fontWeight: FontWeight.w500,
+                  if (hotel.amenities.isNotEmpty)
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: hotel.amenities.map<Widget>((amenity) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
                           ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.blue.shade200),
+                          ),
+                          child: Text(
+                            amenity,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.blue.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    )
+                  else
+                    Text(
+                      'No amenities listed',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
                   const SizedBox(height: 32),
 
                   // Customer Reviews Section
@@ -723,9 +914,9 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Text(
-                                  (hotelData['rating'] ?? 4.0).toString(),
-                                  style: const TextStyle(
+                                const Text(
+                                  '4.5', // Default rating
+                                  style: TextStyle(
                                     fontSize: 48,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.black87,
@@ -734,7 +925,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: List.generate(5, (index) {
-                                    double rating = hotelData['rating'] ?? 4.0;
+                                    const double rating = 4.5;
                                     if (index < rating.floor()) {
                                       return const Icon(Icons.star, color: Colors.orange, size: 20);
                                     } else if (index < rating) {
@@ -746,7 +937,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '${hotelData['totalReviews'] ?? 0} reviews',
+                                  '$_totalReviews reviews',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Colors.grey.shade600,
@@ -761,15 +952,15 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                             Expanded(
                               child: Column(
                                 children: [
-                                  _buildRatingBar(5, hotelData['reviewStats']['5'] ?? 0, hotelData['totalReviews'] ?? 0),
+                                  _buildRatingBar(5, _defaultReviewStats['5']!, _totalReviews),
                                   const SizedBox(height: 8),
-                                  _buildRatingBar(4, hotelData['reviewStats']['4'] ?? 0, hotelData['totalReviews'] ?? 0),
+                                  _buildRatingBar(4, _defaultReviewStats['4']!, _totalReviews),
                                   const SizedBox(height: 8),
-                                  _buildRatingBar(3, hotelData['reviewStats']['3'] ?? 0, hotelData['totalReviews'] ?? 0),
+                                  _buildRatingBar(3, _defaultReviewStats['3']!, _totalReviews),
                                   const SizedBox(height: 8),
-                                  _buildRatingBar(2, hotelData['reviewStats']['2'] ?? 0, hotelData['totalReviews'] ?? 0),
+                                  _buildRatingBar(2, _defaultReviewStats['2']!, _totalReviews),
                                   const SizedBox(height: 8),
-                                  _buildRatingBar(1, hotelData['reviewStats']['1'] ?? 0, hotelData['totalReviews'] ?? 0),
+                                  _buildRatingBar(1, _defaultReviewStats['1']!, _totalReviews),
                                 ],
                               ),
                             ),
@@ -816,13 +1007,40 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Column(
-                    children: rooms.asMap().entries.map((entry) {
-                      int index = entry.key;
-                      Map<String, dynamic> room = entry.value;
-                      return _buildRoomCard(room);
-                    }).toList(),
-                  ),
+                  if (rooms.isNotEmpty)
+                    Column(
+                      children: rooms.map((room) => _buildRoomCard(room)).toList(),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.all(40),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.bed,
+                            size: 64,
+                            color: Colors.grey.shade400,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No rooms available',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Check back later for room availability',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
