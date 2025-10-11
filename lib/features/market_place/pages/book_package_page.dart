@@ -3,13 +3,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
+import 'package:journeyq/data/repositories/marketplace_repository/tour_package_repository.dart';
 
 class BookPackagePage extends StatefulWidget {
   final String packageId;
+  final TourPackage? tourPackage;
 
   const BookPackagePage({
     Key? key,
     required this.packageId,
+    this.tourPackage,
   }) : super(key: key);
 
   @override
@@ -20,7 +23,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
   final _formKey = GlobalKey<FormState>();
 
   // Package data
-  Map<String, dynamic>? package;
+  TourPackage? package;
   bool isLoading = true;
   bool hasError = false;
 
@@ -37,69 +40,6 @@ class _BookPackagePageState extends State<BookPackagePage> {
 
   bool _isSubmitting = false;
 
-  // Essential package data for booking
-  static final List<Map<String, dynamic>> _packageDatabase = [
-    {
-      'id': 'package_001',
-      'title': 'Cultural Triangle Tour',
-      'subtitle': '5 Days • Anuradhapura, Polonnaruwa, Sigiriya',
-      'price': 'LKR 25,000',
-      'duration': '5 Days',
-      'image': 'assets/images/cultural_triangle.jpg',
-      'icon': Icons.account_balance,
-      'backgroundColor': const Color(0xFF8B4513),
-    },
-    {
-      'id': 'package_002',
-      'title': 'Hill Country Adventure',
-      'subtitle': '4 Days • Kandy, Nuwara Eliya, Ella',
-      'price': 'LKR 22,000',
-      'duration': '4 Days',
-      'image': 'assets/images/hill_country.jpg',
-      'icon': Icons.landscape,
-      'backgroundColor': const Color(0xFF228B22),
-    },
-    {
-      'id': 'package_003',
-      'title': 'Southern Coast Explorer',
-      'subtitle': '3 Days • Galle, Hikkaduwa, Mirissa',
-      'price': 'LKR 18,000',
-      'duration': '3 Days',
-      'image': 'assets/images/southern_coast.jpg',
-      'icon': Icons.waves,
-      'backgroundColor': const Color(0xFF20B2AA),
-    },
-    {
-      'id': 'package_004',
-      'title': 'Wildlife Safari Package',
-      'subtitle': '6 Days • Yala, Udawalawe, Minneriya',
-      'price': 'LKR 35,000',
-      'duration': '6 Days',
-      'image': 'assets/images/wildlife_safari.jpg',
-      'icon': Icons.pets,
-      'backgroundColor': const Color(0xFF8FBC8F),
-    },
-    {
-      'id': 'package_005',
-      'title': 'Temple & Heritage Tour',
-      'subtitle': '7 Days • Kandy, Dambulla, Galle',
-      'price': 'LKR 28,000',
-      'duration': '7 Days',
-      'image': 'assets/images/temple_heritage.jpg',
-      'icon': Icons.temple_buddhist,
-      'backgroundColor': const Color(0xFF9370DB),
-    },
-  ];
-
-  // Method to get package by ID
-  Map<String, dynamic>? _getPackageById(String id) {
-    try {
-      return _packageDatabase.firstWhere((package) => package['id'] == id);
-    } catch (e) {
-      return null;
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -110,20 +50,39 @@ class _BookPackagePageState extends State<BookPackagePage> {
 
   void _loadPackageData() {
     try {
-      // Get package data by ID
-      final packageData = _getPackageById(widget.packageId);
-      if (packageData != null) {
-        package = packageData;
+      // Use the package data passed from details page
+      if (widget.tourPackage != null) {
+        package = widget.tourPackage;
         setState(() {
           isLoading = false;
         });
       } else {
-        setState(() {
-          hasError = true;
-          isLoading = false;
-        });
+        // Fallback: Try to fetch by ID if no package data was passed
+        _fetchPackageById();
       }
     } catch (e) {
+      print('Error loading package data: $e');
+      setState(() {
+        hasError = true;
+        isLoading = false;
+      });
+    }
+  }
+
+  void _fetchPackageById() async {
+    try {
+      setState(() {
+        isLoading = true;
+      });
+
+      final packageData = await TourPackageRepository.getTourPackageById(widget.packageId);
+
+      setState(() {
+        package = packageData;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching package by ID: $e');
       setState(() {
         hasError = true;
         isLoading = false;
@@ -142,10 +101,27 @@ class _BookPackagePageState extends State<BookPackagePage> {
 
   double get _totalPrice {
     if (package == null) return 0.0;
-    final basePrice = double.parse(
-      package!['price'].replaceAll('LKR ', '').replaceAll(',', ''),
-    );
-    return basePrice * (_adults + _children * 0.7); // Children 30% discount
+
+    // Get effective price
+    double effectivePrice = package!.finalPrice ??
+        package!.originalPrice ??
+        package!.pricePerPerson ?? 0.0;
+
+    return effectivePrice * (_adults + _children * 0.7); // Children 30% discount
+  }
+
+  String get _formattedPrice {
+    if (package == null) return 'LKR 0';
+
+    double effectivePrice = package!.finalPrice ??
+        package!.originalPrice ??
+        package!.pricePerPerson ?? 0.0;
+
+    if (effectivePrice > 0) {
+      return 'LKR ${NumberFormat('#,###').format(effectivePrice)}';
+    } else {
+      return 'Contact for Price';
+    }
   }
 
   void _selectDate() async {
@@ -463,7 +439,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Your booking request for ${package!['title']} has been sent to the tour agency. They will contact you within 24 hours to confirm your booking.',
+                'Your booking request for ${package?.name ?? 'the tour package'} has been sent to the tour agency. They will contact you within 24 hours to confirm your booking.',
                 style: const TextStyle(
                   fontSize: 14,
                   color: Colors.grey,
@@ -504,7 +480,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    _buildBookingDetailRow('Package', package!['title']),
+                    _buildBookingDetailRow('Package', package?.name ?? 'Tour Package'),
                     _buildBookingDetailRow('Date', DateFormat('MMM dd, yyyy').format(_selectedDate!)),
                     _buildBookingDetailRow('Travelers', '${_adults + _children}'),
                     const Divider(),
@@ -606,6 +582,50 @@ class _BookPackagePageState extends State<BookPackagePage> {
     );
   }
 
+  Widget _buildPackageImage() {
+    if (package?.imageUrl != null && package!.imageUrl!.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Image.network(
+          package!.imageUrl!,
+          width: 80,
+          height: 80,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return _buildImagePlaceholder();
+          },
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return _buildImagePlaceholder();
+          },
+        ),
+      );
+    } else {
+      return _buildImagePlaceholder();
+    }
+  }
+
+  Widget _buildImagePlaceholder() {
+    return Container(
+      width: 80,
+      height: 80,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF0088cc),
+            const Color(0xFF0088cc).withOpacity(0.8),
+          ],
+        ),
+      ),
+      child: const Icon(
+        Icons.tour,
+        color: Colors.white,
+        size: 40,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -617,7 +637,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
           foregroundColor: Colors.white,
           elevation: 0,
           leading: IconButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.pop(),
             icon: const Icon(Icons.arrow_back),
           ),
         ),
@@ -634,7 +654,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
           foregroundColor: Colors.white,
           elevation: 0,
           leading: IconButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.pop(),
             icon: const Icon(Icons.arrow_back),
             color: Colors.white,
           ),
@@ -656,7 +676,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
               ),
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => context.pop(),
                 child: const Text('Back to Tour Packages'),
               ),
             ],
@@ -671,15 +691,15 @@ class _BookPackagePageState extends State<BookPackagePage> {
         title: const Text(
           'Book Package',
           style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: Colors.white
+              fontWeight: FontWeight.w600,
+              color: Colors.white
           ),
         ),
         backgroundColor: const Color(0xFF0088cc),
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
           icon: const Icon(Icons.arrow_back),
           color: Colors.white,
         ),
@@ -709,52 +729,14 @@ class _BookPackagePageState extends State<BookPackagePage> {
                 child: Row(
                   children: [
                     // Package Image
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.2),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.asset(
-                          package!['image'] ?? 'assets/images/default_package.jpg',
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16),
-                                gradient: LinearGradient(
-                                  colors: [
-                                    package!['backgroundColor'] ?? const Color(0xFF0088cc),
-                                    (package!['backgroundColor'] ?? const Color(0xFF0088cc)).withOpacity(0.8),
-                                  ],
-                                ),
-                              ),
-                              child: Icon(
-                                package!['icon'] ?? Icons.tour,
-                                color: Colors.white,
-                                size: 40,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
+                    _buildPackageImage(),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            package!['title'],
+                            package!.name,
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -763,7 +745,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            package!['subtitle'],
+                            package!.location.isNotEmpty ? package!.location : 'Tour Destination',
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.grey,
@@ -772,25 +754,27 @@ class _BookPackagePageState extends State<BookPackagePage> {
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.shade50,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.orange.shade200),
-                                ),
-                                child: Text(
-                                  package!['duration'],
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.orange.shade700,
-                                    fontWeight: FontWeight.w600,
+                              if (package!.duration != null) ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.shade50,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.orange.shade200),
+                                  ),
+                                  child: Text(
+                                    package!.duration!,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.orange.shade700,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
+                                const SizedBox(width: 8),
+                              ],
                               Text(
-                                package!['price'],
+                                _formattedPrice,
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -1017,8 +1001,8 @@ class _BookPackagePageState extends State<BookPackagePage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Adults ($_adults × ${package!['price']})'),
-                        Text('LKR ${NumberFormat('#,###').format(double.parse(package!['price'].replaceAll('LKR ', '').replaceAll(',', '')) * _adults)}'),
+                        Text('Adults ($_adults × $_formattedPrice)'),
+                        Text('LKR ${NumberFormat('#,###').format((package!.finalPrice ?? package!.originalPrice ?? package!.pricePerPerson ?? 0.0) * _adults)}'),
                       ],
                     ),
                     if (_children > 0) ...[
@@ -1027,7 +1011,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('Children ($_children × 70%)'),
-                          Text('LKR ${NumberFormat('#,###').format(double.parse(package!['price'].replaceAll('LKR ', '').replaceAll(',', '')) * _children * 0.7)}'),
+                          Text('LKR ${NumberFormat('#,###').format((package!.finalPrice ?? package!.originalPrice ?? package!.pricePerPerson ?? 0.0) * _children * 0.7)}'),
                         ],
                       ),
                     ],

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:journeyq/features/market_place/pages/searchbar.dart';
-import 'package:journeyq/features/market_place/pages/data.dart'; // Import centralized data
+import 'package:journeyq/data/repositories/marketplace_repository/tour_package_repository.dart';
 
 class ViewAllTourPackagesPage extends StatefulWidget {
   const ViewAllTourPackagesPage({Key? key}) : super(key: key);
@@ -14,21 +14,66 @@ class ViewAllTourPackagesPage extends StatefulWidget {
 }
 
 class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
-  // Comprehensive Tour Packages Data with IDs (matching tour package details database)
+  List<TourPackage> tourPackages = [];
+  bool isLoading = true;
+  String errorMessage = '';
 
+  @override
+  void initState() {
+    super.initState();
+    _loadTourPackages();
+  }
+
+  Future<void> _loadTourPackages() async {
+    try {
+      setState(() {
+        isLoading = true;
+        errorMessage = '';
+      });
+
+      print('🗺️ Loading all tour packages...');
+      final packages = await TourPackageRepository.getAllTourPackages();
+
+      if (mounted) {
+        setState(() {
+          tourPackages = packages;
+          isLoading = false;
+        });
+      }
+
+      print('🗺️ Successfully loaded ${packages.length} tour packages');
+
+      // Debug: Print status of each package
+      for (var package in packages) {
+        print('📦 Package: ${package.name} | Status: ${package.status} | Active: ${package.isActive}');
+      }
+    } catch (e, stackTrace) {
+      print('❌ Error loading tour packages: $e');
+      print('Stack trace: $stackTrace');
+
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+          errorMessage = e.toString();
+        });
+      }
+    }
+  }
 
   void _navigateToPackageDetails(String packageId) {
     context.push('/marketplace/tour_packages/details/$packageId');
   }
 
-  void _bookPackage(String packageId) {
-    context.push('/marketplace/book_package/$packageId');
-  }
+  Widget _buildPackageCard(TourPackage package) {
+    // Calculate discount percentage if applicable
+    double? discountPercentage;
+    if (package.originalPrice != null && package.finalPrice != null && package.originalPrice! > 0) {
+      discountPercentage = ((package.originalPrice! - package.finalPrice!) / package.originalPrice! * 100);
+    }
 
-  Widget _buildPackageCard(Map<String, dynamic> package) {
     return GestureDetector(
       onTap: () {
-        _navigateToPackageDetails(package['id']);
+        _navigateToPackageDetails(package.id);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
@@ -63,83 +108,38 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                 ),
                 child: Stack(
                   children: [
-                    Image.asset(
-                      package['image'],
-                      width: double.infinity,
-                      height: 200,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: double.infinity,
-                          height: 200,
+                    // Tour Package Image
+                    _buildTourPackageImage(package),
+
+                    // Duration Badge - ONLY show duration, remove category
+                    if (package.duration != null && package.duration!.isNotEmpty)
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                package['backgroundColor'],
-                                package['backgroundColor'].withOpacity(0.8),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                            color: Colors.black54,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            package.duration!,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          child: Icon(
-                            package['icon'],
-                            size: 80,
-                            color: Colors.white,
-                          ),
-                        );
-                      },
-                    ),
-                    // Duration Badge
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black54,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          package['duration'],
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
                         ),
                       ),
-                    ),
-                    // Category Badge
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: MarketplaceData.getCategoryColor(package['category']),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          package['category'],
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Discount Badge
-                    if (package['originalPrice'] != null)
+
+                    // Discount Badge - ONLY show discount, remove availability badge
+                    if (discountPercentage != null && discountPercentage > 0)
                       Positioned(
-                        bottom: 12,
+                        top: 12, // Changed from bottom to top
                         left: 12,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -151,7 +151,7 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            'SAVE ${((double.parse(package['originalPrice'].replaceAll('LKR ', '').replaceAll(',', '')) - double.parse(package['price'].replaceAll('LKR ', '').replaceAll(',', ''))) / double.parse(package['originalPrice'].replaceAll('LKR ', '').replaceAll(',', '')) * 100).round()}%',
+                            'SAVE ${discountPercentage.round()}%',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10,
@@ -160,34 +160,11 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                           ),
                         ),
                       ),
-                    // Availability Status
-                    if (!package['isAvailable'])
-                      Positioned(
-                        bottom: 12,
-                        right: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.orange,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text(
-                            'Temporarily Unavailable',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),
             ),
+
             // Package Details
             Padding(
               padding: const EdgeInsets.all(16),
@@ -198,7 +175,7 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                     children: [
                       Expanded(
                         child: Text(
-                          package['title'],
+                          package.name,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -206,16 +183,14 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                           ),
                         ),
                       ),
-                      Icon(
-                        package['isAvailable'] ? Icons.check_circle : Icons.schedule,
-                        color: package['isAvailable'] ? Colors.green : Colors.orange,
-                        size: 20,
-                      ),
+                      // REMOVED the availability icon from here
                     ],
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    package['subtitle'],
+                    package.aboutTour.length > 100
+                        ? '${package.aboutTour.substring(0, 100)}...'
+                        : package.aboutTour,
                     style: const TextStyle(
                       fontSize: 14,
                       color: Colors.grey,
@@ -223,7 +198,7 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                   ),
                   const SizedBox(height: 8),
 
-                  // Agency Information
+                  // Location Information
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
@@ -241,19 +216,10 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                             color: Colors.blue.shade100,
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: Image.asset(
-                              package['agencyLogo'],
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Icon(
-                                  Icons.business,
-                                  size: 16,
-                                  color: Colors.blue.shade600,
-                                );
-                              },
-                            ),
+                          child: Icon(
+                            Icons.location_on,
+                            size: 16,
+                            color: Colors.blue.shade600,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -262,7 +228,7 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                package['agency'] ?? 'Tour Agency',
+                                package.location.isNotEmpty ? package.location : 'Multiple Locations',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -270,23 +236,12 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.star,
-                                    size: 12,
-                                    color: Colors.amber.shade600,
-                                  ),
-                                  const SizedBox(width: 2),
-                                  Text(
-                                    package['agencyRating'].toString(),
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.blue.shade600,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
+                              Text(
+                                'Tour Package',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.blue.shade600,
+                                ),
                               ),
                             ],
                           ),
@@ -297,34 +252,36 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                   const SizedBox(height: 8),
 
                   // Rating and Reviews
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.star,
-                        color: Colors.amber,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        package['rating'].toString(),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                          fontSize: 14,
+                  if (package.rating != null)
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.star,
+                          color: Colors.amber,
+                          size: 18,
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '(${package['reviews']} reviews)',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
+                        const SizedBox(width: 4),
+                        Text(
+                          package.rating!.toStringAsFixed(1),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                            fontSize: 14,
+                          ),
                         ),
-                      )
-                    ],
-                  ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          '(reviews)',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+
                   const SizedBox(height: 8),
-                  
+
                   // Price and Book Now
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -332,17 +289,26 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (package['originalPrice'] != null)
+                          // Original Price (if discount available)
+                          if (package.originalPrice != null && discountPercentage != null && discountPercentage > 0)
                             Text(
-                              package['originalPrice'],
+                              'LKR ${package.originalPrice!.toStringAsFixed(2)}',
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey,
                                 decoration: TextDecoration.lineThrough,
                               ),
                             ),
+
+                          // Final Price or Original Price
                           Text(
-                            package['price'],
+                            package.finalPrice != null
+                                ? 'LKR ${package.finalPrice!.toStringAsFixed(2)}'
+                                : package.originalPrice != null
+                                ? 'LKR ${package.originalPrice!.toStringAsFixed(2)}'
+                                : package.pricePerPerson != null
+                                ? 'LKR ${package.pricePerPerson!.toStringAsFixed(2)}/person'
+                                : 'Price on request',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -359,19 +325,19 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
                         ],
                       ),
                       ElevatedButton(
-                        onPressed: package['isAvailable'] ? () {
-                          _navigateToPackageDetails(package['id']);
+                        onPressed: package.isActive ? () {
+                          _navigateToPackageDetails(package.id);
                         } : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: package['isAvailable'] 
-                              ? const Color(0xFF0088cc) 
+                          backgroundColor: package.isActive
+                              ? const Color(0xFF0088cc)
                               : Colors.grey,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: Text(package['isAvailable'] ? 'View Details' : 'Unavailable'),
+                        child: Text(package.isActive ? 'View Details' : 'Unavailable'),
                       ),
                     ],
                   ),
@@ -380,6 +346,82 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTourPackageImage(TourPackage package) {
+    if (package.imageUrl != null && package.imageUrl!.isNotEmpty) {
+      return Image.network(
+        package.imageUrl!,
+        width: double.infinity,
+        height: 200,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            width: double.infinity,
+            height: 200,
+            color: Colors.grey.shade200,
+            child: Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                    loadingProgress.expectedTotalBytes!
+                    : null,
+                strokeWidth: 2,
+                color: const Color(0xFF0088cc),
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return _buildPlaceholderImage(package.name, Icons.tour);
+        },
+      );
+    }
+
+    return _buildPlaceholderImage(package.name, Icons.tour);
+  }
+
+  Widget _buildPlaceholderImage(String name, IconData icon) {
+    return Container(
+      width: double.infinity,
+      height: 200,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF0088cc),
+            const Color(0xFF0088cc).withOpacity(0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 64,
+            color: Colors.white,
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -435,18 +477,112 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
     );
   }
 
+  Widget _buildLoadingIndicator() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          children: [
+            const CircularProgressIndicator(
+              color: Color(0xFF0088cc),
+              strokeWidth: 3,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Loading tour packages...',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
+  Widget _buildErrorWidget() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to load tour packages',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              errorMessage.length > 100 ? 'Check your internet connection' : errorMessage,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _loadTourPackages,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try Again'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0088cc),
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-  @override
-  void initState() {
-    super.initState();
+  Widget _buildEmptyWidget() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          children: [
+            Icon(
+              Icons.tour,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No tour packages found',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Check back later for new tour packages',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final displayedPackages = MarketplaceData.tourPackages;
-
-
     // Count variables - replace with your actual state variables
     int orderCount = 3; // Number of pending orders
     int chatCount = 7; // Number of unread messages
@@ -493,93 +629,73 @@ class _ViewAllTourPackagesPageState extends State<ViewAllTourPackagesPage> {
           const SizedBox(width: 16),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Search Bar
-              SimpleSearchBar(
-                onSearchTap: () {
-                  context.push('/marketplace/search');
-                },
-                placeholder: 'Search tour packages, agencies...',
-              ),
-              
-              const SizedBox(height: 24),
-
-              // Tour Packages Section Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'All Tour Packages (${displayedPackages.length})',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  )
-                ],
-              ),
-              
-              const SizedBox(height: 16),
-
-              // Tour Packages List
-              if (displayedPackages.isEmpty)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(40),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.search_off,
-                          size: 64,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No tour packages found',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Try adjusting your search criteria',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[500],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: displayedPackages.length,
-                  itemBuilder: (context, index) {
-                    return _buildPackageCard(displayedPackages[index]);
+      body: RefreshIndicator(
+        onRefresh: _loadTourPackages,
+        color: const Color(0xFF0088cc),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Search Bar
+                SimpleSearchBar(
+                  onSearchTap: () {
+                    context.push('/marketplace/search');
                   },
+                  placeholder: 'Search tour packages, agencies...',
                 ),
-                
-              // Add some bottom padding for better scrolling
-              const SizedBox(height: 80),
-            ],
+
+                const SizedBox(height: 24),
+
+                // Tour Packages Section Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'All Tour Packages (${tourPackages.length})',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    if (!isLoading)
+                      IconButton(
+                        onPressed: _loadTourPackages,
+                        icon: const Icon(Icons.refresh),
+                        tooltip: 'Refresh',
+                      ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // Tour Packages List
+                if (isLoading)
+                  _buildLoadingIndicator()
+                else if (errorMessage.isNotEmpty)
+                  _buildErrorWidget()
+                else if (tourPackages.isEmpty)
+                    _buildEmptyWidget()
+                  else
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: tourPackages.length,
+                      itemBuilder: (context, index) {
+                        return _buildPackageCard(tourPackages[index]);
+                      },
+                    ),
+
+                // Add some bottom padding for better scrolling
+                const SizedBox(height: 80),
+              ],
+            ),
           ),
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 }

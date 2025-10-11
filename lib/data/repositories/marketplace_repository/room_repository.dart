@@ -263,6 +263,28 @@ class Room {
     this.bathrooms,
   });
 
+  // Add this method to handle better room type detection
+  String get displayRoomType {
+    if (roomType.isNotEmpty && roomType != 'Unknown' && roomType != 'Standard') {
+      return roomType;
+    }
+
+    // Determine room type based on features
+    if (amenities.any((amenity) => amenity.toLowerCase().contains('queen bed'))) {
+      return 'Queen Room';
+    } else if (amenities.any((amenity) => amenity.toLowerCase().contains('king bed'))) {
+      return 'King Room';
+    } else if (amenities.any((amenity) => amenity.toLowerCase().contains('single bed'))) {
+      return 'Single Room';
+    } else if (price > 10000) {
+      return 'Deluxe Room';
+    } else if (price > 7000) {
+      return 'Standard Room';
+    } else {
+      return 'Budget Room';
+    }
+  }
+
   factory Room.fromJson(Map<String, dynamic> json) {
     debugPrint('─────────────────────────────────────');
     debugPrint('Parsing room JSON: $json');

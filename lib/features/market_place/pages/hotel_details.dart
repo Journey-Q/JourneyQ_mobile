@@ -60,6 +60,72 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
     context.push('/marketplace/hotels/reviews/${widget.hotelId}');
   }
 
+  void _viewRoomDetails(Room room) {
+    // Convert Room object to Map for compatibility with RoomDetailsPage
+    final roomMap = {
+      'id': room.id,
+      'type': _getFormattedRoomName(room),
+      'roomType': room.roomType,
+      'roomNumber': room.roomNumber,
+      'price': room.formattedPrice,
+      'size': room.size != null ? '${room.size} sqm' : 'Standard',
+      'bedrooms': room.bedrooms ?? 1,
+      'bathrooms': room.bathrooms ?? 1,
+      'capacity': room.capacity,
+      'maxOccupancy': room.capacity,
+      'bedType': _getBedTypeFromAmenities(room.amenities),
+      'amenities': room.amenities,
+      'status': room.status.name.toLowerCase(),
+      'available': room.status == RoomStatus.AVAILABLE,
+      'image': room.imageUrl,
+      'backgroundColor': _getRoomColor(room.id),
+    };
+
+    // Convert HotelProfile to Map for compatibility with RoomDetailsPage
+    final hotelMap = {
+      'id': hotelData?.id ?? '',
+      'name': hotelData?.name ?? 'Unknown Hotel',
+      'location': hotelData?.location ?? 'Unknown Location',
+      'description': hotelData?.description,
+      'phone': hotelData?.phone,
+      'email': hotelData?.email,
+      'imageUrl': hotelData?.imageUrl,
+      'amenities': hotelData?.amenities ?? [],
+      'isActive': hotelData?.isActive ?? false,
+    };
+
+    context.push(
+      '/marketplace/hotels/room-details',
+      extra: {
+        'hotel': hotelMap,
+        'room': roomMap,
+      },
+    );
+  }
+
+  String _getBedTypeFromAmenities(List<String> amenities) {
+    for (final amenity in amenities) {
+      if (amenity.toLowerCase().contains('queen')) return 'Queen Bed';
+      if (amenity.toLowerCase().contains('king')) return 'King Bed';
+      if (amenity.toLowerCase().contains('single')) return 'Single Bed';
+      if (amenity.toLowerCase().contains('double')) return 'Double Bed';
+      if (amenity.toLowerCase().contains('twin')) return 'Twin Beds';
+    }
+    return 'Standard Bed';
+  }
+
+  Color _getRoomColor(String roomId) {
+    final colors = [
+      const Color(0xFF0088cc),
+      const Color(0xFF4CAF50),
+      const Color(0xFF9C27B0),
+      const Color(0xFFF44336),
+      const Color(0xFFFF9800),
+    ];
+    final colorIndex = roomId.hashCode % colors.length;
+    return colors[colorIndex];
+  }
+
   Widget _buildRatingBar(int starCount, int reviewCount, int totalReviews) {
     double percentage = totalReviews > 0 ? reviewCount / totalReviews : 0;
 
@@ -111,8 +177,71 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
     );
   }
 
-  // Enhanced room card with separate bedroom/bathroom counts
+  // Helper method for feature items
+  Widget _buildFeatureItem({required IconData icon, required String text}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, size: 16, color: Colors.grey.shade600),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade800,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Helper method to get formatted room name
+  String _getFormattedRoomName(Room room) {
+    String roomType = room.roomType;
+
+    // Handle empty or default room types
+    if (roomType.isEmpty || roomType == 'Unknown' || roomType == 'Standard') {
+      // Try to determine room type from amenities or other features
+      if (room.amenities.any((amenity) => amenity.toLowerCase().contains('queen') || amenity.toLowerCase().contains('king'))) {
+        return 'Deluxe Room';
+      } else if (room.amenities.any((amenity) => amenity.toLowerCase().contains('suite'))) {
+        return 'Suite';
+      } else if (room.price > 10000) {
+        return 'Premium Room';
+      } else if (room.price > 7000) {
+        return 'Standard Room';
+      } else {
+        return 'Budget Room';
+      }
+    }
+
+    // Capitalize first letter of each word
+    roomType = roomType.split(' ').map((word) {
+      if (word.isEmpty) return '';
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+
+    return roomType;
+  }
+
+  // Helper method to get room number display
+  String _getRoomNumberDisplay(Room room) {
+    if (room.roomNumber.isNotEmpty && room.roomNumber != 'Unknown') {
+      return 'Room ${room.roomNumber}';
+    }
+    return 'Room Details';
+  }
+
+  // Enhanced room card with proper data mapping
   Widget _buildRoomCard(Room room) {
+    bool isBookable = room.status == RoomStatus.AVAILABLE;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -158,7 +287,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: room.statusColor,
+                        color: room.statusColor.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -171,6 +300,21 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                       ),
                     ),
                   ),
+                  // Overlay for unavailable rooms
+                  if (!isBookable)
+                    Container(
+                      color: Colors.black54,
+                      child: Center(
+                        child: Text(
+                          room.statusText.toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -181,12 +325,13 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Room Type - FIXED: Better room name handling
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
                       child: Text(
-                        room.roomType,
+                        _getFormattedRoomName(room),
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -207,7 +352,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                 ),
                 const SizedBox(height: 12),
 
-                // Room Number
+                // Room Number - FIXED: Better room number display
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -219,7 +364,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                       Icon(Icons.meeting_room, size: 16, color: Colors.grey.shade600),
                       const SizedBox(width: 8),
                       Text(
-                        'Room ${room.roomNumber}',
+                        _getRoomNumberDisplay(room),
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade700,
@@ -231,7 +376,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                 ),
                 const SizedBox(height: 12),
 
-                // Bedroom & Bathroom Counts Section
+                // Room Features - FIXED: Better layout and pixel alignment
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -243,82 +388,37 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                     children: [
                       // Capacity
                       Expanded(
-                        child: Row(
-                          children: [
-                            Icon(Icons.people, size: 18, color: Colors.grey.shade600),
-                            const SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  room.capacityText,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.grey.shade800,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                )
-                              ],
-                            ),
-                          ],
+                        child: _buildFeatureItem(
+                          icon: Icons.people,
+                          text: '${room.capacity} guest${room.capacity > 1 ? 's' : ''}',
                         ),
                       ),
                       // Vertical divider
                       Container(
-                        height: 30,
+                        height: 24,
                         width: 1,
                         color: Colors.grey.shade300,
                       ),
                       const SizedBox(width: 12),
                       // Bedrooms
                       Expanded(
-                        child: Row(
-                          children: [
-                            Icon(Icons.bed, size: 18, color: Colors.grey.shade600),
-                            const SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${room.bedrooms ?? 1} Bedroom${(room.bedrooms ?? 1) > 1 ? 's' : ''}',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.grey.shade800,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                )
-                              ],
-                            ),
-                          ],
+                        child: _buildFeatureItem(
+                          icon: Icons.bed,
+                          text: '${room.bedrooms ?? 1} bedroom${(room.bedrooms ?? 1) > 1 ? 's' : ''}',
                         ),
                       ),
                       // Vertical divider
                       Container(
-                        height: 30,
+                        height: 24,
                         width: 1,
                         color: Colors.grey.shade300,
                       ),
                       const SizedBox(width: 12),
                       // Bathrooms
                       Expanded(
-                        child: Row(
-                          children: [
-                            Icon(Icons.bathtub, size: 18, color: Colors.grey.shade600),
-                            const SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${room.bathrooms ?? 1} Bathroom${(room.bathrooms ?? 1) > 1 ? 's' : ''}',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.grey.shade800,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                )
-                              ],
-                            ),
-                          ],
+                        child: _buildFeatureItem(
+                          icon: Icons.bathtub,
+                          text: '${room.bathrooms ?? 1} bathroom${(room.bathrooms ?? 1) > 1 ? 's' : ''}',
                         ),
                       ),
                     ],
@@ -326,78 +426,101 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                 ),
                 const SizedBox(height: 12),
 
-                // Room Description
-                Text(
-                  room.description,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade700,
-                    height: 1.4,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 12),
-
-                // Room Amenities
+                // Room Amenities - FIXED: Better amenities display
                 if (room.amenities.isNotEmpty)
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: room.amenities.take(4).map<Widget>((amenity) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
+                        children: room.amenities.take(6).map<Widget>((amenity) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.blue.shade200),
+                            ),
+                            child: Text(
+                              amenity,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.blue.shade700,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  ),
+
+                // Price and Book Button - FIXED: Better alignment and syntax error
+                Container(
+                  padding: const EdgeInsets.only(top: 8),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(
+                        color: Colors.grey.shade200,
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            room.formattedPrice,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                          if (!isBookable)
+                            Text(
+                              room.statusText,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.red.shade600,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                        ],
+                      ),
+                      ElevatedButton(
+                        onPressed: isBookable ? () {
+                          _viewRoomDetails(room);
+                        } : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isBookable ? const Color(0xFF0088cc) : Colors.grey.shade400,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
                         ),
                         child: Text(
-                          amenity,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.blue.shade700,
+                          isBookable ? 'View Details' : 'Not Available',
+                          style: const TextStyle(
+                            fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                      );
-                    }).toList(),
+                      ),
+                    ],
                   ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      room.formattedPrice,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Navigate to room booking page
-                        context.push(
-                          '/marketplace/hotels/booking/${widget.hotelId}/room/${room.id}',
-                          extra: {
-                            'hotel': hotelData,
-                            'room': room,
-                          },
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0088cc),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text('Book Now'),
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -408,6 +531,8 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
   }
 
   Widget _buildRoomImage(Room room) {
+    bool isBookable = room.status == RoomStatus.AVAILABLE;
+
     if (room.imageUrl != null && room.imageUrl!.isNotEmpty) {
       return Image.network(
         room.imageUrl!,
@@ -441,6 +566,8 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
   }
 
   Widget _buildRoomPlaceholder(Room room) {
+    bool isBookable = room.status == RoomStatus.AVAILABLE;
+
     // Generate consistent color based on room ID
     final colors = [
       const Color(0xFF0088cc),
@@ -475,7 +602,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            room.roomType,
+            _getFormattedRoomName(room),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 16,
@@ -485,6 +612,17 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
+          if (!isBookable) ...[
+            const SizedBox(height: 8),
+            Text(
+              room.statusText,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ],
       ),
     );

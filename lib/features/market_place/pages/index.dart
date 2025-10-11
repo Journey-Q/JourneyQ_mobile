@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:journeyq/features/market_place/pages/searchbar.dart';
 import 'package:journeyq/data/repositories/marketplace_repository/hotel_repository.dart';
 import 'package:journeyq/data/repositories/marketplace_repository/agency_repository.dart';
-import 'package:journeyq/data/repositories/marketplace_repository/tour_guide_repository.dart';
+import 'package:journeyq/data/repositories/marketplace_repository/tour_package_repository.dart';
 
 class MarketplacePage extends StatefulWidget {
   const MarketplacePage({Key? key}) : super(key: key);
@@ -26,10 +26,10 @@ class _MarketplacePageState extends State<MarketplacePage> {
   bool isLoadingAgencies = true;
   String errorMessageAgencies = '';
 
-  // State for real tour guide data
-  List<TourGuideProfile> popularTourGuides = [];
-  bool isLoadingTourGuides = true;
-  String errorMessageTourGuides = '';
+  // State for real tour package data
+  List<TourPackage> popularTourPackages = [];
+  bool isLoadingTourPackages = true;
+  String errorMessageTourPackages = '';
 
   // Main services
   final List<Map<String, dynamic>> mainServices = [
@@ -46,10 +46,10 @@ class _MarketplacePageState extends State<MarketplacePage> {
       'route': 'vehicle_agency',
     },
     {
-      'name': 'Tour Guide',
-      'icon': Icons.person_pin_circle,
+      'name': 'Packages',
+      'icon': Icons.tour,
       'color': const Color(0xFF0088cc),
-      'route': 'tour_guide',
+      'route': 'tour_packages',
     },
   ];
 
@@ -79,7 +79,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
     await Future.wait([
       _loadPopularHotels(),
       _loadPopularAgencies(),
-      _loadPopularTourGuides(),
+      _loadPopularTourPackages(),
     ]);
   }
 
@@ -156,37 +156,37 @@ class _MarketplacePageState extends State<MarketplacePage> {
     }
   }
 
-  Future<void> _loadPopularTourGuides() async {
+  Future<void> _loadPopularTourPackages() async {
     try {
       setState(() {
-        isLoadingTourGuides = true;
-        errorMessageTourGuides = '';
+        isLoadingTourPackages = true;
+        errorMessageTourPackages = '';
       });
 
-      print('🗺️ Starting to load popular tour guides...');
-      final guides = await TourGuideRepository.getPopularTourGuides(limit: 6);
+      print('🗺️ Starting to load popular tour packages...');
+      final packages = await TourPackageRepository.getPopularTourPackages(limit: 6);
 
-      print('🗺️ Tour guides loaded successfully: ${guides.length} guides');
+      print('🗺️ Tour packages loaded successfully: ${packages.length} packages');
 
       if (mounted) {
         setState(() {
-          popularTourGuides = guides;
-          isLoadingTourGuides = false;
+          popularTourPackages = packages;
+          isLoadingTourPackages = false;
         });
       }
 
-      // Print tour guide details for debugging
-      for (var guide in guides) {
-        print('Tour Guide: ${guide.name} | Specialty: ${guide.specialty} | Image: ${guide.imageUrl}');
+      // Print tour package details for debugging - UPDATED FIELDS
+      for (var package in packages) {
+        print('Tour Package: ${package.name} | Location: ${package.location} | Final Price: ${package.finalPrice} | Original Price: ${package.originalPrice}');
       }
     } catch (e, stackTrace) {
-      print('❌ Error loading tour guides: $e');
+      print('❌ Error loading tour packages: $e');
       print('Stack trace: $stackTrace');
 
       if (mounted) {
         setState(() {
-          isLoadingTourGuides = false;
-          errorMessageTourGuides = e.toString();
+          isLoadingTourPackages = false;
+          errorMessageTourPackages = e.toString();
         });
       }
     }
@@ -369,12 +369,12 @@ class _MarketplacePageState extends State<MarketplacePage> {
 
                 const SizedBox(height: 24),
 
-                // Tour Guides Section
+                // Tour Packages Section
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Popular Tour Guides',
+                      'Popular Tour Packages',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -395,15 +395,15 @@ class _MarketplacePageState extends State<MarketplacePage> {
                 ),
                 const SizedBox(height: 12),
 
-                // Tour Guide List
-                if (isLoadingTourGuides)
-                  _buildLoadingIndicator('tour guides')
-                else if (errorMessageTourGuides.isNotEmpty)
-                  _buildErrorWidget('tour guides', errorMessageTourGuides, _loadPopularTourGuides)
-                else if (popularTourGuides.isEmpty)
-                    _buildEmptyWidget('tour guides')
+                // Tour Package List
+                if (isLoadingTourPackages)
+                  _buildLoadingIndicator('tour packages')
+                else if (errorMessageTourPackages.isNotEmpty)
+                  _buildErrorWidget('tour packages', errorMessageTourPackages, _loadPopularTourPackages)
+                else if (popularTourPackages.isEmpty)
+                    _buildEmptyWidget('tour packages')
                   else
-                    _buildTourGuideList(),
+                    _buildTourPackageList(),
 
                 const SizedBox(height: 24),
               ],
@@ -503,8 +503,8 @@ class _MarketplacePageState extends State<MarketplacePage> {
       case 'travel agencies':
         icon = Icons.directions_car;
         break;
-      case 'tour guides':
-        icon = Icons.person_pin_circle;
+      case 'tour packages':
+        icon = Icons.tour;
         break;
       default:
         icon = Icons.error_outline;
@@ -573,15 +573,15 @@ class _MarketplacePageState extends State<MarketplacePage> {
     );
   }
 
-  Widget _buildTourGuideList() {
+  Widget _buildTourPackageList() {
     return SizedBox(
-      height: 240,
+      height: 280, // Increased height only for tour packages
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: popularTourGuides.length,
+        itemCount: popularTourPackages.length,
         padding: const EdgeInsets.symmetric(horizontal: 4),
         itemBuilder: (context, index) {
-          return _buildTourGuideCard(popularTourGuides[index]);
+          return _buildTourPackageCard(popularTourPackages[index]);
         },
       ),
     );
@@ -804,14 +804,15 @@ class _MarketplacePageState extends State<MarketplacePage> {
     );
   }
 
-  Widget _buildTourGuideCard(TourGuideProfile guide) {
+  Widget _buildTourPackageCard(TourPackage package) {
     return GestureDetector(
       onTap: () {
-        print('Tapped tour guide: ${guide.id}');
-        context.push('/marketplace/tour_packages/details/${guide.id}');
+        print('Tapped tour package: ${package.id}');
+        context.push('/marketplace/tour_packages/details/${package.id}');
       },
       child: Container(
         width: 200,
+        height: 260, // Slightly increased to prevent overflow
         margin: const EdgeInsets.only(right: 16),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -827,89 +828,186 @@ class _MarketplacePageState extends State<MarketplacePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Tour Guide Image
+            // Tour Package Image - Fixed height
             ClipRRect(
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
               ),
-              child: _buildTourGuideImage(guide),
+              child: Container(
+                width: double.infinity,
+                height: 140, // Fixed image height
+                child: _buildTourPackageImage(package),
+              ),
             ),
 
-            // Tour Guide Details
+            // Tour Package Details
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      guide.name,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                        height: 1.2,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      guide.specialty,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (guide.rating != null) ...[
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.star,
-                            size: 12,
-                            color: Colors.amber.shade600,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            guide.rating!,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey.shade600,
-                              fontWeight: FontWeight.w500,
+                    // Name and Location Section
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Package Name
+                        SizedBox(
+                          height: 40, // Fixed height for name
+                          child: Text(
+                            package.name,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                              height: 1.2,
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ],
-                      ),
-                    ],
-                    if (guide.location != null) ...[
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on,
-                            size: 12,
-                            color: Colors.grey.shade600,
+                        ),
+                        const SizedBox(height: 4),
+
+                        // Location
+                        if (package.location.isNotEmpty)
+                          Text(
+                            package.location,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              guide.location!,
-                              style: TextStyle(
-                                fontSize: 11,
+                      ],
+                    ),
+
+                    // REMOVED THE GAP - Price starts immediately after location
+                    const SizedBox(height: 8), // Reduced gap
+
+                    // Pricing and Info Section
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Pricing with discount
+                        if (package.originalPrice != null && package.discount != null && package.discount! > 0)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Final price and discount badge in same row
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'LKR ${package.finalPrice?.toStringAsFixed(2) ?? package.originalPrice!.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      color: Color(0xFF0088cc),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.shade50,
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(color: Colors.red.shade200),
+                                    ),
+                                    child: Text(
+                                      '${package.discount}% OFF',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.red.shade600,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              // Original price with strikethrough
+                              Text(
+                                'LKR ${package.originalPrice!.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade500,
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                              ),
+                            ],
+                          )
+                        else if (package.finalPrice != null)
+                          Text(
+                            'LKR ${package.finalPrice!.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Color(0xFF0088cc),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
+                        else if (package.originalPrice != null)
+                            Text(
+                              'LKR ${package.originalPrice!.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Color(0xFF0088cc),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )
+                          else if (package.pricePerPerson != null)
+                              Text(
+                                'LKR ${package.pricePerPerson!.toStringAsFixed(2)}/person',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF0088cc),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+
+                        const SizedBox(height: 6),
+
+                        // Duration and Rating at the bottom
+                        Row(
+                          children: [
+                            if (package.duration != null && package.duration!.isNotEmpty) ...[
+                              Icon(
+                                Icons.schedule,
+                                size: 12,
                                 color: Colors.grey.shade600,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                              const SizedBox(width: 4),
+                              Text(
+                                package.duration!,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                            if (package.duration != null && package.rating != null)
+                              const SizedBox(width: 8),
+                            if (package.rating != null) ...[
+                              Icon(
+                                Icons.star,
+                                size: 12,
+                                color: Colors.amber.shade600,
+                              ),
+                              const SizedBox(width: 2),
+                              Text(
+                                package.rating!.toStringAsFixed(1),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey.shade600,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -956,9 +1054,18 @@ class _MarketplacePageState extends State<MarketplacePage> {
   }
 
   Widget _buildAgencyImage(AgencyProfile agency) {
-    if (agency.imageUrl != null && agency.imageUrl!.isNotEmpty) {
+    String? imageUrl = agency.imageUrl;
+
+    // Check if the URL needs base URL prepending
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      if (!imageUrl.startsWith('http')) {
+        // If it's a relative path, prepend your base URL
+        imageUrl = 'http://10.0.2.2:8080$imageUrl';
+        print('🖼️ Converted to absolute URL: $imageUrl');
+      }
+
       return Image.network(
-        agency.imageUrl!,
+        imageUrl,
         width: 200,
         height: 140,
         fit: BoxFit.cover,
@@ -981,20 +1088,22 @@ class _MarketplacePageState extends State<MarketplacePage> {
           );
         },
         errorBuilder: (context, error, stackTrace) {
-          print('Image load error for ${agency.name}: $error');
+          print('🖼️ Image load error: $error');
           return _buildPlaceholderImage(agency.name, Icons.business);
         },
       );
     }
 
+
+
+    print('🖼️ No image URL, using placeholder');
     return _buildPlaceholderImage(agency.name, Icons.business);
   }
 
-
-  Widget _buildTourGuideImage(TourGuideProfile guide) {
-    if (guide.imageUrl != null && guide.imageUrl!.isNotEmpty) {
+  Widget _buildTourPackageImage(TourPackage package) {
+    if (package.imageUrl != null && package.imageUrl!.isNotEmpty) {
       return Image.network(
-        guide.imageUrl!,
+        package.imageUrl!,
         width: 200,
         height: 140,
         fit: BoxFit.cover,
@@ -1017,13 +1126,13 @@ class _MarketplacePageState extends State<MarketplacePage> {
           );
         },
         errorBuilder: (context, error, stackTrace) {
-          print('Image load error for ${guide.name}: $error');
-          return _buildPlaceholderImage(guide.name, Icons.person_pin_circle);
+          print('Image load error for ${package.name}: $error');
+          return _buildPlaceholderImage(package.name, Icons.tour);
         },
       );
     }
 
-    return _buildPlaceholderImage(guide.name, Icons.person_pin_circle);
+    return _buildPlaceholderImage(package.name, Icons.tour);
   }
 
   Widget _buildPlaceholderImage(String name, IconData icon) {
@@ -1129,7 +1238,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
       case 'vehicle_agency':
         context.push('/marketplace/travel_agencies');
         break;
-      case 'tour_guide':
+      case 'tour_packages':
         context.push('/marketplace/tour_packages');
         break;
     }

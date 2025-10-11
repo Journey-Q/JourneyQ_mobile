@@ -289,8 +289,9 @@ class AgencyProfile {
       'area'
     ]);
 
-    // Extract image URL - try multiple possible field names
-    String? imageUrl = _extractField(json, [
+    // Extract image URL - try multiple possible field names with better debugging
+    String? imageUrl;
+    List<String> imageKeys = [
       'agency_photo',
       'agency_image',
       'imageUrl',
@@ -298,8 +299,18 @@ class AgencyProfile {
       'image',
       'photo',
       'image_url',
-      'photoUrl'
-    ]);
+      'photoUrl',
+      'profile_picture',
+      'picture'
+    ];
+
+    for (var key in imageKeys) {
+      if (json.containsKey(key) && json[key] != null && json[key].toString().isNotEmpty) {
+        imageUrl = json[key].toString();
+        print('🖼️ Found image URL in key "$key": $imageUrl');
+        break;
+      }
+    }
 
     // Extract phone - try multiple possible field names
     String? phone = _extractField(json, [
