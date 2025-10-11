@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:journeyq/features/join_trip/pages/common/trip_details_widget.dart';
 import 'package:journeyq/features/join_trip/pages/common/trip_form_widget.dart';
 import 'package:journeyq/data/repositories/joint_trip_repository/trip_repository.dart';
+import 'package:journeyq/data/repositories/joint_trip_repository/follow_repository.dart';
+import 'package:journeyq/data/repositories/joint_trip_repository/trip_request_repository.dart';
 
 class CreatedTripsTab extends StatefulWidget {
   final VoidCallback? onCreateTrip;
@@ -9,10 +11,10 @@ class CreatedTripsTab extends StatefulWidget {
   const CreatedTripsTab({super.key, this.onCreateTrip});
 
   @override
-  State<CreatedTripsTab> createState() => CreatedTripsTabState(); // CRITICAL FIX: Make state class public
+  State<CreatedTripsTab> createState() => CreatedTripsTabState();
 }
 
-class CreatedTripsTabState extends State<CreatedTripsTab> // CRITICAL FIX: Remove underscore to make it public
+class CreatedTripsTabState extends State<CreatedTripsTab>
     with AutomaticKeepAliveClientMixin {
   List<Map<String, dynamic>> _createdTrips = [];
   bool _isLoading = false;
@@ -70,7 +72,6 @@ class CreatedTripsTabState extends State<CreatedTripsTab> // CRITICAL FIX: Remov
     }
   }
 
-  // CRITICAL FIX: Make this method public and add better logging
   Future<void> refreshTrips() async {
     print('🔄 Manually refreshing trips from external call...');
     await _loadCreatedTrips();
@@ -460,12 +461,304 @@ class CreatedTripsTabState extends State<CreatedTripsTab> // CRITICAL FIX: Remov
     );
   }
 
-  void _sendTripRequest(Map<String, dynamic> trip) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Send request feature for ${trip['title']}'),
-        backgroundColor: Colors.orange,
-        behavior: SnackBarBehavior.floating,
+  void _sendTripRequest(Map<String, dynamic> trip) async {
+    try {
+      // Show loading dialog while fetching followers
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0088cc)),
+          ),
+        ),
+      );
+
+      // Fetch the list of people the user follows
+      final following = await FollowRepository.getMyFollowing(page: 0, size: 100);
+
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      if (following.isEmpty) {
+        // No followers to send to
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('You are not following anyone yet. Follow users to send trip requests.'),
+              backgroundColor: Colors.orange,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Show dialog with follower selection
+      if (mounted) {
+        _showFollowerSelectionDialog(trip, following);
+      }
+    } catch (e) {
+      // Close loading dialog if still open
+      if (mounted) {
+        Navigator.pop(context);
+      }
+
+      print('Error fetching followers: $e');
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load followers: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: () => _sendTripRequest(trip),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  void _showFollowerSelectionDialog(
+    Map<String, dynamic> trip,
+    List<Map<String, dynamic>> following,
+  ) {
+    // Track selected followers
+    Set<String> selectedFollowers = {};
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: Row(
+              children: [
+                const Icon(Icons.send, color: Color(0xFF0088cc)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Send "${trip['title']}"',
+                    style: const TextStyle(fontSize: 18),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Select followers to send this trip request:',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    constraints: const BoxConstraints(maxHeight: 300),
+                    child: following.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'No followers found',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: following.length,
+                            itemBuilder: (context, index) {
+                              final follower = following[index];
+                              final userId = follower['userId'] ?? '';
+                              final isSelected = selectedFollowers.contains(userId);
+
+                              return CheckboxListTile(
+                                value: isSelected,
+                                onChanged: (bool? value) {
+                                  setDialogState(() {
+                                    if (value == true) {
+                                      selectedFollowers.add(userId);
+                                    } else {
+                                      selectedFollowers.remove(userId);
+                                    }
+                                  });
+                                },
+                                title: Text(
+                                  follower['displayName'] ?? 'Unknown User',
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                secondary: CircleAvatar(
+                                  backgroundColor: const Color(0xFF0088cc).withOpacity(0.1),
+                                  backgroundImage: follower['profileImageUrl'] != null &&
+                                          follower['profileImageUrl'].toString().isNotEmpty
+                                      ? NetworkImage(follower['profileImageUrl'])
+                                      : null,
+                                  child: follower['profileImageUrl'] == null ||
+                                          follower['profileImageUrl'].toString().isEmpty
+                                      ? Text(
+                                          (follower['displayName'] ?? 'U')[0].toUpperCase(),
+                                          style: const TextStyle(
+                                            color: Color(0xFF0088cc),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                                activeColor: const Color(0xFF0088cc),
+                                checkboxShape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (selectedFollowers.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0088cc).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${selectedFollowers.length} follower(s) selected',
+                        style: const TextStyle(
+                          color: Color(0xFF0088cc),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: selectedFollowers.isEmpty
+                    ? null
+                    : () async {
+                        Navigator.pop(dialogContext); // Close selection dialog
+
+                        // Show loading with context reference
+                        final scaffoldContext = context;
+                        bool isLoadingDialogOpen = true;
+                        
+                        showDialog(
+                          context: scaffoldContext,
+                          barrierDismissible: false,
+                          builder: (loadingContext) => const Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0088cc)),
+                            ),
+                          ),
+                        );
+
+                        try {
+                          print('Starting trip request send process...');
+                          
+                          // Convert string IDs to integers
+                          final List<int> receiverIds = selectedFollowers
+                              .map((id) => int.tryParse(id) ?? 0)
+                              .where((id) => id > 0)
+                              .toList();
+
+                          print('Receiver IDs: $receiverIds');
+
+                          // Get trip ID
+                          final tripId = int.tryParse(trip['id']?.toString() ?? '');
+                          
+                          if (tripId == null || tripId == 0) {
+                            throw Exception('Invalid trip ID: ${trip['id']}');
+                          }
+
+                          print('Trip ID: $tripId');
+
+                          // Send trip requests via API with timeout
+                          final result = await TripRequestRepository.sendTripRequests(
+                            tripId: tripId,
+                            receiverIds: receiverIds,
+                          ).timeout(
+                            const Duration(seconds: 30),
+                            onTimeout: () => throw Exception('Request timeout - please try again'),
+                          );
+
+                          print('Trip request sent successfully: $result');
+
+                          // Close loading dialog
+                          if (mounted && isLoadingDialogOpen) {
+                            Navigator.of(scaffoldContext).pop();
+                            isLoadingDialogOpen = false;
+                          }
+
+                          // Show success message
+                          if (mounted) {
+                            ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Trip request sent to ${selectedFollowers.length} follower(s)!',
+                                ),
+                                backgroundColor: Colors.green,
+                                behavior: SnackBarBehavior.floating,
+                                duration: const Duration(seconds: 3),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          print('Error sending trip request: $e');
+                          
+                          // Close loading dialog if still open
+                          if (mounted && isLoadingDialogOpen) {
+                            try {
+                              Navigator.of(scaffoldContext).pop();
+                              isLoadingDialogOpen = false;
+                            } catch (navError) {
+                              print('Error closing loading dialog: $navError');
+                            }
+                          }
+
+                          // Show error message
+                          if (mounted) {
+                            ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                              SnackBar(
+                                content: Text('Failed to send trip requests: ${e.toString()}'),
+                                backgroundColor: Colors.red,
+                                behavior: SnackBarBehavior.floating,
+                                duration: const Duration(seconds: 5),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                icon: const Icon(Icons.send, size: 18, color: Colors.white),
+                label: const Text('Send', style: TextStyle(color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0088cc),
+                  disabledBackgroundColor: Colors.grey[300],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -511,120 +804,110 @@ class CreatedTripsTabState extends State<CreatedTripsTab> // CRITICAL FIX: Remov
   }
 
   void _deleteTrip(Map<String, dynamic> trip) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Delete Trip'),
-      content: Text('Are you sure you want to delete "${trip['title']}"? This action cannot be undone.'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        TextButton(
-          onPressed: () async {
-            // CRITICAL FIX: Store context reference before async operations
-            final dialogContext = context;
-            final scaffoldContext = this.context;
-            
-            Navigator.pop(dialogContext); // Close confirmation dialog first
-            
-            // Show loading dialog with a new context check
-            if (mounted) {
-              showDialog(
-                context: scaffoldContext,
-                barrierDismissible: false,
-                builder: (loadingContext) => const Center(
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0088cc)),
-                  ),
-                ),
-              );
-            }
-            
-            try {
-              final tripIdStr = trip['id']?.toString();
-              if (tripIdStr == null || tripIdStr.isEmpty) {
-                throw Exception('Invalid trip ID');
-              }
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Trip'),
+        content: Text('Are you sure you want to delete "${trip['title']}"? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final dialogContext = context;
+              final scaffoldContext = this.context;
               
-              final tripId = int.tryParse(tripIdStr);
-              if (tripId == null) {
-                throw Exception('Invalid trip ID format: $tripIdStr');
-              }
-              
-              print('🗑️ Deleting trip with ID: $tripId');
-              
-              // CRITICAL FIX: Wait for deletion to complete
-              await TripRepository.deleteTrip(tripId);
-              
-              // CRITICAL FIX: Close loading dialog safely
-              if (mounted) {
-                Navigator.pop(scaffoldContext); // Close loading dialog
-              }
-              
-              // CRITICAL FIX: Update UI immediately by removing from local list
-              if (mounted) {
-                setState(() {
-                  _createdTrips.removeWhere((t) => t['id'].toString() == tripIdStr);
-                });
-              }
-              
-              // CRITICAL FIX: Refresh from server after a short delay
-              if (mounted) {
-                Future.delayed(const Duration(milliseconds: 100), () async {
-                  if (mounted) {
-                    await _loadCreatedTrips();
-                  }
-                });
-              }
-              
-              // Show success message
-              if (mounted) {
-                ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                  const SnackBar(
-                    content: Text('Trip deleted successfully'),
-                    backgroundColor: Colors.green,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              }
-            } catch (e) {
-              // CRITICAL FIX: Close loading dialog safely on error
-              if (mounted) {
-                // Check if loading dialog is still open
-                try {
-                  Navigator.pop(scaffoldContext);
-                } catch (navError) {
-                  // Loading dialog might already be closed
-                  print('Loading dialog already closed: $navError');
-                }
-              }
-              
-              print('❌ Error deleting trip: $e');
+              Navigator.pop(dialogContext);
               
               if (mounted) {
-                String errorMessage = _getErrorMessage(e);
-                
-                ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                  SnackBar(
-                    content: Text(errorMessage),
-                    backgroundColor: Colors.red,
-                    behavior: SnackBarBehavior.floating,
-                    action: SnackBarAction(
-                      label: 'Retry',
-                      textColor: Colors.white,
-                      onPressed: () => _deleteTrip(trip),
+                showDialog(
+                  context: scaffoldContext,
+                  barrierDismissible: false,
+                  builder: (loadingContext) => const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0088cc)),
                     ),
                   ),
                 );
               }
-            }
-          },
-          child: const Text('Delete', style: TextStyle(color: Colors.red)),
-        ),
-      ],
-    ),
-  );
-}
+              
+              try {
+                final tripIdStr = trip['id']?.toString();
+                if (tripIdStr == null || tripIdStr.isEmpty) {
+                  throw Exception('Invalid trip ID');
+                }
+                
+                final tripId = int.tryParse(tripIdStr);
+                if (tripId == null) {
+                  throw Exception('Invalid trip ID format: $tripIdStr');
+                }
+                
+                print('🗑️ Deleting trip with ID: $tripId');
+                
+                await TripRepository.deleteTrip(tripId);
+                
+                if (mounted) {
+                  Navigator.pop(scaffoldContext);
+                }
+                
+                if (mounted) {
+                  setState(() {
+                    _createdTrips.removeWhere((t) => t['id'].toString() == tripIdStr);
+                  });
+                }
+                
+                if (mounted) {
+                  Future.delayed(const Duration(milliseconds: 100), () async {
+                    if (mounted) {
+                      await _loadCreatedTrips();
+                    }
+                  });
+                }
+                
+                if (mounted) {
+                  ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                    const SnackBar(
+                      content: Text('Trip deleted successfully'),
+                      backgroundColor: Colors.green,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  try {
+                    Navigator.pop(scaffoldContext);
+                  } catch (navError) {
+                    print('Loading dialog already closed: $navError');
+                  }
+                }
+                
+                print('❌ Error deleting trip: $e');
+                
+                if (mounted) {
+                  String errorMessage = _getErrorMessage(e);
+                  
+                  ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                    SnackBar(
+                      content: Text(errorMessage),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                      action: SnackBarAction(
+                        label: 'Retry',
+                        textColor: Colors.white,
+                        onPressed: () => _deleteTrip(trip),
+                      ),
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
 }
