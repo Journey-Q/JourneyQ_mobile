@@ -60,45 +60,13 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
     context.push('/marketplace/hotels/reviews/${widget.hotelId}');
   }
 
+  // UPDATED: Simplified navigation to room details
   void _viewRoomDetails(Room room) {
-    // Convert Room object to Map for compatibility with RoomDetailsPage
-    final roomMap = {
-      'id': room.id,
-      'type': _getFormattedRoomName(room),
-      'roomType': room.roomType,
-      'roomNumber': room.roomNumber,
-      'price': room.formattedPrice,
-      'size': room.size != null ? '${room.size} sqm' : 'Standard',
-      'bedrooms': room.bedrooms ?? 1,
-      'bathrooms': room.bathrooms ?? 1,
-      'capacity': room.capacity,
-      'maxOccupancy': room.capacity,
-      'bedType': _getBedTypeFromAmenities(room.amenities),
-      'amenities': room.amenities,
-      'status': room.status.name.toLowerCase(),
-      'available': room.status == RoomStatus.AVAILABLE,
-      'image': room.imageUrl,
-      'backgroundColor': _getRoomColor(room.id),
-    };
-
-    // Convert HotelProfile to Map for compatibility with RoomDetailsPage
-    final hotelMap = {
-      'id': hotelData?.id ?? '',
-      'name': hotelData?.name ?? 'Unknown Hotel',
-      'location': hotelData?.location ?? 'Unknown Location',
-      'description': hotelData?.description,
-      'phone': hotelData?.phone,
-      'email': hotelData?.email,
-      'imageUrl': hotelData?.imageUrl,
-      'amenities': hotelData?.amenities ?? [],
-      'isActive': hotelData?.isActive ?? false,
-    };
-
     context.push(
-      '/marketplace/hotels/room-details',
+      '/marketplace/hotels/room_details',
       extra: {
-        'hotel': hotelMap,
-        'room': roomMap,
+        'hotelId': hotelData?.id ?? '',
+        'roomId': room.id,
       },
     );
   }
@@ -114,6 +82,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
     return 'Standard Bed';
   }
 
+  // FIXED: Corrected color selection method to prevent RangeError
   Color _getRoomColor(String roomId) {
     final colors = [
       const Color(0xFF0088cc),
@@ -122,7 +91,8 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
       const Color(0xFFF44336),
       const Color(0xFFFF9800),
     ];
-    final colorIndex = roomId.hashCode % colors.length;
+    // Use absolute value and ensure it's within bounds
+    final colorIndex = (roomId.hashCode.abs() % colors.length);
     return colors[colorIndex];
   }
 
@@ -576,7 +546,8 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
       const Color(0xFFF44336),
       const Color(0xFFFF9800),
     ];
-    final colorIndex = room.id.hashCode % colors.length;
+    // FIXED: Use absolute value to prevent negative index
+    final colorIndex = (room.id.hashCode.abs() % colors.length);
     final backgroundColor = colors[colorIndex];
 
     return Container(
@@ -666,7 +637,8 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
       const Color(0xFFF44336),
       const Color(0xFFFF9800),
     ];
-    final colorIndex = hotelData?.id.hashCode ?? 0 % colors.length;
+    // FIXED: Use absolute value to prevent negative index
+    final colorIndex = ((hotelData?.id.hashCode ?? 0).abs() % colors.length);
     final backgroundColor = colors[colorIndex];
 
     return Container(

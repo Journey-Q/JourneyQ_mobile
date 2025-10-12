@@ -163,17 +163,17 @@ class AppRouter {
           builder: (context, state) {
             final extra = state.extra as Map<String, dynamic>?;
             if (extra == null) {
-              // If no room data provided, redirect to hotels
+              // If no data provided, redirect to hotels
               return AppWrapper(
                 currentRoute: '/marketplace',
                 child: const ViewAllHotelsPage(),
               );
             }
 
-            final hotel = extra['hotel'] as Map<String, dynamic>?;
-            final room = extra['room'] as Map<String, dynamic>?;
+            final hotelId = extra['hotelId'] as String?;
+            final roomId = extra['roomId'] as String?;
 
-            if (hotel == null || room == null) {
+            if (hotelId == null || roomId == null) {
               // If incomplete data, redirect to hotels
               return AppWrapper(
                 currentRoute: '/marketplace',
@@ -183,7 +183,7 @@ class AppRouter {
 
             return AppWrapper(
               currentRoute: '/marketplace',
-              child: RoomDetailsPage(hotel: hotel, room: room),
+              child: RoomDetailsPage(hotelId: hotelId, roomId: roomId),
             );
           },
           transitionType: PageTransitionType.slide,

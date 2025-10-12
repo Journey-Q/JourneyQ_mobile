@@ -1,5 +1,3 @@
-// File: lib/data/repositories/marketplace_repository/room_repository.dart
-
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:journeyq/core/services/marketplace_service.dart';
@@ -425,6 +423,48 @@ class Room {
       'bedrooms': bedrooms,
       'bathrooms': bathrooms,
     };
+  }
+
+  /// Convert Room to Map for navigation (serializable)
+  Map<String, dynamic> toNavigationMap() {
+    return {
+      'id': id,
+      'serviceProviderId': serviceProviderId,
+      'roomNumber': roomNumber,
+      'roomType': roomType,
+      'description': description,
+      'price': price,
+      'capacity': capacity,
+      'status': status.name,
+      'amenities': amenities,
+      'imageUrl': imageUrl,
+      'size': size,
+      'bedrooms': bedrooms,
+      'bathrooms': bathrooms,
+      'displayRoomType': displayRoomType,
+      'formattedPrice': formattedPrice,
+      'statusText': statusText,
+      'statusColor': statusColor.value, // Convert Color to int
+    };
+  }
+
+  /// Create Room from navigation map
+  factory Room.fromNavigationMap(Map<String, dynamic> map) {
+    return Room(
+      id: map['id'] ?? 'unknown_id',
+      serviceProviderId: map['serviceProviderId'] ?? 'unknown_provider',
+      roomNumber: map['roomNumber'] ?? 'Unknown',
+      roomType: map['roomType'] ?? 'Standard',
+      description: map['description'] ?? 'No description available',
+      price: (map['price'] ?? 0.0).toDouble(),
+      capacity: map['capacity'] ?? 2,
+      status: _parseRoomStatus(map['status'] ?? 'AVAILABLE'),
+      amenities: List<String>.from(map['amenities'] ?? []),
+      imageUrl: map['imageUrl'],
+      size: map['size'],
+      bedrooms: map['bedrooms'],
+      bathrooms: map['bathrooms'],
+    );
   }
 
   String get statusText {

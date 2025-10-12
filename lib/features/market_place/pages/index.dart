@@ -63,15 +63,20 @@ class _MarketplacePageState extends State<MarketplacePage> {
   Future<void> _debugInitialization() async {
     print('🔍 Debugging Marketplace Initialization...');
 
-    // Test API connection
-    final isConnected = await HotelRepository.testApiConnection();
-    print('📡 API Connection Test: ${isConnected ? 'SUCCESS' : 'FAILED'}');
+    // Test API connections
+    final isHotelConnected = await HotelRepository.testApiConnection();
+    final isAgencyConnected = await AgencyRepository.testApiConnection();
+    final isTourConnected = await TourPackageRepository.testApiConnection();
 
-    if (!isConnected) {
+    print('📡 Hotel API Connection Test: ${isHotelConnected ? 'SUCCESS' : 'FAILED'}');
+    print('📡 Agency API Connection Test: ${isAgencyConnected ? 'SUCCESS' : 'FAILED'}');
+    print('📡 Tour Package API Connection Test: ${isTourConnected ? 'SUCCESS' : 'FAILED'}');
+
+    if (!isHotelConnected || !isAgencyConnected || !isTourConnected) {
       print('❌ Possible issues:');
       print('   - Backend server not running at http://10.0.2.2:8080');
       print('   - Network connectivity issues');
-      print('   - Wrong API endpoint: /service/hotel-profiles/all');
+      print('   - Wrong API endpoints');
     }
   }
 
@@ -692,7 +697,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
   Widget _buildAgencyCard(AgencyProfile agency) {
     return GestureDetector(
       onTap: () {
-        print('Tapped agency: ${agency.id}');
+        print('🚗 Tapped agency: ${agency.id} - ${agency.name}');
         context.push('/marketplace/travel_agencies/details/${agency.id}');
       },
       child: Container(
@@ -807,7 +812,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
   Widget _buildTourPackageCard(TourPackage package) {
     return GestureDetector(
       onTap: () {
-        print('Tapped tour package: ${package.id}');
+        print('🗺️ Tapped tour package: ${package.id} - ${package.name}');
         context.push('/marketplace/tour_packages/details/${package.id}');
       },
       child: Container(
@@ -1093,8 +1098,6 @@ class _MarketplacePageState extends State<MarketplacePage> {
         },
       );
     }
-
-
 
     print('🖼️ No image URL, using placeholder');
     return _buildPlaceholderImage(agency.name, Icons.business);

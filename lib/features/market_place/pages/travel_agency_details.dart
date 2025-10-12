@@ -2,7 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:journeyq/features/market_place/pages/data.dart'; // Import centralized data
+import 'package:journeyq/data/repositories/marketplace_repository/agency_repository.dart';
+import 'package:journeyq/core/services/marketplace_service.dart';
 
 class TravelAgencyDetailsPage extends StatefulWidget {
   final String agencyId;
@@ -17,9 +18,12 @@ class TravelAgencyDetailsPage extends StatefulWidget {
 }
 
 class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
-  late Map<String, dynamic> agencyData;
+  AgencyProfile? agencyData;
+  List<dynamic> vehicles = [];
+  List<dynamic> drivers = [];
   bool isLoading = true;
   bool hasError = false;
+  String errorMessage = '';
 
   @override
   void initState() {
@@ -27,30 +31,119 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
     _loadAgencyData();
   }
 
-  void _loadAgencyData() {
+  Future<void> _loadAgencyData() async {
     try {
-      // Get agency data by ID
-      final agency = MarketplaceData.getTravelAgencyById(widget.agencyId);
-      if (agency != null) {
-        agencyData = agency;
-        setState(() {
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          hasError = true;
-          isLoading = false;
-        });
+      setState(() {
+        isLoading = true;
+        hasError = false;
+        errorMessage = '';
+      });
+
+      print('🚗 Loading agency details for ID: ${widget.agencyId}');
+
+      // Validate agency ID
+      if (widget.agencyId.isEmpty || widget.agencyId == 'unknown_id') {
+        throw Exception('Invalid agency ID: ${widget.agencyId}');
       }
+
+      // Load agency profile
+      final agency = await AgencyRepository.getAgencyProfileById(widget.agencyId);
+
+      if (agency.id == 'unknown_id') {
+        throw Exception('Could not find valid agency data for ID: ${widget.agencyId}');
+      }
+
+      // Load vehicles for this agency
+      await _loadVehicles(widget.agencyId);
+
+      // Load drivers for this agency
+      await _loadDrivers(widget.agencyId);
+
+      setState(() {
+        agencyData = agency;
+        isLoading = false;
+      });
     } catch (e) {
+      print('❌ Error loading agency data: $e');
       setState(() {
         hasError = true;
         isLoading = false;
+        errorMessage = e.toString();
       });
     }
   }
 
+  Future<void> _loadVehicles(String agencyId) async {
+    try {
+      print('🚗 Loading vehicles for agency: $agencyId');
 
+      // Convert agencyId to Long (serviceProviderId)
+      final serviceProviderId = int.tryParse(agencyId);
+      if (serviceProviderId == null) {
+        print('⚠ Invalid agency ID for vehicles: $agencyId');
+        return;
+      }
+
+      final response = await MarketplaceService.get('/service/vehicles/service-provider/$serviceProviderId');
+
+      if (response.statusCode == 200) {
+        if (response.data is List) {
+          setState(() {
+            vehicles = response.data as List<dynamic>;
+          });
+          print('✅ Loaded ${vehicles.length} vehicles');
+        } else if (response.data is Map<String, dynamic>) {
+          final responseMap = response.data as Map<String, dynamic>;
+          if (responseMap.containsKey('data') && responseMap['data'] is List) {
+            setState(() {
+              vehicles = responseMap['data'] as List<dynamic>;
+            });
+            print('✅ Loaded ${vehicles.length} vehicles from data field');
+          }
+        }
+      } else {
+        print('⚠ Failed to load vehicles: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Error loading vehicles: $e');
+    }
+  }
+
+  Future<void> _loadDrivers(String agencyId) async {
+    try {
+      print('👨‍💼 Loading drivers for agency: $agencyId');
+
+      // Convert agencyId to Long (serviceProviderId)
+      final serviceProviderId = int.tryParse(agencyId);
+      if (serviceProviderId == null) {
+        print('⚠ Invalid agency ID for drivers: $agencyId');
+        return;
+      }
+
+      final response = await MarketplaceService.get('/service/drivers/service-provider/$serviceProviderId');
+
+      if (response.statusCode == 200) {
+        if (response.data is List) {
+          setState(() {
+            drivers = response.data as List<dynamic>;
+          });
+          print('✅ Loaded ${drivers.length} drivers');
+        } else if (response.data is Map<String, dynamic>) {
+          final responseMap = response.data as Map<String, dynamic>;
+          if (responseMap.containsKey('data') && responseMap['data'] is List) {
+            setState(() {
+              drivers = responseMap['data'] as List<dynamic>;
+            });
+            print('✅ Loaded ${drivers.length} drivers from data field');
+          }
+        }
+      } else {
+        print('⚠ Failed to load drivers: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Error loading drivers: $e');
+    }
+  }
 
   void _contactAgency() {
     _showContactBottomSheet();
@@ -69,6 +162,8 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
   }
 
   void _showContactBottomSheet() {
+    if (agencyData == null) return;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -110,30 +205,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          child: Image.asset(
-                            agencyData['image'] ?? '',
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      agencyData['backgroundColor'] ??
-                                          Colors.blue,
-                                      (agencyData['backgroundColor'] ??
-                                          Colors.blue).withOpacity(0.8),
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(
-                                  Icons.business,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
-                              );
-                            },
-                          ),
+                          child: _buildAgencyImage(agencyData!, size: 60),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -144,7 +216,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              agencyData['name'] ?? 'Travel Agency',
+                              agencyData!.name,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -157,7 +229,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                                     Icons.star, color: Colors.orange, size: 16),
                                 const SizedBox(width: 4),
                                 Text(
-                                  '${agencyData['rating'] ?? 4.5}',
+                                  '4.5', // Default rating
                                   style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
@@ -165,8 +237,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  '• ${agencyData['experience'] ??
-                                      'Experienced'}',
+                                  agencyData!.experience,
                                   style: const TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey,
@@ -258,7 +329,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                                 color: Color(0xFF0088cc)),
                             const SizedBox(width: 8),
                             Text(
-                              agencyData['contact'] ?? '+94 11 000 0000',
+                              agencyData!.phone ?? '+94 11 000 0000',
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
@@ -277,7 +348,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                agencyData['location'] ?? 'Colombo, Sri Lanka',
+                                agencyData!.location ?? 'Colombo, Sri Lanka',
                                 style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
@@ -302,12 +373,28 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
     context.push('/marketplace/travel_agencies/reviews/${widget.agencyId}');
   }
 
-
-
   Widget _buildVehicleCard(Map<String, dynamic> vehicle, int index) {
+    // Extract vehicle data with fallbacks
+    final vehicleType = vehicle['vehicleType'] ?? vehicle['type'] ?? 'Vehicle';
+    final seats = vehicle['capacity'] ?? vehicle['seats'] ?? 4;
+    final acPrice = vehicle['acPricePerKm'] ?? vehicle['pricePerKm'] ?? 50.0;
+    final nonAcPrice = vehicle['nonAcPricePerKm'] ?? 40.0;
+
+    // Extract features
+    List<String> features = [];
+    if (vehicle['features'] is List) {
+      features = List<String>.from(vehicle['features'] ?? []);
+    } else if (vehicle['amenities'] is List) {
+      features = List<String>.from(vehicle['amenities'] ?? []);
+    }
+
+    if (features.isEmpty) {
+      features = ['GPS Navigation', 'Comfortable Seats', 'Safety Features'];
+    }
+
     return Padding(
       padding: EdgeInsets.only(
-        bottom: index == (agencyData['vehicles'] as List).length - 1 ? 0 : 16,
+        bottom: index == vehicles.length - 1 ? 0 : 16,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,7 +412,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    vehicle['type'] ?? 'Vehicle',
+                    vehicleType.toString(),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -342,7 +429,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${vehicle['seats']} seats',
+                        '$seats seats',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade600,
@@ -391,7 +478,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'LKR ${vehicle['acPricePerKm']} per 1km',
+                        'LKR $acPrice per 1km',
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -435,7 +522,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'LKR ${vehicle['nonAcPricePerKm']} per 1km',
+                        'LKR $nonAcPrice per 1km',
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -462,7 +549,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
           ),
           const SizedBox(height: 4),
           Text(
-            (vehicle['features'] as List<String>).join(' • '),
+            features.join(' • '),
             style: TextStyle(
               fontSize: 13,
               color: Colors.grey.shade700,
@@ -471,7 +558,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
           ),
 
           // Divider line between vehicles
-          if (index < (agencyData['vehicles'] as List).length - 1)
+          if (index < vehicles.length - 1)
             Padding(
               padding: const EdgeInsets.only(top: 12),
               child: Divider(
@@ -484,7 +571,25 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
     );
   }
 
-  Widget _buildDriverCard(Map<String, dynamic> driver) {
+  Widget _buildDriverCard(Map<String, dynamic> driver, int index) {
+    // Extract driver data with fallbacks
+    final name = driver['name'] ?? driver['driverName'] ?? 'Professional Driver';
+    final experience = driver['experience'] ?? driver['yearsExperience'] ?? 'Experienced';
+    final specialization = driver['specialization'] ?? driver['vehicleType'] ?? 'All Vehicles';
+    final contact = driver['contact'] ?? driver['phone'] ?? '+94 77 000 0000';
+
+    // Extract languages
+    List<String> languages = [];
+    if (driver['languages'] is List) {
+      languages = List<String>.from(driver['languages'] ?? []);
+    } else if (driver['language'] != null) {
+      languages = [driver['language'].toString()];
+    }
+
+    if (languages.isEmpty) {
+      languages = ['English', 'Sinhala'];
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -520,7 +625,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      driver['name'] ?? 'Professional Driver',
+                      name,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -528,15 +633,15 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                       ),
                     ),
                     Text(
-                      '${driver['experience'] ?? 'Experienced'} experience',
+                      '$experience experience',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade600,
                       ),
                     ),
-                    if (driver['specialization'] != null)
+                    if (specialization != null)
                       Text(
-                        'Specializes in: ${driver['specialization']}',
+                        'Specializes in: $specialization',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.blue.shade600,
@@ -555,8 +660,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  'Languages: ${(driver['languages'] as List<dynamic>? ??
-                      ['English', 'Sinhala']).join(', ')}',
+                  'Languages: ${languages.join(', ')}',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey.shade600,
@@ -571,7 +675,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
               const Icon(Icons.phone, size: 16, color: Colors.grey),
               const SizedBox(width: 4),
               Text(
-                'Contact: ${driver['contact'] ?? '+94 77 000 0000'}',
+                'Contact: $contact',
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey.shade600,
@@ -635,6 +739,101 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
     );
   }
 
+  Widget _buildAgencyImage(AgencyProfile agency, {double size = double.infinity}) {
+    if (agency.imageUrl != null && agency.imageUrl!.isNotEmpty) {
+      String imageUrl = agency.imageUrl!;
+
+      // Convert relative URL to absolute if needed
+      if (!imageUrl.startsWith('http')) {
+        imageUrl = 'http://10.0.2.2:8080$imageUrl';
+      }
+
+      return Image.network(
+        imageUrl,
+        width: size,
+        height: size == double.infinity ? 250 : size,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            width: size,
+            height: size == double.infinity ? 250 : size,
+            color: Colors.grey.shade200,
+            child: Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                    loadingProgress.expectedTotalBytes!
+                    : null,
+                strokeWidth: 2,
+                color: const Color(0xFF0088cc),
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          print('Image load error for ${agency.name}: $error');
+          return _buildPlaceholderImage(agency, size: size);
+        },
+      );
+    }
+
+    return _buildPlaceholderImage(agency, size: size);
+  }
+
+  Widget _buildPlaceholderImage(AgencyProfile agency, {double size = double.infinity}) {
+    // Generate a consistent color based on agency ID
+    final colors = [
+      const Color(0xFF0088cc),
+      const Color(0xFF4CAF50),
+      const Color(0xFF9C27B0),
+      const Color(0xFFF44336),
+      const Color(0xFFFF9800),
+    ];
+    final colorIndex = agency.id.hashCode % colors.length;
+    final backgroundColor = colors[colorIndex];
+
+    return Container(
+      width: size,
+      height: size == double.infinity ? 250 : size,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            backgroundColor,
+            backgroundColor.withOpacity(0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.business,
+            size: size == double.infinity ? 80 : 48,
+            color: Colors.white,
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              agency.name,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: size == double.infinity ? 16 : 14,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -654,7 +853,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
       );
     }
 
-    if (hasError) {
+    if (hasError || agencyData == null) {
       return Scaffold(
         backgroundColor: Colors.grey[50],
         appBar: AppBar(
@@ -666,30 +865,64 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
           title: const Text('Agency Not Found'),
         ),
         body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.grey,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Travel Agency not found',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Agency ID: ${widget.agencyId}',
-                style: const TextStyle(color: Colors.grey),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () => context.pop(),
-                child: const Text('Back to Travel Agencies'),
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Colors.grey,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Travel Agency not found',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Agency ID: ${widget.agencyId}',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                if (errorMessage.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Error: $errorMessage',
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontSize: 12,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => context.pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0088cc),
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Back to Travel Agencies'),
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: _loadAgencyData,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey.shade300,
+                    foregroundColor: Colors.grey.shade700,
+                  ),
+                  child: const Text('Try Again'),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -711,32 +944,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.asset(
-                    agencyData['image'] ?? '',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              agencyData['backgroundColor'] ?? Colors.blue,
-                              (agencyData['backgroundColor'] ?? Colors.blue)
-                                  .withOpacity(0.8),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.business,
-                            size: 80,
-                            color: Colors.white,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                  _buildAgencyImage(agencyData!),
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -782,7 +990,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                           children: [
                             Expanded(
                               child: Text(
-                                agencyData['name'] ?? 'Travel Agency',
+                                agencyData!.name,
                                 style: const TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
@@ -809,7 +1017,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    (agencyData['rating'] ?? 4.0).toString(),
+                                    '4.5', // Default rating
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: Colors.orange,
@@ -822,25 +1030,25 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          agencyData['location'] ?? 'Colombo, Sri Lanka',
+                          agencyData!.location ?? 'Colombo, Sri Lanka',
                           style: const TextStyle(fontSize: 14, color: Colors
                               .grey),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          agencyData['contact'] ?? '+94 11 000 0000',
+                          agencyData!.phone ?? '+94 11 000 0000',
                           style: const TextStyle(fontSize: 14, color: Colors
                               .grey),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          agencyData['email'] ?? 'info@agency.lk',
+                          agencyData!.email ?? 'info@agency.lk',
                           style: const TextStyle(fontSize: 14, color: Colors
                               .grey),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          agencyData['experience'] ?? 'Years of Experience',
+                          agencyData!.experience,
                           style: const TextStyle(fontSize: 14, color: Colors
                               .grey),
                         ),
@@ -878,8 +1086,8 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          agencyData['description'] ??
-                              'Welcome to our travel agency!',
+                          agencyData!.description ??
+                              'Welcome to ${agencyData!.name}! We provide reliable and comfortable transportation services with experienced drivers and well-maintained vehicles.',
                           style: const TextStyle(
                             fontSize: 16,
                             color: Colors.black54,
@@ -893,98 +1101,99 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                   const SizedBox(height: 20),
 
                   // Vehicle Types Section
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          spreadRadius: 1,
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Vehicle Types & Pricing',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                  if (vehicles.isNotEmpty) ...[
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Column(
-                          children: (agencyData['vehicles'] as List)
-                              .asMap()
-                              .entries
-                              .map((entry) {
-                            int index = entry.key;
-                            Map<String, dynamic> vehicle = entry.value;
-                            return _buildVehicleCard(vehicle, index);
-                          }).toList(),
-                        ),
-                      ],
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Vehicle Types & Pricing',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Column(
+                            children: vehicles
+                                .asMap()
+                                .entries
+                                .map((entry) {
+                              int index = entry.key;
+                              Map<String, dynamic> vehicle = entry.value;
+                              return _buildVehicleCard(vehicle, index);
+                            }).toList(),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-
-                  const SizedBox(height: 20),
+                    const SizedBox(height: 20),
+                  ],
 
                   // Drivers Section
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          spreadRadius: 1,
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Our Professional Drivers',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                  if (drivers.isNotEmpty) ...[
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Column(
-                          children: (agencyData['drivers'] as List)
-                              .asMap()
-                              .entries
-                              .map((entry) {
-                            int index = entry.key;
-                            Map<String, dynamic> driver = entry.value;
-                            return Padding(
-                              padding: EdgeInsets.only(
-                                bottom: index ==
-                                    (agencyData['drivers'] as List).length - 1
-                                    ? 0
-                                    : 12,
-                              ),
-                              child: _buildDriverCard(driver),
-                            );
-                          }).toList(),
-                        ),
-                      ],
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Our Professional Drivers',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Column(
+                            children: drivers
+                                .asMap()
+                                .entries
+                                .map((entry) {
+                              int index = entry.key;
+                              Map<String, dynamic> driver = entry.value;
+                              return Padding(
+                                padding: EdgeInsets.only(
+                                  bottom: index == drivers.length - 1
+                                      ? 0
+                                      : 12,
+                                ),
+                                child: _buildDriverCard(driver, index),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-
-                  const SizedBox(height: 20),
+                    const SizedBox(height: 20),
+                  ],
 
                   // Customer Reviews Section (WITHOUT white container)
                   Column(
@@ -1007,7 +1216,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
-                                (agencyData['rating'] ?? 4.0).toString(),
+                                '4.5', // Default rating
                                 style: const TextStyle(
                                   fontSize: 48,
                                   fontWeight: FontWeight.bold,
@@ -1017,7 +1226,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: List.generate(5, (index) {
-                                  double rating = agencyData['rating'] ?? 4.0;
+                                  double rating = 4.5;
                                   if (index < rating.floor()) {
                                     return const Icon(
                                         Icons.star, color: Colors.orange,
@@ -1033,11 +1242,11 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                                 }),
                               ),
                               const SizedBox(height: 4),
-                              Text(
-                                '${agencyData['totalReviews'] ?? 0} reviews',
+                              const Text(
+                                '25 reviews', // Default review count
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Colors.grey.shade600,
+                                  color: Colors.grey,
                                 ),
                               ),
                             ],
@@ -1049,35 +1258,15 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                           Expanded(
                             child: Column(
                               children: [
-                                _buildRatingBar(
-                                    5,
-                                    (agencyData['reviewStats']?['5'] ??
-                                        0) as int,
-                                    agencyData['totalReviews'] ?? 0),
+                                _buildRatingBar(5, 15, 25),
                                 const SizedBox(height: 8),
-                                _buildRatingBar(
-                                    4,
-                                    (agencyData['reviewStats']?['4'] ??
-                                        0) as int,
-                                    agencyData['totalReviews'] ?? 0),
+                                _buildRatingBar(4, 7, 25),
                                 const SizedBox(height: 8),
-                                _buildRatingBar(
-                                    3,
-                                    (agencyData['reviewStats']?['3'] ??
-                                        0) as int,
-                                    agencyData['totalReviews'] ?? 0),
+                                _buildRatingBar(3, 2, 25),
                                 const SizedBox(height: 8),
-                                _buildRatingBar(
-                                    2,
-                                    (agencyData['reviewStats']?['2'] ??
-                                        0) as int,
-                                    agencyData['totalReviews'] ?? 0),
+                                _buildRatingBar(2, 1, 25),
                                 const SizedBox(height: 8),
-                                _buildRatingBar(
-                                    1,
-                                    (agencyData['reviewStats']?['1'] ??
-                                        0) as int,
-                                    agencyData['totalReviews'] ?? 0),
+                                _buildRatingBar(1, 0, 25),
                               ],
                             ),
                           ),

@@ -451,6 +451,36 @@ class HotelProfile {
     };
   }
 
+  /// Convert HotelProfile to Map for navigation (serializable)
+  Map<String, dynamic> toNavigationMap() {
+    return {
+      'id': id,
+      'name': name,
+      'location': location,
+      'imageUrl': imageUrl,
+      'phone': phone,
+      'email': email,
+      'isActive': isActive,
+      'description': description,
+      'amenities': amenities,
+    };
+  }
+
+  /// Create HotelProfile from navigation map
+  factory HotelProfile.fromNavigationMap(Map<String, dynamic> map) {
+    return HotelProfile(
+      id: map['id'] ?? 'unknown_id',
+      name: map['name'] ?? 'Unknown Hotel',
+      location: map['location'] ?? 'Unknown Location',
+      imageUrl: map['imageUrl'],
+      phone: map['phone'],
+      email: map['email'],
+      isActive: map['isActive'] ?? true,
+      description: map['description'],
+      amenities: List<String>.from(map['amenities'] ?? []),
+    );
+  }
+
   HotelProfile copyWith({
     String? id,
     String? name,
