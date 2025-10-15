@@ -58,38 +58,43 @@ class _ProfilePageState extends State<ProfilePage> {
         _isLoadingPosts = true;
       });
 
-      // Load profile data, stats, and posts concurrently
-      final List<dynamic> results = await Future.wait([
-        ProfileRepository.getProfile(_userId!),
-        _loadUserStats(),
-        _loadUserPosts(),
-      ]);
+      // Execute all API calls in parallel for maximum speed
+      final results = await Future.wait(
+        [
+          ProfileRepository.getProfile(_userId!),
+          _loadUserStats(),
+          _loadUserPosts(),
+        ],
+        eagerError: false, // Don't stop on first error
+      );
 
-      final profileData = results[0] as Map<String, dynamic>;
+      final profileData = results[0] as Map<String, dynamic>?;
       final statsData = results[1] as Map<String, dynamic>?;
-      final postsData = results[2] as List<Map<String, dynamic>>;
+      final postsData = results[2] as List<Map<String, dynamic>>?;
 
       print("Profile data loaded: $profileData");
       print("Stats data loaded: $statsData");
-      print("Posts data loaded: ${postsData.length} posts");
-
-      setState(() {
-        _profileData = profileData;
-        _statsData = statsData;
-        _userPosts = postsData;
-        _isLoading = false;
-        _isLoadingStats = false;
-        _isLoadingPosts = false;
-      });
-    } catch (e) {
-      print("Error loading profile: $e");
-      setState(() {
-        _isLoading = false;
-        _isLoadingStats = false;
-        _isLoadingPosts = false;
-      });
+      print("Posts data loaded: ${postsData?.length ?? 0} posts");
 
       if (mounted) {
+        setState(() {
+          _profileData = profileData;
+          _statsData = statsData;
+          _userPosts = postsData ?? [];
+          _isLoading = false;
+          _isLoadingStats = false;
+          _isLoadingPosts = false;
+        });
+      }
+    } catch (e) {
+      print("Error loading profile: $e");
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isLoadingStats = false;
+          _isLoadingPosts = false;
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error loading profile: ${e.toString()}'),
@@ -207,13 +212,18 @@ class _ProfilePageState extends State<ProfilePage> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final authUser = authProvider.user;
 
-    // Get follower/following counts from stats data
+    // Get follower/following/posts counts from stats data
     int followersCount = 0;
     int followingCount = 0;
+    int postsCount = 0;
 
     if (_statsData != null) {
       followersCount = _statsData!['followersCount'] ?? 0;
       followingCount = _statsData!['followingCount'] ?? 0;
+      postsCount = _statsData!['postsCount'] ?? _userPosts.length;
+    } else {
+      // Fallback to local posts count if stats not loaded
+      postsCount = _userPosts.length;
     }
 
     if (_profileData != null) {
@@ -223,8 +233,8 @@ class _ProfilePageState extends State<ProfilePage> {
         'name': _profileData!['display_name'] ?? authUser?.username ?? 'Unknown User',
         'username': authUser?.username ?? 'unknown_user',
         'displayName': _profileData!['display_name'] ?? authUser?.username ?? 'Unknown User',
-        'bio': _profileData!['bio'] ?? 'Travel enthusiast | Exploring Sri Lanka 🇱🇰\n✈️ ${_userPosts.length} amazing journeys completed',
-        'posts': _userPosts.length,
+        'bio': _profileData!['bio'] ?? 'Travel enthusiast | Exploring Sri Lanka 🇱🇰\n✈️ $postsCount amazing journeys completed',
+        'posts': postsCount,
         'followers': followersCount,
         'following': followingCount,
         'profileImage': _profileData!['profile_image_url'] ?? authUser?.profileUrl ?? 'assets/images/profile_picture.jpg',
@@ -243,8 +253,8 @@ class _ProfilePageState extends State<ProfilePage> {
         'name': authUser?.username ?? 'Unknown User',
         'username': authUser?.username ?? 'unknown_user',
         'displayName': authUser?.username ?? 'Unknown User',
-        'bio': 'Travel enthusiast | Exploring Sri Lanka 🇱🇰\n✈️ ${_userPosts.length} amazing journeys completed',
-        'posts': _userPosts.length,
+        'bio': 'Travel enthusiast | Exploring Sri Lanka 🇱🇰\n✈️ $postsCount amazing journeys completed',
+        'posts': postsCount,
         'followers': followersCount,
         'following': followingCount,
         'profileImage': authUser?.profileUrl ?? 'assets/images/profile_picture.jpg',
@@ -613,7 +623,7 @@ class _ProfilePageState extends State<ProfilePage> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _buildStatItem(
-            _userPosts.length.toString(),
+            _isLoadingStats ? '...' : (userData['posts'] ?? 0).toString(),
             'Posts',
             Icons.photo_library,
             const Color(0xFF0088cc),
@@ -629,7 +639,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           _buildDivider(),
           _buildStatItem(
-            _isLoadingStats ? '...' : (userData['following'] ?? 0).toString(),
+            _isLoadingStats ? '...' : _formatNumber(userData['following'] ?? 0),
             'Following',
             Icons.person_add,
             const Color(0xFFE17055),

@@ -5,7 +5,9 @@ import 'package:journeyq/data/repositories/profile_repository/profile_repository
 import 'package:journeyq/data/repositories/post_repository/post_repository.dart';
 import 'package:journeyq/data/repositories/chat_repository/chat_repository.dart';
 import 'package:journeyq/data/repositories/chat_repository/models/chat_models.dart';
+import 'package:journeyq/data/repositories/follow_repository/follow_repository.dart';
 import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
+import 'package:journeyq/core/errors/exception.dart';
 
 class UserProfilePage extends StatefulWidget {
   final String userId;
@@ -50,6 +52,22 @@ class _UserProfilePageState extends State<UserProfilePage> {
     await _loadUserPosts();
     // Finally load stats
     await _loadUserStats();
+    // Load follow status
+    await _loadFollowStatus();
+  }
+
+  Future<void> _loadFollowStatus() async {
+    try {
+      final isFollowing = await FollowRepository.isFollowing(widget.userId);
+      if (mounted) {
+        setState(() {
+          _isFollowing = isFollowing;
+        });
+      }
+    } catch (e) {
+      print('Error loading follow status: $e');
+      // Keep default value if error
+    }
   }
 
   Future<void> _loadUserProfile() async {
@@ -768,26 +786,63 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   // Event Handlers
-  void _toggleFollow() {
-    setState(() {
-      _isFollowing = !_isFollowing;
-      if (_isFollowing) {
-        _userStats['followersCount'] = (_userStats['followersCount'] ?? 0) + 1;
-      } else {
-        _userStats['followersCount'] = (_userStats['followersCount'] ?? 0) - 1;
-      }
-    });
+  Future<void> _toggleFollow() async {
+    try {
+      late Map<String, dynamic> result;
+      String successMessage = '';
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _isFollowing
-              ? 'Now following ${widget.userName.isNotEmpty ? widget.userName : 'User'}'
-              : 'Unfollowed ${widget.userName.isNotEmpty ? widget.userName : 'User'}',
-        ),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+      if (_isFollowing) {
+        // Unfollow
+        result = await FollowRepository.unfollowUser(widget.userId);
+        successMessage = 'Unfollowed ${widget.userName.isNotEmpty ? widget.userName : 'User'}';
+      } else {
+        // Send follow request
+        result = await FollowRepository.sendFollowRequest(widget.userId);
+        successMessage = 'Follow request sent to ${widget.userName.isNotEmpty ? widget.userName : 'User'}';
+      }
+
+      if (result['success'] == true && mounted) {
+        setState(() {
+          _isFollowing = !_isFollowing;
+          if (_isFollowing) {
+            _userStats['followersCount'] = (_userStats['followersCount'] ?? 0) + 1;
+          } else {
+            _userStats['followersCount'] = (_userStats['followersCount'] ?? 0) - 1;
+          }
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(successMessage),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+
+        // Reload stats to get accurate count
+        await _loadUserStats();
+      }
+    } on AppException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('An error occurred: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   void _sendMessage() async {

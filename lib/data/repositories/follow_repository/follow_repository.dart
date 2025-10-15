@@ -27,18 +27,12 @@ class FollowRepository {
     }
   }
 
-  /// Accept a follow request
-  static Future<Map<String, dynamic>> acceptFollowRequest(String followingId) async {
+  /// Accept a follow request by followId (used in notifications)
+  static Future<Map<String, dynamic>> acceptFollowRequestById(int followId) async {
     try {
       final response = await ApiService.post(
-        '/follow/accept-request',
-        queryParameters: {
-          'followingId': followingId,
-        },
+        '/follow/accept-request/$followId',
       );
-
-      // Update local cache
-      await _cacheFollowAction(followingId, 'accepted');
 
       return response.data;
     } on AppException {
@@ -48,18 +42,52 @@ class FollowRepository {
     }
   }
 
-  /// Reject a follow request
-  static Future<Map<String, dynamic>> rejectFollowRequest(String followingId) async {
+  /// Reject a follow request by followId (used in notifications)
+  static Future<Map<String, dynamic>> rejectFollowRequestById(int followId) async {
     try {
       final response = await ApiService.post(
-        '/follow/reject-request',
-        queryParameters: {
-          'followingId': followingId,
-        },
+        '/follow/reject-request/$followId',
+      );
+
+      return response.data;
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw ServerException('Failed to reject follow request: $e');
+    }
+  }
+
+  /// Accept a follow request by userId (legacy method)
+  static Future<Map<String, dynamic>> acceptFollowRequest(String followerId) async {
+    try {
+      // This method is kept for backward compatibility
+      // In practice, notifications should use acceptFollowRequestById
+      final response = await ApiService.post(
+        '/follow/accept-request/$followerId',
+      );
+
+      // Update local cache
+      await _cacheFollowAction(followerId, 'accepted');
+
+      return response.data;
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw ServerException('Failed to accept follow request: $e');
+    }
+  }
+
+  /// Reject a follow request by userId (legacy method)
+  static Future<Map<String, dynamic>> rejectFollowRequest(String followerId) async {
+    try {
+      // This method is kept for backward compatibility
+      // In practice, notifications should use rejectFollowRequestById
+      final response = await ApiService.post(
+        '/follow/reject-request/$followerId',
       );
 
       // Remove from local cache
-      await _removeCachedFollowAction(followingId);
+      await _removeCachedFollowAction(followerId);
 
       return response.data;
     } on AppException {
@@ -214,12 +242,20 @@ class FollowRepository {
   }
 
   /// Get pending follow requests for current user
-  static Future<List<FollowRequest>> getMyPendingRequests() async {
+  static Future<FollowRequestsListResponse> getMyPendingRequests({
+    int page = 0,
+    int size = 20,
+  }) async {
     try {
-      final response = await ApiService.get('/follow/my-pending-requests');
+      final response = await ApiService.get(
+        '/follow/pending-requests',
+        queryParameters: {
+          'page': page,
+          'size': size,
+        },
+      );
 
-      final List<dynamic> requestsData = response.data['data'];
-      return requestsData.map((json) => FollowRequest.fromJson(json)).toList();
+      return FollowRequestsListResponse.fromJson(response.data['data']);
     } on AppException {
       rethrow;
     } catch (e) {
@@ -274,10 +310,12 @@ class FollowRepository {
         'success': true,
         'followersCount': stats.followersCount,
         'followingCount': stats.followingCount,
+        'postsCount': stats.postsCount,
         'data': {
           'userId': stats.userId,
           'followersCount': stats.followersCount,
           'followingCount': stats.followingCount,
+          'postsCount': stats.postsCount,
         }
       };
     } on AppException {
@@ -295,10 +333,12 @@ class FollowRepository {
         'success': true,
         'followersCount': stats.followersCount,
         'followingCount': stats.followingCount,
+        'postsCount': stats.postsCount,
         'data': {
           'userId': stats.userId,
           'followersCount': stats.followersCount,
           'followingCount': stats.followingCount,
+          'postsCount': stats.postsCount,
         }
       };
     } on AppException {
@@ -337,15 +377,12 @@ class FollowRepository {
   /// Check if current user is following a specific user
   static Future<bool> isFollowing(String userId) async {
     try {
-      // First check cache
+      final response = await ApiService.get('/follow/is_following/$userId');
+      return response.data['isFollowing'] ?? false;
+    } on AppException {
+      // If API fails, check cache as fallback
       final cachedStatus = await _getCachedFollowStatus(userId);
-      if (cachedStatus != null) {
-        return cachedStatus == 'accepted';
-      }
-
-      // For now, we'll rely on the cache and return false if not cached
-      // The UI will handle the actual status checking through the API responses
-      return false;
+      return cachedStatus == 'accepted';
     } catch (e) {
       if (kDebugMode) {
         print('Error checking follow status: $e');
@@ -496,13 +533,28 @@ class FollowListResponse {
   });
 
   factory FollowListResponse.fromJson(Map<String, dynamic> json) {
-    return FollowListResponse(
-      users: (json['users'] as List<dynamic>)
+    // Handle both followers and following responses
+    List<UserFollowInfo> usersList = [];
+
+    if (json['followers'] != null) {
+      usersList = (json['followers'] as List<dynamic>)
           .map((userJson) => UserFollowInfo.fromJson(userJson))
-          .toList(),
+          .toList();
+    } else if (json['following'] != null) {
+      usersList = (json['following'] as List<dynamic>)
+          .map((userJson) => UserFollowInfo.fromJson(userJson))
+          .toList();
+    } else if (json['users'] != null) {
+      usersList = (json['users'] as List<dynamic>)
+          .map((userJson) => UserFollowInfo.fromJson(userJson))
+          .toList();
+    }
+
+    return FollowListResponse(
+      users: usersList,
       totalCount: json['totalCount'] ?? 0,
-      page: json['page'] ?? 0,
-      size: json['size'] ?? 20,
+      page: json['currentPage'] ?? json['page'] ?? 0,
+      size: json['totalPages'] ?? json['size'] ?? 20,
     );
   }
 
@@ -560,11 +612,13 @@ class UserStats {
   final String userId;
   final int followersCount;
   final int followingCount;
+  final int postsCount;
 
   UserStats({
     required this.userId,
     required this.followersCount,
     required this.followingCount,
+    required this.postsCount,
   });
 
   factory UserStats.fromJson(Map<String, dynamic> json) {
@@ -572,6 +626,7 @@ class UserStats {
       userId: json['userId'] ?? '',
       followersCount: json['followersCount'] ?? 0,
       followingCount: json['followingCount'] ?? 0,
+      postsCount: json['postsCount'] ?? 0,
     );
   }
 
@@ -580,12 +635,13 @@ class UserStats {
       'userId': userId,
       'followersCount': followersCount,
       'followingCount': followingCount,
+      'postsCount': postsCount,
     };
   }
 
   @override
   String toString() {
-    return 'UserStats(userId: $userId, followers: $followersCount, following: $followingCount)';
+    return 'UserStats(userId: $userId, followers: $followersCount, following: $followingCount, posts: $postsCount)';
   }
 }
 
@@ -671,4 +727,74 @@ class FollowRelationship {
   bool get isAccepted => status == 'accepted';
   bool get isPending => status == 'pending';
   bool get isRejected => status == 'rejected';
+}
+
+class FollowRequestsListResponse {
+  final List<FollowRequestInfo> requests;
+  final int totalCount;
+  final int currentPage;
+  final int totalPages;
+
+  FollowRequestsListResponse({
+    required this.requests,
+    required this.totalCount,
+    required this.currentPage,
+    required this.totalPages,
+  });
+
+  factory FollowRequestsListResponse.fromJson(Map<String, dynamic> json) {
+    return FollowRequestsListResponse(
+      requests: (json['requests'] as List<dynamic>?)
+          ?.map((requestJson) => FollowRequestInfo.fromJson(requestJson))
+          .toList() ?? [],
+      totalCount: json['totalCount'] ?? 0,
+      currentPage: json['currentPage'] ?? 0,
+      totalPages: json['totalPages'] ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'requests': requests.map((request) => request.toJson()).toList(),
+      'totalCount': totalCount,
+      'currentPage': currentPage,
+      'totalPages': totalPages,
+    };
+  }
+}
+
+class FollowRequestInfo {
+  final String userId;
+  final String displayName;
+  final String? profileImageUrl;
+  final int followId;
+  final DateTime createdAt;
+
+  FollowRequestInfo({
+    required this.userId,
+    required this.displayName,
+    this.profileImageUrl,
+    required this.followId,
+    required this.createdAt,
+  });
+
+  factory FollowRequestInfo.fromJson(Map<String, dynamic> json) {
+    return FollowRequestInfo(
+      userId: json['userId'] ?? '',
+      displayName: json['displayName'] ?? '',
+      profileImageUrl: json['profileImageUrl'],
+      followId: json['followId'] ?? 0,
+      createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'displayName': displayName,
+      'profileImageUrl': profileImageUrl,
+      'followId': followId,
+      'createdAt': createdAt.toIso8601String(),
+    };
+  }
 }
