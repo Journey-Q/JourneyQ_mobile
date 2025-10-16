@@ -7,6 +7,7 @@ import 'package:journeyq/features/home/pages/travel_post_widget.dart';
 import 'package:journeyq/shared/widgets/dialog/show_dialog.dart';
 import 'package:journeyq/features/home/data.dart';
 import 'package:journeyq/data/repositories/chat_repository/chat_repository.dart';
+import 'package:journeyq/features/notification/repository/notification_repository.dart';
 import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
 
@@ -20,6 +21,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final ScrollController _scrollController = ScrollController();
   final ChatRepository _chatRepository = ChatRepository();
+  final NotificationRepository _notificationRepository = NotificationRepository();
 
   // Using the imported post_data from data.dart
   late List<Map<String, dynamic>> _posts;
@@ -62,7 +64,7 @@ class _HomePageState extends State<HomePage> {
 
     if (currentUserId == null || !_isChatInitialized) {
       return JourneyQAppBar(
-        notificationCount: 3,
+        notificationCount: 0,
         chatCount: 0,
         onNotificationTap: () {
           context.push('/notification');
@@ -77,22 +79,34 @@ class _HomePageState extends State<HomePage> {
       preferredSize: const Size.fromHeight(55),
       child: StreamBuilder<int>(
         stream: _chatRepository.streamUnreadMessageCount(currentUserId),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            print('❌ Error in unread count stream: ${snapshot.error}');
+        builder: (context, chatSnapshot) {
+          if (chatSnapshot.hasError) {
+            print('❌ Error in chat unread count stream: ${chatSnapshot.error}');
           }
 
-          final unreadCount = snapshot.data ?? 0;
-          print('📱 App bar unread count updated: $unreadCount');
+          final chatUnreadCount = chatSnapshot.data ?? 0;
 
-          return JourneyQAppBar(
-            notificationCount: 3,
-            chatCount: unreadCount,
-            onNotificationTap: () {
-              context.push('/notification');
-            },
-            onChatTap: () {
-              context.push('/chat');
+          // Nested StreamBuilder for notification count
+          return StreamBuilder<int>(
+            stream: _notificationRepository.listenToUnreadCount(currentUserId),
+            builder: (context, notificationSnapshot) {
+              if (notificationSnapshot.hasError) {
+                print('❌ Error in notification unread count stream: ${notificationSnapshot.error}');
+              }
+
+              final notificationUnreadCount = notificationSnapshot.data ?? 0;
+              print('📱 App bar counts - Chat: $chatUnreadCount, Notifications: $notificationUnreadCount');
+
+              return JourneyQAppBar(
+                notificationCount: notificationUnreadCount,
+                chatCount: chatUnreadCount,
+                onNotificationTap: () {
+                  context.push('/notification');
+                },
+                onChatTap: () {
+                  context.push('/chat');
+                },
+              );
             },
           );
         },
@@ -106,7 +120,7 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
       appBar: _isChatInitialized ? _buildDynamicAppBar() : JourneyQAppBar(
-        notificationCount: 3,
+        notificationCount: 0, // Show 0 while loading
         chatCount: 0, // Show 0 while loading
         onNotificationTap: () {
           context.push('/notification');
