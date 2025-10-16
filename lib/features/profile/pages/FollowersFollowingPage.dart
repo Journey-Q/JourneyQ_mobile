@@ -48,10 +48,16 @@ class _FollowersFollowingPageState extends State<FollowersFollowingPage>
   @override
   void initState() {
     super.initState();
+
+    // Debug: Log which tab should be shown
+    print('🔍 FollowersFollowingPage initialized with initialTab: ${widget.initialTab}');
+    final initialTabIndex = widget.initialTab == 'following' ? 1 : 0;
+    print('🔍 Setting tab controller to index: $initialTabIndex');
+
     _tabController = TabController(
       length: 2,
       vsync: this,
-      initialIndex: widget.initialTab == 'following' ? 1 : 0,
+      initialIndex: initialTabIndex,
     );
 
     _checkAuthStatusAndLoadData();

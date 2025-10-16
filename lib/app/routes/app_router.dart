@@ -396,13 +396,20 @@ class AppRouter {
           builder: (context, state) {
             final extra = state.extra as Map<String, dynamic>?;
 
+            // Debug: Log what extra data was received
+            print('🔍 AppRouter: Received extra data: $extra');
+
             if (extra == null) {
+              print('🔍 AppRouter: No extra data, redirecting to profile');
               // Fallback to profile if no data provided
               return AppWrapper(currentRoute: '/profile', child: ProfilePage());
             }
 
             final initialTab = extra['initialTab'] as String? ?? 'followers';
             final userData = extra['userData'] as Map<String, dynamic>? ?? {};
+
+            print('🔍 AppRouter: Extracted initialTab: $initialTab');
+            print('🔍 AppRouter: Extracted userData has ${userData.keys.length} keys');
 
             return FollowersFollowingPage(
               initialTab: initialTab,

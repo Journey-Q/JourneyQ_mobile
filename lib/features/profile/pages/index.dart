@@ -6,8 +6,6 @@ import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:journeyq/data/repositories/profile_repository/profile_repository.dart';
 import 'package:journeyq/data/repositories/follow_repository/follow_repository.dart';
 import 'package:journeyq/data/repositories/post_repository/post_repository.dart';
-import 'package:journeyq/core/errors/exception.dart';
-import 'package:journeyq/features/profile/pages/followersfollowingpage.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -105,23 +103,42 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  // New method to load user stats
+  // New method to load user stats from database
   Future<Map<String, dynamic>?> _loadUserStats() async {
     try {
-      final statsResponse = await FollowRepository.getMyProfileStats();
-      return statsResponse;
+      print("🔄 Loading user stats from database for userId: $_userId");
+
+      // Use ProfileRepository to get stats directly from database
+      final statsResponse = await ProfileRepository.getMyStats();
+
+      print("✅ Stats loaded successfully: ${statsResponse.toString()}");
+
+      return {
+        'followersCount': statsResponse.followersCount,
+        'followingCount': statsResponse.followingCount,
+        'postsCount': statsResponse.postsCount,
+      };
     } catch (e) {
-      print("Error loading user stats: $e");
+      print("❌ Error loading user stats: $e");
+
       // Try to create stats if they don't exist
       try {
         if (_userId != null) {
+          print("🔄 Creating user stats for userId: $_userId");
           await FollowRepository.createUserStats(_userId!);
+
           // Try again after creating
-          final statsResponse = await FollowRepository.getMyProfileStats();
-          return statsResponse;
+          final statsResponse = await ProfileRepository.getMyStats();
+          print("✅ Stats created and loaded: ${statsResponse.toString()}");
+
+          return {
+            'followersCount': statsResponse.followersCount,
+            'followingCount': statsResponse.followingCount,
+            'postsCount': statsResponse.postsCount,
+          };
         }
       } catch (createError) {
-        print("Error creating user stats: $createError");
+        print("❌ Error creating user stats: $createError");
       }
       return null;
     }
@@ -1184,20 +1201,23 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   // Updated navigation method to pass userData and refresh stats on return
-  void _navigateToFollowersFollowing(String tab) {
+  void _navigateToFollowersFollowing(String tab) async {
     final userData = _getUserData(context);
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => FollowersFollowingPage(
-          initialTab: tab,
-          userData: userData,
-        ),
-      ),
-    ).then((_) {
-      // Refresh stats when returning from followers/following page
-      _refreshStats();
-    });
+    // Debug: Log which tab was clicked
+    print('🔍 ProfilePage: Navigating to tab: $tab');
+    print('🔍 ProfilePage: UserData keys: ${userData.keys.toList()}');
+
+    // Use GoRouter navigation to match app_router.dart configuration
+    await context.push(
+      '/profile/followers-following',
+      extra: {
+        'initialTab': tab,
+        'userData': userData,
+      },
+    );
+
+    // Refresh stats when returning from followers/following page
+    _refreshStats();
   }
 }

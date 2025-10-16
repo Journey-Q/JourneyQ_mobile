@@ -105,7 +105,7 @@ class _NotificationPageState extends State<NotificationPage> {
                     onRefresh: _handleRefresh,
                     child: Column(
                       children: [
-                        if (unreadCount > 0) _buildMarkAllReadSection(unreadCount),
+  
                         Expanded(
                           child: _buildNotificationsList(notifications),
                         ),
@@ -587,15 +587,11 @@ class _NotificationPageState extends State<NotificationPage> {
     final success = await _repository.acceptFollowRequest(notification.followId!);
 
     if (success) {
-      // Update notification status in Firebase
-      await _repository.updateFollowNotificationStatus(
+      // Delete the notification from Firebase after accepting
+      await _repository.deleteNotification(
         _currentUserId!.toString(),
         notification.id!,
-        'accepted',
       );
-
-      // Mark as read
-      await _repository.markAsRead(_currentUserId!.toString(), notification.id!);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -639,15 +635,11 @@ class _NotificationPageState extends State<NotificationPage> {
     final success = await _repository.rejectFollowRequest(notification.followId!);
 
     if (success) {
-      // Update notification status in Firebase
-      await _repository.updateFollowNotificationStatus(
+      // Delete the notification from Firebase after rejecting
+      await _repository.deleteNotification(
         _currentUserId!.toString(),
         notification.id!,
-        'rejected',
       );
-
-      // Mark as read
-      await _repository.markAsRead(_currentUserId!.toString(), notification.id!);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

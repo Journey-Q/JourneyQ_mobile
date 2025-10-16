@@ -323,21 +323,51 @@ static Future<Map<String, dynamic>> updateCompleteProfile(
     }
   }
 
-  // Get user statistics by user ID
-  static Future<Map<String, dynamic>> getUserStats(String userId) async {
+  // Get user statistics by user ID (followers, following, posts counts)
+  static Future<UserStatsResponse> getUserStats(String userId) async {
     try {
-      final response = await ApiService.get('/stats/$userId');
-      
-      // Handle direct object response
-      if (response.data is Map<String, dynamic>) {
-        return response.data as Map<String, dynamic>;
+      final response = await ApiService.get('/follow/stats/$userId');
+
+      // Extract data from wrapped response
+      if (response.data['success'] == true && response.data['data'] != null) {
+        return UserStatsResponse.fromJson(response.data['data']);
       }
-      
-      return {};
-    } on AppException catch (e) {
+
+      // Fallback to empty stats
+      return UserStatsResponse(
+        userId: userId,
+        followersCount: 0,
+        followingCount: 0,
+        postsCount: 0,
+      );
+    } on AppException {
       rethrow;
     } catch (e) {
+      throw ServerException('Failed to get user stats: $e');
+    }
+  }
+
+  // Get current user's statistics (my stats)
+  static Future<UserStatsResponse> getMyStats() async {
+    try {
+      final response = await ApiService.get('/follow/my-stats');
+
+      // Extract data from wrapped response
+      if (response.data['success'] == true && response.data['data'] != null) {
+        return UserStatsResponse.fromJson(response.data['data']);
+      }
+
+      // Fallback to empty stats
+      return UserStatsResponse(
+        userId: '',
+        followersCount: 0,
+        followingCount: 0,
+        postsCount: 0,
+      );
+    } on AppException {
       rethrow;
+    } catch (e) {
+      throw ServerException('Failed to get my stats: $e');
     }
   }
 
@@ -594,6 +624,44 @@ class UserProfile {
   @override
   String toString() {
     return 'UserProfile(id: $id, displayName: $displayName, email: $email)';
+  }
+}
+
+/// User statistics response model
+class UserStatsResponse {
+  final String userId;
+  final int followersCount;
+  final int followingCount;
+  final int postsCount;
+
+  UserStatsResponse({
+    required this.userId,
+    required this.followersCount,
+    required this.followingCount,
+    required this.postsCount,
+  });
+
+  factory UserStatsResponse.fromJson(Map<String, dynamic> json) {
+    return UserStatsResponse(
+      userId: json['userId'] ?? '',
+      followersCount: json['followersCount'] ?? 0,
+      followingCount: json['followingCount'] ?? 0,
+      postsCount: json['postsCount'] ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'followersCount': followersCount,
+      'followingCount': followingCount,
+      'postsCount': postsCount,
+    };
+  }
+
+  @override
+  String toString() {
+    return 'UserStatsResponse(userId: $userId, followers: $followersCount, following: $followingCount, posts: $postsCount)';
   }
 }
 

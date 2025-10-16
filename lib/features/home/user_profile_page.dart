@@ -157,9 +157,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
       final safeUserId = widget.userId.isNotEmpty ? widget.userId : 'unknown';
       final stats = await ProfileRepository.getUserStats(safeUserId);
-      
+
       setState(() {
-        _userStats = stats;
+        // Convert UserStatsResponse to Map for compatibility
+        _userStats = {
+          'followersCount': stats.followersCount,
+          'followingCount': stats.followingCount,
+          'postsCount': stats.postsCount,
+        };
         _isLoadingStats = false;
       });
     } catch (e) {
