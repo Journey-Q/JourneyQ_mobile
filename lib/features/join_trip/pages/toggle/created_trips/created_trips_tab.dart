@@ -690,9 +690,14 @@ class CreatedTripsTabState extends State<CreatedTripsTab>
 
                           print('Trip ID: $tripId');
 
+                          // Generate group ID (same as trip ID)
+                          final groupId = tripId;
+                          print('Group ID: $groupId');
+
                           // Send trip requests via API with timeout
                           final result = await TripRequestRepository.sendTripRequests(
                             tripId: tripId,
+                            groupId: groupId,
                             receiverIds: receiverIds,
                           ).timeout(
                             const Duration(seconds: 30),

@@ -6,15 +6,17 @@ class TripRequestRepository {
   // Send trip requests to followers
   static Future<Map<String, dynamic>> sendTripRequests({
     required int tripId,
+    required int groupId,
     required List<int> receiverIds,
   }) async {
     try {
-      print('Sending trip request for trip $tripId to users: $receiverIds');
+      print('Sending trip request for trip $tripId (group $groupId) to users: $receiverIds');
 
       final response = await ApiService.post(
         '/trip-requests/send',
         data: {
           'tripId': tripId,
+          'groupId': groupId,
           'receiverIds': receiverIds,
         },
       );

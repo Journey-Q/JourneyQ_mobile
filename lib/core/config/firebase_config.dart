@@ -77,16 +77,20 @@ class FirebaseConfig {
       }
 
       // Configure database settings
-      await _configureDatabaseSettings();
+      _configureDatabaseSettings();
 
       _initialized = true;
       print('✅ Firebase initialized successfully');
       print('📍 Project ID: $_projectId');
       print('📍 Database URL: $_databaseUrl');
 
-      // Verify connection
-      await _verifyConnection();
-      
+      // Verify connection in background (non-blocking)
+      _verifyConnection().then((_) {
+        print('✅ Database connection verified in background');
+      }).catchError((e) {
+        print('⚠️ Background connection verification failed: $e');
+      });
+
     } catch (e) {
       print('❌ Failed to initialize Firebase: $e');
       _initialized = false;
@@ -96,7 +100,7 @@ class FirebaseConfig {
 
 
   /// Configure database settings for better performance
-  Future<void> _configureDatabaseSettings() async {
+  void _configureDatabaseSettings() {
     if (_database == null) return;
 
     try {
@@ -107,7 +111,7 @@ class FirebaseConfig {
       } catch (e) {
         print('⚠️ Could not enable offline persistence: $e');
       }
-      
+
       // Set cache size (10MB) (optional, skip if it causes issues)
       try {
         _database!.setPersistenceCacheSizeBytes(10 * 1024 * 1024);
@@ -122,53 +126,24 @@ class FirebaseConfig {
     }
   }
 
-  /// Verify database connection with open access
+  /// Verify database connection with open access (lightweight check)
   Future<void> _verifyConnection() async {
     try {
-      print('🔍 Verifying database connection with open access...');
+      print('🔍 Verifying database connection...');
 
-      // Test with a simple write/read to verify open access
-      final testRef = _database!.ref('connection_test');
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-
-      // Try to write test data (this will work if database rules allow open access)
-      await testRef.set({
-        'timestamp': timestamp,
-        'status': 'connected',
-        'message': 'Firebase chat database connection test - no auth required'
-      });
-
-      // Try to read it back
+      // Lightweight connection test - just check if we can read
+      final testRef = _database!.ref('.info/connected');
       final snapshot = await testRef.get();
-      if (snapshot.exists && snapshot.value != null) {
-        print('✅ Database connection verified - open access working');
 
-        // Clean up test data
-        await testRef.remove();
-        print('✅ Test data cleaned up');
+      if (snapshot.exists) {
+        print('✅ Database connection verified');
       } else {
-        print('⚠️ Could not verify database read access');
+        print('⚠️ Could not verify database connection');
       }
-
-      print('✅ Firebase chat database setup complete');
 
     } catch (e) {
       print('❌ Database connection verification failed: $e');
-      print('⚠️ Please set your Firebase Database Rules to allow open access:');
-      print('1. Go to https://console.firebase.google.com/');
-      print('2. Select your project: journeyq-bfbbd');
-      print('3. Go to Realtime Database > Rules');
-      print('4. Replace the rules with:');
-      print('''
-{
-  "rules": {
-    ".read": true,
-    ".write": true
-  }
-}
-      ''');
-      print('5. Click "Publish" to save the rules');
-      print('⚠️ Continuing with Firebase setup');
+      print('⚠️ Check Firebase Database Rules at https://console.firebase.google.com/');
     }
   }
 
