@@ -1,342 +1,591 @@
-import 'dart:io';
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:journeyq/core/services/marketplace_service.dart';
-import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:journeyq/core/errors/exception.dart';
 
 class ReviewRepository {
-  static final authProvider = AuthProvider();
+  // Review API endpoints
+  static const String _reviewsBasePath = '/service/reviews';
 
-  // Cloudinary folder configuration for review images
-  static const String _reviewImagesFolder = 'review_images';
-
-  // ===================== CREATE REVIEW =====================
-
-  /// Create a new review for a service
-  static Future<Map<String, dynamic>> createReview({
-    required String serviceType,
-    required String serviceId,
-    required int rating,
-    required String comment,
-    List<File>? reviewImages,
-    Map<String, dynamic>? additionalData,
-  }) async {
+  /// Get review statistics by service provider ID
+  static Future<ReviewStats> getReviewStatsByServiceProviderId(String serviceProviderId) async {
     try {
-      if (!validateReviewData(
-        serviceType: serviceType,
-        serviceId: serviceId,
-        rating: rating,
-        comment: comment,
-      )) {
-        throw ValidationException('Invalid review data provided');
+      if (serviceProviderId.isEmpty) {
+        throw ServerException('Invalid service provider ID');
       }
 
-      final reviewData = <String, dynamic>{
-        'service_type': serviceType,
-        'service_id': serviceId,
-        'rating': rating,
-        'comment': comment,
-        ...?additionalData,
-      };
+      print('📊 Fetching review statistics for service provider ID: $serviceProviderId');
 
-      if (reviewImages != null && reviewImages.isNotEmpty) {
-        final imageUrls = await uploadMultipleReviewImages(
-          reviewImages,
-          serviceType: serviceType,
-          serviceId: serviceId,
+      final response = await MarketplaceService.get('$_reviewsBasePath/service-provider/$serviceProviderId/stats');
+
+      print('Get Review Stats Response: ${response.data}');
+      print('Response Status Code: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        if (response.data is Map<String, dynamic>) {
+          final responseData = response.data as Map<String, dynamic>;
+
+          // Handle different response formats
+          if (responseData.containsKey('totalReviews')) {
+            return ReviewStats.fromJson(responseData);
+          } else if (responseData.containsKey('data') && responseData['data'] != null) {
+            return ReviewStats.fromJson(responseData['data'] as Map<String, dynamic>);
+          } else {
+            // If no reviews exist, return empty stats
+            return ReviewStats(
+              totalReviews: 0,
+              averageRating: 0.0,
+              fiveStarCount: 0,
+              fourStarCount: 0,
+              threeStarCount: 0,
+              twoStarCount: 0,
+              oneStarCount: 0,
+            );
+          }
+        }
+      } else if (response.statusCode == 404) {
+        // No reviews found for this service provider
+        print('⚠️ No reviews found for service provider: $serviceProviderId');
+        return ReviewStats(
+          totalReviews: 0,
+          averageRating: 0.0,
+          fiveStarCount: 0,
+          fourStarCount: 0,
+          threeStarCount: 0,
+          twoStarCount: 0,
+          oneStarCount: 0,
         );
-        reviewData['image_urls'] = imageUrls;
       }
 
-      final response = await MarketplaceService.post(
-        '/service/reviews/create',
-        data: reviewData,
+      throw ServerException('Failed to fetch review statistics: ${response.statusCode}');
+    } on AppException catch (e) {
+      print('AppException in getReviewStatsByServiceProviderId: $e');
+      rethrow;
+    } catch (e) {
+      print('General Exception in getReviewStatsByServiceProviderId: $e');
+      // Return empty stats instead of throwing error
+      return ReviewStats(
+        totalReviews: 0,
+        averageRating: 0.0,
+        fiveStarCount: 0,
+        fourStarCount: 0,
+        threeStarCount: 0,
+        twoStarCount: 0,
+        oneStarCount: 0,
       );
-
-      if (response.data != null && response.data['review'] != null) {
-        await cacheReviewData(
-          key: 'latest_review_${serviceType}_$serviceId',
-          data: response.data['review'],
-        );
-      }
-
-      return response.data;
-    } on AppException catch (e) {
-      rethrow;
-    } catch (e) {
-      throw ServerException('Failed to create review: $e');
     }
   }
 
-  // ===================== GET REVIEWS =====================
-
-  /// Get review by ID
-  static Future<Map<String, dynamic>> getReviewById({
-    required String reviewId,
-  }) async {
+  /// Get reviews by service provider ID
+  static Future<List<Review>> getReviewsByServiceProviderId(String serviceProviderId) async {
     try {
-      final response = await MarketplaceService.get('/service/reviews/$reviewId');
-
-      if (response.data != null) {
-        await cacheReviewData(
-          key: 'review_$reviewId',
-          data: response.data,
-        );
+      if (serviceProviderId.isEmpty) {
+        throw ServerException('Invalid service provider ID');
       }
 
-      return response.data;
-    } on AppException catch (e) {
-      rethrow;
-    } catch (e) {
-      throw ServerException('Failed to get review: $e');
-    }
-  }
+      print('📝 Fetching reviews for service provider ID: $serviceProviderId');
 
-  /// Get review by booking ID
-  static Future<Map<String, dynamic>> getReviewByBookingId({
-    required String bookingId,
-  }) async {
-    try {
-      final response = await MarketplaceService.get('/service/reviews/booking/$bookingId');
-      return response.data;
-    } on AppException catch (e) {
-      rethrow;
-    } catch (e) {
-      throw ServerException('Failed to get review by booking ID: $e');
-    }
-  }
+      final response = await MarketplaceService.get('$_reviewsBasePath/service-provider/$serviceProviderId');
 
-  /// Get all reviews
-  static Future<List<Map<String, dynamic>>> getAllReviews({
-    int page = 1,
-    int limit = 20,
-  }) async {
-    try {
-      final response = await MarketplaceService.get(
-        '/service/reviews/all',
-        queryParameters: {
-          'page': page,
-          'limit': limit,
-        },
-      );
+      print('Get Reviews Response: ${response.data}');
+      print('Response Status Code: ${response.statusCode}');
 
-      if (response.data is List) {
-        return List<Map<String, dynamic>>.from(response.data);
-      } else if (response.data is Map && response.data['reviews'] != null) {
-        return List<Map<String, dynamic>>.from(response.data['reviews']);
+      if (response.statusCode == 200) {
+        return _parseReviewsResponse(response);
+      } else if (response.statusCode == 404) {
+        // No reviews found
+        print('⚠️ No reviews found for service provider: $serviceProviderId');
+        return [];
       }
 
+      throw ServerException('Failed to fetch reviews: ${response.statusCode}');
+    } on AppException catch (e) {
+      print('AppException in getReviewsByServiceProviderId: $e');
+      rethrow;
+    } catch (e) {
+      print('General Exception in getReviewsByServiceProviderId: $e');
+      // Return empty list instead of throwing error
       return [];
-    } on AppException catch (e) {
-      rethrow;
-    } catch (e) {
-      throw ServerException('Failed to get all reviews: $e');
     }
   }
 
-  // Continue with all other methods, replacing ApiService with MarketplaceService
-  // ... (I'll show a few more examples)
-
-  /// Update a review
-  static Future<Map<String, dynamic>> updateReview({
-    required String reviewId,
-    int? rating,
-    String? comment,
-    List<File>? newReviewImages,
-    List<String>? imagesToDelete,
-    Map<String, dynamic>? additionalData,
-  }) async {
+  /// Get active reviews by service provider ID
+  static Future<List<Review>> getActiveReviewsByServiceProviderId(String serviceProviderId) async {
     try {
-      final updateData = <String, dynamic>{
-        ...?additionalData,
-      };
-
-      if (rating != null) updateData['rating'] = rating;
-      if (comment != null) updateData['comment'] = comment;
-
-      // Delete old images if specified
-      if (imagesToDelete != null && imagesToDelete.isNotEmpty) {
-        await deleteMultipleReviewImages(imagesToDelete);
-        updateData['images_to_delete'] = imagesToDelete;
+      if (serviceProviderId.isEmpty) {
+        throw ServerException('Invalid service provider ID');
       }
 
-      // Upload new images if provided
-      if (newReviewImages != null && newReviewImages.isNotEmpty) {
-        final imageUrls = await uploadMultipleReviewImages(
-          newReviewImages,
-          serviceType: 'review_update',
-          serviceId: reviewId,
-        );
-        updateData['new_image_urls'] = imageUrls;
+      print('📝 Fetching active reviews for service provider ID: $serviceProviderId');
+
+      final response = await MarketplaceService.get('$_reviewsBasePath/service-provider/$serviceProviderId/active');
+
+      print('Get Active Reviews Response: ${response.data}');
+
+      if (response.statusCode == 200) {
+        return _parseReviewsResponse(response);
+      } else if (response.statusCode == 404) {
+        return [];
       }
 
-      final response = await MarketplaceService.put(
-        '/service/reviews/$reviewId',
-        data: updateData,
-      );
-
-      if (response.data != null) {
-        await cacheReviewData(
-          key: 'review_$reviewId',
-          data: response.data,
-        );
-      }
-
-      return response.data;
+      throw ServerException('Failed to fetch active reviews: ${response.statusCode}');
     } on AppException catch (e) {
+      print('AppException in getActiveReviewsByServiceProviderId: $e');
       rethrow;
     } catch (e) {
-      throw ServerException('Failed to update review: $e');
+      print('General Exception in getActiveReviewsByServiceProviderId: $e');
+      return [];
     }
   }
 
-  /// Delete a review
-  static Future<Map<String, dynamic>> deleteReview({
-    required String reviewId,
-  }) async {
-    try {
-      final response = await MarketplaceService.delete('/service/reviews/$reviewId');
+  /// Helper method to parse reviews response
+  static List<Review> _parseReviewsResponse(dynamic response) {
+    List<dynamic> reviewData = [];
 
-      // Clear cached review data
-      await clearCachedReviewData(specificKey: 'review_$reviewId');
+    print('Parsing reviews response...');
+    print('Response data type: ${response.data.runtimeType}');
 
-      return response.data ?? {'message': 'Review deleted successfully'};
-    } on AppException catch (e) {
-      rethrow;
-    } catch (e) {
-      throw ServerException('Failed to delete review: $e');
-    }
-  }
+    if (response.data is List) {
+      reviewData = response.data as List<dynamic>;
+      print('✓ Response is directly a List with ${reviewData.length} items');
+    } else if (response.data is Map<String, dynamic>) {
+      final responseMap = response.data as Map<String, dynamic>;
+      print('Response is a Map with keys: ${responseMap.keys.toList()}');
 
-  // ===================== IMAGE HANDLING METHODS =====================
-
-  /// Upload multiple review images to Cloudinary
-  static Future<List<String>> uploadMultipleReviewImages(
-      List<File> imageFiles, {
-        required String serviceType,
-        required String serviceId,
-      }) async {
-    try {
-      final userId = authProvider.user?.userId ?? 'anonymous';
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-
-      final customFileNames = imageFiles.asMap().entries.map((entry) {
-        final index = entry.key;
-        return 'review_${serviceType}_${serviceId}_${userId}_${timestamp}_$index';
-      }).toList();
-
-      final imageUrls = await MarketplaceService.uploadMultipleImages(
-        imageFiles: imageFiles,
-        subfolderName: _reviewImagesFolder,
-        customFileNames: customFileNames,
-      );
-
-      return imageUrls;
-    } on AppException catch (e) {
-      rethrow;
-    } catch (e) {
-      throw ServerException('Failed to upload review images: $e');
-    }
-  }
-
-  /// Delete multiple review images
-  static Future<void> deleteMultipleReviewImages(List<String> imageUrls) async {
-    try {
-      await MarketplaceService.deleteMultipleImages(imageUrls: imageUrls);
-    } on AppException catch (e) {
-      rethrow;
-    } catch (e) {
-      throw ServerException('Failed to delete review images: $e');
-    }
-  }
-
-  // ===================== CACHING METHODS =====================
-
-  /// Cache review data locally
-  static Future<void> cacheReviewData({
-    required String key,
-    required Map<String, dynamic> data,
-  }) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('review_cache_$key', jsonEncode(data));
-    } catch (e) {
-      // Continue even if caching fails
-    }
-  }
-
-  /// Get cached review data
-  static Future<Map<String, dynamic>?> getCachedReviewData({
-    required String key,
-  }) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final cachedData = prefs.getString('review_cache_$key');
-      if (cachedData != null) {
-        return jsonDecode(cachedData) as Map<String, dynamic>;
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  /// Clear cached review data
-  static Future<void> clearCachedReviewData({String? specificKey}) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-
-      if (specificKey != null) {
-        await prefs.remove('review_cache_$specificKey');
+      // Try multiple possible keys where review data might be
+      if (responseMap.containsKey('data') && responseMap['data'] != null) {
+        if (responseMap['data'] is List) {
+          reviewData = responseMap['data'] as List<dynamic>;
+          print('✓ Found reviews in data field: ${reviewData.length} items');
+        }
+      } else if (responseMap.containsKey('reviews') && responseMap['reviews'] != null) {
+        if (responseMap['reviews'] is List) {
+          reviewData = responseMap['reviews'] as List<dynamic>;
+          print('✓ Found reviews in reviews field: ${reviewData.length} items');
+        }
       } else {
-        final keys = prefs.getKeys().where((key) => key.startsWith('review_cache_'));
-        for (final key in keys) {
-          await prefs.remove(key);
+        // Try to find any list in the response recursively
+        reviewData = _findListInResponse(responseMap);
+        if (reviewData.isNotEmpty) {
+          print('✓ Found list recursively with ${reviewData.length} items');
         }
       }
-    } catch (e) {
-      // Continue even if clearing cache fails
+    } else {
+      print('⚠ Unexpected response format: ${response.data.runtimeType}');
     }
+
+    if (reviewData.isEmpty) {
+      print('⚠ No review data found in response');
+      return [];
+    }
+
+    final reviews = <Review>[];
+    for (var i = 0; i < reviewData.length; i++) {
+      try {
+        if (reviewData[i] is Map<String, dynamic>) {
+          final review = Review.fromJson(reviewData[i] as Map<String, dynamic>);
+          reviews.add(review);
+          print('✓ Parsed review $i: ${review.customerName} - ${review.rating} stars');
+        } else {
+          print('⚠ Item $i is not a Map: ${reviewData[i].runtimeType}');
+        }
+      } catch (e) {
+        print('⚠ Error parsing review at index $i: $e');
+        print('⚠ Problematic data: ${reviewData[i]}');
+      }
+    }
+
+    print('✓ Successfully parsed ${reviews.length} out of ${reviewData.length} reviews');
+    return reviews;
   }
 
-  // ===================== UTILITY METHODS =====================
+  /// Helper method to find list in response recursively
+  static List<dynamic> _findListInResponse(Map<String, dynamic> response) {
+    for (var key in response.keys) {
+      final value = response[key];
 
-  /// Validate review data before sending
-  static bool validateReviewData({
-    required String serviceType,
-    required String serviceId,
-    required int rating,
-    required String comment,
-  }) {
-    if (!['hotel', 'tour_package', 'travel_agency'].contains(serviceType)) {
+      if (value is List && value.isNotEmpty) {
+        // Check if the list contains maps (review objects)
+        if (value[0] is Map<String, dynamic>) {
+          print('Found list under key: $key');
+          return value;
+        }
+      } else if (value is Map<String, dynamic>) {
+        final nestedList = _findListInResponse(value);
+        if (nestedList.isNotEmpty) {
+          return nestedList;
+        }
+      }
+    }
+    return [];
+  }
+
+  /// Test API connection
+  static Future<bool> testApiConnection() async {
+    try {
+      final response = await MarketplaceService.get('$_reviewsBasePath/all');
+      print('Review API Connection Test: Status ${response.statusCode}');
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Review API Connection Test Failed: $e');
       return false;
     }
-
-    if (serviceId.trim().isEmpty) return false;
-    if (rating < 1 || rating > 5) return false;
-    if (comment.trim().length < 10) return false;
-
-    return true;
   }
-
-  /// Get current user ID for operations
-  static String? get currentUserId => authProvider.user?.userId?.toString();
-
-  /// Check if user is authenticated
-  static bool get isUserAuthenticated => authProvider.user != null;
 }
 
-/// Model class for Review Response
+/// Review Model
+class Review {
+  final String id;
+  final String bookingId;
+  final String serviceProviderId;
+  final String userId;
+  final String customerName;
+  final String customerEmail;
+  final String customerPhone;
+  final int rating;
+  final String reviewText;
+  final bool isVerified;
+  final String status;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  Review({
+    required this.id,
+    required this.bookingId,
+    required this.serviceProviderId,
+    required this.userId,
+    required this.customerName,
+    required this.customerEmail,
+    required this.customerPhone,
+    required this.rating,
+    required this.reviewText,
+    required this.isVerified,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory Review.fromJson(Map<String, dynamic> json) {
+    print('─────────────────────────────────────');
+    print('Parsing review JSON: $json');
+
+    // Extract ID
+    String id = _extractField(json, [
+      'id',
+      'reviewId',
+      '_id'
+    ]) ?? 'unknown_id';
+
+    // Extract booking ID
+    String bookingId = _extractField(json, [
+      'bookingId',
+      'booking_id',
+      'bookingId'
+    ]) ?? '';
+
+    // Extract service provider ID
+    String serviceProviderId = _extractField(json, [
+      'serviceProviderId',
+      'service_provider_id',
+      'serviceProviderId'
+    ]) ?? '';
+
+    // Extract user ID
+    String userId = _extractField(json, [
+      'userId',
+      'user_id',
+      'userId'
+    ]) ?? '';
+
+    // Extract customer details
+    String customerName = _extractField(json, [
+      'customerName',
+      'customer_name',
+      'userName',
+      'user_name'
+    ]) ?? 'Anonymous';
+
+    String customerEmail = _extractField(json, [
+      'customerEmail',
+      'customer_email',
+      'email'
+    ]) ?? '';
+
+    String customerPhone = _extractField(json, [
+      'customerPhone',
+      'customer_phone',
+      'phone'
+    ]) ?? '';
+
+    // Extract rating
+    int rating = json['rating'] ?? 5;
+
+    // Extract review text
+    String reviewText = _extractField(json, [
+      'reviewText',
+      'review_text',
+      'comment',
+      'text'
+    ]) ?? '';
+
+    // Extract verification status
+    bool isVerified = json['isVerified'] ?? json['is_verified'] ?? false;
+
+    // Extract status
+    String status = _extractField(json, [
+      'status',
+      'reviewStatus'
+    ]) ?? 'ACTIVE';
+
+    // Extract timestamps
+    DateTime createdAt = _parseDateTime(json['createdAt'] ?? json['created_at']);
+    DateTime updatedAt = _parseDateTime(json['updatedAt'] ?? json['updated_at']);
+
+    print('✓ Extracted Review:');
+    print('  ID: $id');
+    print('  Booking ID: $bookingId');
+    print('  Service Provider ID: $serviceProviderId');
+    print('  User ID: $userId');
+    print('  Customer: $customerName');
+    print('  Rating: $rating');
+    print('  Verified: $isVerified');
+    print('  Status: $status');
+    print('  Created: $createdAt');
+    print('─────────────────────────────────────');
+
+    return Review(
+      id: id,
+      bookingId: bookingId,
+      serviceProviderId: serviceProviderId,
+      userId: userId,
+      customerName: customerName,
+      customerEmail: customerEmail,
+      customerPhone: customerPhone,
+      rating: rating,
+      reviewText: reviewText,
+      isVerified: isVerified,
+      status: status,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
+
+  /// Helper method to extract field from JSON with multiple possible keys
+  static String? _extractField(Map<String, dynamic> json, List<String> possibleKeys) {
+    for (var key in possibleKeys) {
+      if (json.containsKey(key) && json[key] != null && json[key].toString().isNotEmpty) {
+        return json[key].toString();
+      }
+    }
+    return null;
+  }
+
+  /// Helper method to parse DateTime
+  static DateTime _parseDateTime(dynamic dateTime) {
+    if (dateTime == null) return DateTime.now();
+    if (dateTime is DateTime) return dateTime;
+    if (dateTime is String) {
+      try {
+        return DateTime.parse(dateTime);
+      } catch (e) {
+        return DateTime.now();
+      }
+    }
+    return DateTime.now();
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'bookingId': bookingId,
+      'serviceProviderId': serviceProviderId,
+      'userId': userId,
+      'customerName': customerName,
+      'customerEmail': customerEmail,
+      'customerPhone': customerPhone,
+      'rating': rating,
+      'reviewText': reviewText,
+      'isVerified': isVerified,
+      'status': status,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
+
+  /// Convert Review to Map for navigation (serializable)
+  Map<String, dynamic> toNavigationMap() {
+    return toJson();
+  }
+
+  /// Create Review from navigation map
+  factory Review.fromNavigationMap(Map<String, dynamic> map) {
+    return Review.fromJson(map);
+  }
+
+  Review copyWith({
+    String? id,
+    String? bookingId,
+    String? serviceProviderId,
+    String? userId,
+    String? customerName,
+    String? customerEmail,
+    String? customerPhone,
+    int? rating,
+    String? reviewText,
+    bool? isVerified,
+    String? status,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return Review(
+      id: id ?? this.id,
+      bookingId: bookingId ?? this.bookingId,
+      serviceProviderId: serviceProviderId ?? this.serviceProviderId,
+      userId: userId ?? this.userId,
+      customerName: customerName ?? this.customerName,
+      customerEmail: customerEmail ?? this.customerEmail,
+      customerPhone: customerPhone ?? this.customerPhone,
+      rating: rating ?? this.rating,
+      reviewText: reviewText ?? this.reviewText,
+      isVerified: isVerified ?? this.isVerified,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'Review(id: $id, rating: $rating, customer: $customerName, serviceProvider: $serviceProviderId)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Review && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
+}
+
+/// Review Statistics Model
+class ReviewStats {
+  final int totalReviews;
+  final double averageRating;
+  final int fiveStarCount;
+  final int fourStarCount;
+  final int threeStarCount;
+  final int twoStarCount;
+  final int oneStarCount;
+
+  ReviewStats({
+    required this.totalReviews,
+    required this.averageRating,
+    required this.fiveStarCount,
+    required this.fourStarCount,
+    required this.threeStarCount,
+    required this.twoStarCount,
+    required this.oneStarCount,
+  });
+
+  factory ReviewStats.fromJson(Map<String, dynamic> json) {
+    return ReviewStats(
+      totalReviews: json['totalReviews'] ?? 0,
+      averageRating: (json['averageRating'] ?? 0.0).toDouble(),
+      fiveStarCount: json['fiveStarCount'] ?? 0,
+      fourStarCount: json['fourStarCount'] ?? 0,
+      threeStarCount: json['threeStarCount'] ?? 0,
+      twoStarCount: json['twoStarCount'] ?? 0,
+      oneStarCount: json['oneStarCount'] ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'totalReviews': totalReviews,
+      'averageRating': averageRating,
+      'fiveStarCount': fiveStarCount,
+      'fourStarCount': fourStarCount,
+      'threeStarCount': threeStarCount,
+      'twoStarCount': twoStarCount,
+      'oneStarCount': oneStarCount,
+    };
+  }
+
+  double get fiveStarPercentage => totalReviews > 0 ? fiveStarCount / totalReviews : 0;
+  double get fourStarPercentage => totalReviews > 0 ? fourStarCount / totalReviews : 0;
+  double get threeStarPercentage => totalReviews > 0 ? threeStarCount / totalReviews : 0;
+  double get twoStarPercentage => totalReviews > 0 ? twoStarCount / totalReviews : 0;
+  double get oneStarPercentage => totalReviews > 0 ? oneStarCount / totalReviews : 0;
+}
+
+/// Create Review Request Model
+class CreateReviewRequest {
+  final String bookingId;
+  final String serviceProviderId;
+  final int rating;
+  final String reviewText;
+  final String customerName;
+  final String customerEmail;
+  final String customerPhone;
+
+  CreateReviewRequest({
+    required this.bookingId,
+    required this.serviceProviderId,
+    required this.rating,
+    required this.reviewText,
+    required this.customerName,
+    required this.customerEmail,
+    required this.customerPhone,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'bookingId': bookingId,
+      'serviceProviderId': serviceProviderId,
+      'rating': rating,
+      'reviewText': reviewText,
+      'customerName': customerName,
+      'customerEmail': customerEmail,
+      'customerPhone': customerPhone,
+    };
+  }
+}
+
+/// Update Review Request Model
+class UpdateReviewRequest {
+  final int? rating;
+  final String? reviewText;
+  final String? status;
+
+  UpdateReviewRequest({
+    this.rating,
+    this.reviewText,
+    this.status,
+  });
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = {};
+    if (rating != null) data['rating'] = rating;
+    if (reviewText != null) data['reviewText'] = reviewText;
+    if (status != null) data['status'] = status;
+    return data;
+  }
+}
+
+/// Response wrapper for review API
 class ReviewResponse {
   final bool success;
   final String message;
   final Review? review;
+  final List<Review>? reviews;
+  final ReviewStats? stats;
 
   ReviewResponse({
     required this.success,
     required this.message,
     this.review,
+    this.reviews,
+    this.stats,
   });
 
   factory ReviewResponse.fromJson(Map<String, dynamic> json) {
@@ -344,6 +593,10 @@ class ReviewResponse {
       success: json['success'] ?? false,
       message: json['message'] ?? '',
       review: json['review'] != null ? Review.fromJson(json['review']) : null,
+      reviews: json['reviews'] != null
+          ? (json['reviews'] as List).map((r) => Review.fromJson(r)).toList()
+          : null,
+      stats: json['stats'] != null ? ReviewStats.fromJson(json['stats']) : null,
     );
   }
 
@@ -352,117 +605,8 @@ class ReviewResponse {
       'success': success,
       'message': message,
       'review': review?.toJson(),
+      'reviews': reviews?.map((r) => r.toJson()).toList(),
+      'stats': stats?.toJson(),
     };
   }
-}
-
-/// Model class for Review
-class Review {
-  final String id;
-  final String userId;
-  final String serviceType;
-  final String serviceId;
-  final int rating;
-  final String comment;
-  final List<String> imageUrls;
-  final String status;
-  final bool isVerified;
-  final DateTime createdAt;
-  final DateTime? updatedAt;
-
-  Review({
-    required this.id,
-    required this.userId,
-    required this.serviceType,
-    required this.serviceId,
-    required this.rating,
-    required this.comment,
-    required this.imageUrls,
-    required this.status,
-    required this.isVerified,
-    required this.createdAt,
-    this.updatedAt,
-  });
-
-  factory Review.fromJson(Map<String, dynamic> json) {
-    return Review(
-      id: json['id']?.toString() ?? '',
-      userId: json['user_id']?.toString() ?? json['userId']?.toString() ?? '',
-      serviceType: json['service_type'] ?? json['serviceType'] ?? '',
-      serviceId: json['service_id']?.toString() ?? json['serviceId']?.toString() ?? '',
-      rating: json['rating'] ?? 0,
-      comment: json['comment'] ?? '',
-      imageUrls: List<String>.from(
-        json['image_urls'] ?? json['imageUrls'] ?? [],
-      ),
-      status: json['status'] ?? 'ACTIVE',
-      isVerified: json['is_verified'] ?? json['isVerified'] ?? false,
-      createdAt: DateTime.parse(
-        json['created_at'] ?? json['createdAt'] ?? DateTime.now().toIso8601String(),
-      ),
-      updatedAt: json['updated_at'] != null || json['updatedAt'] != null
-          ? DateTime.parse(json['updated_at'] ?? json['updatedAt'])
-          : null,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'user_id': userId,
-      'service_type': serviceType,
-      'service_id': serviceId,
-      'rating': rating,
-      'comment': comment,
-      'image_urls': imageUrls,
-      'status': status,
-      'is_verified': isVerified,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt?.toIso8601String(),
-    };
-  }
-}
-
-/// Model class for Review Statistics
-class ReviewStats {
-  final double averageRating;
-  final int totalReviews;
-  final Map<int, int> ratingDistribution;
-  final int verifiedReviews;
-  final int activeReviews;
-
-  ReviewStats({
-    required this.averageRating,
-    required this.totalReviews,
-    required this.ratingDistribution,
-    required this.verifiedReviews,
-    required this.activeReviews,
-  });
-
-  factory ReviewStats.fromJson(Map<String, dynamic> json) {
-    return ReviewStats(
-      averageRating: (json['average_rating'] ?? json['averageRating'] ?? 0.0).toDouble(),
-      totalReviews: json['total_reviews'] ?? json['totalReviews'] ?? 0,
-      ratingDistribution: Map<int, int>.from(
-        json['rating_distribution'] ?? json['ratingDistribution'] ?? {},
-      ),
-      verifiedReviews: json['verified_reviews'] ?? json['verifiedReviews'] ?? 0,
-      activeReviews: json['active_reviews'] ?? json['activeReviews'] ?? 0,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'average_rating': averageRating,
-      'total_reviews': totalReviews,
-      'rating_distribution': ratingDistribution,
-      'verified_reviews': verifiedReviews,
-      'active_reviews': activeReviews,
-    };
-  }
-}
-
-/// Custom exception for validation errors
-class ValidationException extends AppException {
-  ValidationException(String message) : super(message);
 }
