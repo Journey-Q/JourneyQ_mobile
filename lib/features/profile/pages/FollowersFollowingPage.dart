@@ -49,10 +49,10 @@ class _FollowersFollowingPageState extends State<FollowersFollowingPage>
   void initState() {
     super.initState();
 
-    // Debug: Log which tab should be shown
-    print('🔍 FollowersFollowingPage initialized with initialTab: ${widget.initialTab}');
-    final initialTabIndex = widget.initialTab == 'following' ? 1 : 0;
-    print('🔍 Setting tab controller to index: $initialTabIndex');
+   
+    // Fixed: Proper string comparison with trimming and lowercase
+    final String cleanTab = widget.initialTab.trim().toLowerCase();
+    final int initialTabIndex = cleanTab == 'following' ? 1 : 0;
 
     _tabController = TabController(
       length: 2,
@@ -134,21 +134,26 @@ class _FollowersFollowingPageState extends State<FollowersFollowingPage>
       late FollowListResponse response;
 
       // Check if this is the current user's profile or another user's profile
-      final String userId = widget.userData['id'] ?? widget.userData['userId'] ?? '';
-      print('DEBUG: Loading followers for userId: $userId');
+      final userId = widget.userData['id'] ?? widget.userData['userId'];
+      final String userIdStr = userId?.toString() ?? '';
+
+      print('DEBUG: Loading followers for userId: $userIdStr (type: ${userId.runtimeType})');
+      print('DEBUG: userData[\'id\']: ${widget.userData['id']} (type: ${widget.userData['id'].runtimeType})');
+      print('DEBUG: userData[\'userId\']: ${widget.userData['userId']}');
       print('DEBUG: Is current user: ${_isCurrentUserProfile()}');
+      print('DEBUG: Will use ${userIdStr.isEmpty || _isCurrentUserProfile() ? "my-followers" : "getUserFollowers"} endpoint');
 
       // If userId is empty or this is a "my profile" context, use my-followers endpoint
-      if (userId.isEmpty || _isCurrentUserProfile()) {
+      if (userIdStr.isEmpty || _isCurrentUserProfile()) {
         print('DEBUG: Using my-followers endpoint');
         response = await FollowRepository.getMyFollowers(
           page: _followersPage,
           size: _pageSize,
         );
       } else {
-        print('DEBUG: Using getUserFollowers endpoint');
+        print('DEBUG: Using getUserFollowers endpoint with userId: $userIdStr');
         response = await FollowRepository.getUserFollowers(
-          userId: userId,
+          userId: userIdStr,
           page: _followersPage,
           size: _pageSize,
         );
@@ -204,20 +209,24 @@ class _FollowersFollowingPageState extends State<FollowersFollowingPage>
       late FollowListResponse response;
 
       // Check if this is the current user's profile or another user's profile
-      final String userId = widget.userData['id'] ?? widget.userData['userId'] ?? '';
-      print('DEBUG: Loading following for userId: $userId');
+      final userId = widget.userData['id'] ?? widget.userData['userId'];
+      final String userIdStr = userId?.toString() ?? '';
+
+      print('DEBUG: Loading following for userId: $userIdStr (type: ${userId.runtimeType})');
+      print('DEBUG: Is current user: ${_isCurrentUserProfile()}');
+      print('DEBUG: Will use ${userIdStr.isEmpty || _isCurrentUserProfile() ? "my-following" : "getUserFollowing"} endpoint');
 
       // If userId is empty or this is a "my profile" context, use my-following endpoint
-      if (userId.isEmpty || _isCurrentUserProfile()) {
+      if (userIdStr.isEmpty || _isCurrentUserProfile()) {
         print('DEBUG: Using my-following endpoint');
         response = await FollowRepository.getMyFollowing(
           page: _followingPage,
           size: _pageSize,
         );
       } else {
-        print('DEBUG: Using getUserFollowing endpoint');
+        print('DEBUG: Using getUserFollowing endpoint with userId: $userIdStr');
         response = await FollowRepository.getUserFollowing(
-          userId: userId,
+          userId: userIdStr,
           page: _followingPage,
           size: _pageSize,
         );
@@ -255,39 +264,94 @@ class _FollowersFollowingPageState extends State<FollowersFollowingPage>
 
   // Helper method to determine if this is the current user's profile
   bool _isCurrentUserProfile() {
-    // You can customize this logic based on how you determine if it's the current user
-    // For example, you might pass a flag in userData or check against the current user ID
-    return widget.userData['isCurrentUser'] == true;
+    // Check if isCurrentUser flag is explicitly set
+    final isCurrentUser = widget.userData['isCurrentUser'];
+
+    print('DEBUG: isCurrentUser flag: $isCurrentUser');
+    print('DEBUG: userData keys: ${widget.userData.keys.toList()}');
+
+    // Return true only if explicitly set to true, otherwise assume it's another user
+    return isCurrentUser == true;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF2D3436)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           widget.userData['username'] ?? widget.userData['displayName'] ?? 'User',
           style: const TextStyle(
-            color: Colors.black,
+            color: Color(0xFF2D3436),
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
         ),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.black,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: Colors.black,
-          tabs: [
-            Tab(text: '${_followers.length} Followers'),
-            Tab(text: '${_following.length} Following'),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TabBar(
+              controller: _tabController,
+              labelColor: const Color(0xFF0088cc),
+              unselectedLabelColor: const Color(0xFF636E72),
+              labelStyle: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
+              indicator: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: const Color(0xFF0088cc),
+                    width: 3,
+                  ),
+                ),
+              ),
+              indicatorSize: TabBarIndicatorSize.tab,
+              tabs: [
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.people, size: 18),
+                      const SizedBox(width: 6),
+                      Text('${_followers.length} Followers'),
+                    ],
+                  ),
+                ),
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.person_add, size: 18),
+                      const SizedBox(width: 6),
+                      Text('${_following.length} Following'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
       body: TabBarView(
@@ -314,10 +378,40 @@ class _FollowersFollowingPageState extends State<FollowersFollowingPage>
     }
 
     if (_followers.isEmpty) {
-      return const Center(
-        child: Text(
-          'No followers yet',
-          style: TextStyle(color: Colors.grey, fontSize: 16),
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0088cc).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.people_outline,
+                size: 64,
+                color: Color(0xFF0088cc),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'No followers yet',
+              style: TextStyle(
+                color: Color(0xFF2D3436),
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Start connecting with other travelers',
+              style: TextStyle(
+                color: Color(0xFF636E72),
+                fontSize: 14,
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -366,10 +460,40 @@ class _FollowersFollowingPageState extends State<FollowersFollowingPage>
     }
 
     if (_following.isEmpty) {
-      return const Center(
-        child: Text(
-          'Not following anyone yet',
-          style: TextStyle(color: Colors.grey, fontSize: 16),
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: const Color(0xFF00B894).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.person_add_outlined,
+                size: 64,
+                color: Color(0xFF00B894),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Not following anyone yet',
+              style: TextStyle(
+                color: Color(0xFF2D3436),
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Discover and follow amazing travelers',
+              style: TextStyle(
+                color: Color(0xFF636E72),
+                fontSize: 14,
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -406,101 +530,191 @@ class _FollowersFollowingPageState extends State<FollowersFollowingPage>
 
   Widget _buildAuthErrorWidget() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.lock_outline,
-            size: 64,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Please log in to view followers and following',
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: 16,
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE17055).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.lock_outline,
+                size: 64,
+                color: Color(0xFFE17055),
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              // Navigate to login or refresh auth
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
+            const SizedBox(height: 24),
+            const Text(
+              'Authentication Required',
+              style: TextStyle(
+                color: Color(0xFF2D3436),
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
             ),
-            child: const Text('Go Back'),
-          ),
-        ],
+            const SizedBox(height: 12),
+            const Text(
+              'Please log in to view followers and following',
+              style: TextStyle(
+                color: Color(0xFF636E72),
+                fontSize: 15,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back, size: 18),
+              label: const Text('Go Back'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0088cc),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildErrorWidget(String error, VoidCallback onRetry) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            error,
-            style: const TextStyle(
-              color: Colors.grey,
-              fontSize: 16,
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE17055).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Color(0xFFE17055),
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: onRetry,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
+            const SizedBox(height: 24),
+            const Text(
+              'Oops! Something went wrong',
+              style: TextStyle(
+                color: Color(0xFF2D3436),
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
             ),
-            child: const Text('Retry'),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Text(
+              error,
+              style: const TextStyle(
+                color: Color(0xFF636E72),
+                fontSize: 15,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('Try Again'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0088cc),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildUserItem(UserFollowInfo user) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         children: [
-          // Profile Picture
+          // Profile Picture with gradient border for mutual follows
           GestureDetector(
             onTap: () => _navigateToProfile(user.userId),
-            child: CircleAvatar(
-              radius: 25,
-              backgroundColor: Colors.grey[300],
-              backgroundImage: user.profileImageUrl != null
-                  ? NetworkImage(user.profileImageUrl!)
+            child: Container(
+              decoration: user.isMutualFollow == true
+                  ? BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF0088cc), Color(0xFF00B894)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF0088cc).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    )
                   : null,
-              child: user.profileImageUrl == null
-                  ? Text(
-                user.displayName.isNotEmpty
-                    ? user.displayName[0].toUpperCase()
-                    : 'U',
-                style: const TextStyle(
-                  color: Colors.grey,
-                  fontWeight: FontWeight.bold,
-                ),
-              )
-                  : null,
+              padding: user.isMutualFollow == true
+                  ? const EdgeInsets.all(2)
+                  : EdgeInsets.zero,
+              child: CircleAvatar(
+                radius: 28,
+                backgroundColor: Colors.grey[200],
+                backgroundImage: user.profileImageUrl != null
+                    ? NetworkImage(user.profileImageUrl!)
+                    : null,
+                child: user.profileImageUrl == null
+                    ? Text(
+                        user.displayName.isNotEmpty
+                            ? user.displayName[0].toUpperCase()
+                            : 'U',
+                        style: const TextStyle(
+                          color: Color(0xFF636E72),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      )
+                    : null,
+              ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
 
           // User Info
           Expanded(
@@ -511,77 +725,83 @@ class _FollowersFollowingPageState extends State<FollowersFollowingPage>
                 children: [
                   Row(
                     children: [
-                      Text(
-                        user.displayName,
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                      Flexible(
+                        child: Text(
+                          user.displayName,
+                          style: const TextStyle(
+                            color: Color(0xFF2D3436),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (user.isMutualFollow == true)
+                      if (user.isMutualFollow == true) ...[
+                        const SizedBox(width: 6),
                         Container(
-                          margin: const EdgeInsets.only(left: 8),
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
+                            horizontal: 8,
+                            vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Text(
-                            'Mutual',
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF0088cc), Color(0xFF00B894)],
                             ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.people,
+                                color: Colors.white,
+                                size: 12,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'Mutual',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                      ],
                     ],
                   ),
-                  Text(
-                    '@${user.userId}', // You might want to use username instead
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14,
+                  const SizedBox(height: 4),
+                  if (_getStatusText(user.status).isNotEmpty)
+                    Row(
+                      children: [
+                        Icon(
+                          _getStatusIcon(user.status),
+                          size: 14,
+                          color: _getStatusColor(user.status),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _getStatusText(user.status),
+                          style: TextStyle(
+                            color: _getStatusColor(user.status),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  Text(
-                    _getStatusText(user.status),
-                    style: TextStyle(
-                      color: _getStatusColor(user.status),
-                      fontSize: 12,
-                    ),
-                  ),
                 ],
               ),
             ),
           ),
-
-          // Follow Button
-          _buildFollowButton(user),
         ],
       ),
     );
   }
 
-  Widget _buildFollowButton(UserFollowInfo user) {
-    return FollowButton(
-      userId: user.userId,
-      displayName: user.displayName,
-      initialStatus: user.status, // Pass the initial status from the API response
-      onFollowChanged: () {
-        // Refresh the current tab when follow status changes
-        if (_tabController.index == 0) {
-          _loadFollowers(refresh: true);
-        } else {
-          _loadFollowing(refresh: true);
-        }
-      },
-    );
-  }
+  
 
   String _getStatusText(String status) {
     switch (status) {
@@ -596,14 +816,27 @@ class _FollowersFollowingPageState extends State<FollowersFollowingPage>
     }
   }
 
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case 'accepted':
+        return Icons.check_circle;
+      case 'pending':
+        return Icons.hourglass_empty;
+      case 'rejected':
+        return Icons.cancel;
+      default:
+        return Icons.info;
+    }
+  }
+
   Color _getStatusColor(String status) {
     switch (status) {
       case 'accepted':
-        return Colors.green;
+        return const Color(0xFF00B894);
       case 'pending':
-        return Colors.orange;
+        return const Color(0xFFFFB800);
       default:
-        return Colors.grey;
+        return const Color(0xFF636E72);
     }
   }
 
@@ -750,8 +983,8 @@ class _FollowButtonState extends State<FollowButton> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return SizedBox(
-        width: 100,
-        height: 32,
+        width: 95,
+        height: 34,
         child: ElevatedButton(
           onPressed: null,
           style: widget.style ?? _getDefaultButtonStyle(),
@@ -768,8 +1001,8 @@ class _FollowButtonState extends State<FollowButton> {
     }
 
     return SizedBox(
-      width: 100,
-      height: 32,
+      width: 95, // Slightly reduced width to prevent overflow
+      height: 34,
       child: ElevatedButton(
         onPressed: _isActionLoading ? null : _handleFollowToggle,
         style: widget.style ?? _getButtonStyle(),
@@ -782,11 +1015,16 @@ class _FollowButtonState extends State<FollowButton> {
             color: Colors.white,
           ),
         )
-            : Text(
-          _getButtonText(),
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
+            : FittedBox( // Ensures text fits within button
+          fit: BoxFit.scaleDown,
+          child: Text(
+            _getButtonText(),
+            style: const TextStyle(
+              fontSize: 13, // Slightly smaller font
+              fontWeight: FontWeight.w600,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ),
@@ -798,7 +1036,7 @@ class _FollowButtonState extends State<FollowButton> {
       case 'accepted':
         return 'Following';
       case 'pending':
-        return 'Pending';
+        return 'Requested'; // Shorter text to prevent overflow
       default:
         return 'Follow';
     }
@@ -810,6 +1048,7 @@ class _FollowButtonState extends State<FollowButton> {
         return ElevatedButton.styleFrom(
           backgroundColor: Colors.grey[200],
           foregroundColor: Colors.black,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
             side: BorderSide(color: Colors.grey[300]!),
@@ -817,17 +1056,19 @@ class _FollowButtonState extends State<FollowButton> {
         );
       case 'pending':
         return ElevatedButton.styleFrom(
-          backgroundColor: Colors.orange[100],
-          foregroundColor: Colors.orange[700],
+          backgroundColor: Colors.blue[50], // Blue background
+          foregroundColor: Colors.blue[700], // Blue text
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
-            side: BorderSide(color: Colors.orange[300]!),
+            side: BorderSide(color: Colors.blue[200]!),
           ),
         );
       default:
         return ElevatedButton.styleFrom(
           backgroundColor: Colors.blue,
           foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),

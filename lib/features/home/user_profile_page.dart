@@ -619,14 +619,45 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
-  void _navigateToFollowersFollowing(String type) {
-    // Handle navigation to followers/following page
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Opening $type list'),
-        duration: const Duration(seconds: 2),
-      ),
+  void _navigateToFollowersFollowing(String tab) async {
+    // Get current user's ID from auth provider to determine if this is their profile
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final currentUserId = authProvider.user?.userId?.toString() ?? '';
+
+    // Check if viewing own profile or another user's profile
+    final isCurrentUser = currentUserId.isNotEmpty && currentUserId == widget.userId;
+
+    // Prepare user data for the followers/following page
+    final userData = {
+      'id': widget.userId,
+      'userId': widget.userId,
+      'username': _userProfile['username'] ?? widget.userName,
+      'displayName': _userProfile['name'] ?? widget.userName,
+      'name': _userProfile['name'] ?? widget.userName,
+      'profileImage': _userProfile['profileImage'],
+      'isCurrentUser': isCurrentUser, // Dynamically set based on comparison
+      'followers': _userStats['followersCount'] ?? 0,
+      'following': _userStats['followingCount'] ?? 0,
+      'posts': _userStats['postsCount'] ?? 0,
+    };
+
+    print('🔍 UserProfilePage: Navigating to tab: $tab');
+    print('🔍 UserProfilePage: Current user ID: $currentUserId');
+    print('🔍 UserProfilePage: Profile user ID: ${widget.userId}');
+    print('🔍 UserProfilePage: Is current user: $isCurrentUser');
+    print('🔍 UserProfilePage: UserData: $userData');
+
+    // Navigate using GoRouter with proper parameters
+    await context.push(
+      '/profile/followers-following',
+      extra: {
+        'initialTab': tab,
+        'userData': userData,
+      },
     );
+
+    // Refresh stats when returning
+    await _loadUserStats();
   }
 
   Widget _buildMyPostsSection() {

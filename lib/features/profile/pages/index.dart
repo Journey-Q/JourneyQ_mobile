@@ -1202,10 +1202,19 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // Updated navigation method to pass userData and refresh stats on return
   void _navigateToFollowersFollowing(String tab) async {
+    // Get current user's ID from auth provider
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final currentUserId = authProvider.user?.userId?.toString() ?? '';
+
     final userData = _getUserData(context);
 
+    // Ensure isCurrentUser is set to true for the profile page (own profile)
+    userData['isCurrentUser'] = true;
+
     // Debug: Log which tab was clicked
-    print('🔍 ProfilePage: Navigating to tab: $tab');
+    print('🔍 ProfilePage (Own Profile): Navigating to tab: $tab');
+    print('🔍 ProfilePage: Current user ID: $currentUserId');
+    print('🔍 ProfilePage: Is current user: true');
     print('🔍 ProfilePage: UserData keys: ${userData.keys.toList()}');
 
     // Use GoRouter navigation to match app_router.dart configuration

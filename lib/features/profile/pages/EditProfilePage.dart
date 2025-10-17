@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
-import 'package:go_router/go_router.dart';
 import 'package:journeyq/data/repositories/profile_repository/profile_repository.dart';
 import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:journeyq/core/errors/exception.dart';
