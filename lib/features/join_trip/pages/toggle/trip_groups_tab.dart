@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:journeyq/features/join_trip/pages/data.dart';
 import 'package:journeyq/app/themes/theme.dart'; // Import theme
+import 'package:journeyq/data/repositories/jointTrip_chat/jointTrip_group.dart';
+import 'package:journeyq/core/storage/localstorage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TripGroupsTab extends StatefulWidget {
   final Function(String, String, String) onNavigateToChat;
@@ -8,17 +10,85 @@ class TripGroupsTab extends StatefulWidget {
   const TripGroupsTab({super.key, required this.onNavigateToChat});
 
   @override
-  State<TripGroupsTab> createState() => _TripGroupsTabState();
+  State<TripGroupsTab> createState() => TripGroupsTabState();
 }
 
-class _TripGroupsTabState extends State<TripGroupsTab> {
+class TripGroupsTabState extends State<TripGroupsTab>
+    with AutomaticKeepAliveClientMixin {
   bool _showMyGroups = true; // true = My Created Groups, false = Joined Groups
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _myCreatedGroups = [];
+  List<Map<String, dynamic>> _joinedGroups = [];
+  int? _currentUserId;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGroups();
+  }
+
+  /// Public method to refresh groups (can be called from parent)
+  Future<void> refreshGroups() async {
+    print('🔄 Manually refreshing groups from external call...');
+    await _loadGroups();
+    print('✅ Manual refresh completed');
+  }
+
+  Future<void> _loadGroups() async {
+    setState(() => _isLoading = true);
+
+    try {
+      // Get current user
+      final prefs = await SharedPreferences.getInstance();
+      final localStorage = LocalStorage(prefs: prefs);
+      final currentUser = await localStorage.getUser();
+
+      if (currentUser != null && currentUser.userId != null) {
+        _currentUserId = currentUser.userId;
+
+        print('🔄 Loading groups for user ${currentUser.userId}...');
+
+        // Fetch groups created by user
+        final createdGroups = await JointTripGroupRepository.getCreatedGroups(currentUser.userId!);
+        print('✅ Loaded ${createdGroups.length} created groups');
+
+        // Fetch groups joined by user
+        final joinedGroups = await JointTripGroupRepository.getJoinedGroups(currentUser.userId!);
+        print('✅ Loaded ${joinedGroups.length} joined groups');
+
+        if (mounted) {
+          setState(() {
+            _myCreatedGroups = createdGroups;
+            _joinedGroups = joinedGroups;
+            _isLoading = false;
+          });
+        }
+      } else {
+        print('⚠️ No user found in local storage');
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
+    } catch (e) {
+      print('❌ Error loading groups: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final myCreatedGroups = SampleData.createdTrips;
-    final joinedGroups = SampleData.joinedTrips;
-    final allGroups = [...myCreatedGroups, ...joinedGroups];
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
+
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final allGroups = [..._myCreatedGroups, ..._joinedGroups];
 
     if (allGroups.isEmpty) {
       return _buildEmptyState();
@@ -109,20 +179,28 @@ class _TripGroupsTabState extends State<TripGroupsTab> {
         
         // Groups List
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: _showMyGroups ? myCreatedGroups.length : joinedGroups.length,
-            itemBuilder: (context, index) {
-              final trip = _showMyGroups ? myCreatedGroups[index] : joinedGroups[index];
-              return _buildGroupTile(trip, _showMyGroups);
-            },
+          child: RefreshIndicator(
+            onRefresh: _loadGroups,
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: _showMyGroups ? _myCreatedGroups.length : _joinedGroups.length,
+              itemBuilder: (context, index) {
+                final group = _showMyGroups ? _myCreatedGroups[index] : _joinedGroups[index];
+                return _buildGroupTile(group, _showMyGroups);
+              },
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildGroupTile(Map<String, dynamic> trip, bool isMyGroup) {
+  Widget _buildGroupTile(Map<String, dynamic> group, bool isMyGroup) {
+    final groupId = group['groupId']?.toString() ?? '';
+    final groupName = group['groupName']?.toString() ?? 'Unknown Group';
+    final groupProfile = group['groupProfile']?.toString() ?? '';
+    final memberCount = (group['members'] as Map?)?.length ?? 0;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -140,9 +218,9 @@ class _TripGroupsTabState extends State<TripGroupsTab> {
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: () => widget.onNavigateToChat(
-          trip['id']!,
-          trip['title']!,
-          trip['userImage']!,
+          groupId,
+          groupName,
+          groupProfile,
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -164,20 +242,15 @@ class _TripGroupsTabState extends State<TripGroupsTab> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: Image.network(
-                    _getLocationBasedImage(trip['destination']),
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[300],
-                        child: Icon(
-                          Icons.location_on,
-                          size: 28,
-                          color: Colors.grey[600],
-                        ),
-                      );
-                    },
-                  ),
+                  child: groupProfile.isNotEmpty
+                      ? Image.network(
+                          groupProfile,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return _buildDefaultGroupIcon();
+                          },
+                        )
+                      : _buildDefaultGroupIcon(),
                 ),
               ),
               const SizedBox(width: 16),
@@ -186,14 +259,31 @@ class _TripGroupsTabState extends State<TripGroupsTab> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      trip['title']!,
+                      groupName,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                         color: Colors.black87,
                       ),
                     ),
-                    // Removed the unread count display section
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.people,
+                          size: 14,
+                          color: Colors.grey[600],
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$memberCount ${memberCount == 1 ? 'member' : 'members'}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -211,26 +301,15 @@ class _TripGroupsTabState extends State<TripGroupsTab> {
     );
   }
 
-  String _getLocationBasedImage(String? destination) {
-    final dest = destination?.toLowerCase() ?? '';
-    
-    if (dest.contains('kandy')) {
-      return 'https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=800';
-    } else if (dest.contains('ella')) {
-      return 'https://images.unsplash.com/photo-1605640840605-14ac1855827b?w=800';
-    } else if (dest.contains('sigiriya')) {
-      return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800';
-    } else if (dest.contains('galle')) {
-      return 'https://images.unsplash.com/photo-1539650116574-75c0c6d24e14?w=800';
-    } else if (dest.contains('nuwara eliya')) {
-      return 'https://images.unsplash.com/photo-1605640957230-d8b5b3c7b1e4?w=800';
-    } else if (dest.contains('yala')) {
-      return 'https://images.unsplash.com/photo-1539650116574-75c0c6d24e14?w=800';
-    } else if (dest.contains('mirissa')) {
-      return 'https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=800&h=600&fit=crop';
-    }  else {
-      return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop';
-    }
+  Widget _buildDefaultGroupIcon() {
+    return Container(
+      color: Colors.grey[300],
+      child: Icon(
+        Icons.groups,
+        size: 28,
+        color: Colors.grey[600],
+      ),
+    );
   }
 
   Widget _buildEmptyState() {

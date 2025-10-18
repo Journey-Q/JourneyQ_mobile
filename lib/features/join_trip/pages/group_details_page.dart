@@ -1,26 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:journeyq/features/join_trip/pages/data.dart';
-import 'package:journeyq/features/join_trip/pages/common/trip_form_widget.dart';
+import 'package:journeyq/data/repositories/jointTrip_chat/jointTrip_group.dart';
+import 'package:journeyq/data/repositories/joint_trip_repository/trip_repository.dart';
+import 'package:journeyq/core/storage/localstorage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:journeyq/features/join_trip/pages/common/trip_details_widget.dart';
+import 'package:journeyq/features/join_trip/pages/common/trip_form_widget.dart';
 
 class GroupDetailsPage extends StatefulWidget {
   final String groupId;
   final String groupName;
   final String groupImage;
-  final String description;
-  final List<Map<String, dynamic>> members;
-  final bool isCreator; // true if current user created this group
-  final String createdDate;
 
   const GroupDetailsPage({
     super.key,
     required this.groupId,
     required this.groupName,
     required this.groupImage,
-    required this.description,
-    required this.members,
-    required this.isCreator,
-    required this.createdDate,
   });
 
   @override
@@ -30,33 +25,67 @@ class GroupDetailsPage extends StatefulWidget {
 class _GroupDetailsPageState extends State<GroupDetailsPage> {
   late TextEditingController _groupNameController;
   bool _isEditing = false;
-  late Map<String, String> _tripDetails;
-  Map<String, dynamic>? _tripFormData;
+  bool _isLoading = true;
+
+  Map<String, dynamic>? _groupData;
+  List<Map<String, dynamic>> _members = [];
+  Map<String, dynamic>? _tripData;
+  bool _isCreator = false;
+  int? _currentUserId;
+  int? _tripId;
 
   @override
   void initState() {
     super.initState();
     _groupNameController = TextEditingController(text: widget.groupName);
-    _tripDetails = SampleData.getTripDetails(widget.groupId);
-    _loadTripFormData();
+    _loadGroupData();
   }
 
-  void _loadTripFormData() {
-    // Try to find corresponding trip form data
-    final groupData = SampleData.getGroupById(widget.groupId);
-    if (groupData != null) {
-      // Convert group data to trip form format with ONLY basic fields
-      _tripFormData = {
-        'title': groupData['title'] ?? widget.groupName,
-        'destination': _tripDetails['destination'],
-        'startDate': _tripDetails['startDate'],
-        'endDate': _tripDetails['endDate'],
-        'tripType': _tripDetails['tripType'],
-        'description': widget.description,
-        'duration': groupData['duration'] ?? '3 days',
-        'status': 'Active',
-        'createdDate': widget.createdDate,
-      };
+  Future<void> _loadGroupData() async {
+    setState(() => _isLoading = true);
+
+    try {
+      // Get current user
+      final prefs = await SharedPreferences.getInstance();
+      final localStorage = LocalStorage(prefs: prefs);
+      final currentUser = await localStorage.getUser();
+      _currentUserId = currentUser?.userId;
+
+      // Extract tripId from groupId (format: trip_123)
+      _tripId = int.tryParse(widget.groupId.replaceFirst('trip_', ''));
+
+      if (_tripId != null) {
+        // Fetch group data from Firebase
+        _groupData = await JointTripGroupRepository.getGroupDetails(_tripId!);
+
+        if (_groupData != null) {
+          // Get members
+          final membersMap = _groupData!['members'] as Map<dynamic, dynamic>?;
+          if (membersMap != null) {
+            _members = membersMap.values
+                .map((m) => Map<String, dynamic>.from(m as Map))
+                .toList();
+          }
+
+          // Check if current user is creator
+          _isCreator = _groupData!['creatorId'] == _currentUserId;
+
+          // Update group name controller
+          _groupNameController.text = _groupData!['groupName'] ?? widget.groupName;
+        }
+
+        // Fetch trip data from backend
+        try {
+          _tripData = await TripRepository.getTripById(_tripId!);
+        } catch (e) {
+          print('Error fetching trip data: $e');
+        }
+      }
+
+      setState(() => _isLoading = false);
+    } catch (e) {
+      print('Error loading group data: $e');
+      setState(() => _isLoading = false);
     }
   }
 
@@ -66,9 +95,53 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
     super.dispose();
   }
 
-String _getLocationBasedImage() {
-    // Use groupName instead of destination for determining image
-    final groupNameLower = widget.groupName.toLowerCase();
+  Future<void> _saveGroupName() async {
+    if (_tripId == null) return;
+
+    try {
+      final newName = _groupNameController.text.trim();
+      if (newName.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Group name cannot be empty'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      await JointTripGroupRepository.updateGroupName(
+        tripId: _tripId!,
+        newGroupName: newName,
+      );
+
+      setState(() {
+        _isEditing = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Group name updated successfully!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update group name: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  String _getLocationBasedImage() {
+    final groupNameLower = _groupNameController.text.toLowerCase();
 
     if (groupNameLower.contains('kandy')) {
       return 'https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=800';
@@ -85,8 +158,47 @@ String _getLocationBasedImage() {
     }
   }
 
+  void _changeGroupImage() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Change Group Image',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            const Text('Image upload feature coming soon!'),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: CustomScrollView(
@@ -110,7 +222,7 @@ String _getLocationBasedImage() {
               ),
             ),
             actions: [
-              if (widget.isCreator)
+              if (_isCreator)
                 Container(
                   margin: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -120,11 +232,9 @@ String _getLocationBasedImage() {
                   child: TextButton(
                     onPressed: () {
                       if (_isEditing) {
-                        _saveChanges();
+                        _saveGroupName();
                       } else {
-                        setState(() {
-                          _isEditing = true;
-                        });
+                        setState(() => _isEditing = true);
                       }
                     },
                     child: Text(
@@ -141,18 +251,18 @@ String _getLocationBasedImage() {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // Solid Color Background (no landscape image)
+                  // Background Color
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: const BorderRadius.only(
                         bottomLeft: Radius.circular(24),
                         bottomRight: Radius.circular(24),
                       ),
-                      color: Colors.grey[100], // Light background color
+                      color: Colors.grey[100],
                     ),
                   ),
-                  
-                  // Content Overlay - Profile Picture and Name Only
+
+                  // Content - Profile Picture and Name
                   Positioned(
                     bottom: 40,
                     left: 20,
@@ -160,14 +270,14 @@ String _getLocationBasedImage() {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // Full-width Rounded Rectangle Profile Picture with increased length
+                        // Full-width Rounded Rectangle Profile Picture
                         Stack(
                           children: [
                             Container(
                               width: double.infinity,
-                              height: 150, // Increased length
+                              height: 150,
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12), // Rounded rectangle
+                                borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: Colors.grey[300]!, width: 3),
                                 boxShadow: [
                                   BoxShadow(
@@ -195,7 +305,7 @@ String _getLocationBasedImage() {
                                 ),
                               ),
                             ),
-                            if (widget.isCreator && _isEditing)
+                            if (_isCreator && _isEditing)
                               Positioned(
                                 bottom: 0,
                                 right: 0,
@@ -219,9 +329,9 @@ String _getLocationBasedImage() {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        
+
                         // Group Name Below Picture
-                        _isEditing && widget.isCreator
+                        _isEditing && _isCreator
                             ? Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                 decoration: BoxDecoration(
@@ -244,7 +354,7 @@ String _getLocationBasedImage() {
                                 ),
                               )
                             : Text(
-                                widget.groupName,
+                                _groupNameController.text,
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -259,7 +369,7 @@ String _getLocationBasedImage() {
               ),
             ),
           ),
-          
+
           // Content
           SliverToBoxAdapter(
             child: Padding(
@@ -291,7 +401,7 @@ String _getLocationBasedImage() {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20), // Rounded square design
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -304,93 +414,57 @@ String _getLocationBasedImage() {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Trip Details',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              Row(
-                children: [
-                  _buildActionChip(
-                    icon: Icons.visibility,
-                    label: 'View',
-                    onTap: _viewTripDetails,
-                    color: const Color(0xFF0088cc),
-                  ),
-                  const SizedBox(width: 8),
-                  _buildActionChip(
-                    icon: Icons.edit,
-                    label: 'Edit',
-                    onTap: _editTripDetails,
-                    color: Colors.orange,
-                  ),
-                ],
-              ),
-            ],
+          const Text(
+            'Trip Details',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           _buildDetailRow(
             'Destination',
-            _tripDetails['destination']!,
+            _tripData?['destination'] ?? 'Unknown',
             Icons.location_on,
           ),
           _buildDetailRow(
             'Start Date',
-            _tripDetails['startDate']!,
+            _tripData?['startDate'] ?? 'TBD',
             Icons.calendar_today,
           ),
           _buildDetailRow(
             'End Date',
-            _tripDetails['endDate']!,
+            _tripData?['endDate'] ?? 'TBD',
             Icons.calendar_month,
           ),
           _buildDetailRow(
-            'Budget',
-            _tripDetails['budget']!,
-            Icons.account_balance_wallet,
-          ),
-          _buildDetailRow(
             'Trip Type',
-            _tripDetails['tripType']!,
+            _tripData?['tripType'] ?? 'Cultural Heritage',
             Icons.category,
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionChip({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    required Color color,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: color),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
+          const SizedBox(height: 16),
+          Divider(height: 1, color: Colors.grey[200]),
+          const SizedBox(height: 16),
+          // View and Edit Buttons
+          Row(
+            children: [
+              Expanded(
+                child: _buildTripActionButton(
+                  icon: Icons.visibility,
+                  label: 'View',
+                  color: Colors.blue,
+                  onTap: _tripData != null ? _viewTripDetails : null,
+                ),
               ),
-            ),
-          ],
-        ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildTripActionButton(
+                  icon: Icons.edit,
+                  label: 'Edit',
+                  color: Colors.green,
+                  onTap: _isCreator && _tripData != null ? _editTrip : null,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -399,13 +473,12 @@ String _getLocationBasedImage() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: const Color(0xFF0088cc).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10), // Rounded square
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, size: 18, color: const Color(0xFF0088cc)),
           ),
@@ -419,7 +492,6 @@ String _getLocationBasedImage() {
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 14,
-                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -444,7 +516,7 @@ String _getLocationBasedImage() {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20), // Rounded square design
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -457,694 +529,367 @@ String _getLocationBasedImage() {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Members (${widget.members.length})',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              if (widget.isCreator)
-                _buildActionChip(
-                  icon: Icons.person_add,
-                  label: 'Add',
-                  onTap: _addMember,
-                  color: Colors.green,
-                ),
-            ],
+          Text(
+            'Members (${_members.length})',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
-          ...widget.members.map((member) => _buildMemberTile(member)),
+          if (_members.isEmpty)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: Text('No members found'),
+              ),
+            )
+          else
+            ..._members.map((member) => _buildMemberTile(member)),
         ],
       ),
     );
   }
 
   Widget _buildMemberTile(Map<String, dynamic> member) {
+    final userName = member['userName']?.toString() ?? 'Unknown';
+    final userRole = member['role']?.toString() ?? 'member';
+    final userId = member['userId'] as int?;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(16), // Rounded square design
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey[200]!),
       ),
       child: Row(
         children: [
-          // Member Avatar - Rounded Square
+          // Member Avatar
           Container(
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12), // Rounded square
-              border: Border.all(color: Colors.grey[300]!, width: 1),
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.grey[300],
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(11),
-              child: Image.network(
-                member['avatar'],
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey[300],
-                    child: const Icon(
-                      Icons.person,
-                      size: 24,
-                      color: Colors.grey,
-                    ),
-                  );
-                },
-              ),
+            child: const Icon(
+              Icons.person,
+              size: 24,
+              color: Colors.grey,
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              member['name'],
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-            ),
-          ),
-          if (widget.isCreator && member['id'] != 'current_user')
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'remove') {
-                  _removeMember(member);
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'remove',
-                  child: Row(
-                    children: [
-                      Icon(Icons.person_remove, size: 16, color: Colors.red),
-                      SizedBox(width: 8),
-                      Text('Remove', style: TextStyle(color: Colors.red)),
-                    ],
-                  ),
-                ),
-              ],
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.more_vert,
-                  size: 16,
-                  color: Colors.grey,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButton() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20), // Rounded square design
-        border: Border.all(color: Colors.red.withOpacity(0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: widget.isCreator ? _deleteGroup : _leaveGroup,
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    widget.isCreator ? Icons.delete : Icons.exit_to_app,
-                    color: Colors.red,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
                 Text(
-                  widget.isCreator ? 'Delete Group' : 'Leave Group',
+                  userName,
                   style: const TextStyle(
-                    color: Colors.red,
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                   ),
                 ),
+                Text(
+                  userRole == 'creator' ? 'Creator' : 'Member',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  // Trip Details Methods
-  void _viewTripDetails() {
-    if (_tripFormData != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => TripDetailsWidget(
-            tripData: _tripFormData!,
-            customTitle: '${widget.groupName} - Trip Details',
-            showEditButton: false,
-            isGroupMember: false,
-          ),
-          fullscreenDialog: true,
-        ),
-      );
-    }
-  }
-
-  void _editTripDetails() {
-    if (_tripFormData != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => TripFormWidget(
-            mode: TripFormMode.edit,
-            initialData: _tripFormData,
-            isGroupMember: false,
-            customTitle: 'Edit ${widget.groupName} Trip',
-onSubmit: (updatedData) async {
-              setState(() {
-                _tripFormData = updatedData;
-                _tripDetails = {
-                  'destination':
-                      updatedData['destination'] ??
-                      _tripDetails['destination']!,
-                  'startDate':
-                      updatedData['startDate'] ?? _tripDetails['startDate']!,
-                  'endDate': updatedData['endDate'] ?? _tripDetails['endDate']!,
-                  'budget': 'Not specified',
-                  'tripType':
-                      updatedData['tripType'] ?? _tripDetails['tripType']!,
-                };
-              });
-            },
-          ),
-          fullscreenDialog: true,
-        ),
-      );
-    }
-  }
-
-  // Helper methods
-  void _changeGroupImage() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
+          if (_isCreator && userId != _currentUserId)
+            IconButton(
+              icon: const Icon(Icons.person_remove, color: Colors.red),
+              onPressed: () => _removeMember(userId, userName),
             ),
-            const SizedBox(height: 20),
-            const Text(
-              'Change Group Image',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildImageOption('Camera', Icons.camera_alt, () {
-                  Navigator.pop(context);
-                  // Implement camera functionality
-                }),
-                _buildImageOption('Gallery', Icons.photo_library, () {
-                  Navigator.pop(context);
-                  // Implement gallery functionality
-                }),
-                _buildImageOption('Default', Icons.landscape, () {
-                  Navigator.pop(context);
-                  // Set default location-based image
-                }),
-              ],
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImageOption(String label, IconData icon, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: const Color(0xFF0088cc).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(15), // Rounded square
-            ),
-            child: Icon(icon, color: const Color(0xFF0088cc), size: 30),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-          ),
         ],
       ),
     );
   }
 
-  void _saveChanges() {
-    setState(() {
-      _isEditing = false;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Group details saved successfully!'),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
+  Future<void> _removeMember(int? userId, String userName) async {
+    if (userId == null || _tripId == null) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove Member'),
+        content: Text('Remove $userName from the group?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Remove'),
+          ),
+        ],
       ),
     );
-  }
 
-  void _addMember() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => FollowerSelectionSheet(
-        tripData: _tripFormData ?? {},
-        onSendRequests: (selectedFollowers) {
-          Navigator.pop(context);
+    if (confirm == true && _currentUserId != null) {
+      try {
+        await JointTripGroupRepository.removeMember(
+          tripId: _tripId!,
+          creatorId: _currentUserId!,
+          memberIdToRemove: userId,
+        );
+
+        _loadGroupData(); // Reload data
+
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                'Invitations sent to ${selectedFollowers.length} followers!',
-              ),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
+              content: Text('$userName removed from group'),
+              backgroundColor: Colors.orange,
             ),
           );
-        },
-      ),
-    );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to remove member: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 
-  void _removeMember(Map<String, dynamic> member) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Remove Member'),
-        content: Text(
-          'Are you sure you want to remove ${member['name']} from the group?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${member['name']} removed from group'),
-                  backgroundColor: Colors.orange,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            child: const Text('Remove', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _deleteGroup() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Delete Group'),
-        content: const Text(
-          'Are you sure you want to delete this group? This action cannot be undone. All trip details and member data will be lost.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Close group details
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Group deleted successfully'),
-                  backgroundColor: Colors.red,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _leaveGroup() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Leave Group'),
-        content: const Text(
-          'Are you sure you want to leave this group? You will lose access to all trip details and group chats.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Close group details
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('You have left the group'),
-                  backgroundColor: Colors.orange,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            child: const Text('Leave', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
-}
-class FollowerSelectionSheet extends StatefulWidget {
-  final Map<String, dynamic> tripData;
-  final Function(List<Map<String, dynamic>>) onSendRequests;
-
-  const FollowerSelectionSheet({
-    super.key,
-    required this.tripData,
-    required this.onSendRequests,
-  });
-
-  @override
-  State<FollowerSelectionSheet> createState() => _FollowerSelectionSheetState();
-}
-
-class _FollowerSelectionSheetState extends State<FollowerSelectionSheet> {
-  List<Map<String, dynamic>> _selectedFollowers = [];
-
-  // Sample Sri Lankan followers data
-  final List<Map<String, dynamic>> _followers = [
-    {
-      'id': 'follower_7',
-      'name': 'Tharaka Rathnayake',
-      'avatar':
-          'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-      'isOnline': true,
-      'location': 'Colombo',
-    },
-    {
-      'id': 'follower_8',
-      'name': 'Sanduni Perera',
-      'avatar':
-          'https://images.unsplash.com/photo-1494790108755-2616b332c2e0?w=150',
-      'isOnline': false,
-      'location': 'Galle',
-    },
-    {
-      'id': 'follower_9',
-      'name': 'Chaminda Silva',
-      'avatar':
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-      'isOnline': true,
-      'location': 'Kandy',
-    },
-    {
-      'id': 'follower_10',
-      'name': 'Malika Fernando',
-      'avatar':
-          'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
-      'isOnline': false,
-      'location': 'Nuwara Eliya',
-    },
-    {
-      'id': 'follower_11',
-      'name': 'Dinesh Wickramasinghe',
-      'avatar':
-          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
-      'isOnline': true,
-      'location': 'Sigiriya',
-    },
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.8,
-      padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(2),
+  Widget _buildActionButton() {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: _isCreator ? _deleteGroup : _leaveGroup,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+          decoration: BoxDecoration(
+            color: Colors.red.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.red.withOpacity(0.3),
+              width: 1.5,
             ),
           ),
-          const SizedBox(height: 20),
-
-          const Text(
-            'Add Members to Group',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-
-          Text(
-            'Select followers to invite to this trip group',
-            style: TextStyle(color: Colors.grey[600], fontSize: 14),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-
-          if (_selectedFollowers.isNotEmpty) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(16), // Rounded square
-                border: Border.all(color: Colors.blue[100]!),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.people, color: Color(0xFF0088cc), size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${_selectedFollowers.length} followers selected',
-                    style: const TextStyle(
-                      color: Color(0xFF0088cc),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          Expanded(
-            child: ListView.builder(
-              itemCount: _followers.length,
-              itemBuilder: (context, index) {
-                final follower = _followers[index];
-                final isSelected = _selectedFollowers.any(
-                  (f) => f['id'] == follower['id'],
-                );
-
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.blue[50] : Colors.white,
-                    borderRadius: BorderRadius.circular(16), // Rounded square
-                    border: Border.all(
-                      color: isSelected ? Colors.blue[200]! : Colors.grey[200]!,
-                    ),
-                  ),
-                  child: CheckboxListTile(
-                    value: isSelected,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        if (value ?? false) {
-                          _selectedFollowers.add(follower);
-                        } else {
-                          _selectedFollowers.removeWhere(
-                            (f) => f['id'] == follower['id'],
-                          );
-                        }
-                      });
-                    },
-                    activeColor: const Color(0xFF0088cc),
-                    title: Row(
-                      children: [
-                        Stack(
-                          children: [
-                            // Avatar - Rounded Square
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(
-                                  10,
-                                ), // Rounded square
-                                border: Border.all(
-                                  color: Colors.grey[300]!,
-                                  width: 1,
-                                ),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(9),
-                                child: Image.network(
-                                  follower['avatar'],
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      color: Colors.grey[300],
-                                      child: const Icon(
-                                        Icons.person,
-                                        size: 20,
-                                        color: Colors.grey,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                            if (follower['isOnline'])
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    color: Colors.green,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Colors.white,
-                                      width: 2,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            follower['name'],
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          Row(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16), // Rounded square
-                    ),
-                  ),
-                  child: const Text('Cancel'),
-                ),
+              Icon(
+                _isCreator ? Icons.delete : Icons.exit_to_app,
+                color: Colors.red,
+                size: 22,
               ),
               const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: _selectedFollowers.isEmpty
-                      ? null
-                      : () => widget.onSendRequests(_selectedFollowers),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0088cc),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16), // Rounded square
-                    ),
-                  ),
-                  child: Text(
-                    _selectedFollowers.isEmpty
-                        ? 'Select Followers'
-                        : 'Send Invitations (${_selectedFollowers.length})',
-                    style: const TextStyle(color: Colors.white),
-                  ),
+              Text(
+                _isCreator ? 'Delete Group' : 'Leave Group',
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deleteGroup() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Group'),
+        content: const Text('Are you sure? This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
         ],
       ),
     );
+
+    if (confirm == true && _tripId != null && _currentUserId != null) {
+      try {
+        await JointTripGroupRepository.deleteGroup(
+          tripId: _tripId!,
+          userId: _currentUserId!,
+        );
+
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Group deleted successfully'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to delete group: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _leaveGroup() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Leave Group'),
+        content: const Text('Are you sure you want to leave?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Leave'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && _tripId != null && _currentUserId != null) {
+      try {
+        await JointTripGroupRepository.leaveGroup(
+          tripId: _tripId!,
+          userId: _currentUserId!,
+        );
+
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('You have left the group'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to leave group: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Widget _buildTripActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback? onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          decoration: BoxDecoration(
+            color: onTap == null ? Colors.grey.withOpacity(0.1) : color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: onTap == null ? Colors.grey.withOpacity(0.3) : color.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: onTap == null ? Colors.grey : color,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: onTap == null ? Colors.grey : color,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _viewTripDetails() {
+    if (_tripData == null) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TripDetailsWidget(
+          tripData: _tripData!,
+          customTitle: _tripData!['title'],
+          isGroupMember: true,
+        ),
+      ),
+    );
+  }
+
+  void _editTrip() async {
+    if (_tripData == null || !_isCreator) return;
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TripFormWidget(
+          mode: TripFormMode.edit,
+          initialData: _tripData,
+          isGroupMember: true,
+          customTitle: 'Edit ${_tripData!['title']}',
+          onSubmit: (updatedData) async {
+            try {
+              await TripRepository.updateTrip(_tripId!, updatedData);
+            } catch (e) {
+              throw Exception('Failed to update trip: $e');
+            }
+          },
+        ),
+        fullscreenDialog: true,
+      ),
+    );
+
+    // Reload trip data if edit was successful
+    if (result == true || result == null) {
+      await _loadGroupData();
+    }
   }
 }

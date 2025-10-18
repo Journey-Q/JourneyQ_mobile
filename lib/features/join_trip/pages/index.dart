@@ -17,9 +17,10 @@ class _JoinTripPageState extends State<JoinTripPage>
     with TickerProviderStateMixin {
   int _selectedIndex = 0;
   late TabController _tabController;
-  
-  // FIXED: Changed to CreatedTripsTabState (without underscore)
+
+  // GlobalKeys for manual refresh
   final GlobalKey<CreatedTripsTabState> _createdTripsKey = GlobalKey<CreatedTripsTabState>();
+  final GlobalKey<TripGroupsTabState> _tripGroupsKey = GlobalKey<TripGroupsTabState>();
   int _refreshCounter = 0;
 
   @override
@@ -123,11 +124,28 @@ void _showCreateTripForm() async {
       MaterialPageRoute(
         builder: (context) => GroupChatScreen(
           groupId: groupId,
-          groupName: groupName, 
+          groupName: groupName,
           userImage: userImage
         ),
       ),
     );
+  }
+
+  /// Callback for when a trip request is accepted
+  Future<void> _onRequestAccepted() async {
+    print('🔄 Request accepted! Refreshing Trip Groups tab...');
+
+    // Refresh Trip Groups tab to show the newly joined group
+    final tripGroupsState = _tripGroupsKey.currentState;
+    if (tripGroupsState != null) {
+      await tripGroupsState.refreshGroups();
+      print('✅ Trip Groups tab refreshed');
+    }
+
+    // Optionally switch to Trip Groups tab to show the user their new group
+    if (mounted) {
+      _tabController.animateTo(0); // Switch to Trip Groups tab (index 0)
+    }
   }
 
   @override
@@ -148,8 +166,13 @@ void _showCreateTripForm() async {
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  TripGroupsTab(onNavigateToChat: _navigateToChatScreen),
-                  const JoinRequestsTab(),
+                  TripGroupsTab(
+                    key: _tripGroupsKey,
+                    onNavigateToChat: _navigateToChatScreen,
+                  ),
+                  JoinRequestsTab(
+                    onRequestAccepted: _onRequestAccepted,
+                  ),
                   CreatedTripsTab(
                     key: _createdTripsKey,
                     onCreateTrip: _showCreateTripForm,

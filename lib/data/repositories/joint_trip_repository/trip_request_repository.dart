@@ -1,20 +1,25 @@
 import 'dart:convert';
 import 'package:journeyq/core/services/api_service.dart';
 import 'package:journeyq/core/errors/exception.dart';
+import 'package:journeyq/data/repositories/jointTrip_chat/jointTrip_group.dart';
+import 'package:journeyq/core/storage/localstorage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TripRequestRepository {
   // Send trip requests to followers
   static Future<Map<String, dynamic>> sendTripRequests({
     required int tripId,
+    required int groupId,
     required List<int> receiverIds,
   }) async {
     try {
-      print('Sending trip request for trip $tripId to users: $receiverIds');
+      print('Sending trip request for trip $tripId (group $groupId) to users: $receiverIds');
 
       final response = await ApiService.post(
         '/trip-requests/send',
         data: {
           'tripId': tripId,
+          'groupId': groupId,
           'receiverIds': receiverIds,
         },
       );
@@ -165,10 +170,41 @@ class TripRequestRepository {
       print('Backend response for acceptRequest: ${response.data}');
 
       if (response.data != null && response.data['success'] == true) {
+        final responseData = response.data['data'];
+
+        // Add user to Firebase group after accepting request
+        try {
+          final tripId = responseData['tripId'] as int?;
+          if (tripId != null) {
+            print('Adding user to Firebase group for trip $tripId...');
+
+            // Get current user from local storage
+            final prefs = await SharedPreferences.getInstance();
+            final localStorage = LocalStorage(prefs: prefs);
+            final currentUser = await localStorage.getUser();
+
+            if (currentUser != null && currentUser.userId != null) {
+              await JointTripGroupRepository.addUserToGroup(
+                tripId: tripId,
+                userId: currentUser.userId!,
+                userName: currentUser.username,
+                userAvatar: currentUser.profileUrl ?? '',
+              );
+
+              print('✅ User added to Firebase group successfully for trip $tripId');
+            } else {
+              print('⚠️ Warning: User not found in local storage, skipping Firebase group addition');
+            }
+          }
+        } catch (e) {
+          print('⚠️ Warning: Failed to add user to Firebase group: $e');
+          // Don't fail the request acceptance if Firebase group addition fails
+        }
+
         return {
           'success': true,
           'message': response.data['message'] ?? 'Request accepted successfully',
-          'data': response.data['data'],
+          'data': responseData,
         };
       } else {
         final errorMessage = response.data?['message'] ?? 'Failed to accept request';
