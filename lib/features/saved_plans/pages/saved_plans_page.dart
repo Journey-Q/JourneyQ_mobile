@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:journeyq/data/repositories/saved_plan_repository/saved_plan_repository.dart';
 import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:journeyq/features/Trip_planner/pages/planpage.dart';
 
 class SavedPlansPage extends StatefulWidget {
   const SavedPlansPage({Key? key}) : super(key: key);
@@ -40,17 +41,38 @@ class _SavedPlansPageState extends State<SavedPlansPage> {
         return;
       }
 
+      print('📥 Loading saved plans for user: $userId');
       final plansData = await SavedPlanRepository.getUserPlans(userId: userId);
-      final plans = plansData.map((data) => SavedPlan.fromJson(data)).toList();
+      print('📥 Retrieved ${plansData.length} plans from database');
+
+      final plans = <SavedPlan>[];
+      for (var i = 0; i < plansData.length; i++) {
+        try {
+          final plan = SavedPlan.fromJson(plansData[i]);
+          plans.add(plan);
+          print('✅ Successfully parsed plan ${i + 1}: ${plan.journeyTitle}');
+        } catch (e) {
+          print('❌ Error parsing plan ${i + 1}: $e');
+          print('Plan data: ${plansData[i]}');
+          // Continue with other plans instead of failing completely
+        }
+      }
 
       setState(() {
         _savedPlans = plans;
         _isLoading = false;
       });
+
+      if (plans.isEmpty && plansData.isNotEmpty) {
+        setState(() {
+          _errorMessage = 'Some saved plans could not be loaded. Please check the app logs.';
+        });
+      }
     } catch (e) {
+      print('❌ Error loading saved plans: $e');
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Failed to load saved plans: $e';
+        _errorMessage = 'Failed to load saved plans. Please try again.';
       });
     }
   }
@@ -102,12 +124,129 @@ class _SavedPlansPageState extends State<SavedPlansPage> {
   }
 
   void _viewPlanDetails(SavedPlan plan) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _buildPlanDetailsSheet(plan),
+    // Reconstruct tripData from saved plan to match Trip Planner format
+    final tripData = plan.fullData['originalTripData'] ?? {
+      'destination': plan.journeyTitle,
+      'numberOfDays': plan.numberOfDays,
+      'numberOfPersons': plan.fullData['numberOfPersons'] ?? 1,
+      'budget': plan.fullData['budgetInfo']?['budgetType'] ?? 'Moderate',
+      'totalEstimatedCost': plan.totalBudget,
+      'tripMoods': plan.fullData['tripMoods'] ?? [],
+      'dayByDayItinerary': plan.fullData['fullItinerary'] ?? [],
+      'tips': plan.fullData['travelTips'] ?? [],
+    };
+
+    // Navigate to Trip Plan View Page
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TripPlanViewPage(tripData: tripData),
+      ),
     );
+  }
+
+  Future<void> _showCleanupOptions() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final userId = authProvider.user?.userId?.toString();
+
+    if (userId == null) return;
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cleanup Options'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Choose a cleanup action:'),
+            const SizedBox(height: 16),
+            const Text(
+              'Warning: These actions cannot be undone!',
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'cancel'),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'sri_lanka'),
+            style: TextButton.styleFrom(foregroundColor: Colors.orange),
+            child: const Text('Delete "Sri Lanka" plans'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'all'),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete ALL plans'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == null || result == 'cancel') return;
+
+    // Show confirmation
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Deletion'),
+        content: Text(
+          result == 'all'
+              ? 'Are you sure you want to delete ALL saved plans? This cannot be undone!'
+              : 'Delete all plans containing "Sri Lanka" in the title?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      if (result == 'all') {
+        await SavedPlanRepository.deleteAllUserPlans(userId: userId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('All plans deleted successfully')),
+          );
+        }
+      } else if (result == 'sri_lanka') {
+        final count = await SavedPlanRepository.deletePlansByTitle(
+          userId: userId,
+          titlePattern: 'sri lanka',
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Deleted $count plan(s) containing "Sri Lanka"')),
+          );
+        }
+      }
+
+      // Reload the list
+      await _loadSavedPlans();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete plans: $e')),
+        );
+      }
+    }
   }
 
   Widget _buildPlanDetailsSheet(SavedPlan plan) {
@@ -291,7 +430,9 @@ class _SavedPlansPageState extends State<SavedPlansPage> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            Navigator.pop(context);
+          },
           tooltip: 'Back',
         ),
         title: const Text(
@@ -310,7 +451,8 @@ class _SavedPlansPageState extends State<SavedPlansPage> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadSavedPlans,
-            tooltip: 'Refresh',
+            onLongPress: _showCleanupOptions,
+            tooltip: 'Refresh (Long press for cleanup options)',
           ),
         ],
       ),

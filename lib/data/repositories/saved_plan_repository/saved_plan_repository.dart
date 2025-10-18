@@ -67,7 +67,7 @@ class SavedPlanRepository {
 
       data.forEach((key, value) {
         if (value is Map) {
-          final plan = Map<String, dynamic>.from(value);
+          final plan = _convertFirebaseMap(value);
           plan['planId'] = key; // Ensure planId is set
           plans.add(plan);
         }
@@ -75,8 +75,8 @@ class SavedPlanRepository {
 
       // Sort by savedAt (most recent first)
       plans.sort((a, b) {
-        final aTime = a['savedAt'] as int? ?? 0;
-        final bTime = b['savedAt'] as int? ?? 0;
+        final aTime = _parseInt(a['savedAt']);
+        final bTime = _parseInt(b['savedAt']);
         return bTime.compareTo(aTime);
       });
 
@@ -86,6 +86,42 @@ class SavedPlanRepository {
       print('❌ Error retrieving plans: $e');
       throw Exception('Failed to retrieve plans: $e');
     }
+  }
+
+  /// Helper method to convert Firebase Map with all nested values
+  static Map<String, dynamic> _convertFirebaseMap(Map<dynamic, dynamic> firebaseMap) {
+    final Map<String, dynamic> result = {};
+
+    firebaseMap.forEach((key, value) {
+      final stringKey = key.toString();
+
+      if (value is Map) {
+        // Recursively convert nested maps
+        result[stringKey] = _convertFirebaseMap(value as Map<dynamic, dynamic>);
+      } else if (value is List) {
+        // Convert lists recursively
+        result[stringKey] = value.map((item) {
+          if (item is Map) {
+            return _convertFirebaseMap(item as Map<dynamic, dynamic>);
+          }
+          return item;
+        }).toList();
+      } else {
+        // Keep primitive values as is
+        result[stringKey] = value;
+      }
+    });
+
+    return result;
+  }
+
+  /// Helper to safely parse integers
+  static int _parseInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
   }
 
   /// Get a specific saved plan by ID
@@ -105,7 +141,7 @@ class SavedPlanRepository {
         return null;
       }
 
-      final plan = Map<String, dynamic>.from(snapshot.value as Map);
+      final plan = _convertFirebaseMap(snapshot.value as Map<dynamic, dynamic>);
       plan['planId'] = planId;
 
       print('✅ Retrieved plan: $planId');
@@ -179,7 +215,7 @@ class SavedPlanRepository {
 
       data.forEach((key, value) {
         if (value is Map) {
-          final plan = Map<String, dynamic>.from(value);
+          final plan = _convertFirebaseMap(value);
           plan['planId'] = key;
           plans.add(plan);
         }
@@ -187,8 +223,8 @@ class SavedPlanRepository {
 
       // Sort by savedAt (most recent first)
       plans.sort((a, b) {
-        final aTime = a['savedAt'] as int? ?? 0;
-        final bTime = b['savedAt'] as int? ?? 0;
+        final aTime = _parseInt(a['savedAt']);
+        final bTime = _parseInt(b['savedAt']);
         return bTime.compareTo(aTime);
       });
 
@@ -236,6 +272,52 @@ class SavedPlanRepository {
       return 0;
     }
   }
+
+  /// Delete all saved plans for a user (use with caution - for cleanup only)
+  static Future<void> deleteAllUserPlans({
+    required String userId,
+  }) async {
+    try {
+      await _database
+          .child('saved_plans')
+          .child(userId)
+          .remove();
+
+      print('✅ All plans deleted for user: $userId');
+    } catch (e) {
+      print('❌ Error deleting all plans: $e');
+      throw Exception('Failed to delete all plans: $e');
+    }
+  }
+
+  /// Delete plans by title pattern (useful for removing hardcoded test data)
+  static Future<int> deletePlansByTitle({
+    required String userId,
+    required String titlePattern,
+  }) async {
+    try {
+      final plans = await getUserPlans(userId: userId);
+      int deletedCount = 0;
+
+      for (var plan in plans) {
+        final title = plan['journeyTitle']?.toString().toLowerCase() ?? '';
+        if (title.contains(titlePattern.toLowerCase())) {
+          await deletePlan(
+            userId: userId,
+            planId: plan['planId']?.toString() ?? '',
+          );
+          deletedCount++;
+          print('🗑️ Deleted plan: ${plan['journeyTitle']}');
+        }
+      }
+
+      print('✅ Deleted $deletedCount plans matching "$titlePattern"');
+      return deletedCount;
+    } catch (e) {
+      print('❌ Error deleting plans by title: $e');
+      throw Exception('Failed to delete plans by title: $e');
+    }
+  }
 }
 
 /// Model class for Saved Plan
@@ -265,21 +347,54 @@ class SavedPlan {
   });
 
   factory SavedPlan.fromJson(Map<String, dynamic> json) {
-    return SavedPlan(
-      planId: json['planId'] as String? ?? '',
-      userId: json['userId'] as String? ?? '',
-      journeyTitle: json['journeyTitle'] as String? ?? 'Untitled Plan',
-      numberOfDays: json['numberOfDays'] as int? ?? 0,
-      placesVisited: (json['placesVisited'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
-      totalBudget: (json['budgetInfo']?['totalBudget'] as num?)?.toDouble() ?? 0.0,
-      currency: json['budgetInfo']?['currency'] as String? ?? 'USD',
-      savedAt: json['savedAt'] as int? ?? 0,
-      updatedAt: json['updatedAt'] as int? ?? 0,
-      fullData: json,
-    );
+    // Helper function to safely parse numbers from dynamic values
+    double parseDouble(dynamic value) {
+      if (value == null) return 0.0;
+      if (value is double) return value;
+      if (value is int) return value.toDouble();
+      if (value is String) return double.tryParse(value) ?? 0.0;
+      return 0.0;
+    }
+
+    int parseInt(dynamic value) {
+      if (value == null) return 0;
+      if (value is int) return value;
+      if (value is double) return value.toInt();
+      if (value is String) return int.tryParse(value) ?? 0;
+      return 0;
+    }
+
+    List<String> parseStringList(dynamic value) {
+      try {
+        if (value == null) return [];
+        if (value is List) {
+          return value.map((e) => e.toString()).toList();
+        }
+        return [];
+      } catch (e) {
+        print('Error parsing string list: $e');
+        return [];
+      }
+    }
+
+    try {
+      return SavedPlan(
+        planId: json['planId']?.toString() ?? '',
+        userId: json['userId']?.toString() ?? '',
+        journeyTitle: json['journeyTitle']?.toString() ?? 'Untitled Plan',
+        numberOfDays: parseInt(json['numberOfDays']),
+        placesVisited: parseStringList(json['placesVisited']),
+        totalBudget: parseDouble(json['budgetInfo']?['totalBudget']),
+        currency: json['budgetInfo']?['currency']?.toString() ?? 'LKR',
+        savedAt: parseInt(json['savedAt']),
+        updatedAt: parseInt(json['updatedAt']),
+        fullData: json,
+      );
+    } catch (e) {
+      print('Error parsing SavedPlan: $e');
+      print('JSON data: $json');
+      rethrow;
+    }
   }
 
   Map<String, dynamic> toJson() {

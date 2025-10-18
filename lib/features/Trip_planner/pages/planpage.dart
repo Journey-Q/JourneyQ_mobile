@@ -47,73 +47,8 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
     final itinerary = widget.tripData['dayByDayItinerary'] as List? ?? [];
     List<Map<String, dynamic>> journeyPlaces = [];
 
-    // Real coordinates for Sri Lankan destinations (from the route map)
-    final Map<String, Map<String, double>> _locationCoordinates = {
-      // Major Cities
-      'colombo': {'latitude': 6.9271, 'longitude': 79.8612},
-      'kandy': {'latitude': 7.2906, 'longitude': 80.6337},
-      'galle': {'latitude': 6.0535, 'longitude': 80.2210},
-      'jaffna': {'latitude': 9.6615, 'longitude': 80.0255},
-      'anuradhapura': {'latitude': 8.3114, 'longitude': 80.4037},
-      'polonnaruwa': {'latitude': 7.9403, 'longitude': 81.0188},
-      'negombo': {'latitude': 7.2084, 'longitude': 79.8438},
-      'trincomalee': {'latitude': 8.5874, 'longitude': 81.2152},
-      'batticaloa': {'latitude': 7.7210, 'longitude': 81.7000},
-      'matara': {'latitude': 5.9549, 'longitude': 80.5550},
-
-      // Popular Tourist Destinations
-      'nuwara eliya': {'latitude': 6.9497, 'longitude': 80.7891},
-      'ella': {'latitude': 6.8667, 'longitude': 81.0463},
-      'sigiriya': {'latitude': 7.9568, 'longitude': 80.7603},
-      'dambulla': {'latitude': 7.8562, 'longitude': 80.6518},
-      'hikkaduwa': {'latitude': 6.1391, 'longitude': 80.0992},
-      'unawatuna': {'latitude': 6.0108, 'longitude': 80.2494},
-      'mirissa': {'latitude': 5.9487, 'longitude': 80.4617},
-      'bentota': {'latitude': 6.4258, 'longitude': 79.9919},
-      'arugam bay': {'latitude': 6.8407, 'longitude': 81.8344},
-      'yala': {'latitude': 6.3725, 'longitude': 81.5067},
-      'udawalawe': {'latitude': 6.4458, 'longitude': 80.8883},
-      'horton plains': {'latitude': 6.8089, 'longitude': 80.8052},
-      'adams peak': {'latitude': 6.8092, 'longitude': 80.4989},
-      'pidurangala': {'latitude': 7.9697, 'longitude': 80.7542},
-    };
-
-    // Function to get coordinates for a place name
-    Map<String, double> _getCoordinatesForPlace(String placeName, int dayIndex, int placeIndex) {
-      String searchKey = placeName.toLowerCase().trim();
-
-      // Direct match
-      if (_locationCoordinates.containsKey(searchKey)) {
-        return _locationCoordinates[searchKey]!;
-      }
-
-      // Partial match
-      for (String key in _locationCoordinates.keys) {
-        if (key.contains(searchKey) || searchKey.contains(key)) {
-          return _locationCoordinates[key]!;
-        }
-      }
-
-      // If no match found, generate coordinates in a realistic spread around Sri Lanka
-      List<Map<String, double>> baseLocations = [
-        {'latitude': 6.9271, 'longitude': 79.8612}, // Colombo
-        {'latitude': 7.2906, 'longitude': 80.6337}, // Kandy
-        {'latitude': 6.9497, 'longitude': 80.7891}, // Nuwara Eliya
-        {'latitude': 6.0535, 'longitude': 80.2210}, // Galle
-        {'latitude': 8.3114, 'longitude': 80.4037}, // Anuradhapura
-      ];
-
-      Map<String, double> base = baseLocations[dayIndex % baseLocations.length];
-      double latOffset = (placeIndex * 0.02) - 0.01;
-      double lngOffset = (placeIndex * 0.02) - 0.01;
-
-      return {
-        'latitude': base['latitude']! + latOffset,
-        'longitude': base['longitude']! + lngOffset,
-      };
-    }
-
     // Convert each day's places to journey format
+    // Get coordinates from Gemini-generated data if available
     for (int dayIndex = 0; dayIndex < itinerary.length; dayIndex++) {
       final dayData = itinerary[dayIndex];
       final places = dayData['places'] as List? ?? [];
@@ -121,7 +56,32 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
       for (int placeIndex = 0; placeIndex < places.length; placeIndex++) {
         final place = places[placeIndex];
         final placeName = place['name'] ?? 'Unknown Place';
-        final coordinates = _getCoordinatesForPlace(placeName, dayIndex, placeIndex);
+
+        // Try to get coordinates from Gemini data
+        Map<String, double> coordinates;
+
+        if (place['location'] != null && place['location'] is Map) {
+          // Coordinates provided by Gemini
+          final location = place['location'] as Map;
+          coordinates = {
+            'latitude': _parseDouble(location['latitude']),
+            'longitude': _parseDouble(location['longitude']),
+          };
+        } else if (place['latitude'] != null && place['longitude'] != null) {
+          // Alternative format where coordinates are at place level
+          coordinates = {
+            'latitude': _parseDouble(place['latitude']),
+            'longitude': _parseDouble(place['longitude']),
+          };
+        } else {
+          // Fallback: Use default coordinates (0, 0) if not provided by Gemini
+          // The map widget should handle this gracefully
+          coordinates = {
+            'latitude': 0.0,
+            'longitude': 0.0,
+          };
+          print('⚠️ Warning: No coordinates found for place: $placeName');
+        }
 
         journeyPlaces.add({
           'name': placeName,
@@ -139,6 +99,15 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
     return {
       'places': journeyPlaces,
     };
+  }
+
+  // Helper method to safely parse double values
+  double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
   }
 
   // Professional Card Widget
@@ -802,7 +771,7 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
           ElevatedButton.icon(
             onPressed: () {
               Navigator.of(context).pop();
-              context.go('/saved-plans');
+              context.push('/saved-plans');
             },
             icon: const Icon(Icons.list, size: 18, color: Colors.white),
             label: const Text(
@@ -921,10 +890,21 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
     return Scaffold(
       backgroundColor: _backgroundColor,
       appBar: AppBar(
-        title: const Text('Your Trip Plan'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+          tooltip: 'Back',
+        ),
+        title: const Text(
+          'Your Trip Plan',
+          style: TextStyle(color: Colors.black87),
+        ),
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
-        foregroundColor: Colors.white,
         elevation: 0,
         bottom: TabBar(
           controller: _tabController,

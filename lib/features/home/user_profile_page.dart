@@ -24,7 +24,7 @@ class UserProfilePage extends StatefulWidget {
 }
 
 class _UserProfilePageState extends State<UserProfilePage> {
-  bool _isFollowing = false;
+  String _followStatus = 'none'; // none, pending, accepted
   bool _isOwnProfile = false;
   bool _isLoadingProfile = true;
   bool _isLoadingPosts = true;
@@ -58,10 +58,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   Future<void> _loadFollowStatus() async {
     try {
-      final isFollowing = await FollowRepository.isFollowing(widget.userId);
+      final status = await FollowRepository.getFollowStatus(widget.userId);
       if (mounted) {
         setState(() {
-          _isFollowing = isFollowing;
+          _followStatus = status ?? 'none';
         });
       }
     } catch (e) {
@@ -87,7 +87,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         _userProfile = {
           'id': profileData['id'] ?? safeUserId,
           'name': profileData['display_name'] ?? profileData['displayName'] ?? safeUserName,
-          'username': '@${(profileData['display_name'] ?? profileData['displayName'] ?? safeUserName).toLowerCase().replaceAll(' ', '')}',
+          'username': '${(profileData['display_name'] ?? profileData['displayName'] ?? safeUserName).toLowerCase().replaceAll(' ', '')}',
           'bio': profileData['bio'] ?? 'Travel enthusiast exploring hidden gems 🌍',
           'location': profileData['location'] ?? 'Location',
           'profileImage': profileData['profile_image_url'] ?? profileData['profileImageUrl'] ?? 'https://i.pravatar.cc/150?img=25',
@@ -108,7 +108,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         _userProfile = {
           'id': safeUserId,
           'name': safeUserName,
-          'username': '@${safeUserName.toLowerCase().replaceAll(' ', '')}',
+          'username': '${safeUserName.toLowerCase().replaceAll(' ', '')}',
           'bio': 'Travel enthusiast exploring hidden gems 🌍',
           'location': 'Location',
           'profileImage': 'https://i.pravatar.cc/150?img=25',
@@ -459,21 +459,22 @@ class _UserProfilePageState extends State<UserProfilePage> {
         // Follow/Following Button
         Expanded(
           child: GestureDetector(
-            onTap: _toggleFollow,
+            onTap: _followStatus == 'pending' ? null : _toggleFollow,
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: _isFollowing ? Colors.grey[200] : Colors.blue,
+                color: Colors.blue,
                 borderRadius: BorderRadius.circular(25),
-                border: _isFollowing
-                    ? Border.all(color: Colors.grey[300]!)
-                    : null,
               ),
               child: Text(
-                _isFollowing ? 'Following' : 'Follow',
+                _followStatus == 'accepted'
+                    ? 'Following'
+                    : _followStatus == 'pending'
+                        ? 'Requested'
+                        : 'Follow',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: _isFollowing ? Colors.black87 : Colors.white,
+                style: const TextStyle(
+                  color: Colors.white,
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
                 ),
@@ -827,7 +828,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
       late Map<String, dynamic> result;
       String successMessage = '';
 
-      if (_isFollowing) {
+      if (_followStatus == 'accepted') {
         // Unfollow
         result = await FollowRepository.unfollowUser(widget.userId);
         successMessage = 'Unfollowed ${widget.userName.isNotEmpty ? widget.userName : 'User'}';
@@ -838,11 +839,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
       }
 
       if (result['success'] == true && mounted) {
+        // Reload follow status from server
+        await _loadFollowStatus();
+
+        // Update follower count only if unfollowing
         setState(() {
-          _isFollowing = !_isFollowing;
-          if (_isFollowing) {
-            _userStats['followersCount'] = (_userStats['followersCount'] ?? 0) + 1;
-          } else {
+          if (_followStatus == 'none') {
+            // Was unfollowed
             _userStats['followersCount'] = (_userStats['followersCount'] ?? 0) - 1;
           }
         });

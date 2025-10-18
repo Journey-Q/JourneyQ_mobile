@@ -782,9 +782,24 @@ class _FollowersFollowingPageState extends State<FollowersFollowingPage>
   }
 
   void _navigateToProfile(String userId) {
-    // Navigate to user profile page
-    // Replace this with your actual navigation logic
-    context.push('/profile/$userId');
+    // Get the user info from the lists
+    UserFollowInfo? userInfo;
+
+    // Search in followers list
+    try {
+      userInfo = _followers.firstWhere((user) => user.userId == userId);
+    } catch (e) {
+      // Not found in followers, try following list
+      try {
+        userInfo = _following.firstWhere((user) => user.userId == userId);
+      } catch (e) {
+        print('User not found in either list: $userId');
+      }
+    }
+
+    // Navigate to user profile page with userId and userName
+    final userName = userInfo?.displayName ?? 'User';
+    context.push('/user-profile/$userId/$userName');
   }
 }
 
