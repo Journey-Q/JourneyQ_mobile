@@ -1161,14 +1161,13 @@ class _JourneyRouteMapWidgetState extends State<JourneyRouteMapWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [Colors.white, _cardBackground],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
@@ -1179,86 +1178,100 @@ class _JourneyRouteMapWidgetState extends State<JourneyRouteMapWidget> {
         ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               color:_gradientEnd,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             ),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(
                         Icons.route_outlined,
                         color: Colors.white,
-                        size: 24,
+                        size: 18,
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           const Text(
                             'Journey Route',
                             style: TextStyle(
-                              fontSize: 20,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 2),
                           if (_isLoadingLocation)
                             Text(
                               'Getting your location...',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 12,
                                 color: Colors.white.withOpacity(0.9),
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             )
                           else if (_totalDistance.isNotEmpty && _estimatedTime.isNotEmpty)
                             Text(
-                              '$_totalDistance • $_estimatedTime • Google Route',
+                              '$_totalDistance • $_estimatedTime',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 12,
                                 color: Colors.white.withOpacity(0.9),
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             )
                           else
                             Text(
-                              'From your location (${_journeyPlaces.length} stops)',
+                              '${_journeyPlaces.length} stops',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 12,
                                 color: Colors.white.withOpacity(0.9),
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                         ],
                       ),
                     ),
+                    const SizedBox(width: 4),
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: IconButton(
                         onPressed: _openFullRoute,
-                        icon: const Icon(Icons.open_in_new, color: Colors.white),
-                        tooltip: 'Open full route in Google Maps',
+                        icon: const Icon(Icons.open_in_new, color: Colors.white, size: 18),
+                        tooltip: 'Open in Google Maps',
+                        padding: const EdgeInsets.all(6),
+                        constraints: const BoxConstraints(),
                       ),
                     ),
                   ],
                 ),
-                
+
                 if (_isLoadingRoute) ...[
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                   LinearProgressIndicator(
                     backgroundColor: Colors.white.withOpacity(0.3),
                     valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
@@ -1267,9 +1280,9 @@ class _JourneyRouteMapWidgetState extends State<JourneyRouteMapWidget> {
               ],
             ),
           ),
-          
+
           SizedBox(
-            height: 350,
+            height: 220,
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
               child: _isMapLoading

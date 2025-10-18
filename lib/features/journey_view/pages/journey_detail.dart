@@ -373,60 +373,38 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
     );
   }
 
-  // New enhanced map section
+  // Enhanced map section with embedded map widget
   Widget _buildEnhancedMapSection() {
-    final apiKey = widget.googleMapsApiKey ?? _defaultApiKey;
-    
-    if (apiKey == "YOUR_GOOGLE_MAPS_API_KEY_HERE") {
-      // Show warning if API key is not set
+    // Show loading indicator if journey data is not yet loaded
+    if (journeyData == null) {
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        padding: const EdgeInsets.all(20),
+        height: 270,
         decoration: BoxDecoration(
-          color: Colors.orange[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.orange[200]!),
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(16),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.warning, color: Colors.orange[600]),
-                const SizedBox(width: 8),
-                const Text(
-                  'Google Maps API Key Required',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'To display the interactive route map with real directions, please add your Google Maps API key.',
-              style: TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton.icon(
-              onPressed: () => _showApiKeyInstructions(),
-              icon: const Icon(Icons.info_outline),
-              label: const Text('Setup Instructions'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange[600],
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ],
+        child: const Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFF0088cc),
+          ),
         ),
       );
     }
 
-    // Return the enhanced map widget with API key
-    return JourneyRouteMapWidget(
-      journeyData: journeyData!,
-      googleMapsApiKey: apiKey,
+    final apiKey = widget.googleMapsApiKey ?? _defaultApiKey;
+
+    // Return embedded map with fixed height to prevent layout errors
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: JourneyRouteMapWidget(
+          journeyData: journeyData!,
+          googleMapsApiKey: apiKey,
+          key: ValueKey('map_${widget.postId}'), // Unique key prevents rebuild issues
+        ),
+      ),
     );
   }
 
@@ -661,15 +639,19 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
                             : null,
                       ),
                       const SizedBox(width: 12),
-                      Text(
-                        journeyData!['authorName'],
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: Text(
+                          journeyData!['authorName'],
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: 18),
+                      const SizedBox(width: 12),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 14,
@@ -826,8 +808,17 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
           Text(
             value,
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
           ),
-          Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+          Text(
+            label,
+            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );

@@ -5,10 +5,11 @@ import 'package:journeyq/features/home/pages/search_wiget.dart';
 import 'package:journeyq/features/home/pages/widget.dart';
 import 'package:journeyq/features/home/pages/travel_post_widget.dart';
 import 'package:journeyq/shared/widgets/dialog/show_dialog.dart';
-import 'package:journeyq/features/home/data.dart';
 import 'package:journeyq/data/repositories/chat_repository/chat_repository.dart';
 import 'package:journeyq/features/notification/repository/notification_repository.dart';
+import 'package:journeyq/data/repositories/feed_repository/feed_repository.dart';
 import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
+import 'package:journeyq/core/errors/exception.dart';
 import 'package:go_router/go_router.dart';
 
 class HomePage extends StatefulWidget {
@@ -23,15 +24,24 @@ class _HomePageState extends State<HomePage> {
   final ChatRepository _chatRepository = ChatRepository();
   final NotificationRepository _notificationRepository = NotificationRepository();
 
-  // Using the imported post_data from data.dart
-  late List<Map<String, dynamic>> _posts;
+  // Feed data
+  List<FeedPost> _posts = [];
   bool _isChatInitialized = false;
+  bool _isLoadingFeed = true;
+  bool _isLoadingMore = false;
+  String? _feedError;
+
+  // Pagination
+  int _currentPage = 0;
+  final int _pageSize = 20;
+  bool _hasMorePosts = true;
 
   @override
   void initState() {
     super.initState();
-    _posts = List.from(post_data); // Create a mutable copy
     _initializeChat();
+    _loadFeed();
+    _scrollController.addListener(_onScroll);
   }
 
   Future<void> _initializeChat() async {
@@ -40,7 +50,7 @@ class _HomePageState extends State<HomePage> {
       if (authProvider.isAuthenticated) {
         await _chatRepository.initialize(authProvider);
         await _chatRepository.initializeUserProfileIfNeeded(authProvider);
-        
+
         if (mounted) {
           setState(() {
             _isChatInitialized = true;
@@ -49,6 +59,90 @@ class _HomePageState extends State<HomePage> {
       }
     } catch (e) {
       print('❌ Error initializing chat in home page: $e');
+    }
+  }
+
+  Future<void> _loadFeed({bool refresh = false}) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final currentUserId = authProvider.user?.userId?.toString();
+
+    if (currentUserId == null) {
+      print('❌ Cannot load feed: User not authenticated');
+      setState(() {
+        _isLoadingFeed = false;
+        _feedError = 'Please log in to view posts';
+      });
+      return;
+    }
+
+    if (refresh) {
+      setState(() {
+        _isLoadingFeed = true;
+        _feedError = null;
+        _currentPage = 0;
+        _hasMorePosts = true;
+      });
+    } else if (!_hasMorePosts || _isLoadingMore) {
+      return;
+    }
+
+    try {
+      setState(() {
+        if (!refresh) _isLoadingMore = true;
+      });
+
+      print('📱 Loading feed for user: $currentUserId, page: $_currentPage');
+
+      final feedResponse = await FeedRepository.getFeed(
+        userId: currentUserId,
+        page: _currentPage,
+        size: _pageSize,
+      );
+
+      if (mounted) {
+        setState(() {
+          if (refresh) {
+            _posts = feedResponse.posts;
+          } else {
+            _posts.addAll(feedResponse.posts);
+          }
+
+          _hasMorePosts = feedResponse.hasMore;
+          _currentPage++;
+          _isLoadingFeed = false;
+          _isLoadingMore = false;
+          _feedError = null;
+        });
+      }
+
+      print('✅ Feed loaded: ${feedResponse.posts.length} posts');
+    } on AppException catch (e) {
+      print('❌ AppException loading feed: ${e.message}');
+      if (mounted) {
+        setState(() {
+          _feedError = e.message;
+          _isLoadingFeed = false;
+          _isLoadingMore = false;
+        });
+      }
+    } catch (e) {
+      print('❌ Error loading feed: $e');
+      if (mounted) {
+        setState(() {
+          _feedError = 'Failed to load feed. Please try again.';
+          _isLoadingFeed = false;
+          _isLoadingMore = false;
+        });
+      }
+    }
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      if (!_isLoadingMore && _hasMorePosts) {
+        _loadFeed();
+      }
     }
   }
 
@@ -86,7 +180,6 @@ class _HomePageState extends State<HomePage> {
 
           final chatUnreadCount = chatSnapshot.data ?? 0;
 
-          // Nested StreamBuilder for notification count
           return StreamBuilder<int>(
             stream: _notificationRepository.listenToUnreadCount(currentUserId),
             builder: (context, notificationSnapshot) {
@@ -95,7 +188,6 @@ class _HomePageState extends State<HomePage> {
               }
 
               final notificationUnreadCount = notificationSnapshot.data ?? 0;
-              print('📱 App bar counts - Chat: $chatUnreadCount, Notifications: $notificationUnreadCount');
 
               return JourneyQAppBar(
                 notificationCount: notificationUnreadCount,
@@ -120,8 +212,8 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
       appBar: _isChatInitialized ? _buildDynamicAppBar() : JourneyQAppBar(
-        notificationCount: 0, // Show 0 while loading
-        chatCount: 0, // Show 0 while loading
+        notificationCount: 0,
+        chatCount: 0,
         onNotificationTap: () {
           context.push('/notification');
         },
@@ -131,7 +223,7 @@ class _HomePageState extends State<HomePage> {
       ),
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: _handleRefresh,
+          onRefresh: () => _loadFeed(refresh: true),
           child: CustomScrollView(
             controller: _scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
@@ -162,11 +254,22 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
 
-              // Posts List
-              _buildPostsList(),
+              // Posts List or Loading/Error State
+              _buildContent(),
+
+              // Loading more indicator
+              if (_isLoadingMore)
+                const SliverPadding(
+                  padding: EdgeInsets.all(16),
+                  sliver: SliverToBoxAdapter(
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+                ),
 
               // Bottom padding for navigation bar
-              const SliverPadding(padding: EdgeInsets.only(bottom:10)),
+              const SliverPadding(padding: EdgeInsets.only(bottom: 10)),
             ],
           ),
         ),
@@ -174,78 +277,144 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _buildContent() {
+    if (_isLoadingFeed && _posts.isEmpty) {
+      return const SliverFillRemaining(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text(
+                'Loading your personalized feed...',
+                style: TextStyle(
+                  color: Color(0xFF636E72),
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_feedError != null && _posts.isEmpty) {
+      return SliverFillRemaining(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                _feedError!,
+                style: const TextStyle(
+                  color: Color(0xFF636E72),
+                  fontSize: 16,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => _loadFeed(refresh: true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0088cc),
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_posts.isEmpty) {
+      return SliverFillRemaining(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.travel_explore,
+                size: 64,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'No posts to show',
+                style: TextStyle(
+                  color: Color(0xFF636E72),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Start following travelers to see their journeys',
+                style: TextStyle(
+                  color: Color(0xFF636E72),
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return _buildPostsList();
+  }
+
   Widget _buildPostsList() {
     return SliverList(
-      delegate: SliverChildBuilderDelegate((context, index) {
-        final post = _posts[index];
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          final post = _posts[index];
 
-        // Safely handle data conversion
-        List<String> placesVisited = _convertToStringList(
-          post['placesVisited'],
-        );
-        List<String> postImages = _convertToStringList(post['postImages']);
+          // Extract first place name for location
+          final location = post.placesVisited.isNotEmpty
+              ? post.placesVisited.first
+              : 'Unknown Location';
 
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: TravelPostWidget(
-            postId: post['id']?.toString() ?? '1',
-            userName: post['userName']?.toString() ?? 'Unknown User',
-            location: post['location']?.toString() ?? 'Unknown Location',
-            userImage: post['userImage']?.toString() ?? '',
-            journeyTitle: post['journeyTitle']?.toString() ?? 'Travel Adventure',
-            placesVisited: placesVisited,
-            postImages: postImages,
-            likesCount: _convertToInt(post['likesCount']),
-            commentsCount: _convertToInt(post['commentsCount']),
-            isLiked: post['isLiked'] ?? false,
-            isFollowed: false,
-            isBookmarked: false,
-            onMoreOptions: () => _showMoreOptions(
-              context,
-              post['userName']?.toString() ?? 'Unknown',
+          // Get all images from place-wise content
+          final postImages = post.getAllImages();
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: TravelPostWidget(
+              postId: post.postId.toString(),
+              userId: post.createdById.toString(),
+              userName: post.creatorName,
+              location: location,
+              userImage: post.creatorProfileUrl ?? '',
+              journeyTitle: post.journeyTitle,
+              placesVisited: post.placesVisited,
+              postImages: postImages,
+              likesCount: post.likesCount,
+              commentsCount: post.commentsCount,
+              isLiked: post.isLikedByUser,
+              isFollowed: false,
+              isBookmarked: false,
+              onMoreOptions: () => _showMoreOptions(
+                context,
+                post.creatorName,
+                post.postId,
+              ),
             ),
-          ),
-        );
-      }, childCount: _posts.length),
+          );
+        },
+        childCount: _posts.length,
+      ),
     );
   }
 
-  // Helper method to safely convert to List<String>
-  List<String> _convertToStringList(dynamic value) {
-    if (value == null) return [];
-    if (value is List) {
-      return value.map((item) => item.toString()).toList();
-    }
-    if (value is String) {
-      return [value];
-    }
-    return [];
-  }
-
-  // Helper method to safely convert to int
-  int _convertToInt(dynamic value) {
-    if (value == null) return 0;
-    if (value is int) return value;
-    if (value is String) {
-      return int.tryParse(value) ?? 0;
-    }
-    return 0;
-  }
-
-  Future<void> _handleRefresh() async {
-    // Simulate refresh delay
-    await Future.delayed(const Duration(seconds: 2));
-    // Refresh posts data
-    setState(() {
-      _posts = List.from(post_data); // Reload original data
-    });
-
-    if (mounted) {
-      SnackBarService.showSuccess(context, 'Posts refreshed!');
-    }
-  }
-
-  void _showMoreOptions(BuildContext context, String userName) {
+  void _showMoreOptions(BuildContext context, String userName, int postId) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -270,7 +439,7 @@ class _HomePageState extends State<HomePage> {
               title: const Text('Report Post'),
               onTap: () {
                 Navigator.pop(context);
-                _reportPost(userName);
+                _reportPost(userName, postId);
               },
             ),
             ListTile(
@@ -286,7 +455,7 @@ class _HomePageState extends State<HomePage> {
               title: const Text('Copy Link'),
               onTap: () {
                 Navigator.pop(context);
-                _copyLink(userName);
+                _copyLink(postId);
               },
             ),
             const SizedBox(height: 20),
@@ -296,7 +465,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _reportPost(String userName) {
+  void _reportPost(String userName, int postId) {
     SnackBarService.showSuccess(context, 'Post reported');
   }
 
@@ -304,7 +473,7 @@ class _HomePageState extends State<HomePage> {
     SnackBarService.showSuccess(context, 'User blocked');
   }
 
-  void _copyLink(String userName) {
+  void _copyLink(int postId) {
     SnackBarService.showSuccess(context, 'Link copied to clipboard');
   }
 }

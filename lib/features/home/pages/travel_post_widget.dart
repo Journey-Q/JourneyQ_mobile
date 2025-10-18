@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 class TravelPostWidget extends StatefulWidget {
   final String postId;
+  final String userId;
   final String userName;
   final String location;
   final String userImage;
@@ -19,6 +20,7 @@ class TravelPostWidget extends StatefulWidget {
   const TravelPostWidget({
     super.key,
     required this.postId,
+    required this.userId,
     required this.userName,
     required this.location,
     required this.userImage,
@@ -99,7 +101,7 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
           // Make profile picture clickable
           GestureDetector(
             onTap: () {
-              context.push('/user-profile/${widget.postId}/${Uri.encodeComponent(widget.userName)}');
+              context.push('/user-profile/${widget.userId}/${Uri.encodeComponent(widget.userName)}');
             },
             child: CircleAvatar(
               radius: 16,
@@ -121,7 +123,7 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
                 // Make username clickable
                 GestureDetector(
                   onTap: () {
-                    context.push('/user-profile/${widget.postId}/${Uri.encodeComponent(widget.userName)}');
+                    context.push('/user-profile/${widget.userId}/${Uri.encodeComponent(widget.userName)}');
                   },
                   child: Text(
                     widget.userName,
