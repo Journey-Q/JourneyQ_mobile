@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:journeyq/features/journey_view/pages/Journeyroute.dart';
+import 'package:provider/provider.dart';
+import 'package:journeyq/data/repositories/saved_plan_repository/saved_plan_repository.dart';
+import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class TripPlanViewPage extends StatefulWidget {
   final Map<String, dynamic> tripData;
@@ -580,6 +584,244 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
     );
   }
 
+  // Save Plan to Firebase
+  Future<void> _savePlan() async {
+    try {
+      // Get user ID from AuthProvider
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final userId = authProvider.user?.userId?.toString();
+
+      if (userId == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please login to save plans'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Show loading indicator
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(color: Color(0xFF0088cc)),
+        ),
+      );
+
+      // Convert tripData to the format expected by SavedPlanRepository
+      final itinerary = widget.tripData['dayByDayItinerary'] as List? ?? [];
+      List<String> placesVisited = [];
+      List<Map<String, dynamic>> placeWiseContent = [];
+      List<Map<String, dynamic>> hotelRecommendations = [];
+
+      // Extract places and hotels from itinerary
+      for (var day in itinerary) {
+        final places = day['places'] as List? ?? [];
+        final hotel = day['hotel'] as Map<String, dynamic>?;
+
+        for (var place in places) {
+          final placeName = place['name'] ?? 'Unknown Place';
+          if (!placesVisited.contains(placeName)) {
+            placesVisited.add(placeName);
+          }
+
+          placeWiseContent.add({
+            'name': placeName,
+            'activities': place['activities'] ?? [],
+            'experience': place['experience'] ?? '',
+            'tripMoods': place['tripMoods'] ?? [],
+            'day': day['day'] ?? 0,
+            'city': day['city'] ?? '',
+          });
+        }
+
+        // Extract hotel information
+        if (hotel != null) {
+          hotelRecommendations.add({
+            'name': hotel['name'] ?? 'Unknown Hotel',
+            'location': hotel['location'] ?? '',
+            'pricePerNight': hotel['pricePerNight'] ?? '',
+            'rating': hotel['rating'] ?? '',
+            'day': day['day'] ?? 0,
+            'city': day['city'] ?? '',
+          });
+        }
+      }
+
+      // Get trip moods - could be array or single value
+      List<String> tripMoods = [];
+      if (widget.tripData['tripMoods'] is List) {
+        tripMoods = (widget.tripData['tripMoods'] as List).map((e) => e.toString()).toList();
+      } else if (widget.tripData['mood'] != null) {
+        tripMoods = [widget.tripData['mood'].toString()];
+      }
+
+      // Prepare plan data with ALL generated information
+      final planData = {
+        // Basic trip information
+        'journeyTitle': widget.tripData['destination'] ?? 'My Trip Plan',
+        'numberOfDays': widget.tripData['numberOfDays'] ?? 0,
+        'numberOfPersons': widget.tripData['numberOfPersons'] ?? 1,
+
+        // Places and content
+        'placesVisited': placesVisited,
+        'placeWiseContent': placeWiseContent,
+
+        // Budget information
+        'budgetInfo': {
+          'totalBudget': widget.tripData['totalEstimatedCost'] ?? 0,
+          'currency': 'LKR',
+          'budgetType': widget.tripData['budget'] ?? 'Moderate',
+        },
+
+        // Trip details
+        'travelTips': widget.tripData['tips'] ?? [],
+        'tripMoods': tripMoods,
+        'hotelRecommendations': hotelRecommendations,
+
+        // Complete itinerary (preserve all original data)
+        'fullItinerary': itinerary,
+
+        // Additional fields that might be in tripData
+        'transportationOptions': widget.tripData['transportationOptions'] ?? [],
+        'restaurantRecommendations': widget.tripData['restaurantRecommendations'] ?? [],
+
+        // Store the complete original tripData for future reference
+        'originalTripData': widget.tripData,
+      };
+
+      // Save to Firebase
+      final planId = await SavedPlanRepository.savePlan(
+        userId: userId,
+        planData: planData,
+      );
+
+      // Close loading dialog
+      if (!mounted) return;
+      Navigator.of(context).pop();
+
+      // Show success dialog
+      _showSavePlanSuccessDialog(planId);
+    } catch (e) {
+      // Close loading dialog
+      if (mounted) {
+        Navigator.of(context).pop();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save plan: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showSavePlanSuccessDialog(String planId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF00B894).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check_circle,
+                color: Color(0xFF00B894),
+                size: 48,
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Plan Saved Successfully!',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Your trip plan has been saved to your collection.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0088cc).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.bookmark,
+                    color: Color(0xFF0088cc),
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      widget.tripData['destination'] ?? 'My Trip Plan',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF0088cc),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(
+              'Close',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.go('/saved-plans');
+            },
+            icon: const Icon(Icons.list, size: 18, color: Colors.white),
+            label: const Text(
+              'View Saved Plans',
+              style: TextStyle(color: Colors.white),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0088cc),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Enhanced Tips Section
   Widget _buildEnhancedTips() {
     final tips = widget.tripData['tips'] as List? ?? [];
@@ -759,14 +1001,7 @@ class _TripPlanViewPageState extends State<TripPlanViewPage>
               const SizedBox(width: 16),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Trip plan saved successfully!'),
-                        backgroundColor: _accentColor,
-                      ),
-                    );
-                  },
+                  onPressed: _savePlan,
                   icon: const Icon(Icons.bookmark),
                   label: const Text('Save Plan'),
                   style: ElevatedButton.styleFrom(

@@ -44,6 +44,7 @@ import 'package:journeyq/features/market_place/pages/market_chat.dart';
 import 'package:journeyq/features/market_place/pages/BookingHistoryPage.dart';
 import 'package:journeyq/features/market_place/pages/chat_details.dart';
 import 'package:journeyq/features/preference_page/index.dart';
+import 'package:journeyq/features/saved_plans/pages/saved_plans_page.dart';
 
 
 class AppRouter {
@@ -330,6 +331,20 @@ class AppRouter {
           path: '/create',
           builder: (context, state) =>
               AppWrapper(currentRoute: '/create', child: CreateTripPage()),
+          transitionType: PageTransitionType.none,
+        ),
+
+        TransitionGoRoute(
+          path: '/create-trip',
+          builder: (context, state) =>
+              AppWrapper(currentRoute: '/create', child: CreateTripPage()),
+          transitionType: PageTransitionType.none,
+        ),
+
+        TransitionGoRoute(
+          path: '/saved-plans',
+          builder: (context, state) =>
+              AppWrapper(currentRoute: '/saved-plans', child: const SavedPlansPage()),
           transitionType: PageTransitionType.none,
         ),
 

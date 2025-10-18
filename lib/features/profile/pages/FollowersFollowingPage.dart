@@ -772,26 +772,6 @@ class _FollowersFollowingPageState extends State<FollowersFollowingPage>
                       ],
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  if (_getStatusText(user.status).isNotEmpty)
-                    Row(
-                      children: [
-                        Icon(
-                          _getStatusIcon(user.status),
-                          size: 14,
-                          color: _getStatusColor(user.status),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _getStatusText(user.status),
-                          style: TextStyle(
-                            color: _getStatusColor(user.status),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
                 ],
               ),
             ),
@@ -799,45 +779,6 @@ class _FollowersFollowingPageState extends State<FollowersFollowingPage>
         ],
       ),
     );
-  }
-
-  
-
-  String _getStatusText(String status) {
-    switch (status) {
-      case 'accepted':
-        return 'Follows you';
-      case 'pending':
-        return 'Pending approval';
-      case 'rejected':
-        return '';
-      default:
-        return '';
-    }
-  }
-
-  IconData _getStatusIcon(String status) {
-    switch (status) {
-      case 'accepted':
-        return Icons.check_circle;
-      case 'pending':
-        return Icons.hourglass_empty;
-      case 'rejected':
-        return Icons.cancel;
-      default:
-        return Icons.info;
-    }
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'accepted':
-        return const Color(0xFF00B894);
-      case 'pending':
-        return const Color(0xFFFFB800);
-      default:
-        return const Color(0xFF636E72);
-    }
   }
 
   void _navigateToProfile(String userId) {
