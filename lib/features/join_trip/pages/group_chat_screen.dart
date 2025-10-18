@@ -199,11 +199,22 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   }
 
   void _navigateToBudget() {
+    if (_tripId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to load budget: Trip ID not found'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => BudgetTrackerScreen(
-          groupId: widget.groupId,
+          groupId: _tripId.toString(), // Pass numeric trip ID as string
           groupName: widget.groupName,
           members: _getMembers(),
         ),
