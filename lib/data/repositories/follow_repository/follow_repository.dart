@@ -195,8 +195,61 @@ class FollowRepository {
     }
   }
 
-  /// Get followers of a specific user
+  /// Get followers of a specific user (using /followers/{userId} endpoint)
   static Future<FollowListResponse> getUserFollowers({
+    required String userId,
+    int page = 0,
+    int size = 20,
+  }) async {
+    try {
+      print('DEBUG: Calling getUserFollowers with userId: $userId, page: $page, size: $size');
+      final response = await ApiService.get(
+        '/follow/followers/$userId',
+        queryParameters: {
+          'page': page,
+          'size': size,
+        },
+      );
+
+      print('DEBUG: getUserFollowers response: ${response.data}');
+      return FollowListResponse.fromJson(response.data['data']);
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      print('ERROR: getUserFollowers failed: $e');
+      throw ServerException('Failed to get user followers: $e');
+    }
+  }
+
+  /// Get following of a specific user (using /following/{userId} endpoint)
+  static Future<FollowListResponse> getUserFollowing({
+    required String userId,
+    int page = 0,
+    int size = 20,
+  }) async {
+    try {
+      print('DEBUG: Calling getUserFollowing with userId: $userId, page: $page, size: $size');
+      final response = await ApiService.get(
+        '/follow/following/$userId',
+        queryParameters: {
+          'page': page,
+          'size': size,
+        },
+      );
+
+      print('DEBUG: getUserFollowing response: ${response.data}');
+      return FollowListResponse.fromJson(response.data['data']);
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      print('ERROR: getUserFollowing failed: $e');
+      throw ServerException('Failed to get user following: $e');
+    }
+  }
+
+  /// DEPRECATED: Get followers with profiles (old endpoint)
+  /// Use getUserFollowers instead
+  static Future<FollowListResponse> getUserFollowersWithProfiles({
     required String userId,
     int page = 0,
     int size = 20,
@@ -218,8 +271,9 @@ class FollowRepository {
     }
   }
 
-  /// Get following of a specific user
-  static Future<FollowListResponse> getUserFollowing({
+  /// DEPRECATED: Get following with profiles (old endpoint)
+  /// Use getUserFollowing instead
+  static Future<FollowListResponse> getUserFollowingWithProfiles({
     required String userId,
     int page = 0,
     int size = 20,

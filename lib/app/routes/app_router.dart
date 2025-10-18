@@ -44,6 +44,7 @@ import 'package:journeyq/features/market_place/pages/market_chat.dart';
 import 'package:journeyq/features/market_place/pages/BookingHistoryPage.dart';
 import 'package:journeyq/features/market_place/pages/chat_details.dart';
 import 'package:journeyq/features/preference_page/index.dart';
+import 'package:journeyq/features/saved_plans/pages/saved_plans_page.dart';
 
 
 class AppRouter {
@@ -334,6 +335,20 @@ class AppRouter {
         ),
 
         TransitionGoRoute(
+          path: '/create-trip',
+          builder: (context, state) =>
+              AppWrapper(currentRoute: '/create', child: CreateTripPage()),
+          transitionType: PageTransitionType.none,
+        ),
+
+        TransitionGoRoute(
+          path: '/saved-plans',
+          builder: (context, state) =>
+              AppWrapper(currentRoute: '/saved-plans', child: const SavedPlansPage()),
+          transitionType: PageTransitionType.none,
+        ),
+
+        TransitionGoRoute(
           path: '/join_trip',
           builder: (context, state) =>
               AppWrapper(currentRoute: '/join_trip', child: JoinTripPage()),
@@ -396,13 +411,20 @@ class AppRouter {
           builder: (context, state) {
             final extra = state.extra as Map<String, dynamic>?;
 
+            // Debug: Log what extra data was received
+            print('🔍 AppRouter: Received extra data: $extra');
+
             if (extra == null) {
+              print('🔍 AppRouter: No extra data, redirecting to profile');
               // Fallback to profile if no data provided
               return AppWrapper(currentRoute: '/profile', child: ProfilePage());
             }
 
             final initialTab = extra['initialTab'] as String? ?? 'followers';
             final userData = extra['userData'] as Map<String, dynamic>? ?? {};
+
+            print('🔍 AppRouter: Extracted initialTab: $initialTab');
+            print('🔍 AppRouter: Extracted userData has ${userData.keys.length} keys');
 
             return FollowersFollowingPage(
               initialTab: initialTab,

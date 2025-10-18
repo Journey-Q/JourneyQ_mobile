@@ -1,11 +1,13 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 import 'package:journeyq/core/services/api_service.dart';
+import 'package:journeyq/core/services/notification_service.dart';
 import 'package:journeyq/features/notification/models/notification_model.dart';
 import 'package:journeyq/data/repositories/follow_repository/follow_repository.dart';
 
 class NotificationRepository {
   final FirebaseDatabase _database = FirebaseDatabase.instance;
+  final Set<String> _displayedNotifications = {}; // Track shown notifications
 
   /// Listen to notifications for a specific user
   Stream<List<NotificationModel>> listenToNotifications(String userId) {
@@ -22,7 +24,14 @@ class NotificationRepository {
           try {
             final notificationData = Map<String, dynamic>.from(value as Map);
             notificationData['id'] = key; // Add Firebase key as ID
-            notifications.add(NotificationModel.fromJson(notificationData));
+            final notification = NotificationModel.fromJson(notificationData);
+            notifications.add(notification);
+
+            // Show in-app notification for new unread notifications
+            if (!notification.isRead && !_displayedNotifications.contains(key)) {
+              _displayedNotifications.add(key);
+              _showInAppNotification(notification);
+            }
           } catch (e) {
             if (kDebugMode) {
               print('Error parsing notification: $e');
@@ -41,6 +50,29 @@ class NotificationRepository {
       }
       return <NotificationModel>[];
     });
+  }
+
+  /// Show in-app notification using NotificationService
+  void _showInAppNotification(NotificationModel notification) {
+    try {
+      final title = notification.senderName ?? 'New Notification';
+      final body = notification.message;
+
+      if (kDebugMode) {
+        print('📱 Showing in-app notification: $title - $body');
+      }
+
+      // Use NotificationService to show the notification
+      NotificationService.showNotification(
+        title: title,
+        body: body,
+        payload: notification.id,
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error showing in-app notification: $e');
+      }
+    }
   }
 
   /// Get unread notification count
@@ -82,22 +114,44 @@ class NotificationRepository {
     }
   }
 
-  /// Delete a notification (via backend API)
+  /// Delete a notification from Firebase database
   Future<bool> deleteNotification(String userId, String notificationId) async {
     try {
-      final response = await ApiService.delete('/notifications/$userId/$notificationId');
+      // Delete from Firebase Realtime Database
+      await _database
+          .ref('notifications/$userId/$notificationId')
+          .remove();
 
-      if (response.statusCode == 200) {
-        if (kDebugMode) {
-          print('Notification deleted');
-        }
-        return true;
+      // Decrement unread count if notification was unread
+      final countRef = _database.ref('notification_counts/$userId/unread_count');
+      await countRef.runTransaction((currentValue) {
+        if (currentValue == null) return Transaction.success(0);
+
+        final current = currentValue as int;
+        return Transaction.success(current > 0 ? current - 1 : 0);
+      });
+
+      // Remove from displayed notifications set
+      _displayedNotifications.remove(notificationId);
+
+      if (kDebugMode) {
+        print('✅ Notification deleted from Firebase: $notificationId');
       }
 
-      return false;
+      // Also try to delete from backend API (optional, may not exist)
+      try {
+        await ApiService.delete('/notifications/$userId/$notificationId');
+      } catch (e) {
+        // Ignore backend errors, Firebase deletion is primary
+        if (kDebugMode) {
+          print('⚠️ Backend notification delete skipped: $e');
+        }
+      }
+
+      return true;
     } catch (e) {
       if (kDebugMode) {
-        print('Error deleting notification: $e');
+        print('❌ Error deleting notification from Firebase: $e');
       }
       return false;
     }
