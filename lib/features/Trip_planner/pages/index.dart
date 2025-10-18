@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:journeyq/features/Trip_planner/data.dart';
+import 'package:go_router/go_router.dart';
 import 'package:journeyq/features/Trip_planner/pages/planpage.dart';
 import 'package:journeyq/core/services/gemini_ai_service.dart';
 import 'package:journeyq/core/config/gemini_config.dart';
@@ -759,25 +759,17 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
 
       // Check if Gemini API is configured
       if (!GeminiConfig.isConfigured) {
-        print('⚠️ Gemini API key not configured, using sample data');
+        print('⚠️ Gemini API key not configured');
         setState(() => _isLoading = false);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('AI generation requires API key configuration. Using sample itinerary.'),
-              backgroundColor: Colors.orange,
+              content: const Text('AI generation requires API key configuration. Please configure your Gemini API key.'),
+              backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-          );
-
-          // Navigate with sample data
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  TripPlanViewPage(tripData: TripPlannerData.sampleItinerary),
+              duration: const Duration(seconds: 5),
             ),
           );
         }
@@ -811,25 +803,18 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
           );
         }
       } else {
-        print('❌ Failed to generate AI itinerary, using sample data');
+        print('❌ Failed to generate AI itinerary');
+        setState(() => _isLoading = false);
 
-        // Show error and fallback to sample data
+        // Show error message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('AI generation failed. Using sample itinerary.'),
-              backgroundColor: Colors.orange,
+              content: const Text('AI generation failed. Please check your inputs and try again.'),
+              backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-          );
-
-          // Navigate with sample data as fallback
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  TripPlanViewPage(tripData: TripPlannerData.sampleItinerary),
+              duration: const Duration(seconds: 5),
             ),
           );
         }
@@ -867,6 +852,14 @@ class _TripPlannerPageState extends State<TripPlannerPage> {
           ),
         ),
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.bookmark_outline),
+            onPressed: () => context.push('/saved-plans'),
+            tooltip: 'Saved Plans',
+            color: const Color(0xFF0088cc),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),

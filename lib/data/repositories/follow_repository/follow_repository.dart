@@ -445,23 +445,57 @@ class FollowRepository {
     }
   }
 
+  /// Check if current user has a pending follow request to a specific user
+  static Future<bool> isPending(String userId) async {
+    try {
+      final response = await ApiService.get('/follow/is_pending/$userId');
+      final isPending = response.data['isPending'] ?? false;
+
+      // Cache the status if pending
+      if (isPending) {
+        await _cacheFollowAction(userId, 'pending');
+      }
+
+      return isPending;
+    } on AppException {
+      // If API fails, check cache as fallback
+      final cachedStatus = await _getCachedFollowStatus(userId);
+      return cachedStatus == 'pending';
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error checking pending status: $e');
+      }
+      return false;
+    }
+  }
+
   /// Get follow status between current user and another user
   static Future<String?> getFollowStatus(String userId) async {
     try {
-      // First check cache
-      final cachedStatus = await _getCachedFollowStatus(userId);
-      if (cachedStatus != null) {
-        return cachedStatus;
+      // Check if following
+      final isFollowingUser = await isFollowing(userId);
+      if (isFollowingUser) {
+        await _cacheFollowAction(userId, 'accepted');
+        return 'accepted';
       }
 
-      // For now, we'll rely on the cache and return null if not cached
-      // The UI will use the initial status from API responses
-      return null;
+      // Check if pending
+      final isPendingUser = await isPending(userId);
+      if (isPendingUser) {
+        await _cacheFollowAction(userId, 'pending');
+        return 'pending';
+      }
+
+      // Not following and not pending
+      await _removeCachedFollowAction(userId);
+      return 'none';
     } catch (e) {
       if (kDebugMode) {
         print('Error getting follow status: $e');
       }
-      return null;
+      // Try cache as fallback
+      final cachedStatus = await _getCachedFollowStatus(userId);
+      return cachedStatus ?? 'none';
     }
   }
 
