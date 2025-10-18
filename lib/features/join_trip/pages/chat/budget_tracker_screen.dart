@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:journeyq/features/join_trip/pages/data.dart';
+import 'package:journeyq/data/repositories/joint_trip_repository/joint_trip_budget.dart';
 
 class BudgetTrackerScreen extends StatefulWidget {
   final String groupId;
@@ -20,6 +20,9 @@ class BudgetTrackerScreen extends StatefulWidget {
 class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
   Map<String, Map<String, double>> memberExpenses = {};
   Map<String, bool> expandedMembers = {};
+  int? budgetGroupId; // Store the budget group ID from backend
+  bool isLoading = true;
+  String? errorMessage;
 
   @override
   void initState() {
@@ -27,23 +30,111 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
     _initializeBudgetData();
   }
 
-  void _initializeBudgetData() {
-    final groupBudgetData = SampleData.getGroupBudgetData(widget.groupId);
-    
-    for (var member in widget.members) {
-      String memberId = member['id'];
-      
-      if (groupBudgetData != null && groupBudgetData[memberId] != null) {
-        memberExpenses[memberId] = Map<String, double>.from(groupBudgetData[memberId]!);
-      } else {
+  Future<void> _initializeBudgetData() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      // Parse groupId to int
+      final groupIdInt = int.tryParse(widget.groupId);
+      if (groupIdInt == null) {
+        throw Exception('Invalid group ID');
+      }
+
+      // Try to fetch existing budget from backend
+      final budgetData = await JointTripBudgetRepository.getBudgetByGroupId(groupIdInt);
+
+      // Budget exists, load data from backend
+      budgetGroupId = budgetData['budgetGroupId'] as int?;
+      final members = budgetData['members'] as List<dynamic>? ?? [];
+
+      // Populate member expenses from backend data
+      for (var memberData in members) {
+        final userId = memberData['userId'].toString();
+        memberExpenses[userId] = {
+          'travel': (memberData['travelExpense'] as num?)?.toDouble() ?? 0.0,
+          'food': (memberData['foodExpense'] as num?)?.toDouble() ?? 0.0,
+          'hotel': (memberData['hotelExpense'] as num?)?.toDouble() ?? 0.0,
+          'other': (memberData['otherExpense'] as num?)?.toDouble() ?? 0.0,
+        };
+        expandedMembers[userId] = false;
+      }
+
+      // Initialize any members not in backend data
+      for (var member in widget.members) {
+        String memberId = member['id'];
+        if (!memberExpenses.containsKey(memberId)) {
+          memberExpenses[memberId] = {
+            'travel': 0.0,
+            'food': 0.0,
+            'hotel': 0.0,
+            'other': 0.0,
+          };
+          expandedMembers[memberId] = false;
+        }
+      }
+
+      setState(() {
+        isLoading = false;
+      });
+    } catch (e) {
+      // Budget doesn't exist yet, create it
+      print('Budget not found, creating new budget: $e');
+      await _createBudget();
+    }
+  }
+
+  Future<void> _createBudget() async {
+    try {
+      final groupIdInt = int.tryParse(widget.groupId);
+      if (groupIdInt == null) {
+        throw Exception('Invalid group ID');
+      }
+
+      // Prepare members data
+      final membersData = widget.members.map((member) {
+        return {
+          'userId': int.tryParse(member['id'].toString()) ?? 0,
+          'memberName': member['name'] ?? 'Unknown',
+          'memberAvatar': member['avatar'] ?? '',
+          'travelExpense': 0.0,
+          'foodExpense': 0.0,
+          'hotelExpense': 0.0,
+          'otherExpense': 0.0,
+        };
+      }).toList();
+
+      // Create budget in backend
+      final budgetData = await JointTripBudgetRepository.createBudget(
+        groupId: groupIdInt,
+        groupName: widget.groupName,
+        members: membersData,
+      );
+
+      budgetGroupId = budgetData['budgetGroupId'] as int?;
+
+      // Initialize local state
+      for (var member in widget.members) {
+        String memberId = member['id'];
         memberExpenses[memberId] = {
           'travel': 0.0,
           'food': 0.0,
           'hotel': 0.0,
           'other': 0.0,
         };
+        expandedMembers[memberId] = false;
       }
-      expandedMembers[memberId] = false;
+
+      setState(() {
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Failed to create budget: ${e.toString()}';
+      });
     }
   }
 
@@ -141,8 +232,6 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final settlements = _calculateSettlements();
-    
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -174,7 +263,70 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
           ],
         ),
       ),
-      body: Column(
+      body: isLoading
+          ? const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFF0088cc),
+              ),
+            )
+          : errorMessage != null
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: Color(0xFFE57373),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Error',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          errorMessage!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: _initializeBudgetData,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0088cc),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 16,
+                            ),
+                          ),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : _buildBudgetContent(),
+    );
+  }
+
+  Widget _buildBudgetContent() {
+    final settlements = _calculateSettlements();
+
+    return Column(
         children: [
           // Summary Card
           Container(
@@ -456,8 +608,7 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 
   String _getExpenseBreakdownText(String memberId) {
@@ -541,7 +692,7 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
 
   void _editExpense(String memberId, String category, String categoryName, double currentAmount) {
     final controller = TextEditingController(text: currentAmount.toStringAsFixed(0));
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -585,24 +736,83 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               final newAmount = double.tryParse(controller.text);
               if (newAmount != null && newAmount >= 0) {
-                setState(() {
-                  memberExpenses[memberId]![category] = newAmount;
-                });
-                SampleData.updateMemberExpense(widget.groupId, memberId, category, newAmount);
+                // Show loading indicator
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('$categoryName expense updated!'),
-                    backgroundColor: const Color(0xFF4CAF50),
+                    content: Row(
+                      children: [
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Text('Updating $categoryName expense...'),
+                      ],
+                    ),
+                    backgroundColor: const Color(0xFF0088cc),
                     behavior: SnackBarBehavior.floating,
+                    duration: const Duration(seconds: 2),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 );
+
+                try {
+                  // Update in backend
+                  if (budgetGroupId != null) {
+                    final userIdInt = int.tryParse(memberId);
+                    if (userIdInt != null) {
+                      await JointTripBudgetRepository.updateMemberExpense(
+                        budgetGroupId: budgetGroupId!,
+                        userId: userIdInt,
+                        category: category,
+                        amount: newAmount,
+                      );
+                    }
+                  }
+
+                  // Update local state
+                  setState(() {
+                    memberExpenses[memberId]![category] = newAmount;
+                  });
+
+                  // Show success message
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('$categoryName expense updated successfully!'),
+                        backgroundColor: const Color(0xFF4CAF50),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  // Show error message
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to update expense: ${e.toString()}'),
+                        backgroundColor: const Color(0xFFE57373),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    );
+                  }
+                }
               }
             },
             style: ElevatedButton.styleFrom(
