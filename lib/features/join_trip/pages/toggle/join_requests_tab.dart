@@ -4,7 +4,9 @@ import 'package:journeyq/features/join_trip/pages/common/trip_details_widget.dar
 import 'package:journeyq/app/themes/theme.dart';
 
 class JoinRequestsTab extends StatefulWidget {
-  const JoinRequestsTab({super.key});
+  final VoidCallback? onRequestAccepted;
+
+  const JoinRequestsTab({super.key, this.onRequestAccepted});
 
   @override
   State<JoinRequestsTab> createState() => _JoinRequestsTabState();
@@ -531,23 +533,30 @@ class _JoinRequestsTabState extends State<JoinRequestsTab> {
 
   void _acceptRequest(int requestId) async {
     try {
+      print('✅ Accepting request $requestId...');
       await TripRequestRepository.acceptRequest(requestId);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Request accepted!'),
+            content: Text('Request accepted! Welcome to the trip!'),
             backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
           ),
         );
         _loadRequests(); // Reload to update UI
+
+        // Call the callback to refresh Trip Groups tab
+        widget.onRequestAccepted?.call();
       }
     } catch (e) {
+      print('❌ Error accepting request: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to accept request: $e'),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }

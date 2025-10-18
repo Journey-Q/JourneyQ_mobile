@@ -654,25 +654,29 @@ class CreatedTripsTabState extends State<CreatedTripsTab>
                 onPressed: selectedFollowers.isEmpty
                     ? null
                     : () async {
-                        Navigator.pop(dialogContext); // Close selection dialog
+                        // Close selection dialog first
+                        Navigator.of(dialogContext).pop();
 
-                        // Show loading with context reference
-                        final scaffoldContext = context;
-                        bool isLoadingDialogOpen = true;
-                        
+                        // Get the root context before showing dialog
+                        final rootContext = this.context;
+
+                        // Show loading dialog
                         showDialog(
-                          context: scaffoldContext,
+                          context: rootContext,
                           barrierDismissible: false,
-                          builder: (loadingContext) => const Center(
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0088cc)),
+                          builder: (loadingContext) => WillPopScope(
+                            onWillPop: () async => false,
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0088cc)),
+                              ),
                             ),
                           ),
                         );
 
                         try {
                           print('Starting trip request send process...');
-                          
+
                           // Convert string IDs to integers
                           final List<int> receiverIds = selectedFollowers
                               .map((id) => int.tryParse(id) ?? 0)
@@ -683,7 +687,7 @@ class CreatedTripsTabState extends State<CreatedTripsTab>
 
                           // Get trip ID
                           final tripId = int.tryParse(trip['id']?.toString() ?? '');
-                          
+
                           if (tripId == null || tripId == 0) {
                             throw Exception('Invalid trip ID: ${trip['id']}');
                           }
@@ -695,7 +699,7 @@ class CreatedTripsTabState extends State<CreatedTripsTab>
                           print('Group ID: $groupId');
 
                           // Send trip requests via API with timeout
-                          final result = await TripRequestRepository.sendTripRequests(
+                          await TripRequestRepository.sendTripRequests(
                             tripId: tripId,
                             groupId: groupId,
                             receiverIds: receiverIds,
@@ -704,35 +708,33 @@ class CreatedTripsTabState extends State<CreatedTripsTab>
                             onTimeout: () => throw Exception('Request timeout - please try again'),
                           );
 
-                          print('Trip request sent successfully: $result');
+                          print('✅ Trip request sent successfully');
 
-                          // Close loading dialog
-                          if (mounted && isLoadingDialogOpen) {
-                            Navigator.of(scaffoldContext).pop();
-                            isLoadingDialogOpen = false;
+                          // Close loading dialog using root navigator
+                          if (mounted) {
+                            Navigator.of(rootContext, rootNavigator: true).pop();
                           }
 
                           // Show success message
                           if (mounted) {
-                            ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                            ScaffoldMessenger.of(rootContext).showSnackBar(
                               SnackBar(
                                 content: Text(
                                   'Trip request sent to ${selectedFollowers.length} follower(s)!',
                                 ),
                                 backgroundColor: Colors.green,
                                 behavior: SnackBarBehavior.floating,
-                                duration: const Duration(seconds: 3),
+                                duration: const Duration(seconds: 2),
                               ),
                             );
                           }
                         } catch (e) {
-                          print('Error sending trip request: $e');
-                          
+                          print('❌ Error sending trip request: $e');
+
                           // Close loading dialog if still open
-                          if (mounted && isLoadingDialogOpen) {
+                          if (mounted) {
                             try {
-                              Navigator.of(scaffoldContext).pop();
-                              isLoadingDialogOpen = false;
+                              Navigator.of(rootContext, rootNavigator: true).pop();
                             } catch (navError) {
                               print('Error closing loading dialog: $navError');
                             }
@@ -740,12 +742,12 @@ class CreatedTripsTabState extends State<CreatedTripsTab>
 
                           // Show error message
                           if (mounted) {
-                            ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                            ScaffoldMessenger.of(rootContext).showSnackBar(
                               SnackBar(
                                 content: Text('Failed to send trip requests: ${e.toString()}'),
                                 backgroundColor: Colors.red,
                                 behavior: SnackBarBehavior.floating,
-                                duration: const Duration(seconds: 5),
+                                duration: const Duration(seconds: 4),
                               ),
                             );
                           }

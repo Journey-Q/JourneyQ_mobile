@@ -182,10 +182,6 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
           groupId: groupId,
           groupName: groupName,
           groupImage: userImage,
-          description: description,
-          members: members,
-          isCreator: isCreator,
-          createdDate: createdDate,
         ),
       ),
     );

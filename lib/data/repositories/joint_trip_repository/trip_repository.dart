@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:journeyq/core/services/api_service.dart';
 import 'package:journeyq/core/errors/exception.dart';
+import 'package:journeyq/data/repositories/jointTrip_chat/jointTrip_group.dart';
+import 'package:journeyq/core/storage/localstorage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TripRepository {
   // CRITICAL FIX: Add request deduplication
@@ -32,7 +35,40 @@ class TripRepository {
       print('Backend response: ${response.data}');
 
       if (response.data != null && response.data['success'] == true) {
-        return response.data['data'] ?? {};
+        final tripData = response.data['data'] ?? {};
+
+        // Create Firebase group for the trip
+        try {
+          final tripId = tripData['tripId'] as int?;
+          if (tripId != null) {
+            print('Creating Firebase group for trip $tripId...');
+
+            // Get current user from local storage
+            final prefs = await SharedPreferences.getInstance();
+            final localStorage = LocalStorage(prefs: prefs);
+            final currentUser = await localStorage.getUser();
+
+            if (currentUser != null && currentUser.userId != null) {
+              await JointTripGroupRepository.createGroup(
+                tripId: tripId,
+                groupName: formData['title']?.toString() ?? 'Trip Group',
+                creatorId: currentUser.userId!,
+                creatorName: currentUser.username,
+                creatorAvatar: currentUser.profileUrl ?? '',
+                groupProfile: null,
+              );
+
+              print('✅ Firebase group created successfully for trip $tripId');
+            } else {
+              print('⚠️ Warning: User not found in local storage, skipping Firebase group creation');
+            }
+          }
+        } catch (e) {
+          print('⚠️ Warning: Failed to create Firebase group: $e');
+          // Don't fail the trip creation if Firebase group creation fails
+        }
+
+        return tripData;
       } else {
         final errorMessage = response.data?['message'] ?? 'Unknown error occurred';
         throw Exception('Backend error: $errorMessage');

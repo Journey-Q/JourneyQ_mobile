@@ -342,23 +342,27 @@ class JointTripGroupRepository {
         await _firebaseConfig.initialize();
       }
 
-      final snapshot = await _groupsRef
-          .orderByChild('creatorId')
-          .equalTo(userId)
-          .get();
+      // Fetch all groups and filter client-side (no index required)
+      final snapshot = await _groupsRef.get();
 
       if (!snapshot.exists || snapshot.value == null) {
-        print('⚠️ No created groups found for user $userId');
+        print('⚠️ No groups found');
         return [];
       }
 
-      final groupsMap = Map<String, dynamic>.from(snapshot.value as Map);
-      final groupsList = groupsMap.values
-          .map((group) => Map<String, dynamic>.from(group as Map))
-          .toList();
+      final allGroups = Map<String, dynamic>.from(snapshot.value as Map);
+      final createdGroups = <Map<String, dynamic>>[];
 
-      print('✅ Found ${groupsList.length} created groups for user $userId');
-      return groupsList;
+      // Filter groups where user is the creator
+      allGroups.forEach((groupId, groupData) {
+        final group = Map<String, dynamic>.from(groupData as Map);
+        if (group['creatorId'] == userId) {
+          createdGroups.add(group);
+        }
+      });
+
+      print('✅ Found ${createdGroups.length} created groups for user $userId');
+      return createdGroups;
     } catch (e) {
       print('❌ Error getting created groups: $e');
       throw Exception('Failed to get created groups: $e');

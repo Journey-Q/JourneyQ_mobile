@@ -66,12 +66,14 @@ class _BudgetTrackerScreenState extends State<BudgetTrackerScreen> {
   Map<String, double> _calculateSettlements() {
     final averageExpense = _getAverageExpensePerMember();
     Map<String, double> settlements = {};
-    
+
     for (var member in widget.members) {
       final totalExpense = _getTotalExpenseForMember(member['id']);
-      settlements[member['id']] = averageExpense - totalExpense;
+      // Positive = should receive (spent more than average)
+      // Negative = owes (spent less than average)
+      settlements[member['id']] = totalExpense - averageExpense;
     }
-    
+
     return settlements;
   }
 
