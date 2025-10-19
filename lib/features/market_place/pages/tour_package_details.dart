@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:journeyq/features/market_place/pages/data.dart'; // Import centralized data
+import 'package:journeyq/data/repositories/marketplace_repository/tour_package_repository.dart';
 
 class TourPackageDetailsPage extends StatefulWidget {
   final String packageId;
@@ -15,7 +15,7 @@ class TourPackageDetailsPage extends StatefulWidget {
 }
 
 class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
-  late Map<String, dynamic> packageData;
+  TourPackage? packageData;
   late PageController _pageController;
   int _currentPhotoIndex = 0;
   bool isLoading = true;
@@ -34,22 +34,23 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
     super.dispose();
   }
 
-  void _loadPackageData() {
+  Future<void> _loadPackageData() async {
     try {
-      // Get package data by ID
-      final package = MarketplaceData.getTourPackageById(widget.packageId);
-      if (package != null) {
+      print('🗺️ Loading tour package details for ID: ${widget.packageId}');
+      setState(() {
+        isLoading = true;
+        hasError = false;
+      });
+
+      final package = await TourPackageRepository.getTourPackageById(widget.packageId);
+
+      setState(() {
         packageData = package;
-        setState(() {
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          hasError = true;
-          isLoading = false;
-        });
-      }
+        isLoading = false;
+      });
+
     } catch (e) {
+      print('❌ Error loading tour package details: $e');
       setState(() {
         hasError = true;
         isLoading = false;
@@ -61,64 +62,24 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
     context.push('/marketplace/tour_packages/reviews/${widget.packageId}');
   }
 
-  // Comprehensive tour packages database with all details (including review stats)
-
-
-
-
   void _bookPackage() {
-    context.push('/marketplace/book_package/${widget.packageId}');
-  }
+    if (packageData != null) {
+      // Option 1: Using GoRouter with extra data
+      context.push(
+        '/marketplace/book_package/${widget.packageId}',
+        extra: packageData,
+      );
 
-  Widget _buildRatingBar(int starCount, int reviewCount, int totalReviews) {
-    double percentage = totalReviews > 0 ? reviewCount / totalReviews : 0;
-
-    return Row(
-      children: [
-        Text(
-          '$starCount',
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(width: 4),
-        const Icon(
-          Icons.star,
-          size: 16,
-          color: Colors.orange,
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Container(
-            height: 8,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              widthFactor: percentage,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.orange,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          '$reviewCount',
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey.shade600,
-          ),
-        ),
-      ],
-    );
+      // Option 2: Using direct navigation (uncomment if you prefer this approach)
+      // Navigator.of(context).push(
+      //   MaterialPageRoute(
+      //     builder: (context) => BookPackagePage(
+      //       packageId: widget.packageId,
+      //       tourPackage: packageData,
+      //     ),
+      //   ),
+      // );
+    }
   }
 
   Widget _buildHighlightChip(String highlight) {
@@ -166,50 +127,75 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
     );
   }
 
-  Widget _buildItineraryItem(Map<String, String> item) {
+  Widget _buildItineraryItem(Map<String, dynamic> item) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 60,
-            height: 60,
+            width: 80,
+            height: 80,
             decoration: BoxDecoration(
               color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.blue.shade300, width: 2),
             ),
             child: Center(
-              child: Text(
-                item['day']?.split(' ')[1] ?? '1',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue.shade700,
-                ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.schedule,
+                    size: 20,
+                    color: Colors.blue.shade700,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    item['time']?.toString() ?? '',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.blue.shade600,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ),
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item['title'] ?? '',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item['title']?.toString() ?? item['activity']?.toString() ?? 'Activity',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  item['description'] ?? '',
-                  style: const TextStyle(fontSize: 14, color: Colors.grey),
-                ),
-              ],
+                  if (item['description'] != null && item['description'].toString().isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      item['description'].toString(),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
         ],
@@ -217,17 +203,21 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
     );
   }
 
-  Widget _buildPastTourPhoto(Map<String, String> photo) {
+  Widget _buildPastTourPhoto(String imageUrl, String caption) {
     return Container(
       margin: const EdgeInsets.only(right: 16),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: Container(
+          width: 200,
+          height: 150,
           color: Colors.grey.shade300,
-          child: Image.asset(
-            photo['image'] ?? '',
+          child: imageUrl.isNotEmpty
+              ? Image.network(
+            imageUrl,
             fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
               return Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -237,16 +227,99 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                   ),
                 ),
                 child: const Center(
-                  child: Icon(
-                    Icons.photo_camera,
-                    size: 50,
-                    color: Colors.white,
-                  ),
+                  child: CircularProgressIndicator(color: Colors.white),
                 ),
               );
             },
-          ),
+            errorBuilder: (context, error, stackTrace) {
+              return _buildPhotoPlaceholder(caption);
+            },
+          )
+              : _buildPhotoPlaceholder(caption),
         ),
+      ),
+    );
+  }
+
+  Widget _buildPhotoPlaceholder(String caption) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue.shade100, Colors.blue.shade300],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.photo_camera,
+              size: 40,
+              color: Colors.white,
+            ),
+            if (caption.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  caption,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlaceholderImage() {
+    return Container(
+      width: double.infinity,
+      height: 300,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF0088cc),
+            const Color(0xFF0088cc).withOpacity(0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.tour,
+            size: 80,
+            color: Colors.white,
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              packageData?.name ?? 'Tour Package',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -264,11 +337,20 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
           ),
           title: const Text('Loading...'),
         ),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Loading tour package details...'),
+            ],
+          ),
+        ),
       );
     }
 
-    if (hasError) {
+    if (hasError || packageData == null) {
       return Scaffold(
         backgroundColor: Colors.grey[50],
         appBar: AppBar(
@@ -305,680 +387,637 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
       );
     }
 
+    final package = packageData!;
+
+    // Calculate discount percentage if applicable
+    double? discountPercentage;
+    if (package.originalPrice != null && package.finalPrice != null && package.originalPrice! > 0) {
+      discountPercentage = ((package.originalPrice! - package.finalPrice!) / package.originalPrice! * 100);
+    }
+
+    // Get effective price for display
+    double effectivePrice = package.finalPrice ?? package.originalPrice ?? package.pricePerPerson ?? 0.0;
+    String priceText = effectivePrice > 0 ? 'LKR ${effectivePrice.toStringAsFixed(2)}' : 'Contact for Price';
+
     return Scaffold(
-        backgroundColor: Colors.grey[50],
-        body: CustomScrollView(
+      backgroundColor: Colors.grey[50],
+      body: CustomScrollView(
         slivers: [
-        // App Bar with Package Image
-        SliverAppBar(
-        expandedHeight: 300,
-        pinned: true,
-        backgroundColor: const Color(0xFF0088cc),
-    leading: IconButton(
-    onPressed: () {
-    context.pop();
-    },
-    icon: const Icon(Icons.arrow_back, color: Colors.white),
-    ),
-    flexibleSpace: FlexibleSpaceBar(
-    background: Stack(
-    fit: StackFit.expand,
-    children: [
-    Image.asset(
-    packageData['image'] ?? '',
-    fit: BoxFit.cover,
-    errorBuilder: (context, error, stackTrace) {
-    return Container(
-    decoration: BoxDecoration(
-    gradient: LinearGradient(
-    colors: [
-    packageData['backgroundColor'],
-    packageData['backgroundColor'].withOpacity(0.8),
-    ],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    ),
-    ),
-    child: Center(
-    child: Icon(
-    packageData['icon'],
-    size: 80,
-    color: Colors.white,
-    ),
-    ),
-    );
-    },
-    ),
-    Container(
-    decoration: BoxDecoration(
-    gradient: LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [
-    Colors.transparent,
-    Colors.black.withOpacity(0.4),
-    ],
-    ),
-    ),
-    ),
-    // Duration Badge
-    Positioned(
-    top: 100,
-    right: 20,
-    child: Container(
-    padding: const EdgeInsets.symmetric(
-    horizontal: 12,
-    vertical: 6,
-    ),
-    decoration: BoxDecoration(
-    color: Colors.black54,
-    borderRadius: BorderRadius.circular(20),
-    ),
-    child: Text(
-    packageData['duration'] ?? '',
-    style: const TextStyle(
-    color: Colors.white,
-    fontSize: 14,
-    fontWeight: FontWeight.w600,
-    ),
-    ),
-    ),
-    ),
-    ],
-    ),
-    ),
-    ),
-
-    // Content
-    SliverToBoxAdapter(
-    child: Padding(
-    padding: const EdgeInsets.all(20),
-    child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-    // Package Header
-    Container(
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(16),
-    boxShadow: [
-    BoxShadow(
-    color: Colors.grey.withOpacity(0.1),
-    spreadRadius: 1,
-    blurRadius: 10,
-    offset: const Offset(0, 2),
-    ),
-    ],
-    ),
-    child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-    Text(
-      packageData['title'] ?? 'Tour Package',
-      style: const TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-        color: Colors.black87,
-      ),
-    ),
-      const SizedBox(height: 8),
-      Text(
-        packageData['subtitle'] ?? '',
-        style: const TextStyle(
-          fontSize: 16,
-          color: Colors.grey,
-        ),
-      ),
-      const SizedBox(height: 16),
-
-      // Rating and Reviews
-      Row(
-        children: [
-          const Icon(
-            Icons.star,
-            color: Colors.amber,
-            size: 20,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            packageData['rating'].toString(),
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
+          // App Bar with Package Image
+          SliverAppBar(
+            expandedHeight: 300,
+            pinned: true,
+            backgroundColor: const Color(0xFF0088cc),
+            leading: IconButton(
+              onPressed: () => context.pop(),
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              background: package.imageUrl != null && package.imageUrl!.isNotEmpty
+                  ? Image.network(
+                package.imageUrl!,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return _buildPlaceholderImage();
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return _buildPlaceholderImage();
+                },
+              )
+                  : _buildPlaceholderImage(),
             ),
           ),
-          const SizedBox(width: 8),
-          Text(
-            '(${packageData['reviews']} reviews)',
-            style: const TextStyle(
-              color: Colors.grey,
-              fontSize: 14,
-            ),
-          )
 
-        ],
-      ),
-      const SizedBox(height: 16),
+          // Content
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Package Header
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          package.name,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        if (package.location.isNotEmpty)
+                          Row(
+                            children: [
+                              Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  package.location,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        const SizedBox(height: 16),
 
-      // Quick Info
-      Row(
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.group,
-                  size: 16,
-                  color: Colors.grey,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  packageData['groupSize'] ?? '2-15 people',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
-            ),
+                        // Rating
+                        if (package.rating != null)
+                          Row(
+                            children: [
+                              const Icon(Icons.star, color: Colors.amber, size: 20),
+                              const SizedBox(width: 4),
+                              Text(
+                                package.rating!.toStringAsFixed(1),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        const SizedBox(height: 16),
 
-          ),
-        ],
-      ),
-      const SizedBox(height: 16),
+                        // Quick Info
+                        Row(
+                          children: [
+                            if (package.duration != null) ...[
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.schedule, size: 16, color: Colors.grey),
+                                    const SizedBox(width: 4),
+                                    Flexible(
+                                      child: Text(
+                                        package.duration!,
+                                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            if (package.minPeople != null || package.maxPeople != null) ...[
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.group, size: 16, color: Colors.grey),
+                                    const SizedBox(width: 4),
+                                    Flexible(
+                                      child: Text(
+                                        '${package.minPeople ?? 1}-${package.maxPeople ?? 15} people',
+                                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 16),
 
-      // Price
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (packageData['originalPrice'] != null)
-                Text(
-                  packageData['originalPrice'],
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                    decoration: TextDecoration.lineThrough,
-                  ),
-                ),
-              Text(
-                packageData['price'] ?? 'Contact for Price',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              const Text(
-                'per person',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
-              ),
-            ],
-          ),
-          if (packageData['originalPrice'] != null)
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 6,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                'SAVE ${((double.parse(packageData['originalPrice'].replaceAll('LKR ', '').replaceAll(',', '')) - double.parse(packageData['price'].replaceAll('LKR ', '').replaceAll(',', ''))) / double.parse(packageData['originalPrice'].replaceAll('LKR ', '').replaceAll(',', '')) * 100).round()}%',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-        ],
-      ),
-    ],
-    ),
-    ),
-
-      const SizedBox(height: 20),
-
-      // Agency Information Card
-      Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Tour Agency',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.blue.shade200),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      packageData['agencyLogo'] ?? '',
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(
-                          Icons.business,
-                          size: 30,
-                          color: Colors.blue.shade600,
-                        );
-                      },
+                        // Price
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (package.originalPrice != null && discountPercentage != null && discountPercentage > 0)
+                                  Text(
+                                    'LKR ${package.originalPrice!.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey,
+                                      decoration: TextDecoration.lineThrough,
+                                    ),
+                                  ),
+                                Text(
+                                  priceText,
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                const Text(
+                                  'per person',
+                                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                            if (discountPercentage != null && discountPercentage > 0)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  'SAVE ${discountPercentage.round()}%',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        packageData['agency'] ?? 'Tour Agency',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+
+                  const SizedBox(height: 20),
+
+                  // Description
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.star,
-                            size: 16,
-                            color: Colors.amber,
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'About This Tour',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            packageData['agencyRating'].toString(),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          package.aboutTour,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black54,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Past Tour Photos Section
+                  if (package.photos.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Tour Photos',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Agency Rating',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            height: 160,
+                            child: PageView.builder(
+                              controller: _pageController,
+                              onPageChanged: (index) {
+                                setState(() {
+                                  _currentPhotoIndex = index;
+                                });
+                              },
+                              itemCount: package.photos.length,
+                              itemBuilder: (context, index) {
+                                return _buildPastTourPhoto(
+                                  package.photos[index],
+                                  package.name,
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(
+                              package.photos.length,
+                                  (index) => Container(
+                                width: 8,
+                                height: 8,
+                                margin: const EdgeInsets.symmetric(horizontal: 4),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: index == _currentPhotoIndex
+                                      ? const Color(0xFF0088cc)
+                                      : Colors.grey.shade300,
+                                ),
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Established ${packageData['agencyEstablished']} • ${packageData['agencyTours']}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
+                    ),
+
+                  if (package.photos.isNotEmpty) const SizedBox(height: 20),
+
+                  // Highlights
+                  if (package.highlights.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Tour Highlights',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: package.highlights.map((highlight) => _buildHighlightChip(highlight)).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  if (package.highlights.isNotEmpty) const SizedBox(height: 20),
+
+                  // What's Included
+                  if (package.includedItems.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'What\'s Included',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: package.includedItems.map((include) => _buildIncludeChip(include)).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  if (package.includedItems.isNotEmpty) const SizedBox(height: 20),
+
+                  // Itinerary
+                  if (package.itinerary.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Tour Itinerary',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Column(
+                            children: package.itinerary.map((item) => _buildItineraryItem(item)).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  if (package.itinerary.isNotEmpty) const SizedBox(height: 20),
+
+                  // Important Notes
+                  if (package.importantNotes.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.amber.shade200),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.info_outline, color: Colors.amber.shade700, size: 20),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Important Notes',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: package.importantNotes
+                                .map(
+                                  (note) => Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: Text(
+                                  '• $note',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    height: 1.5,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
+                            )
+                                .toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  if (package.importantNotes.isNotEmpty) const SizedBox(height: 32),
+
+                  // Customer Reviews Section
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-
-      const SizedBox(height: 20),
-
-      // Description
-      Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'About This Tour',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              packageData['description'] ?? 'Tour description',
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.black54,
-                height: 1.5,
-              ),
-            ),
-          ],
-        ),
-      ),
-
-      const SizedBox(height: 20),
-
-      // Past Tour Photos Section
-      Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Past Tour Photos',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 200,
-              child: PageView.builder(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentPhotoIndex = index;
-                  });
-                },
-                itemCount:
-                (packageData['pastTourPhotos'] as List).length,
-                itemBuilder: (context, index) {
-                  return _buildPastTourPhoto(
-                    (packageData['pastTourPhotos'] as List)[index],
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                (packageData['pastTourPhotos'] as List).length,
-                    (index) => Container(
-                  width: 8,
-                  height: 8,
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: index == _currentPhotoIndex
-                        ? const Color(0xFF0088cc)
-                        : Colors.grey.shade300,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-
-      const SizedBox(height: 20),
-
-      // Highlights
-      const Text(
-        'Tour Highlights',
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: Colors.black87,
-        ),
-      ),
-      const SizedBox(height: 16),
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: (packageData['highlights'] as List)
-            .map<Widget>(
-              (highlight) => _buildHighlightChip(highlight),
-        )
-            .toList(),
-      ),
-
-      const SizedBox(height: 20),
-
-      // What's Included
-      const Text(
-        'What\'s Included',
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: Colors.black87,
-        ),
-      ),
-      const SizedBox(height: 16),
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: (packageData['includes'] as List)
-            .map<Widget>((include) => _buildIncludeChip(include))
-            .toList(),
-      ),
-
-      const SizedBox(height: 20),
-
-      // Itinerary
-      const Text(
-        'Tour Itinerary',
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: Colors.black87,
-        ),
-      ),
-      const SizedBox(height: 12),
-      Column(
-        children: (packageData['itinerary'] as List)
-            .map<Widget>((item) => _buildItineraryItem(item))
-            .toList(),
-      ),
-
-      const SizedBox(height: 20),
-
-      // Important Notes
-      Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.amber.shade50,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.amber.shade200),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  color: Colors.amber.shade700,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Important Notes',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.amber.shade700,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              '• Please bring comfortable walking shoes\n'
-                  '• Carry sun protection and water\n'
-                  '• Respectful dress required for religious sites\n'
-                  '• Travel insurance recommended\n'
-                  '• Minimum 2 people required for tour confirmation',
-              style: TextStyle(
-                fontSize: 14,
-                height: 1.5,
-                color: Colors.black87,
-              ),
-            ),
-          ],
-        ),
-      ),
-
-      const SizedBox(height: 32),
-
-
-            const Text(
-              'Customer Reviews',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            Row(
-              children: [
-                // Left side - Overall rating
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      (packageData['rating'] ?? 4.0).toString(),
-                      style: const TextStyle(
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
+                      ],
                     ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: List.generate(5, (index) {
-                        double rating = packageData['rating'] ?? 4.0;
-                        if (index < rating.floor()) {
-                          return const Icon(Icons.star, color: Colors.orange, size: 20);
-                        } else if (index < rating) {
-                          return const Icon(Icons.star_half, color: Colors.orange, size: 20);
-                        } else {
-                          return Icon(Icons.star_border, color: Colors.grey.shade300, size: 20);
-                        }
-                      }),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${packageData['totalReviews'] ?? 0} reviews',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
-                ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Customer Reviews',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
 
-                const SizedBox(width: 32),
+                        Row(
+                          children: [
+                            // Left side - Overall rating
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  (package.rating ?? 0.0).toStringAsFixed(1),
+                                  style: const TextStyle(
+                                    fontSize: 48,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: List.generate(5, (index) {
+                                    double rating = package.rating ?? 0.0;
+                                    if (index < rating.floor()) {
+                                      return const Icon(Icons.star, color: Colors.orange, size: 20);
+                                    } else if (index < rating) {
+                                      return const Icon(Icons.star_half, color: Colors.orange, size: 20);
+                                    } else {
+                                      return Icon(Icons.star_border, color: Colors.grey.shade300, size: 20);
+                                    }
+                                  }),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  package.rating != null ? 'Based on reviews' : 'No rating yet',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
 
-                // Right side - Rating breakdown
-                Expanded(
-                  child: Column(
-                    children: [
-                      _buildRatingBar(5, packageData['reviewStats']['5'] ?? 0, packageData['totalReviews'] ?? 0),
-                      const SizedBox(height: 8),
-                      _buildRatingBar(4, packageData['reviewStats']['4'] ?? 0, packageData['totalReviews'] ?? 0),
-                      const SizedBox(height: 8),
-                      _buildRatingBar(3, packageData['reviewStats']['3'] ?? 0, packageData['totalReviews'] ?? 0),
-                      const SizedBox(height: 8),
-                      _buildRatingBar(2, packageData['reviewStats']['2'] ?? 0, packageData['totalReviews'] ?? 0),
-                      const SizedBox(height: 8),
-                      _buildRatingBar(1, packageData['reviewStats']['1'] ?? 0, packageData['totalReviews'] ?? 0),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+                            const SizedBox(width: 32),
 
-            const SizedBox(height: 20),
+                            // Right side - Rating info
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (package.rating != null && package.rating! > 0) ...[
+                                    Text(
+                                      'Rated ${package.rating!.toStringAsFixed(1)} out of 5',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    const Text(
+                                      'See what travelers loved',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ] else ...[
+                                    const Text(
+                                      'No reviews yet',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    const Text(
+                                      'Be the first to review this tour!',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
 
-// Read Reviews Button
-            GestureDetector(
-              onTap: _viewReviews,
-              child: Row(
-                children: [
-                  Text(
-                    'Read reviews',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.blue.shade600,
-                      fontWeight: FontWeight.w500,
+                        const SizedBox(height: 20),
+
+                        // Read Reviews Button
+                        GestureDetector(
+                          onTap: _viewReviews,
+                          child: Row(
+                            children: [
+                              Text(
+                                'Read reviews',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.blue.shade600,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                                color: Colors.blue.shade600,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: Colors.blue.shade600,
-                  ),
+
+                  const SizedBox(height: 80), // Space for bottom button
                 ],
               ),
             ),
-
-
-      const SizedBox(height: 80), // Space for bottom button
-    ],
-    ),
-    ),
-    ),
+          ),
         ],
-        ),
+      ),
 
       // Fixed Book Now Button
       bottomNavigationBar: Container(
@@ -1006,9 +1045,9 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (packageData['originalPrice'] != null)
+                      if (package.originalPrice != null && discountPercentage != null && discountPercentage > 0)
                         Text(
-                          packageData['originalPrice'],
+                          'LKR ${package.originalPrice!.toStringAsFixed(2)}',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[500],
@@ -1017,7 +1056,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                           ),
                         ),
                       Text(
-                        packageData['price'] ?? 'Contact for Price',
+                        priceText,
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -1025,11 +1064,11 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                           letterSpacing: -0.5,
                         ),
                       ),
-                      Text(
+                      const Text(
                         'per person',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey[600],
+                          color: Colors.grey,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -1041,15 +1080,17 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                   child: Container(
                     height: 52,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF0088cc), Color(0xFF0088cc)],
+                      gradient: LinearGradient(
+                        colors: package.isActive
+                            ? [const Color(0xFF0088cc), const Color(0xFF0088cc)]
+                            : [Colors.grey.shade400, Colors.grey.shade400],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: ElevatedButton(
-                      onPressed: _bookPackage,
+                      onPressed: package.isActive ? _bookPackage : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         foregroundColor: Colors.white,
@@ -1058,19 +1099,21 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 0,
+                        disabledBackgroundColor: Colors.transparent,
+                        disabledForegroundColor: Colors.white70,
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            Icons.calendar_today_rounded,
+                            package.isActive ? Icons.calendar_today_rounded : Icons.block,
                             size: 20,
                             color: Colors.white,
                           ),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Text(
-                            'Book Now',
-                            style: TextStyle(
+                            package.isActive ? 'Book Now' : 'Unavailable',
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,

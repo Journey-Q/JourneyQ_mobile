@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:journeyq/data/repositories/marketplace_repository/hotel_repository.dart';
+import 'package:journeyq/data/repositories/marketplace_repository/room_repository.dart';
 import 'booking_room.dart';
 
 class RoomDetailsPage extends StatefulWidget {
-  final Map<String, dynamic> hotel;
-  final Map<String, dynamic> room;
+  final String hotelId;
+  final String roomId;
 
   const RoomDetailsPage({
     Key? key,
-    required this.hotel,
-    required this.room,
+    required this.hotelId,
+    required this.roomId,
   }) : super(key: key);
 
   @override
@@ -17,33 +19,75 @@ class RoomDetailsPage extends StatefulWidget {
 }
 
 class _RoomDetailsPageState extends State<RoomDetailsPage> {
+  HotelProfile? hotelData;
+  Room? roomData;
+  bool isLoading = true;
+  bool hasError = false;
+  String errorMessage = '';
   int selectedImageIndex = 0;
 
-  // Sample room images - in a real app, these would come from the room data
+  // Room images - will be populated from room data
   List<String> roomImages = [];
 
   @override
   void initState() {
     super.initState();
-    // Initialize room images - in real app, get from room data
-    roomImages = [
-      widget.room['image'],
-      // Add more sample images for the gallery
-      'assets/images/room_deluxe.jpg',
-      'assets/images/room_suite.jpg',
-      'assets/images/room_presidential.jpg',
-    ];
+    _loadRoomData();
   }
 
-  String get roomStatus {
-    if (widget.room.containsKey('status') && widget.room['status'] != null) {
-      return widget.room['status'];
-    } else {
-      return (widget.room['available'] == true) ? 'available' : 'booked';
+  Future<void> _loadRoomData() async {
+    try {
+      print('🏨 Loading room details for ID: ${widget.roomId}');
+      print('🏨 Hotel ID: ${widget.hotelId}');
+
+      // Load hotel profile
+      final hotel = await HotelRepository.getHotelProfileById(widget.hotelId);
+
+      // Load room details
+      final room = await RoomRepository.getRoomById(widget.roomId);
+
+      // Initialize room images
+      final images = <String>[];
+      if (room.imageUrl != null && room.imageUrl!.isNotEmpty) {
+        images.add(room.imageUrl!);
+      }
+      // Add placeholder images for gallery
+      images.addAll([
+        'assets/images/room_deluxe.jpg',
+        'assets/images/room_suite.jpg',
+        'assets/images/room_presidential.jpg',
+      ]);
+
+      if (mounted) {
+        setState(() {
+          hotelData = hotel;
+          roomData = room;
+          roomImages = images;
+          isLoading = false;
+        });
+      }
+    } catch (e, stackTrace) {
+      print('❌ Error loading room details: $e');
+      print('Stack trace: $stackTrace');
+
+      if (mounted) {
+        setState(() {
+          hasError = true;
+          isLoading = false;
+          errorMessage = e.toString();
+        });
+      }
     }
   }
 
-  bool get isRoomAvailable => roomStatus == 'available';
+  String get roomStatus {
+    if (roomData != null) {
+      return roomData!.status.name.toLowerCase();
+    }
+    return 'available';
+  }
+
+  bool get isRoomAvailable => roomData?.status == RoomStatus.AVAILABLE;
 
   Color get statusColor {
     switch (roomStatus) {
@@ -51,7 +95,8 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
         return Colors.green;
       case 'maintenance':
         return Colors.orange;
-      case 'booked':
+      case 'occupied':
+      case 'reserved':
         return Colors.red;
       default:
         return Colors.green;
@@ -64,8 +109,10 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
         return 'Available';
       case 'maintenance':
         return 'Under Maintenance';
-      case 'booked':
-        return 'Currently Booked';
+      case 'occupied':
+        return 'Currently Occupied';
+      case 'reserved':
+        return 'Reserved';
       default:
         return 'Available';
     }
@@ -86,93 +133,145 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
+                child: roomImages.isNotEmpty
+                    ? Image.network(
                   roomImages[selectedImageIndex],
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
                     return Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            widget.room['backgroundColor'],
-                            widget.room['backgroundColor'].withOpacity(0.8),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                      color: Colors.grey.shade200,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                              : null,
+                          strokeWidth: 2,
+                          color: const Color(0xFF0088cc),
                         ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.bed,
-                        size: 80,
-                        color: Colors.white,
                       ),
                     );
                   },
-                ),
+                  errorBuilder: (context, error, stackTrace) {
+                    return _buildRoomPlaceholder();
+                  },
+                )
+                    : _buildRoomPlaceholder(),
               ),
             ),
           ),
           const SizedBox(height: 12),
           // Thumbnail Images
-          Expanded(
-            flex: 1,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: roomImages.length,
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedImageIndex = index;
-                    });
-                  },
-                  child: Container(
-                    width: 80,
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: selectedImageIndex == index
-                            ? const Color(0xFF0088cc)
-                            : Colors.grey.shade300,
-                        width: selectedImageIndex == index ? 2 : 1,
+          if (roomImages.length > 1)
+            Expanded(
+              flex: 1,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: roomImages.length,
+                itemBuilder: (context, index) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedImageIndex = index;
+                      });
+                    },
+                    child: Container(
+                      width: 80,
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: selectedImageIndex == index
+                              ? const Color(0xFF0088cc)
+                              : Colors.grey.shade300,
+                          width: selectedImageIndex == index ? 2 : 1,
+                        ),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          roomImages[index],
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              color: Colors.grey.shade200,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  value: loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                      : null,
+                                  strokeWidth: 1,
+                                  color: const Color(0xFF0088cc),
+                                ),
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: _getRoomColor().withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.bed,
+                                size: 30,
+                                color: Colors.white,
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.asset(
-                        roomImages[index],
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              color: widget.room['backgroundColor'].withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.bed,
-                              size: 30,
-                              color: Colors.white,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
         ],
       ),
     );
   }
 
+  Widget _buildRoomPlaceholder() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            _getRoomColor(),
+            _getRoomColor().withOpacity(0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Icon(
+        Icons.bed,
+        size: 80,
+        color: Colors.white,
+      ),
+    );
+  }
+
+  Color _getRoomColor() {
+    final colors = [
+      const Color(0xFF0088cc),
+      const Color(0xFF4CAF50),
+      const Color(0xFF9C27B0),
+      const Color(0xFFF44336),
+      const Color(0xFFFF9800),
+    ];
+    final colorIndex = roomData?.id.hashCode ?? 0 % colors.length;
+    return colors[colorIndex];
+  }
+
   Widget _buildRoomSpecs() {
-    int bedrooms = widget.room['bedrooms'] ?? 1;
-    int bathrooms = widget.room['bathrooms'] ?? 1;
-    int maxOccupancy = widget.room['maxOccupancy'] ?? _calculateMaxOccupancy(bedrooms);
+    final bedrooms = roomData?.bedrooms ?? 1;
+    final bathrooms = roomData?.bathrooms ?? 1;
+    final maxOccupancy = roomData?.capacity ?? _calculateMaxOccupancy(bedrooms);
+    final roomSize = roomData?.size != null ? '${roomData!.size} sqm' : 'Standard';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -224,7 +323,7 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      widget.room['size'],
+                      roomSize,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -255,7 +354,7 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      widget.room['bedType'],
+                      _getBedTypeFromAmenities(),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -394,20 +493,36 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
 
   // Helper method to calculate maximum occupancy based on room type and bedrooms
   int _calculateMaxOccupancy(int bedrooms) {
-    String roomType = widget.room['type'].toLowerCase();
+    if (roomData != null) {
+      return roomData!.capacity;
+    }
 
-    // Calculate based on room type and bedroom count
+    final roomType = roomData?.roomType.toLowerCase() ?? '';
     if (roomType.contains('presidential') || roomType.contains('suite')) {
-      return bedrooms * 3; // Suites can accommodate more people
+      return bedrooms * 3;
     } else if (roomType.contains('deluxe') || roomType.contains('executive')) {
-      return bedrooms * 2 + 1; // Deluxe rooms have extra capacity
+      return bedrooms * 2 + 1;
     } else {
-      return bedrooms * 2; // Standard rooms
+      return bedrooms * 2;
     }
   }
 
+  String _getBedTypeFromAmenities() {
+    if (roomData == null) return 'Standard Bed';
+
+    final amenities = roomData!.amenities;
+    for (final amenity in amenities) {
+      if (amenity.toLowerCase().contains('queen')) return 'Queen Bed';
+      if (amenity.toLowerCase().contains('king')) return 'King Bed';
+      if (amenity.toLowerCase().contains('single')) return 'Single Bed';
+      if (amenity.toLowerCase().contains('double')) return 'Double Bed';
+      if (amenity.toLowerCase().contains('twin')) return 'Twin Beds';
+    }
+    return 'Standard Bed';
+  }
+
   Widget _buildAmenitiesSection() {
-    final amenities = widget.room['amenities'] as List<dynamic>;
+    final amenities = roomData?.amenities ?? [];
 
     // Filter out meal plan options from amenities
     final filteredAmenities = amenities.where((amenity) =>
@@ -440,49 +555,57 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
             ),
           ),
           const SizedBox(height: 16),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: filteredAmenities.map<Widget>((amenity) {
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _getAmenityIcon(amenity),
-                      size: 16,
-                      color: Colors.grey.shade600,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      amenity,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade800,
-                        fontWeight: FontWeight.w600,
+          if (filteredAmenities.isNotEmpty)
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: filteredAmenities.map<Widget>((amenity) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _getAmenityIcon(amenity),
+                        size: 16,
+                        color: Colors.grey.shade600,
                       ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
+                      const SizedBox(width: 6),
+                      Text(
+                        amenity,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade800,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            )
+          else
+            Text(
+              'No amenities listed',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade500,
+              ),
+            ),
         ],
       ),
     );
   }
 
   IconData _getAmenityIcon(String amenity) {
-    // Simple mapping of amenities to icons
     switch (amenity.toLowerCase()) {
       case 'wifi':
       case 'free wifi':
@@ -570,7 +693,7 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                widget.room['price'],
+                roomData?.formattedPrice ?? '\$0.00/night',
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -604,12 +727,16 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
             height: 50,
             child: ElevatedButton(
               onPressed: isRoomAvailable ? () {
+                // Convert to maps for compatibility with BookingRoomPage
+                final hotelMap = hotelData?.toNavigationMap() ?? {};
+                final roomMap = roomData?.toNavigationMap() ?? {};
+
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => BookingRoomPage(
-                      hotel: widget.hotel,
-                      room: widget.room,
+                      hotel: hotelMap,
+                      room: roomMap,
                     ),
                   ),
                 );
@@ -639,6 +766,88 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          ),
+          title: const Text(
+            'Loading...',
+            style: TextStyle(
+              color: Colors.black87,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (hasError || roomData == null || hotelData == null) {
+      return Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          ),
+          title: const Text(
+            'Room Not Found',
+            style: TextStyle(
+              color: Colors.black87,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.grey,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Room not found',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Room ID: ${widget.roomId}',
+                style: const TextStyle(color: Colors.grey),
+              ),
+              if (errorMessage.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Error: $errorMessage',
+                  style: const TextStyle(color: Colors.red),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => context.pop(),
+                child: const Text('Back to Hotel'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -649,15 +858,13 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.black87),
         ),
         title: Text(
-          widget.room['type'],
+          roomData!.displayRoomType,
           style: const TextStyle(
             color: Colors.black87,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [], // Remove the IconButton by setting actions to an empty list
-
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -677,7 +884,7 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.room['type'],
+                        roomData!.displayRoomType,
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -686,7 +893,7 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${widget.hotel['name']} • ${widget.hotel['location']}',
+                        '${hotelData!.name} • ${hotelData!.location}',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade600,

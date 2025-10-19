@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:journeyq/features/market_place/pages/searchbar.dart';
-import 'package:journeyq/features/market_place/pages/data.dart'; // Import centralized data
+import 'package:journeyq/data/repositories/marketplace_repository/hotel_repository.dart';
 
 class ViewAllHotelsPage extends StatefulWidget {
   const ViewAllHotelsPage({Key? key}) : super(key: key);
@@ -14,18 +14,55 @@ class ViewAllHotelsPage extends StatefulWidget {
 }
 
 class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
-  // Comprehensive Hotels Data with IDs (matching hotel details database)
+  List<HotelProfile> allHotels = [];
+  bool isLoading = true;
+  String errorMessage = '';
 
+  @override
+  void initState() {
+    super.initState();
+    _loadAllHotels();
+  }
+
+  Future<void> _loadAllHotels() async {
+    try {
+      setState(() {
+        isLoading = true;
+        errorMessage = '';
+      });
+
+      print('🏨 Loading all hotels from database...');
+      final hotels = await HotelRepository.getAllHotelProfiles();
+
+      print('🏨 Successfully loaded ${hotels.length} hotels');
+
+      if (mounted) {
+        setState(() {
+          allHotels = hotels;
+          isLoading = false;
+        });
+      }
+    } catch (e, stackTrace) {
+      print('❌ Error loading hotels: $e');
+      print('Stack trace: $stackTrace');
+
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+          errorMessage = e.toString();
+        });
+      }
+    }
+  }
 
   void _navigateToHotelDetails(String hotelId) {
     context.push('/marketplace/hotels/details/$hotelId');
   }
 
-  Widget _buildHotelCard(Map<String, dynamic> hotel) {
+  Widget _buildHotelCard(HotelProfile hotel) {
     return GestureDetector(
       onTap: () {
-        // Navigate to hotel details using hotel ID
-        _navigateToHotelDetails(hotel['id']);
+        _navigateToHotelDetails(hotel.id);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
@@ -60,33 +97,7 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
                 ),
                 child: Stack(
                   children: [
-                    Image.asset(
-                      hotel['image'],
-                      width: double.infinity,
-                      height: 200,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: double.infinity,
-                          height: 200,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                hotel['backgroundColor'],
-                                hotel['backgroundColor'].withOpacity(0.8),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.hotel,
-                            size: 80,
-                            color: Colors.white,
-                          ),
-                        );
-                      },
-                    ),
+                    _buildHotelImage(hotel),
                     // Rating Badge
                     Positioned(
                       top: 12,
@@ -110,7 +121,7 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              hotel['rating'].toString(),
+                              '4.5', // Default rating since it's not in database
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
@@ -122,8 +133,8 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
                       ),
                     ),
 
-                    // Availability Status
-                    if (!hotel['isAvailable'])
+                    // Availability Status - using isActive instead of isAvailable
+                    if (!hotel.isActive)
                       Positioned(
                         bottom: 12,
                         left: 12,
@@ -160,7 +171,7 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
                     children: [
                       Expanded(
                         child: Text(
-                          hotel['name'],
+                          hotel.name,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -168,11 +179,10 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
                           ),
                         ),
                       ),
+                      // Approved Status Icon
                       Icon(
-                        hotel['isAvailable']
-                            ? Icons.check_circle
-                            : Icons.cancel,
-                        color: hotel['isAvailable'] ? Colors.green : Colors.red,
+                        hotel.isActive ? Icons.verified : Icons.pending,
+                        color: hotel.isActive ? Colors.green : Colors.orange,
                         size: 20,
                       ),
                     ],
@@ -188,7 +198,7 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          hotel['location'],
+                          hotel.location,
                           style: const TextStyle(
                             fontSize: 14,
                             color: Colors.grey,
@@ -198,13 +208,13 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  // Reviews count
+                  // Amenities count
                   Row(
                     children: [
-                      const Icon(Icons.reviews, size: 14, color: Colors.grey),
+                      const Icon(Icons.emoji_food_beverage, size: 14, color: Colors.grey),
                       const SizedBox(width: 4),
                       Text(
-                        '${hotel['reviewCount']} reviews',
+                        '${hotel.amenities.length} amenities',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.grey,
@@ -214,63 +224,108 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
                   ),
                   const SizedBox(height: 12),
                   // Amenities (show first 4)
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: (hotel['amenities'] as List).take(4).map<Widget>((
-                        amenity,
-                        ) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          amenity,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.blue.shade700,
-                            fontWeight: FontWeight.w500,
+                  if (hotel.amenities.isNotEmpty)
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: hotel.amenities.take(4).map<Widget>((amenity) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
                           ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            amenity,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.blue.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    )
+                  else
+                    Text(
+                      'No amenities listed',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
 
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      // Active Status instead of Price
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            hotel['price'],
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: hotel.isActive
+                                  ? Colors.green.shade50
+                                  : Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: hotel.isActive
+                                    ? Colors.green.shade200
+                                    : Colors.red.shade200,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  hotel.isActive
+                                      ? Icons.check_circle
+                                      : Icons.cancel,
+                                  size: 14,
+                                  color: hotel.isActive
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  hotel.isActive ? 'Active' : 'Inactive',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: hotel.isActive
+                                        ? Colors.green
+                                        : Colors.red,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const Text(
-                            '',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          const SizedBox(height: 4),
+                          Text(
+                            hotel.isActive ? 'Accepting bookings' : 'Not available',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey,
+                            ),
                           ),
                         ],
                       ),
                       ElevatedButton(
-                        onPressed: hotel['isAvailable']
+                        onPressed: hotel.isActive
                             ? () {
-                          // Navigate to hotel details page using hotel ID
-                          _navigateToHotelDetails(hotel['id']);
+                          _navigateToHotelDetails(hotel.id);
                         }
                             : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: hotel['isAvailable']
+                          backgroundColor: hotel.isActive
                               ? const Color(0xFF0088cc)
                               : Colors.grey,
                           foregroundColor: Colors.white,
@@ -279,7 +334,7 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
                           ),
                         ),
                         child: Text(
-                          hotel['isAvailable'] ? 'View Details' : 'Unavailable',
+                          hotel.isActive ? 'View Details' : 'Unavailable',
                         ),
                       ),
                     ],
@@ -289,6 +344,92 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHotelImage(HotelProfile hotel) {
+    // Use network image if available, otherwise use placeholder
+    if (hotel.imageUrl != null && hotel.imageUrl!.isNotEmpty) {
+      return Image.network(
+        hotel.imageUrl!,
+        width: double.infinity,
+        height: 200,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            width: double.infinity,
+            height: 200,
+            color: Colors.grey.shade200,
+            child: Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                    loadingProgress.expectedTotalBytes!
+                    : null,
+                strokeWidth: 2,
+                color: const Color(0xFF0088cc),
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          print('Image load error for ${hotel.name}: $error');
+          return _buildPlaceholderImage(hotel);
+        },
+      );
+    }
+
+    return _buildPlaceholderImage(hotel);
+  }
+
+  Widget _buildPlaceholderImage(HotelProfile hotel) {
+    // Generate a consistent color based on hotel ID
+    final colors = [
+      const Color(0xFF0088cc),
+      const Color(0xFF4CAF50),
+      const Color(0xFF9C27B0),
+      const Color(0xFFF44336),
+      const Color(0xFFFF9800),
+    ];
+    final colorIndex = hotel.id.hashCode % colors.length;
+    final backgroundColor = colors[colorIndex];
+
+    return Container(
+      width: double.infinity,
+      height: 200,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            backgroundColor,
+            backgroundColor.withOpacity(0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.hotel,
+            size: 64,
+            color: Colors.white,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            hotel.name,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }
@@ -345,14 +486,7 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
   }
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final displayedHotels = MarketplaceData.hotels;
-
     // Count variables - replace with your actual state variables
     int orderCount = 3; // Number of pending orders
     int chatCount = 7; // Number of unread messages
@@ -399,7 +533,11 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
           const SizedBox(width: 16),
         ],
       ),
-      body: SingleChildScrollView(
+      body: isLoading
+          ? _buildLoadingIndicator()
+          : errorMessage.isNotEmpty
+          ? _buildErrorWidget()
+          : SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -420,7 +558,7 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'All Hotels (${displayedHotels.length})',
+                    'All Hotels (${allHotels.length})',
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -433,14 +571,14 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
               const SizedBox(height: 16),
 
               // Hotels List
-              if (displayedHotels.isEmpty)
+              if (allHotels.isEmpty)
                 Center(
                   child: Padding(
                     padding: const EdgeInsets.all(40),
                     child: Column(
                       children: [
                         Icon(
-                          Icons.search_off,
+                          Icons.hotel,
                           size: 64,
                           color: Colors.grey[400],
                         ),
@@ -455,7 +593,7 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Try adjusting your search criteria',
+                          'Check back later for new listings',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[500],
@@ -469,9 +607,9 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
                 ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: displayedHotels.length,
+                  itemCount: allHotels.length,
                   itemBuilder: (context, index) {
-                    return _buildHotelCard(displayedHotels[index]);
+                    return _buildHotelCard(allHotels[index]);
                   },
                 ),
 
@@ -483,6 +621,75 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
       ),
     );
   }
+
+  Widget _buildLoadingIndicator() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(
+            color: Color(0xFF0088cc),
+            strokeWidth: 3,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Loading hotels...',
+            style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to load hotels',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              errorMessage,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: _loadAllHotels,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try Again'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0088cc),
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     super.dispose();
