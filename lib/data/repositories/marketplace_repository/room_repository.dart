@@ -128,24 +128,87 @@ class RoomRepository {
           '$_roomsBasePath/service-provider/$serviceProviderId'
       );
 
-      debugPrint('Get Rooms by Service Provider Response: ${response.data}');
+      debugPrint('Get Rooms by Service Provider Raw Response: ${response.data}');
+      debugPrint('Response Type: ${response.data.runtimeType}');
 
       List<dynamic> roomData = [];
 
+      // Handle different response formats
       if (response.data is List) {
         roomData = response.data as List<dynamic>;
+        debugPrint('✓ Response is directly a List with ${roomData.length} items');
       } else if (response.data is Map<String, dynamic>) {
         final responseMap = response.data as Map<String, dynamic>;
-        if (responseMap.containsKey('data') && responseMap['data'] is List) {
-          roomData = responseMap['data'] as List<dynamic>;
-        } else if (responseMap.containsKey('rooms') && responseMap['rooms'] is List) {
-          roomData = responseMap['rooms'] as List<dynamic>;
+        debugPrint('Response is a Map with keys: ${responseMap.keys.toList()}');
+
+        if (responseMap.containsKey('data') && responseMap['data'] != null) {
+          if (responseMap['data'] is List) {
+            roomData = responseMap['data'] as List<dynamic>;
+            debugPrint('✓ Found rooms in data field: ${roomData.length} items');
+          } else if (responseMap['data'] is Map) {
+            // Handle case where data is a single room object
+            roomData = [responseMap['data']];
+          }
+        } else if (responseMap.containsKey('rooms') && responseMap['rooms'] != null) {
+          if (responseMap['rooms'] is List) {
+            roomData = responseMap['rooms'] as List<dynamic>;
+            debugPrint('✓ Found rooms in rooms field: ${roomData.length} items');
+          }
+        } else {
+          // Try to find any list in the response recursively
+          roomData = _findListInResponse(responseMap);
+          if (roomData.isNotEmpty) {
+            debugPrint('✓ Found list recursively with ${roomData.length} items');
+          } else {
+            // If no list found, check if the response itself contains room data
+            if (responseMap.containsKey('id') || responseMap.containsKey('roomNumber')) {
+              roomData = [responseMap];
+              debugPrint('✓ Response contains single room data');
+            }
+          }
         }
       }
 
-      final rooms = roomData.map((roomJson) => Room.fromJson(roomJson as Map<String, dynamic>)).toList();
+      if (roomData.isEmpty) {
+        debugPrint('⚠ No room data found in response for service provider: $serviceProviderId');
+        return [];
+      }
 
-      debugPrint('✓ Found ${rooms.length} rooms for service provider $serviceProviderId');
+      final rooms = <Room>[];
+      for (var i = 0; i < roomData.length; i++) {
+        try {
+          if (roomData[i] is Map<String, dynamic>) {
+            final roomJson = roomData[i] as Map<String, dynamic>;
+
+            // Log the raw room data for debugging
+            debugPrint('Raw room data at index $i: $roomJson');
+
+            final room = Room.fromJson(roomJson);
+            rooms.add(room);
+            debugPrint('✓ Successfully parsed room: ${room.roomNumber}');
+          } else {
+            debugPrint('⚠ Item $i is not a Map: ${roomData[i].runtimeType}');
+            debugPrint('⚠ Problematic item: ${roomData[i]}');
+          }
+        } catch (e, stackTrace) {
+          debugPrint('❌ Error parsing room at index $i: $e');
+          debugPrint('❌ Stack trace: $stackTrace');
+          debugPrint('❌ Problematic data: ${roomData[i]}');
+        }
+      }
+
+      debugPrint('✅ Successfully parsed ${rooms.length} out of ${roomData.length} rooms for service provider $serviceProviderId');
+
+      if (rooms.isNotEmpty) {
+        debugPrint('Sample parsed room:');
+        debugPrint('  - ID: ${rooms[0].id}');
+        debugPrint('  - Number: ${rooms[0].roomNumber}');
+        debugPrint('  - Type: ${rooms[0].roomType}');
+        debugPrint('  - Price: ${rooms[0].price}');
+        debugPrint('  - Status: ${rooms[0].status}');
+        debugPrint('  - Image URL: ${rooms[0].imageUrl}');
+      }
+
       return rooms;
     } on AppException catch (e) {
       debugPrint('❌ AppException in getRoomsByServiceProvider: $e');
@@ -261,13 +324,18 @@ class Room {
     this.bathrooms,
   });
 
-  // Add this method to handle better room type detection
+  // FIXED: Use the actual roomType from database for display
   String get displayRoomType {
+    // Use the roomType directly from database, don't override with custom logic
     if (roomType.isNotEmpty && roomType != 'Unknown' && roomType != 'Standard') {
-      return roomType;
+      // Capitalize first letter of each word for better display
+      return roomType.split(' ').map((word) {
+        if (word.isEmpty) return '';
+        return word[0].toUpperCase() + word.substring(1).toLowerCase();
+      }).join(' ');
     }
 
-    // Determine room type based on features
+    // If roomType is empty or default, use the original logic as fallback
     if (amenities.any((amenity) => amenity.toLowerCase().contains('queen bed'))) {
       return 'Queen Room';
     } else if (amenities.any((amenity) => amenity.toLowerCase().contains('king bed'))) {
@@ -287,10 +355,13 @@ class Room {
     debugPrint('─────────────────────────────────────');
     debugPrint('Parsing room JSON: $json');
 
-    // Extract ID
+    // Call debug method first to check image data
+    _debugImageData(json);
+
+    // Extract ID - handle both string and numeric IDs
     String id = _extractField(json, ['id', 'roomId', '_id']) ?? 'unknown_id';
 
-    // Extract service provider ID
+    // Extract service provider ID - handle both string and numeric
     String serviceProviderId = _extractField(json, [
       'serviceProviderId',
       'service_provider_id',
@@ -302,7 +373,8 @@ class Room {
     String roomNumber = _extractField(json, [
       'roomNumber',
       'room_number',
-      'number'
+      'number',
+      'name' // Database shows 'name' instead of roomNumber
     ]) ?? 'Unknown';
 
     // Extract room type
@@ -318,31 +390,36 @@ class Room {
       'details'
     ]) ?? 'No description available';
 
-    // Extract price
-    double price = (json['price'] ?? json['room_price'] ?? 0.0).toDouble();
+    // Extract price - handle different field names and types
+    double price = 0.0;
+    if (json['price'] != null) {
+      price = (json['price'] is num) ? json['price'].toDouble() : double.tryParse(json['price'].toString()) ?? 0.0;
+    } else if (json['room_price'] != null) {
+      price = (json['room_price'] is num) ? json['room_price'].toDouble() : double.tryParse(json['room_price'].toString()) ?? 0.0;
+    }
 
-    // Extract capacity
-    int capacity = json['capacity'] ?? json['guest_capacity'] ?? 2;
+    // Extract capacity - handle max_docupancy from database
+    int capacity = json['capacity'] ??
+        json['guest_capacity'] ??
+        json['max_docupancy'] ?? // Database column name
+        2;
 
-    // Extract status
+    // Extract status - handle database status values
     RoomStatus status = _parseRoomStatus(json['status'] ?? 'AVAILABLE');
 
-    // Extract amenities
+    // Extract amenities - handle both list and string formats
     List<String> amenities = [];
     if (json['amenities'] is List) {
       amenities = (json['amenities'] as List).whereType<String>().toList();
+    } else if (json['amenities'] is String) {
+      amenities = [json['amenities']];
     }
 
-    // Extract image URL
-    String? imageUrl = _extractField(json, [
-      'imageUrl',
-      'image_url',
-      'room_image',
-      'photo'
-    ]);
+    // EXTRACT IMAGE URL - IMPROVED VERSION
+    String? imageUrl = _extractImageUrl(json);
 
-    // Extract size
-    int? size = json['size'] ?? json['room_size'];
+    // Extract size (area from database)
+    int? size = json['size'] ?? json['room_size'] ?? json['area'];
 
     // Extract bedrooms
     int? bedrooms = json['bedrooms'] ?? json['bedroom_count'];
@@ -350,16 +427,15 @@ class Room {
     // Extract bathrooms
     int? bathrooms = json['bathrooms'] ?? json['bathroom_count'];
 
-    debugPrint('✓ Extracted Room:');
+    debugPrint('✓ Successfully parsed room from database:');
     debugPrint('  ID: $id');
     debugPrint('  Service Provider ID: $serviceProviderId');
-    debugPrint('  Room Number: $roomNumber');
+    debugPrint('  Room Number/Name: $roomNumber');
     debugPrint('  Type: $roomType');
     debugPrint('  Price: $price');
     debugPrint('  Capacity: $capacity');
     debugPrint('  Status: $status');
-    debugPrint('  Amenities: ${amenities.length} items');
-    debugPrint('  Image: ${imageUrl ?? "null"}');
+    debugPrint('  Image URL: ${imageUrl ?? "null"}');
     debugPrint('─────────────────────────────────────');
 
     return Room(
@@ -379,20 +455,133 @@ class Room {
     );
   }
 
+  /// IMPROVED: Extract image URL with better validation
+  static String? _extractImageUrl(Map<String, dynamic> json) {
+    // Try all possible image field names from database
+    final possibleImageFields = [
+      'image', 'imageUrl', 'image_url', 'room_image', 'photo',
+      'image_path', 'img', 'picture', 'url', 'imageURL'
+    ];
+
+    for (var field in possibleImageFields) {
+      if (json.containsKey(field) &&
+          json[field] != null &&
+          json[field].toString().trim().isNotEmpty) {
+
+        String potentialUrl = json[field].toString().trim();
+
+        // Skip obviously invalid values
+        if (potentialUrl.toLowerCase() == 'null' ||
+            potentialUrl.toLowerCase() == '<null>' ||
+            potentialUrl.toLowerCase() == 'undefined' ||
+            potentialUrl.isEmpty) {
+          continue;
+        }
+
+        // Enhanced URL validation
+        bool isValidUrl = _isValidImageUrl(potentialUrl);
+
+        if (isValidUrl) {
+          debugPrint('✅ Found valid image URL in "$field" field: $potentialUrl');
+
+          // Ensure proper URL format
+          if (potentialUrl.startsWith('www.')) {
+            potentialUrl = 'https://$potentialUrl';
+          }
+
+          return potentialUrl;
+        } else {
+          debugPrint('⚠ Found image data in "$field" but not a valid URL: $potentialUrl');
+        }
+      }
+    }
+
+    debugPrint('❌ No valid image URL found in room data. Checked fields: $possibleImageFields');
+    return null;
+  }
+
+  /// Check if a string is a valid image URL
+  static bool _isValidImageUrl(String url) {
+    if (url.isEmpty) return false;
+
+    // Check for common URL patterns
+    bool hasUrlPattern = url.startsWith('http://') ||
+        url.startsWith('https://') ||
+        url.startsWith('www.') ||
+        url.contains('.com') ||
+        url.contains('.net') ||
+        url.contains('.org') ||
+        url.contains('.io') ||
+        url.contains('.cloudinary') ||
+        url.contains('storage.googleapis.com');
+
+    // Check for common image file extensions
+    bool hasImageExtension = url.toLowerCase().contains('.jpg') ||
+        url.toLowerCase().contains('.jpeg') ||
+        url.toLowerCase().contains('.png') ||
+        url.toLowerCase().contains('.webp') ||
+        url.toLowerCase().contains('.gif') ||
+        url.toLowerCase().contains('.bmp') ||
+        url.toLowerCase().contains('.svg');
+
+    // Check if it looks like a base64 image (data:image)
+    bool isBase64 = url.startsWith('data:image/');
+
+    return hasUrlPattern || hasImageExtension || isBase64;
+  }
+
+  /// Debug method to check what image data exists in the database response
+  static void _debugImageData(Map<String, dynamic> json) {
+    debugPrint('🔍 DEBUGGING IMAGE DATA IN ROOM RESPONSE:');
+    debugPrint('Full JSON keys: ${json.keys.toList()}');
+
+    // Check all potential image-related fields
+    final imageFields = ['image', 'imageUrl', 'image_url', 'room_image', 'photo', 'img', 'picture'];
+
+    for (var field in imageFields) {
+      if (json.containsKey(field)) {
+        final value = json[field];
+        debugPrint('$field: $value (type: ${value.runtimeType})');
+
+        if (value != null && value.toString().isNotEmpty && value.toString() != 'null') {
+          debugPrint('✅ Found potential image data in $field');
+        }
+      }
+    }
+
+    // Also check all fields for any URL-like values
+    debugPrint('🔍 Checking all fields for URL patterns:');
+    for (var key in json.keys) {
+      final value = json[key];
+      if (value != null && value is String) {
+        if (value.contains('http') || value.contains('.jpg') || value.contains('.png') || value.contains('image')) {
+          debugPrint('⚠️ Found URL-like value in $key: $value');
+        }
+      }
+    }
+  }
+
   static RoomStatus _parseRoomStatus(dynamic status) {
     if (status == null) return RoomStatus.AVAILABLE;
 
     final statusStr = status.toString().toUpperCase();
+
+    // Handle database status values
     switch (statusStr) {
       case 'AVAILABLE':
+      case 'ACTIVE':
         return RoomStatus.AVAILABLE;
       case 'OCCUPIED':
+      case 'BOOKED':
         return RoomStatus.OCCUPIED;
       case 'MAINTENANCE':
+      case 'UNDER_MAINTENANCE':
+      case 'MANTENANCE': // Handle typo in database
         return RoomStatus.MAINTENANCE;
       case 'RESERVED':
         return RoomStatus.RESERVED;
       default:
+        debugPrint('⚠ Unknown room status: $statusStr, defaulting to AVAILABLE');
         return RoomStatus.AVAILABLE;
     }
   }
@@ -493,13 +682,20 @@ class Room {
     }
   }
 
-  String get formattedPrice => '\$${price.toStringAsFixed(2)}/night';
+  // FIXED: Change currency from $ to LKR
+  String get formattedPrice {
+    // Format price with LKR symbol and commas
+    return 'LKR ${price.toStringAsFixed(0).replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
+    )}/night';
+  }
 
   String get capacityText => '$capacity ${capacity == 1 ? 'guest' : 'guests'}';
 
   @override
   String toString() {
-    return 'Room(id: $id, number: $roomNumber, type: $roomType, price: $price, status: $status)';
+    return 'Room(id: $id, number: $roomNumber, type: $roomType, displayType: $displayRoomType, price: $price, status: $status, imageUrl: $imageUrl)';
   }
 }
 

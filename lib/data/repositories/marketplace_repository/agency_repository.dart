@@ -511,7 +511,7 @@ class AgencyRepository {
   }
 }
 
-/// Agency Profile Model - UPDATED with better field mapping
+/// Agency Profile Model - UPDATED with better field mapping and established year priority
 class AgencyProfile {
   final String id;
   final String name;
@@ -585,11 +585,23 @@ class AgencyProfile {
       'companyName', 'businessName', 'serviceProviderName'
     ]) ?? 'Unknown Agency';
 
-    // Extract experience
-    String experience = _extractField(json, [
-      'experience', 'years_experience', 'experience_years', 'yearsExperience',
-      'rating', 'yearsInBusiness', 'yearsInService'
-    ]) ?? '0 years';
+    // Extract ESTABLISHED YEAR - PRIORITIZE THIS OVER EXPERIENCE
+    String? establishedYear = _extractField(json, [
+      'established_year', 'year_established', 'establishedYear', 'founding_year',
+      'yearFounded', 'since_year', 'est_year', 'established'
+    ]);
+
+    // Extract experience - use as fallback if established year not available
+    String experience = '';
+    if (establishedYear == null || establishedYear.isEmpty) {
+      experience = _extractField(json, [
+        'experience', 'years_experience', 'experience_years', 'yearsExperience',
+        'yearsInBusiness', 'yearsInService', 'operation_years'
+      ]) ?? '0 years';
+    } else {
+      // If we have established year, calculate experience or use default
+      experience = _calculateExperienceFromYear(establishedYear) ?? 'Experienced';
+    }
 
     // Extract ADDRESS - Based on database schema
     String? address = _extractField(json, [
@@ -606,12 +618,6 @@ class AgencyProfile {
     String? email = _extractField(json, [
       'email', 'contact_email', 'email_address', 'contactEmail',
       'business_email', 'company_email', 'email_id'
-    ]);
-
-    // Extract ESTABLISHED YEAR - Based on database schema
-    String? establishedYear = _extractField(json, [
-      'established_year', 'year_established', 'establishedYear', 'founding_year',
-      'yearFounded', 'since_year'
     ]);
 
     // Extract location (city/area)
@@ -632,7 +638,7 @@ class AgencyProfile {
       'number_of_vehicles', 'vehicles_count'
     ]);
 
-    // Extract image URL
+    // Extract image URL - ENHANCED with better URL handling
     String? imageUrl;
     List<String> imageKeys = [
       'profile_photo', 'agency_photo', 'agency_image', 'imageUrl', 'profileImageUrl',
@@ -642,7 +648,17 @@ class AgencyProfile {
 
     for (var key in imageKeys) {
       if (json.containsKey(key) && json[key] != null && json[key].toString().isNotEmpty) {
-        imageUrl = json[key].toString();
+        String rawUrl = json[key].toString();
+
+        // Fix common image URL issues
+        if (rawUrl.startsWith('/')) {
+          imageUrl = rawUrl; // Keep as relative path, will be handled in UI
+        } else if (!rawUrl.startsWith('http') && rawUrl.contains('/')) {
+          imageUrl = '/$rawUrl'; // Ensure it starts with slash
+        } else {
+          imageUrl = rawUrl;
+        }
+
         print('🖼️ Found image URL in key "$key": $imageUrl');
         break;
       }
@@ -673,11 +689,11 @@ class AgencyProfile {
     print('📊 FINAL Extracted Agency Data:');
     print('  ID: $id');
     print('  Name: $name');
+    print('  Established Year: ${establishedYear ?? "Not available"}');
     print('  Experience: $experience');
     print('  Address: ${address ?? "Not available"}');
     print('  Phone: ${phone ?? "Not available"}');
     print('  Email: ${email ?? "Not available"}');
-    print('  Established Year: ${establishedYear ?? "Not available"}');
     print('  Location: ${location ?? "Not available"}');
     print('  Description: ${description ?? "Not available"}');
     print('  Fleet Size: ${fleetSize ?? "Not available"}');
@@ -713,6 +729,31 @@ class AgencyProfile {
     return null;
   }
 
+  /// Calculate experience from established year
+  static String? _calculateExperienceFromYear(String establishedYear) {
+    try {
+      final year = int.tryParse(establishedYear);
+      if (year != null) {
+        final currentYear = DateTime.now().year;
+        final yearsExperience = currentYear - year;
+        if (yearsExperience > 0) {
+          return '$yearsExperience years';
+        }
+      }
+    } catch (e) {
+      print('⚠ Error calculating experience from year: $e');
+    }
+    return null;
+  }
+
+  /// Get display text for years (prioritizes established year)
+  String get displayYears {
+    if (establishedYear != null && establishedYear!.isNotEmpty) {
+      return 'Est. $establishedYear';
+    }
+    return experience;
+  }
+
   /// Get formatted experience text
   String get formattedExperience {
     if (experience.contains('years') || experience.contains('year')) {
@@ -723,10 +764,10 @@ class AgencyProfile {
 
   /// Get formatted established info
   String get formattedEstablished {
-    if (establishedYear != null) {
+    if (establishedYear != null && establishedYear!.isNotEmpty) {
       return 'Est. $establishedYear';
     }
-    return 'Experienced Agency';
+    return experience.isNotEmpty ? experience : 'Experienced Agency';
   }
 
   /// Get formatted fleet info
@@ -756,6 +797,6 @@ class AgencyProfile {
 
   @override
   String toString() {
-    return 'AgencyProfile(id: $id, name: $name, experience: $experience, address: $address, phone: $phone, email: $email)';
+    return 'AgencyProfile(id: $id, name: $name, establishedYear: $establishedYear, experience: $experience, location: $location)';
   }
 }
