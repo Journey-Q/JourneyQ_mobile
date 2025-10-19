@@ -356,9 +356,14 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
   }
 
   Widget _buildAgencyImage(AgencyProfile agency) {
+    // Enhanced image URL validation and loading
     if (agency.imageUrl != null && agency.imageUrl!.isNotEmpty) {
+      String imageUrl = agency.imageUrl!;
+
+      print('🖼️ Loading agency image for list: $imageUrl');
+
       return Image.network(
-        agency.imageUrl!,
+        imageUrl,
         width: double.infinity,
         height: 160,
         fit: BoxFit.cover,
@@ -381,12 +386,14 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
           );
         },
         errorBuilder: (context, error, stackTrace) {
-          print('Image load error for ${agency.name}: $error');
+          print('❌ Image load error for ${agency.name}: $error');
+          print('❌ Image URL: $imageUrl');
           return _buildPlaceholderImage(agency);
         },
       );
     }
 
+    print('🖼️ No image URL for agency in list: ${agency.name}');
     return _buildPlaceholderImage(agency);
   }
 

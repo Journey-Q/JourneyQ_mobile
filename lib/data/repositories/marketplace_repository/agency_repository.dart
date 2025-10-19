@@ -341,90 +341,6 @@ class AgencyRepository {
     }
   }
 
-  /// Test method to check raw API response
-  static Future<void> testAgencyData(String agencyId) async {
-    try {
-      print('🧪 TESTING API RESPONSE FOR AGENCY: $agencyId');
-
-      final longAgencyId = int.tryParse(agencyId);
-      if (longAgencyId == null) {
-        print('❌ Invalid agency ID');
-        return;
-      }
-
-      // Test agency-profiles endpoint
-      print('📡 Testing /service/agency-profiles/$longAgencyId');
-      try {
-        final response1 = await MarketplaceService.get('/service/agency-profiles/$longAgencyId');
-        print('✅ Agency Profiles Endpoint Response:');
-        print('   Status: ${response1.statusCode}');
-        print('   Data: ${response1.data}');
-        print('   Data Type: ${response1.data.runtimeType}');
-
-        if (response1.data is Map) {
-          final data = response1.data as Map;
-          print('   All Keys: ${data.keys.toList()}');
-          data.forEach((key, value) {
-            print('     $key: $value (${value.runtimeType})');
-          });
-        }
-      } catch (e) {
-        print('❌ Agency Profiles Endpoint Failed: $e');
-      }
-
-      // Test providers endpoint
-      print('📡 Testing /service/providers/$longAgencyId');
-      try {
-        final response2 = await MarketplaceService.get('/service/providers/$longAgencyId');
-        print('✅ Providers Endpoint Response:');
-        print('   Status: ${response2.statusCode}');
-        print('   Data: ${response2.data}');
-        print('   Data Type: ${response2.data.runtimeType}');
-
-        if (response2.data is Map) {
-          final data = response2.data as Map;
-          print('   All Keys: ${data.keys.toList()}');
-        }
-      } catch (e) {
-        print('❌ Providers Endpoint Failed: $e');
-      }
-
-    } catch (e) {
-      print('❌ Test failed: $e');
-    }
-  }
-
-  /// Debug method to see all agencies data structure
-  static Future<void> debugAllAgencies() async {
-    try {
-      print('🔍 DEBUG: Fetching ALL agencies to check data structure');
-      final response = await MarketplaceService.get('/service/agency-profiles/all');
-      print('✅ All Agencies Response:');
-      print('   Status: ${response.statusCode}');
-
-      if (response.data is List) {
-        final agencies = response.data as List;
-        print('   Found ${agencies.length} agencies');
-        for (int i = 0; i < agencies.length; i++) {
-          if (agencies[i] is Map) {
-            final agency = agencies[i] as Map<String, dynamic>;
-            print('   Agency $i Keys: ${agency.keys.toList()}');
-            if (i == 0) { // Print first agency details
-              print('   First Agency Full Data:');
-              agency.forEach((key, value) {
-                print('     $key: $value (${value.runtimeType})');
-              });
-            }
-          }
-        }
-      } else {
-        print('   Response data: ${response.data}');
-      }
-    } catch (e) {
-      print('❌ Debug failed: $e');
-    }
-  }
-
   /// Helper method to find list in response recursively
   static List<dynamic> _findListInResponse(Map<String, dynamic> response) {
     for (var key in response.keys) {
@@ -511,7 +427,7 @@ class AgencyRepository {
   }
 }
 
-/// Agency Profile Model - UPDATED with better field mapping and established year priority
+/// Agency Profile Model - UPDATED to show established year directly
 class AgencyProfile {
   final String id;
   final String name;
@@ -585,22 +501,47 @@ class AgencyProfile {
       'companyName', 'businessName', 'serviceProviderName'
     ]) ?? 'Unknown Agency';
 
-    // Extract ESTABLISHED YEAR - PRIORITIZE THIS OVER EXPERIENCE
+    // DEBUG: Print all fields to see what's available
+    print('🔍 DEBUG - All available fields:');
+    json.forEach((key, value) {
+      if (key.toString().toLowerCase().contains('estab') ||
+          key.toString().toLowerCase().contains('year') ||
+          key.toString().toLowerCase().contains('since')) {
+        print('   🎯 POTENTIAL ESTABLISHED YEAR FIELD: "$key": $value');
+      }
+    });
+
+    // Extract ESTABLISHED YEAR - More comprehensive field extraction
     String? establishedYear = _extractField(json, [
-      'established_year', 'year_established', 'establishedYear', 'founding_year',
-      'yearFounded', 'since_year', 'est_year', 'established'
+      'established_year', 'establishedYear', 'year_established', 'established',
+      'founding_year', 'yearFounded', 'since_year', 'year', 'establish_year',
+      'est_year', 'start_year', 'operation_year', 'since'
     ]);
 
-    // Extract experience - use as fallback if established year not available
-    String experience = '';
-    if (establishedYear == null || establishedYear.isEmpty) {
-      experience = _extractField(json, [
-        'experience', 'years_experience', 'experience_years', 'yearsExperience',
-        'yearsInBusiness', 'yearsInService', 'operation_years'
-      ]) ?? '0 years';
+    // If no established year found, try to find any numeric field that could be a year
+    if (establishedYear == null) {
+      for (var key in json.keys) {
+        var value = json[key];
+        if (value != null) {
+          String stringValue = value.toString();
+          // Check if this looks like a year (4-digit number between 1900-2024)
+          if (_looksLikeYear(stringValue)) {
+            establishedYear = stringValue;
+            print('✅ Found potential year in field "$key": $establishedYear');
+            break;
+          }
+        }
+      }
+    }
+
+    // Use established year directly, or fallback
+    String experience;
+    if (establishedYear != null && establishedYear.isNotEmpty) {
+      experience = 'Est. $establishedYear';
+      print('✅ Using established year: $establishedYear');
     } else {
-      // If we have established year, calculate experience or use default
-      experience = _calculateExperienceFromYear(establishedYear) ?? 'Experienced';
+      experience = 'Established';
+      print('⚠️ No established year found, using fallback');
     }
 
     // Extract ADDRESS - Based on database schema
@@ -638,31 +579,8 @@ class AgencyProfile {
       'number_of_vehicles', 'vehicles_count'
     ]);
 
-    // Extract image URL - ENHANCED with better URL handling
-    String? imageUrl;
-    List<String> imageKeys = [
-      'profile_photo', 'agency_photo', 'agency_image', 'imageUrl', 'profileImageUrl',
-      'image', 'photo', 'image_url', 'photoUrl', 'profile_picture', 'picture',
-      'logo', 'profilePicture', 'profileImage', 'companyLogo', 'profile_pic'
-    ];
-
-    for (var key in imageKeys) {
-      if (json.containsKey(key) && json[key] != null && json[key].toString().isNotEmpty) {
-        String rawUrl = json[key].toString();
-
-        // Fix common image URL issues
-        if (rawUrl.startsWith('/')) {
-          imageUrl = rawUrl; // Keep as relative path, will be handled in UI
-        } else if (!rawUrl.startsWith('http') && rawUrl.contains('/')) {
-          imageUrl = '/$rawUrl'; // Ensure it starts with slash
-        } else {
-          imageUrl = rawUrl;
-        }
-
-        print('🖼️ Found image URL in key "$key": $imageUrl');
-        break;
-      }
-    }
+    // Extract image URL with enhanced handling
+    String? imageUrl = _extractImageUrl(json);
 
     // Extract active status
     bool isActive = true;
@@ -717,6 +635,76 @@ class AgencyProfile {
     );
   }
 
+  /// Check if a string looks like a year (4 digits between 1900-2024)
+  static bool _looksLikeYear(String value) {
+    if (value.length != 4) return false;
+
+    try {
+      int year = int.parse(value);
+      return year >= 1900 && year <= DateTime.now().year;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Enhanced image URL extraction with better validation
+  static String? _extractImageUrl(Map<String, dynamic> json) {
+    List<String> imageKeys = [
+      'profile_photo', 'agency_photo', 'agency_image', 'imageUrl', 'profileImageUrl',
+      'image', 'photo', 'image_url', 'photoUrl', 'profile_picture', 'picture',
+      'logo', 'profilePicture', 'profileImage', 'companyLogo', 'profile_pic',
+      'hotelPhoto', 'hotel_photo' // Sometimes agencies might use hotel fields
+    ];
+
+    for (var key in imageKeys) {
+      if (json.containsKey(key) && json[key] != null && json[key].toString().isNotEmpty) {
+        String imageUrl = json[key].toString();
+
+        // Validate the image URL
+        if (_isValidImageUrl(imageUrl)) {
+          print('🖼️ Found valid image URL in key "$key": $imageUrl');
+
+          // Convert relative URL to absolute if needed
+          if (!imageUrl.startsWith('http')) {
+            imageUrl = 'http://10.0.2.2:8080$imageUrl';
+            print('🔄 Converted to absolute URL: $imageUrl');
+          }
+
+          return imageUrl;
+        } else {
+          print('⚠️ Invalid image URL in key "$key": $imageUrl');
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /// Validate image URL
+  static bool _isValidImageUrl(String url) {
+    if (url.isEmpty ||
+        url == 'null' ||
+        url == '<null>' ||
+        url == 'undefined' ||
+        url.trim().isEmpty) {
+      return false;
+    }
+
+    // Check for common image file extensions
+    final validExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp'];
+    final hasValidExtension = validExtensions.any((ext) => url.toLowerCase().contains(ext));
+
+    // Also accept URLs that might be from cloud storage or APIs
+    final hasImageIndicator = url.contains('image') ||
+        url.contains('photo') ||
+        url.contains('cloudinary') ||
+        url.contains('storage.googleapis.com') ||
+        url.contains('aws') ||
+        url.contains('azure');
+
+    return hasValidExtension || hasImageIndicator;
+  }
+
   /// Helper method to extract field from JSON with multiple possible keys
   static String? _extractField(Map<String, dynamic> json, List<String> possibleKeys) {
     for (var key in possibleKeys) {
@@ -729,45 +717,17 @@ class AgencyProfile {
     return null;
   }
 
-  /// Calculate experience from established year
-  static String? _calculateExperienceFromYear(String establishedYear) {
-    try {
-      final year = int.tryParse(establishedYear);
-      if (year != null) {
-        final currentYear = DateTime.now().year;
-        final yearsExperience = currentYear - year;
-        if (yearsExperience > 0) {
-          return '$yearsExperience years';
-        }
-      }
-    } catch (e) {
-      print('⚠ Error calculating experience from year: $e');
-    }
-    return null;
-  }
-
-  /// Get display text for years (prioritizes established year)
-  String get displayYears {
-    if (establishedYear != null && establishedYear!.isNotEmpty) {
-      return 'Est. $establishedYear';
-    }
-    return experience;
-  }
-
   /// Get formatted experience text
   String get formattedExperience {
-    if (experience.contains('years') || experience.contains('year')) {
-      return experience;
-    }
-    return '$experience years';
+    return experience;
   }
 
   /// Get formatted established info
   String get formattedEstablished {
-    if (establishedYear != null && establishedYear!.isNotEmpty) {
+    if (establishedYear != null) {
       return 'Est. $establishedYear';
     }
-    return experience.isNotEmpty ? experience : 'Experienced Agency';
+    return 'Established';
   }
 
   /// Get formatted fleet info
@@ -797,6 +757,6 @@ class AgencyProfile {
 
   @override
   String toString() {
-    return 'AgencyProfile(id: $id, name: $name, establishedYear: $establishedYear, experience: $experience, location: $location)';
+    return 'AgencyProfile(id: $id, name: $name, experience: $experience, establishedYear: $establishedYear, address: $address, phone: $phone, email: $email)';
   }
 }

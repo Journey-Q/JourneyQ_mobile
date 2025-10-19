@@ -740,12 +740,13 @@ class _MarketplacePageState extends State<MarketplacePage> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
+                    // Email display with smaller font and different color
                     Text(
-                      agency.experience,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF0088cc),
-                        fontWeight: FontWeight.w500,
+                      agency.experience, // This now contains the email
+                      style: TextStyle(
+                        fontSize: 11, // Smaller font for email
+                        color: Colors.grey.shade700, // Different color
+                        fontWeight: FontWeight.normal,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -803,6 +804,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
     );
   }
 
+
   Widget _buildTourPackageCard(TourPackage package) {
     return GestureDetector(
       onTap: () {
@@ -811,7 +813,6 @@ class _MarketplacePageState extends State<MarketplacePage> {
       },
       child: Container(
         width: 200,
-        height: 260, // Slightly increased to prevent overflow
         margin: const EdgeInsets.only(right: 16),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -835,36 +836,34 @@ class _MarketplacePageState extends State<MarketplacePage> {
               ),
               child: Container(
                 width: double.infinity,
-                height: 140, // Fixed image height
+                height: 130, // Reduced image height to prevent overflow
                 child: _buildTourPackageImage(package),
               ),
             ),
 
-            // Tour Package Details
-            Expanded(
+            // Tour Package Details - Using Flexible instead of Expanded with fixed constraints
+            Flexible(
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // Name and Location Section
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Package Name
-                        SizedBox(
-                          height: 40, // Fixed height for name
-                          child: Text(
-                            package.name,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                              height: 1.2,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                        Text(
+                          package.name,
+                          style: const TextStyle(
+                            fontSize: 14, // Slightly reduced font size
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                            height: 1.2,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
 
@@ -873,7 +872,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
                           Text(
                             package.location,
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 11, // Slightly reduced font size
                               color: Colors.grey.shade600,
                             ),
                             maxLines: 1,
@@ -881,9 +880,6 @@ class _MarketplacePageState extends State<MarketplacePage> {
                           ),
                       ],
                     ),
-
-                    // REMOVED THE GAP - Price starts immediately after location
-                    const SizedBox(height: 8), // Reduced gap
 
                     // Pricing and Info Section
                     Column(
@@ -901,14 +897,14 @@ class _MarketplacePageState extends State<MarketplacePage> {
                                   Text(
                                     'LKR ${package.finalPrice?.toStringAsFixed(2) ?? package.originalPrice!.toStringAsFixed(2)}',
                                     style: const TextStyle(
-                                      fontSize: 16,
+                                      fontSize: 14, // Reduced font size
                                       color: Color(0xFF0088cc),
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: 6), // Reduced spacing
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1), // Reduced padding
                                     decoration: BoxDecoration(
                                       color: Colors.red.shade50,
                                       borderRadius: BorderRadius.circular(4),
@@ -917,7 +913,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
                                     child: Text(
                                       '${package.discount}% OFF',
                                       style: TextStyle(
-                                        fontSize: 10,
+                                        fontSize: 9, // Reduced font size
                                         color: Colors.red.shade600,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -930,7 +926,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
                               Text(
                                 'LKR ${package.originalPrice!.toStringAsFixed(2)}',
                                 style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 11, // Reduced font size
                                   color: Colors.grey.shade500,
                                   decoration: TextDecoration.lineThrough,
                                 ),
@@ -941,7 +937,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
                           Text(
                             'LKR ${package.finalPrice!.toStringAsFixed(2)}',
                             style: const TextStyle(
-                              fontSize: 16,
+                              fontSize: 14, // Reduced font size
                               color: Color(0xFF0088cc),
                               fontWeight: FontWeight.bold,
                             ),
@@ -950,7 +946,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
                             Text(
                               'LKR ${package.originalPrice!.toStringAsFixed(2)}',
                               style: const TextStyle(
-                                fontSize: 16,
+                                fontSize: 14, // Reduced font size
                                 color: Color(0xFF0088cc),
                                 fontWeight: FontWeight.bold,
                               ),
@@ -959,7 +955,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
                               Text(
                                 'LKR ${package.pricePerPerson!.toStringAsFixed(2)}/person',
                                 style: const TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 13, // Reduced font size
                                   color: Color(0xFF0088cc),
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -973,31 +969,31 @@ class _MarketplacePageState extends State<MarketplacePage> {
                             if (package.duration != null && package.duration!.isNotEmpty) ...[
                               Icon(
                                 Icons.schedule,
-                                size: 12,
+                                size: 11, // Reduced icon size
                                 color: Colors.grey.shade600,
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: 3), // Reduced spacing
                               Text(
                                 package.duration!,
                                 style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: 10, // Reduced font size
                                   color: Colors.grey.shade600,
                                 ),
                               ),
                             ],
                             if (package.duration != null && package.rating != null)
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 6), // Reduced spacing
                             if (package.rating != null) ...[
                               Icon(
                                 Icons.star,
-                                size: 12,
+                                size: 11, // Reduced icon size
                                 color: Colors.amber.shade600,
                               ),
                               const SizedBox(width: 2),
                               Text(
                                 package.rating!.toStringAsFixed(1),
                                 style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: 10, // Reduced font size
                                   color: Colors.grey.shade600,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -1053,15 +1049,11 @@ class _MarketplacePageState extends State<MarketplacePage> {
   }
 
   Widget _buildAgencyImage(AgencyProfile agency) {
-    String? imageUrl = agency.imageUrl;
+    // Enhanced image URL validation and loading
+    if (agency.imageUrl != null && agency.imageUrl!.isNotEmpty) {
+      String imageUrl = agency.imageUrl!;
 
-    // Check if the URL needs base URL prepending
-    if (imageUrl != null && imageUrl.isNotEmpty) {
-      if (!imageUrl.startsWith('http')) {
-        // If it's a relative path, prepend your base URL
-        imageUrl = 'http://10.0.2.2:8080$imageUrl';
-        print('🖼️ Converted to absolute URL: $imageUrl');
-      }
+      print('🖼️ Loading agency image: $imageUrl');
 
       return Image.network(
         imageUrl,
@@ -1087,13 +1079,14 @@ class _MarketplacePageState extends State<MarketplacePage> {
           );
         },
         errorBuilder: (context, error, stackTrace) {
-          print('🖼️ Image load error: $error');
+          print('❌ Image load error for ${agency.name}: $error');
+          print('❌ Image URL: $imageUrl');
           return _buildPlaceholderImage(agency.name, Icons.business);
         },
       );
     }
 
-    print('🖼️ No image URL, using placeholder');
+    print('🖼️ No image URL for agency: ${agency.name}');
     return _buildPlaceholderImage(agency.name, Icons.business);
   }
 
@@ -1102,13 +1095,13 @@ class _MarketplacePageState extends State<MarketplacePage> {
       return Image.network(
         package.imageUrl!,
         width: 200,
-        height: 140,
+        height: 130,
         fit: BoxFit.cover,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return Container(
             width: 200,
-            height: 140,
+            height: 130,
             color: Colors.grey.shade200,
             child: Center(
               child: CircularProgressIndicator(

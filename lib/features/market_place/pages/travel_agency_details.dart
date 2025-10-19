@@ -578,13 +578,11 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
   }
 
   Widget _buildAgencyImage(AgencyProfile agency, {double size = double.infinity}) {
+    // Enhanced image URL validation and loading
     if (agency.imageUrl != null && agency.imageUrl!.isNotEmpty) {
       String imageUrl = agency.imageUrl!;
 
-      // Convert relative URL to absolute if needed
-      if (!imageUrl.startsWith('http')) {
-        imageUrl = 'http://10.0.2.2:8080$imageUrl';
-      }
+      print('🖼️ Loading agency image for details: $imageUrl');
 
       return Image.network(
         imageUrl,
@@ -610,12 +608,14 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
           );
         },
         errorBuilder: (context, error, stackTrace) {
-          print('Image load error for ${agency.name}: $error');
+          print('❌ Image load error for ${agency.name}: $error');
+          print('❌ Image URL: $imageUrl');
           return _buildPlaceholderImage(agency, size: size);
         },
       );
     }
 
+    print('🖼️ No image URL for agency details: ${agency.name}');
     return _buildPlaceholderImage(agency, size: size);
   }
 
@@ -1151,6 +1151,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Agency Header Info
+                  // In the agency header info section, remove the duplicate email line:
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -1222,13 +1223,9 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                           style: const TextStyle(fontSize: 14, color: Colors.grey),
                         ),
                         const SizedBox(height: 8),
+                        // Email is now shown in the experience field, so we don't need to show it twice
                         Text(
-                          agencyData!.email ?? 'info@agency.lk',
-                          style: const TextStyle(fontSize: 14, color: Colors.grey),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          agencyData!.experience,
+                          agencyData!.experience, // This shows the email
                           style: const TextStyle(fontSize: 14, color: Colors.grey),
                         ),
                       ],
