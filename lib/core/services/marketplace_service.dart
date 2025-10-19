@@ -15,15 +15,13 @@ class MarketplaceService {
 
     _dio = Dio(
       BaseOptions(
-        baseUrl: 'http://10.0.2.2:8080',
+        baseUrl: 'https://serviceprovidersservice-production-8f10.up.railway.app',
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
       ),
     );
 
-    // Add interceptors in order
-    //_dio.interceptors.add(AuthInterceptor(authProvider)); // Add auth token
-    _dio.interceptors.add(ErrorInterceptor()); // Handle errors
+    
   }
 
   // GET request
@@ -33,12 +31,28 @@ class MarketplaceService {
         Options? options,
       }) async {
     try {
-      return await _dio.get(
+      print('🌐 MarketplaceService GET Request:');
+      print('   URL: ${_dio.options.baseUrl}$path');
+      print('   Headers: ${_dio.options.headers}');
+      print('   Query Params: $queryParameters');
+
+      final response = await _dio.get(
         path,
         queryParameters: queryParameters,
         options: options,
       );
+
+      print('✅ Response Status: ${response.statusCode}');
+      return response;
     } on DioException catch (e) {
+      print('❌ DioException Details:');
+      print('   Status Code: ${e.response?.statusCode}');
+      print('   Response Data: ${e.response?.data}');
+      print('   Request URL: ${e.requestOptions.uri}');
+      print('   Request Headers: ${e.requestOptions.headers}');
+      print('   Error Type: ${e.type}');
+      print('   Error Message: ${e.message}');
+
       if (e.error is AppException) {
         throw e.error as AppException;
       }

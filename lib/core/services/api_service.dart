@@ -98,13 +98,31 @@ class ApiService {
     Options? options,
   }) async {
     try {
-      return await _dio.delete(
+      print('🗑️ DELETE Request:');
+      print('   URL: ${_dio.options.baseUrl}$path');
+      print('   Headers: ${_dio.options.headers}');
+      print('   Query Params: $queryParameters');
+      print('   Data: $data');
+
+      final response = await _dio.delete(
         path,
         data: data,
         queryParameters: queryParameters,
         options: options,
       );
+
+      print('✅ DELETE Response:');
+      print('   Status Code: ${response.statusCode}');
+      print('   Response Data: ${response.data}');
+
+      return response;
     } on DioException catch (e) {
+      print('❌ DELETE Error:');
+      print('   Status Code: ${e.response?.statusCode}');
+      print('   Response Data: ${e.response?.data}');
+      print('   Error Message: ${e.message}');
+      print('   Error Type: ${e.type}');
+
       if (e.error is AppException) {
         throw e.error as AppException;
       }
