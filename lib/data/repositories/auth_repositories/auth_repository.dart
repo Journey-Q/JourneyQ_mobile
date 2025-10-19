@@ -377,4 +377,40 @@ class AuthRepository {
       return null;
     }
   }
+
+  // Change password
+  static Future<Map<String, dynamic>> changePassword({
+    required int userId,
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      print('🔐 Changing password for user ID: $userId');
+
+      final response = await ApiService.post(
+        '/auth/change-password',
+        data: {
+          'userId': userId,
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+          'confirmPassword': confirmPassword,
+        },
+      );
+
+      print('📦 Change Password Response: ${response.data}');
+
+      if (response.data is Map) {
+        return Map<String, dynamic>.from(response.data as Map);
+      }
+
+      throw ServerException('Invalid response format');
+    } on AppException catch (e) {
+      print('❌ Error changing password: $e');
+      rethrow;
+    } catch (e) {
+      print('❌ Unexpected error changing password: $e');
+      rethrow;
+    }
+  }
 }
