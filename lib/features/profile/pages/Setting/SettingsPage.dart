@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:journeyq/data/repositories/auth_repositories/auth_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -12,6 +13,46 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   bool _notificationsEnabled = false;
   bool _accountPrivate = false;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  // Load notification settings from SharedPreferences
+  Future<void> _loadSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        _notificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Save notification settings to SharedPreferences
+  Future<void> _saveNotificationSetting(bool value) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('notifications_enabled', value);
+    } catch (e) {
+      // Handle error
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to save notification settings'),
+            backgroundColor: Color(0xFFEF4444),
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,30 +154,17 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: 'Notifications',
                 subtitle: 'Receive updates and alerts',
                 value: _notificationsEnabled,
-                onChanged: (value) {
+                onChanged: (value) async {
                   setState(() {
                     _notificationsEnabled = value;
                   });
+                  await _saveNotificationSetting(value);
                   _showNotificationPopup(value);
                 },
               ),
               
               const SizedBox(height: 12),
               
-              // Account Privacy Toggle
-              _buildToggleCard(
-                icon: Icons.lock_outline,
-                iconColor: const Color(0xFF8B5CF6),
-                title: 'Private Account',
-                subtitle: 'Control who can see your content',
-                value: _accountPrivate,
-                onChanged: (value) {
-                  setState(() {
-                    _accountPrivate = value;
-                  });
-                  _showPrivacyPopup(value);
-                },
-              ),
               
               const SizedBox(height: 24),
               
