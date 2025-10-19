@@ -579,7 +579,7 @@ class AgencyProfile {
     final String id = extractedId ?? 'unknown_id';
     print('🎯 Final ID: $id');
 
-    // Extract name - prioritize agency_name from database (note the typo in database field)
+    // Extract name - prioritize agency_name from database
     String name = _extractField(json, [
       'agency_name', 'agentcy_name', 'name', 'agencyName', 'title', 'company_name', 'providerName',
       'companyName', 'businessName', 'serviceProviderName'
@@ -588,42 +588,42 @@ class AgencyProfile {
     // Extract experience
     String experience = _extractField(json, [
       'experience', 'years_experience', 'experience_years', 'yearsExperience',
-      'rating', 'yearsInBusiness', 'yearsInService', 'established_year'
+      'rating', 'yearsInBusiness', 'yearsInService'
     ]) ?? '0 years';
 
-    // Extract address
+    // Extract ADDRESS - Based on database schema
     String? address = _extractField(json, [
       'address', 'location', 'full_address', 'complete_address', 'physical_address'
     ]);
 
-    // Extract location
-    String? location = _extractField(json, [
-      'location', 'city', 'district', 'area', 'serviceArea', 'operating_area',
-      'operatingArea', 'service_area', 'city_name'
-    ]);
-
-    // Extract phone - prioritize direct 'phone' field from database
+    // Extract PHONE NUMBER - Based on database schema
     String? phone = _extractField(json, [
       'phone', 'phone_number', 'contact_number', 'telephone', 'contactPhone',
       'mobile', 'mobile_number', 'contact', 'phone_no'
     ]);
 
-    // Extract email - prioritize direct 'email' field from database
+    // Extract EMAIL - Based on database schema
     String? email = _extractField(json, [
       'email', 'contact_email', 'email_address', 'contactEmail',
       'business_email', 'company_email', 'email_id'
     ]);
 
-    // Extract description - prioritize direct 'description' field from database
-    String? description = _extractField(json, [
-      'description', 'about', 'details', 'info', 'bio', 'companyDescription',
-      'about_us', 'aboutUs', 'business_description', 'profile_description'
-    ]);
-
-    // Extract established year
+    // Extract ESTABLISHED YEAR - Based on database schema
     String? establishedYear = _extractField(json, [
       'established_year', 'year_established', 'establishedYear', 'founding_year',
       'yearFounded', 'since_year'
+    ]);
+
+    // Extract location (city/area)
+    String? location = _extractField(json, [
+      'location', 'city', 'district', 'area', 'serviceArea', 'operating_area',
+      'operatingArea', 'service_area', 'city_name'
+    ]);
+
+    // Extract description
+    String? description = _extractField(json, [
+      'description', 'about', 'details', 'info', 'bio', 'companyDescription',
+      'about_us', 'aboutUs', 'business_description', 'profile_description'
     ]);
 
     // Extract fleet size
@@ -632,7 +632,7 @@ class AgencyProfile {
       'number_of_vehicles', 'vehicles_count'
     ]);
 
-    // Extract image URL - prioritize profile_photo from database
+    // Extract image URL
     String? imageUrl;
     List<String> imageKeys = [
       'profile_photo', 'agency_photo', 'agency_image', 'imageUrl', 'profileImageUrl',
@@ -675,10 +675,12 @@ class AgencyProfile {
     print('  Name: $name');
     print('  Experience: $experience');
     print('  Address: ${address ?? "Not available"}');
-    print('  Location: ${location ?? "Not available"}');
     print('  Phone: ${phone ?? "Not available"}');
     print('  Email: ${email ?? "Not available"}');
+    print('  Established Year: ${establishedYear ?? "Not available"}');
+    print('  Location: ${location ?? "Not available"}');
     print('  Description: ${description ?? "Not available"}');
+    print('  Fleet Size: ${fleetSize ?? "Not available"}');
     print('  Image: ${imageUrl ?? "Not available"}');
     print('  Active: $isActive');
     print('─────────────────────────────────────');
@@ -689,12 +691,12 @@ class AgencyProfile {
       experience: experience,
       location: location,
       address: address,
-      imageUrl: imageUrl,
-      isActive: isActive,
       phone: phone,
       email: email,
-      description: description,
       establishedYear: establishedYear,
+      imageUrl: imageUrl,
+      isActive: isActive,
+      description: description,
       fleetSize: fleetSize,
     );
   }

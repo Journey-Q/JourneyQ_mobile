@@ -324,130 +324,126 @@ class _BookingRoomPageState extends State<BookingRoomPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => WillPopScope(
-        onWillPop: () async => false,
-        child: AlertDialog(
-          shape: RoundedRectangleBorder(
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        contentPadding: EdgeInsets.zero,
+        content: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-          ),
-          contentPadding: EdgeInsets.zero,
-          content: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.green.shade50,
-                  Colors.white,
-                ],
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.green,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.check,
-                    color: Colors.white,
-                    size: 32,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Booking Confirmed!',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Your room has been successfully booked.',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade200),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.confirmation_number, color: Colors.green, size: 16),
-                          SizedBox(width: 8),
-                          Text(
-                            'Booking Reference',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                      Text(
-                        '#BK${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Color(0xFF0088cc),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildBookingDetailRow('Hotel', hotelData['name'] ?? 'Unknown Hotel'),
-                      _buildBookingDetailRow('Room', roomData['displayRoomType'] ?? roomData['roomType'] ?? 'Standard Room'),
-                      _buildBookingDetailRow('Dates', '${_checkInDate?.day}/${_checkInDate?.month}/${_checkInDate?.year} - ${_checkOutDate?.day}/${_checkOutDate?.month}/${_checkOutDate?.year}'),
-                      _buildBookingDetailRow('Guests', '$_guests'),
-                      const Divider(),
-                      _buildBookingDetailRow('Total', 'LKR ${_calculateTotalAmount().toStringAsFixed(2)}', isTotal: true),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Close the dialog and navigate in one go
-                      Navigator.of(context).popUntil((route) => route.isFirst);
-                      context.go('/marketplace');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0088cc),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Continue',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.green.shade50,
+                Colors.white,
               ],
             ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.green,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Booking Confirmed!',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Your room has been successfully booked.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.confirmation_number, color: Colors.green, size: 16),
+                        SizedBox(width: 8),
+                        Text(
+                          'Booking Reference',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      '#BK${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Color(0xFF0088cc),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildBookingDetailRow('Hotel', hotelData['name'] ?? 'Unknown Hotel'),
+                    _buildBookingDetailRow('Room', roomData['displayRoomType'] ?? roomData['roomType'] ?? 'Standard Room'),
+                    _buildBookingDetailRow('Dates', '${_checkInDate?.day}/${_checkInDate?.month}/${_checkInDate?.year} - ${_checkOutDate?.day}/${_checkOutDate?.month}/${_checkOutDate?.year}'),
+                    _buildBookingDetailRow('Guests', '$_guests'),
+                    const Divider(),
+                    _buildBookingDetailRow('Total', 'LKR ${_calculateTotalAmount().toStringAsFixed(2)}', isTotal: true),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    context.push('/marketplace/hotels');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0088cc),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Continue',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -769,10 +765,7 @@ class _BookingRoomPageState extends State<BookingRoomPage> {
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          onPressed: () {
-            // Use Navigator.pop instead of context.pop to ensure proper navigation
-            Navigator.of(context).pop();
-          },
+          onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back),
         ),
       ),
@@ -1247,19 +1240,19 @@ class _BookingRoomPageState extends State<BookingRoomPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0088cc),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    elevation: 0,
+                    elevation: 3,
                   ),
                   child: _isLoading
                       ? const SizedBox(
                     height: 20,
                     width: 20,
                     child: CircularProgressIndicator(
+                      color: Colors.white,
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   )
                       : const Text(

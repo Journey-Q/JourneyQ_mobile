@@ -489,7 +489,6 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
   Widget build(BuildContext context) {
     // Count variables - replace with your actual state variables
     int orderCount = 3; // Number of pending orders
-    int chatCount = 7; // Number of unread messages
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -520,16 +519,6 @@ class _ViewAllHotelsPageState extends State<ViewAllHotelsPage> {
             count: orderCount,
             onTap: () => context.push('/booking_history'),
           ),
-
-          const SizedBox(width: 10),
-
-          // Chat Icon with Badge
-          _buildIconWithBadge(
-            icon: LucideIcons.messageCircle,
-            count: chatCount,
-            onTap: () => context.push('/market_chat'),
-          ),
-
           const SizedBox(width: 16),
         ],
       ),
