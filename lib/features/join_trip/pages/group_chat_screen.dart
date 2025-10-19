@@ -297,6 +297,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         groupId: widget.groupId,
         groupName: widget.groupName,
         userImage: widget.userImage,
+        groupProfile: _groupData?['groupProfile'], // Pass Firebase group profile image
         description: _groupData?['description'] ?? 'No description available',
         members: _getMembers(),
         isCreator: _groupData?['creatorId'] == _currentUserId,

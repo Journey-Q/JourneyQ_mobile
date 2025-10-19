@@ -1,10 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:journeyq/data/repositories/jointTrip_chat/jointTrip_group.dart';
 import 'package:journeyq/data/repositories/joint_trip_repository/trip_repository.dart';
 import 'package:journeyq/core/storage/localstorage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:journeyq/features/join_trip/pages/common/trip_details_widget.dart';
 import 'package:journeyq/features/join_trip/pages/common/trip_form_widget.dart';
+import 'package:journeyq/core/services/api_service.dart';
 
 class GroupDetailsPage extends StatefulWidget {
   final String groupId;
@@ -140,55 +143,119 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
     }
   }
 
-  String _getLocationBasedImage() {
-    final groupNameLower = _groupNameController.text.toLowerCase();
-
-    if (groupNameLower.contains('kandy')) {
-      return 'https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=800';
-    } else if (groupNameLower.contains('ella')) {
-      return 'https://images.unsplash.com/photo-1605640840605-14ac1855827b?w=800';
-    } else if (groupNameLower.contains('sigiriya')) {
-      return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800';
-    } else if (groupNameLower.contains('galle')) {
-      return 'https://images.unsplash.com/photo-1549366021-9f761d040a94?w=800&h=400&fit=crop';
-    } else if (groupNameLower.contains('nuwara eliya')) {
-      return 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=400&fit=crop';
-    } else {
-      return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop';
+  String? _getTripCoverImage() {
+    // First check trip data (backend) for cover image
+    if (_tripData != null && _tripData!['coverImageUrl'] != null && _tripData!['coverImageUrl'].toString().isNotEmpty) {
+      return _tripData!['coverImageUrl'];
     }
+
+    // Fallback: Check Firebase group profile for cover image
+    if (_groupData != null && _groupData!['groupProfile'] != null && _groupData!['groupProfile'].toString().isNotEmpty) {
+      return _groupData!['groupProfile'];
+    }
+
+    // Return null if no cover image - will show placeholder
+    return null;
   }
 
-  void _changeGroupImage() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
+  Future<void> _changeGroupImage() async {
+    final ImagePicker picker = ImagePicker();
+
+    try {
+      // Pick image from gallery
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+
+      if (image == null) return;
+
+      // Show loading dialog
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
+
+      if (_tripId != null) {
+        final File imageFile = File(image.path);
+
+        // TEMPORARY FIX: Upload directly to Cloudinary and update Firebase
+        // This bypasses the backend endpoint that doesn't exist yet
+        print('📤 Uploading image to Cloudinary...');
+
+        final coverImageUrl = await ApiService.uploadImage(
+          imageFile: imageFile,
+          subfolderName: 'journeyq/trip_covers',
+          customFileName: 'trip_${_tripId}_cover_${DateTime.now().millisecondsSinceEpoch}',
+        );
+
+        if (coverImageUrl == null || coverImageUrl.isEmpty) {
+          throw Exception('Failed to upload image to Cloudinary');
+        }
+
+        print('✅ Image uploaded to Cloudinary: $coverImageUrl');
+
+        // Update Firebase group profile
+        await JointTripGroupRepository.updateGroupProfile(
+          tripId: _tripId!,
+          profileUrl: coverImageUrl,
+        );
+        print('✅ Firebase group profile updated');
+
+        // TODO: When backend endpoint is ready, also call:
+        // await TripRepository.uploadTripCoverImage(_tripId!, imageFile);
+
+        // Reload group data from Firebase to get the updated profile
+        _groupData = await JointTripGroupRepository.getGroupDetails(_tripId!);
+
+        // Update local trip data with new cover image
+        if (_tripData != null) {
+          _tripData!['coverImageUrl'] = coverImageUrl;
+        }
+
+        // Close loading dialog
+        if (mounted) Navigator.pop(context);
+
+        // Update UI
+        setState(() {});
+
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Cover image updated successfully!'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
             ),
-            const SizedBox(height: 20),
-            const Text(
-              'Change Group Image',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            const Text('Image upload feature coming soon!'),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
+          );
+        }
+      }
+    } catch (e) {
+      print('❌ Error updating cover image: $e');
+
+      // Close loading dialog if open
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update cover image: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -289,20 +356,42 @@ class _GroupDetailsPageState extends State<GroupDetailsPage> {
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(11),
-                                child: Image.network(
-                                  _getLocationBasedImage(),
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      color: Colors.grey[300],
-                                      child: const Icon(
-                                        Icons.location_on,
-                                        size: 40,
-                                        color: Colors.grey,
+                                child: _getTripCoverImage() != null
+                                    ? Image.network(
+                                        _getTripCoverImage()!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return Container(
+                                            color: Colors.grey[300],
+                                            child: const Icon(
+                                              Icons.image,
+                                              size: 40,
+                                              color: Colors.grey,
+                                            ),
+                                          );
+                                        },
+                                      )
+                                    : Container(
+                                        color: Colors.grey[200],
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.add_photo_alternate,
+                                              size: 48,
+                                              color: Colors.grey[400],
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              'No cover image',
+                                              style: TextStyle(
+                                                color: Colors.grey[600],
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    );
-                                  },
-                                ),
                               ),
                             ),
                             if (_isCreator && _isEditing)

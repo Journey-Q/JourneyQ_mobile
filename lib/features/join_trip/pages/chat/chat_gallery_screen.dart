@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:journeyq/features/join_trip/pages/data.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:journeyq/core/storage/localstorage.dart';
+import 'package:journeyq/data/repositories/joint_trip_repository/joint_trip_gallery.dart';
 
 class ChatGalleryScreen extends StatefulWidget {
   final String groupId;
@@ -22,19 +25,393 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
   final ImagePicker _picker = ImagePicker();
   List<Map<String, dynamic>> _galleryImages = [];
   List<XFile> _selectedImages = [];
-  Set<String> _selectedForSave = {}; // Track selected images for saving
-  bool _isSelectionMode = false; // Toggle selection mode
+  bool _isLoading = false;
+  bool _isUploading = false;
+  int? _tripId;
+  int? _groupId;
+  int? _currentUserId;
+  String? _currentUserName;
 
   @override
   void initState() {
     super.initState();
-    _loadGalleryImages();
+    _initializeAndLoadGallery();
   }
 
-  void _loadGalleryImages() {
-    setState(() {
-      _galleryImages = SampleData.getGalleryImages(widget.groupId);
-    });
+  Future<void> _initializeAndLoadGallery() async {
+    try {
+      // Extract tripId from groupId (format: trip_123)
+      _tripId = int.tryParse(widget.groupId.replaceFirst('trip_', ''));
+      
+      if (_tripId == null) {
+        throw Exception('Invalid trip ID format');
+      }
+
+      // For now, assume groupId is same as tripId (adjust based on your logic)
+      _groupId = _tripId;
+
+      // Get current user info
+      final prefs = await SharedPreferences.getInstance();
+      final localStorage = LocalStorage(prefs: prefs);
+      final currentUser = await localStorage.getUser();
+
+      _currentUserId = currentUser?.userId;
+      _currentUserName = currentUser?.username ?? 'User';
+
+      // Load gallery images
+      await _loadGalleryImages();
+    } catch (e) {
+      print('Error initializing gallery: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to initialize gallery: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _loadGalleryImages() async {
+    if (_tripId == null) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      print('📥 Loading gallery for trip: $_tripId');
+      final galleryData = await JointTripGalleryRepository.getGalleryImages(_tripId!);
+      print('📦 Raw gallery data received: $galleryData');
+
+      setState(() {
+        _galleryImages = galleryData.map((img) {
+          final formatted = JointTripGalleryRepository.formatImageForUI(img);
+          print('🖼️ Formatted image: $formatted');
+          return formatted;
+        }).toList();
+        _isLoading = false;
+      });
+
+      print('✅ Loaded ${_galleryImages.length} images');
+      if (_galleryImages.isNotEmpty) {
+        print('📸 First image URL: ${_galleryImages[0]['url']}');
+      }
+    } catch (e) {
+      print('Error loading gallery images: $e');
+
+      setState(() {
+        _galleryImages = []; // Set to empty list
+        _isLoading = false;
+      });
+
+      // Only show error if it's not a 404/500 (backend not ready)
+      if (!e.toString().contains('500') && !e.toString().contains('404')) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to load gallery: $e'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } else {
+        // Backend not ready - just show empty gallery silently
+        print('ℹ️ Gallery backend not ready yet. Showing empty gallery.');
+      }
+    }
+  }
+
+  Future<void> _pickImagesFromGallery() async {
+    try {
+      final List<XFile> images = await _picker.pickMultiImage();
+      if (images.isNotEmpty) {
+        setState(() {
+          _selectedImages = images;
+        });
+        _showImagePreviewDialog();
+      }
+    } catch (e) {
+      print('Error picking images: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to pick images: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  void _showAddImageOptions() {
+    // Directly open gallery picker
+    _pickImagesFromGallery();
+  }
+
+  void _showImagePreviewDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Preview Selected Photos',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                '${_selectedImages.length} photo(s) selected',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                height: 200,
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                  ),
+                  itemCount: _selectedImages.length,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          File(_selectedImages[index].path),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey[200],
+                              child: const Center(
+                                child: Icon(Icons.image, size: 30, color: Colors.grey),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  TextButton(
+                    onPressed: _isUploading
+                        ? null
+                        : () {
+                            setState(() {
+                              _selectedImages.clear();
+                            });
+                            Navigator.pop(context);
+                          },
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(color: Colors.grey, fontSize: 16),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: _isUploading
+                        ? null
+                        : () {
+                            Navigator.pop(context);
+                            _uploadSelectedImagesToBackend();
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: _isUploading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Text('Upload'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _uploadSelectedImagesToBackend() async {
+    if (_selectedImages.isEmpty || _tripId == null || _groupId == null || _currentUserId == null) {
+      return;
+    }
+
+    setState(() => _isUploading = true);
+
+    try {
+      // Show progress dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 20),
+              const Text('Uploading images...'),
+            ],
+          ),
+        ),
+      );
+
+      // Convert XFile to File
+      final imageFiles = _selectedImages.map((xFile) => File(xFile.path)).toList();
+
+      // Upload to backend
+      print('🚀 Starting upload: ${imageFiles.length} files, tripId=$_tripId, groupId=$_groupId, userId=$_currentUserId');
+
+      final uploadedImages = await JointTripGalleryRepository.uploadMultipleImages(
+        tripId: _tripId!,
+        groupId: _groupId!,
+        imageFiles: imageFiles,
+        userId: _currentUserId!,
+        onProgress: (uploaded, total) {
+          print('📊 Upload progress: $uploaded/$total');
+        },
+      );
+
+      print('✅ Upload completed! Returned ${uploadedImages.length} images');
+      print('📦 Uploaded images data: $uploadedImages');
+
+      // Close progress dialog
+      if (mounted) Navigator.pop(context);
+
+      // Clear selected images
+      setState(() {
+        _selectedImages.clear();
+        _isUploading = false;
+      });
+
+      // Reload gallery
+      print('🔄 Reloading gallery...');
+      await _loadGalleryImages();
+      print('✅ Gallery reloaded. Now have ${_galleryImages.length} images');
+
+      // Show success message
+      if (mounted) {
+        final count = uploadedImages.length;
+        print('📢 Showing success message for $count photos');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$count photo(s) uploaded successfully!'),
+            backgroundColor: const Color(0xFF34D399),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error uploading images: $e');
+
+      // Close progress dialog
+      if (mounted) Navigator.pop(context);
+
+      setState(() => _isUploading = false);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to upload images: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteImage(Map<String, dynamic> image) async {
+    try {
+      final imageId = image['id'] as int;
+      final cloudinaryUrl = image['url'] as String;
+
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 20),
+              const Text('Deleting image...'),
+            ],
+          ),
+        ),
+      );
+
+      // Delete from backend
+      await JointTripGalleryRepository.deleteImage(
+        imageId: imageId,
+        imageUrl: cloudinaryUrl,
+      );
+
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      // Reload gallery
+      await _loadGalleryImages();
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Photo deleted successfully'),
+            backgroundColor: Color(0xFFF87171),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error deleting image: $e');
+
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete image: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -45,27 +422,15 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
         backgroundColor: Colors.white,
         elevation: 1,
         shadowColor: Colors.grey.withOpacity(0.2),
-        leading: _isSelectionMode
-            ? IconButton(
-                icon: const Icon(Icons.close, color: Colors.black),
-                onPressed: () {
-                  setState(() {
-                    _isSelectionMode = false;
-                    _selectedForSave.clear();
-                  });
-                },
-              )
-            : IconButton(
-                icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-                onPressed: () => Navigator.pop(context),
-              ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _isSelectionMode 
-                  ? 'Select Photos'
-                  : '${widget.groupName} Gallery',
+              '${widget.groupName} Gallery',
               style: const TextStyle(
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
@@ -73,9 +438,7 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
               ),
             ),
             Text(
-              _isSelectionMode
-                  ? '${_selectedForSave.length} selected'
-                  : '${_galleryImages.length} photos',
+              '${_galleryImages.length} photos',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 14,
@@ -83,69 +446,34 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
             ),
           ],
         ),
-        actions: _isSelectionMode
-            ? [
-                if (_selectedForSave.isNotEmpty)
-                  IconButton(
-                    icon: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF34D399),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.save_alt,
-                        color: Colors.white,
-                        size: 22,
-                      ),
-                    ),
-                    onPressed: _saveSelectedImages,
-                  ),
-                const SizedBox(width: 12),
-              ]
-            : [
-                if (_galleryImages.isNotEmpty)
-                  IconButton(
-                    icon: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF6366F1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.download,
-                        color: Colors.white,
-                        size: 22,
-                      ),
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isSelectionMode = true;
-                      });
-                    },
-                  ),
-                IconButton(
-                  icon: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 40, 40, 40),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.add_a_photo,
-                      color: Colors.white,
-                      size: 22,
-                    ),
-                  ),
-                  onPressed: _showAddImageOptions,
-                ),
-                const SizedBox(width: 12),
-              ],
+        actions: [
+          IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 40, 40, 40),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.add_a_photo,
+                color: Colors.white,
+                size: 22,
+              ),
+            ),
+            onPressed: _showAddImageOptions,
+          ),
+          const SizedBox(width: 12),
+        ],
       ),
-      body: _galleryImages.isEmpty
-          ? _buildEmptyState()
-          : _buildGalleryGrid(),
-
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0088cc)),
+              ),
+            )
+          : _galleryImages.isEmpty
+              ? _buildEmptyState()
+              : _buildGalleryGrid(),
     );
   }
 
@@ -156,20 +484,20 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(30),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
                 colors: [Color(0xFFE0E7FF), Color(0xFFC7D2FE)],
               ),
               shape: BoxShape.circle,
             ),
-            child: Icon(
+            child: const Icon(
               Icons.photo_library,
               size: 50,
               color: Colors.black,
             ),
           ),
           const SizedBox(height: 20),
-          Text(
+          const Text(
             'No Photos Yet',
             style: TextStyle(
               fontSize: 22,
@@ -223,356 +551,40 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
   }
 
   Widget _buildImageCard(Map<String, dynamic> image) {
-    final isSelected = _selectedForSave.contains(image['id']);
-    
     return GestureDetector(
-      onTap: () {
-        if (_isSelectionMode) {
-          setState(() {
-            if (isSelected) {
-              _selectedForSave.remove(image['id']);
-            } else {
-              _selectedForSave.add(image['id']);
-            }
-          });
-        } else {
-          _showImageDetail(image);
-        }
-      },
-      onLongPress: () {
-        if (!_isSelectionMode) {
-          setState(() {
-            _isSelectionMode = true;
-            _selectedForSave.add(image['id']);
-          });
-        }
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          border: _isSelectionMode
-              ? Border.all(
-                  color: isSelected ? const Color(0xFF34D399) : Colors.grey[300]!,
-                  width: isSelected ? 3 : 1,
-                )
-              : null,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.15),
-              spreadRadius: 2,
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                image['url'],
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
-                    color: Colors.grey[200],
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                            : null,
-                        color: Colors.black,
-                        strokeWidth: 3,
-                      ),
-                    ),
-                  );
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey[200],
-                    child: const Center(
-                      child: Icon(Icons.error, color: Colors.grey, size: 40),
-                    ),
-                  );
-                },
-              ),
-            ),
-            if (_isSelectionMode)
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isSelected ? const Color(0xFF34D399) : Colors.white,
-                    border: Border.all(
-                      color: isSelected ? const Color(0xFF34D399) : Colors.grey,
-                      width: 2,
-                    ),
-                  ),
-                  child: isSelected
-                      ? const Icon(
-                          Icons.check,
-                          size: 16,
-                          color: Colors.white,
-                        )
-                      : null,
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // New method to save selected images (simplified)
-  Future<void> _saveSelectedImages() async {
-    if (_selectedForSave.isEmpty) return;
-
-    setState(() {
-      _isSelectionMode = false;
-      _selectedForSave.clear();
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${_selectedForSave.length} photos selected for download!'),
-        backgroundColor: const Color(0xFF34D399),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-
-
-  void _showAddImageOptions() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      backgroundColor: Colors.white,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
+      onTap: () => _showImageDetail(image),
+      child: Hero(
+        tag: image['id'],
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.network(
+            image['url'],
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
                 color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Add Photo',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(height: 20),
-            GestureDetector(
-              onTap: () => _pickMultipleImages(),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(15),
+                child: const Center(
+                  child: Icon(Icons.broken_image, color: Colors.grey, size: 30),
                 ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.photo_library,
-                      size: 25,
-                      color: Colors.black,
-                    ),
-                    SizedBox(width: 10),
-                    Text(
-                      'Choose from Gallery',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _pickMultipleImages() async {
-    Navigator.pop(context); // Close the bottom sheet
-    
-    try {
-      final List<XFile> pickedFiles = await _picker.pickMultiImage(
-        maxWidth: 1200,
-        maxHeight: 1200,
-        imageQuality: 85,
-      );
-      
-      if (pickedFiles.isNotEmpty) {
-        setState(() {
-          _selectedImages = pickedFiles;
-        });
-        _showSelectedImagesDialog();
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error picking images: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  void _showSelectedImagesDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Selected Photos',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              const SizedBox(height: 15),
-              Text(
-                '${_selectedImages.length} photo(s) selected',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                height: 200,
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 8,
-                    mainAxisSpacing: 8,
+              );
+            },
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Container(
+                color: Colors.grey[200],
+                child: Center(
+                  child: CircularProgressIndicator(
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
+                    strokeWidth: 2,
                   ),
-                  itemCount: _selectedImages.length,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey[300]!),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          _selectedImages[index].path,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: Colors.grey[200],
-                              child: const Center(
-                                child: Icon(Icons.image, size: 30, color: Colors.grey),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    );
-                  },
                 ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _selectedImages.clear();
-                      });
-                      Navigator.pop(context);
-                    },
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(color: Colors.grey, fontSize: 16),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      _addSelectedImagesToGallery();
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text('Send'),
-                  ),
-                ],
-              ),
-            ],
+              );
+            },
           ),
         ),
-      ),
-    );
-  }
-
-  void _addSelectedImagesToGallery() {
-    for (XFile imageFile in _selectedImages) {
-      final imageData = {
-        'id': 'img_${DateTime.now().millisecondsSinceEpoch}_${_selectedImages.indexOf(imageFile)}',
-        'url': imageFile.path,
-        'thumbnail': imageFile.path,
-        'caption': 'No caption',
-        'uploadedBy': 'You',
-        'uploadedById': 'current_user',
-        'uploadedAt': DateTime.now().toIso8601String(),
-        'userAvatar': 'https://i.pravatar.cc/150?img=1',
-        'groupId': widget.groupId,
-        'likes': 0,
-        'comments': 0,
-      };
-
-      SampleData.addGalleryImage(widget.groupId, imageData);
-    }
-    
-    _loadGalleryImages();
-    
-    setState(() {
-      _selectedImages.clear();
-    });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${_selectedImages.length} photo(s) added to gallery!'),
-        backgroundColor: Color(0xFF34D399),
-        behavior: SnackBarBehavior.floating,
       ),
     );
   }
@@ -623,25 +635,25 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
               ),
             ),
           ),
-          Positioned(
-            top: 40,
-            right: 20,
-            child: SafeArea(
-              child: FloatingActionButton(
-                mini: true,
-                backgroundColor: Colors.red.withOpacity(0.8),
-                foregroundColor: Colors.white,
-                onPressed: () => _showDeleteConfirmation(image, context),
-                child: const Icon(Icons.delete),
+          // Only show delete button if current user uploaded the image
+          if (image['uploadedById']?.toString() == _currentUserId?.toString())
+            Positioned(
+              top: 40,
+              right: 20,
+              child: SafeArea(
+                child: FloatingActionButton(
+                  mini: true,
+                  backgroundColor: Colors.red.withOpacity(0.8),
+                  foregroundColor: Colors.white,
+                  onPressed: () => _showDeleteConfirmation(image, context),
+                  child: const Icon(Icons.delete),
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
   }
-
-
 
   void _showDeleteConfirmation(Map<String, dynamic> image, BuildContext dialogContext) {
     Navigator.pop(dialogContext);
@@ -658,19 +670,11 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              SampleData.removeGalleryImage(widget.groupId, image['id']);
-              _loadGalleryImages();
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Photo deleted'),
-                  backgroundColor: Color(0xFFF87171),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              _deleteImage(image);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFFF87171),
+              backgroundColor: const Color(0xFFF87171),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -688,7 +692,7 @@ class _ChatGalleryScreenState extends State<ChatGalleryScreen> {
       final date = DateTime.parse(dateString);
       final now = DateTime.now();
       final difference = now.difference(date);
-      
+
       if (difference.inDays > 0) {
         return '${difference.inDays}d ago';
       } else if (difference.inHours > 0) {

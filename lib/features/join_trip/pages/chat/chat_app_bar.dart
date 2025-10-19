@@ -5,6 +5,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String groupId;
   final String groupName;
   final String userImage;
+  final String? groupProfile; // Firebase group profile image URL
   final String description;
   final List<Map<String, dynamic>> members;
   final bool isCreator;
@@ -17,6 +18,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.groupId,
     required this.groupName,
     required this.userImage,
+    this.groupProfile, // Optional Firebase group profile
     required this.description,
     required this.members,
     required this.isCreator,
@@ -24,28 +26,6 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onGalleryPressed,
     this.onBudgetPressed,
   });
-
-  String _getLocationBasedImage(String? destination) {
-    final dest = destination?.toLowerCase() ?? '';
-    
-    if (dest.contains('kandy')) {
-      return 'https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=800';
-    } else if (dest.contains('ella')) {
-      return 'https://images.unsplash.com/photo-1605640840605-14ac1855827b?w=800';
-    } else if (dest.contains('sigiriya')) {
-      return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800';
-    } else if (dest.contains('galle')) {
-      return 'https://images.unsplash.com/photo-1539650116574-75c0c6d24e14?w=800';
-    } else if (dest.contains('nuwara eliya')) {
-      return 'https://images.unsplash.com/photo-1605640957230-d8b5b3c7b1e4?w=800';
-    } else if (dest.contains('yala')) {
-      return 'https://images.unsplash.com/photo-1539650116574-75c0c6d24e14?w=800';
-    } else if (dest.contains('mirissa')) {
-      return 'https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=800&h=600&fit=crop';
-    } else {
-      return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop';
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +42,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
           children: [
             Stack(
               children: [
-                // Profile image as rounded square - now using location-based image
+                // Profile image as rounded square - using Firebase group profile or fallback
                 Container(
                   width: 40,
                   height: 40,
@@ -72,16 +52,21 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(9),
-                    child: Image.network(
-                      _getLocationBasedImage(groupName),
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.grey[300],
-                          child: const Icon(Icons.person, size: 20, color: Colors.grey),
-                        );
-                      },
-                    ),
+                    child: groupProfile != null && groupProfile!.isNotEmpty
+                        ? Image.network(
+                            groupProfile!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Colors.grey[300],
+                                child: const Icon(Icons.group, size: 20, color: Colors.grey),
+                              );
+                            },
+                          )
+                        : Container(
+                            color: Colors.grey[300],
+                            child: const Icon(Icons.group, size: 20, color: Colors.grey),
+                          ),
                   ),
                 ),
                 Positioned(
