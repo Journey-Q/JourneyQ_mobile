@@ -32,7 +32,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.journeyq"
-        minSdk = flutter.minSdkVersion  // Changed from flutter.minSdkVersion (21) to 23 for Firebase compatibility
+        minSdk = 23  // Changed from flutter.minSdkVersion (21) to 23 for Firebase compatibility
         targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName

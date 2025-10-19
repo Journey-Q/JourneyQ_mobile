@@ -56,6 +56,10 @@ class AgencyRepository {
         }
 
         print('🎯 Agency data keys: ${agencyData.keys.toList()}');
+        print('📊 Agency data values:');
+        agencyData.forEach((key, value) {
+          print('   $key: $value (${value.runtimeType})');
+        });
 
         return AgencyProfile.fromJson(agencyData);
       } else {
@@ -80,8 +84,7 @@ class AgencyRepository {
       final response = await MarketplaceService.get('$_agencyProfilesBasePath/all');
 
       print('✅ Get All Agencies Response Status: ${response.statusCode}');
-      print('📦 Raw Response: ${response.data}');
-      print('🔍 Response Type: ${response.data.runtimeType}');
+      print('📦 Raw Response Type: ${response.data.runtimeType}');
 
       List<dynamic> agencyData = [];
 
@@ -338,6 +341,90 @@ class AgencyRepository {
     }
   }
 
+  /// Test method to check raw API response
+  static Future<void> testAgencyData(String agencyId) async {
+    try {
+      print('🧪 TESTING API RESPONSE FOR AGENCY: $agencyId');
+
+      final longAgencyId = int.tryParse(agencyId);
+      if (longAgencyId == null) {
+        print('❌ Invalid agency ID');
+        return;
+      }
+
+      // Test agency-profiles endpoint
+      print('📡 Testing /service/agency-profiles/$longAgencyId');
+      try {
+        final response1 = await MarketplaceService.get('/service/agency-profiles/$longAgencyId');
+        print('✅ Agency Profiles Endpoint Response:');
+        print('   Status: ${response1.statusCode}');
+        print('   Data: ${response1.data}');
+        print('   Data Type: ${response1.data.runtimeType}');
+
+        if (response1.data is Map) {
+          final data = response1.data as Map;
+          print('   All Keys: ${data.keys.toList()}');
+          data.forEach((key, value) {
+            print('     $key: $value (${value.runtimeType})');
+          });
+        }
+      } catch (e) {
+        print('❌ Agency Profiles Endpoint Failed: $e');
+      }
+
+      // Test providers endpoint
+      print('📡 Testing /service/providers/$longAgencyId');
+      try {
+        final response2 = await MarketplaceService.get('/service/providers/$longAgencyId');
+        print('✅ Providers Endpoint Response:');
+        print('   Status: ${response2.statusCode}');
+        print('   Data: ${response2.data}');
+        print('   Data Type: ${response2.data.runtimeType}');
+
+        if (response2.data is Map) {
+          final data = response2.data as Map;
+          print('   All Keys: ${data.keys.toList()}');
+        }
+      } catch (e) {
+        print('❌ Providers Endpoint Failed: $e');
+      }
+
+    } catch (e) {
+      print('❌ Test failed: $e');
+    }
+  }
+
+  /// Debug method to see all agencies data structure
+  static Future<void> debugAllAgencies() async {
+    try {
+      print('🔍 DEBUG: Fetching ALL agencies to check data structure');
+      final response = await MarketplaceService.get('/service/agency-profiles/all');
+      print('✅ All Agencies Response:');
+      print('   Status: ${response.statusCode}');
+
+      if (response.data is List) {
+        final agencies = response.data as List;
+        print('   Found ${agencies.length} agencies');
+        for (int i = 0; i < agencies.length; i++) {
+          if (agencies[i] is Map) {
+            final agency = agencies[i] as Map<String, dynamic>;
+            print('   Agency $i Keys: ${agency.keys.toList()}');
+            if (i == 0) { // Print first agency details
+              print('   First Agency Full Data:');
+              agency.forEach((key, value) {
+                print('     $key: $value (${value.runtimeType})');
+              });
+            }
+          }
+        }
+      } else {
+        print('   Response data: ${response.data}');
+      }
+    } catch (e) {
+      print('❌ Debug failed: $e');
+    }
+  }
+
   /// Helper method to find list in response recursively
   static List<dynamic> _findListInResponse(Map<String, dynamic> response) {
     for (var key in response.keys) {
@@ -424,7 +511,7 @@ class AgencyRepository {
   }
 }
 
-/// Agency Profile Model - Updated to match database structure
+/// Agency Profile Model - UPDATED with better field mapping
 class AgencyProfile {
   final String id;
   final String name;
@@ -458,6 +545,10 @@ class AgencyProfile {
     print('─────────────────────────────────────');
     print('🔄 Parsing agency JSON');
     print('🔍 JSON keys: ${json.keys.toList()}');
+    print('📊 JSON values:');
+    json.forEach((key, value) {
+      print('   $key: $value (${value.runtimeType})');
+    });
 
     // Extract ID - try multiple possible field names
     String? extractedId;
@@ -488,9 +579,9 @@ class AgencyProfile {
     final String id = extractedId ?? 'unknown_id';
     print('🎯 Final ID: $id');
 
-    // Extract name - prioritize agency_name from database
+    // Extract name - prioritize agency_name from database (note the typo in database field)
     String name = _extractField(json, [
-      'agency_name', 'name', 'agencyName', 'title', 'company_name', 'providerName',
+      'agency_name', 'agentcy_name', 'name', 'agencyName', 'title', 'company_name', 'providerName',
       'companyName', 'businessName', 'serviceProviderName'
     ]) ?? 'Unknown Agency';
 
@@ -511,19 +602,19 @@ class AgencyProfile {
       'operatingArea', 'service_area', 'city_name'
     ]);
 
-    // Extract phone
+    // Extract phone - prioritize direct 'phone' field from database
     String? phone = _extractField(json, [
       'phone', 'phone_number', 'contact_number', 'telephone', 'contactPhone',
       'mobile', 'mobile_number', 'contact', 'phone_no'
     ]);
 
-    // Extract email
+    // Extract email - prioritize direct 'email' field from database
     String? email = _extractField(json, [
       'email', 'contact_email', 'email_address', 'contactEmail',
       'business_email', 'company_email', 'email_id'
     ]);
 
-    // Extract description
+    // Extract description - prioritize direct 'description' field from database
     String? description = _extractField(json, [
       'description', 'about', 'details', 'info', 'bio', 'companyDescription',
       'about_us', 'aboutUs', 'business_description', 'profile_description'
@@ -541,7 +632,7 @@ class AgencyProfile {
       'number_of_vehicles', 'vehicles_count'
     ]);
 
-    // Extract image URL
+    // Extract image URL - prioritize profile_photo from database
     String? imageUrl;
     List<String> imageKeys = [
       'profile_photo', 'agency_photo', 'agency_image', 'imageUrl', 'profileImageUrl',
@@ -579,7 +670,7 @@ class AgencyProfile {
       }
     }
 
-    print('📊 Extracted Agency Data:');
+    print('📊 FINAL Extracted Agency Data:');
     print('  ID: $id');
     print('  Name: $name');
     print('  Experience: $experience');
@@ -587,6 +678,7 @@ class AgencyProfile {
     print('  Location: ${location ?? "Not available"}');
     print('  Phone: ${phone ?? "Not available"}');
     print('  Email: ${email ?? "Not available"}');
+    print('  Description: ${description ?? "Not available"}');
     print('  Image: ${imageUrl ?? "Not available"}');
     print('  Active: $isActive');
     print('─────────────────────────────────────');

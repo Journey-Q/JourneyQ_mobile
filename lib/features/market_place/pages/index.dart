@@ -226,12 +226,6 @@ class _MarketplacePageState extends State<MarketplacePage> {
             count: 3,
             onTap: () => context.push('/booking_history'),
           ),
-          const SizedBox(width: 10),
-          _buildIconWithBadge(
-            icon: LucideIcons.messageCircle,
-            count: 7,
-            onTap: () => context.push('/market_chat'),
-          ),
           const SizedBox(width: 16),
         ],
       ),

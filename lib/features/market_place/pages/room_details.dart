@@ -14,6 +14,14 @@ class RoomDetailsPage extends StatefulWidget {
     required this.roomId,
   }) : super(key: key);
 
+  // Factory constructor to handle navigation with extra parameters
+  factory RoomDetailsPage.fromMap(Map<String, dynamic> map) {
+    return RoomDetailsPage(
+      hotelId: map['hotelId'] ?? '',
+      roomId: map['roomId'] ?? '',
+    );
+  }
+
   @override
   State<RoomDetailsPage> createState() => _RoomDetailsPageState();
 }
@@ -42,20 +50,26 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
 
       // Load hotel profile
       final hotel = await HotelRepository.getHotelProfileById(widget.hotelId);
+      print('✅ Hotel profile loaded: ${hotel.name}');
 
       // Load room details
       final room = await RoomRepository.getRoomById(widget.roomId);
+      print('✅ Room details loaded: ${room.roomNumber} - ${room.roomType}');
 
       // Initialize room images
       final images = <String>[];
       if (room.imageUrl != null && room.imageUrl!.isNotEmpty) {
         images.add(room.imageUrl!);
+        print('✅ Room image URL: ${room.imageUrl}');
+      } else {
+        print('ℹ️ No room image URL available');
       }
-      // Add placeholder images for gallery
+
+      // Add placeholder images for gallery (you can remove these if you have actual images)
       images.addAll([
-        'assets/images/room_deluxe.jpg',
-        'assets/images/room_suite.jpg',
-        'assets/images/room_presidential.jpg',
+        'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=500',
+        'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=500',
+        'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=500',
       ]);
 
       if (mounted) {
@@ -154,6 +168,7 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
                     );
                   },
                   errorBuilder: (context, error, stackTrace) {
+                    print('❌ Error loading image: $error');
                     return _buildRoomPlaceholder();
                   },
                 )
@@ -247,10 +262,24 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
         ),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Icon(
-        Icons.bed,
-        size: 80,
-        color: Colors.white,
+      child: const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.bed,
+            size: 80,
+            color: Colors.white,
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Room Image',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -263,7 +292,7 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
       const Color(0xFFF44336),
       const Color(0xFFFF9800),
     ];
-    final colorIndex = roomData?.id.hashCode ?? 0 % colors.length;
+    final colorIndex = (roomData?.id.hashCode ?? 0).abs() % colors.length;
     return colors[colorIndex];
   }
 
@@ -829,6 +858,10 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
                 'Room ID: ${widget.roomId}',
                 style: const TextStyle(color: Colors.grey),
               ),
+              Text(
+                'Hotel ID: ${widget.hotelId}',
+                style: const TextStyle(color: Colors.grey),
+              ),
               if (errorMessage.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
@@ -899,12 +932,47 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
                           color: Colors.grey.shade600,
                         ),
                       ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Room ${roomData!.roomNumber}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 24),
+
+            // Room Description
+            if (roomData!.description.isNotEmpty && roomData!.description != 'No description available')
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Description',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    roomData!.description,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade700,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
 
             // Room Specifications
             _buildRoomSpecs(),

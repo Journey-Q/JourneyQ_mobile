@@ -15,7 +15,7 @@ class MarketplaceService {
 
     _dio = Dio(
       BaseOptions(
-        baseUrl: 'http://10.0.2.2:8080',
+        baseUrl: 'https://serviceprovidersservice-production-8f10.up.railway.app',
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
       ),
