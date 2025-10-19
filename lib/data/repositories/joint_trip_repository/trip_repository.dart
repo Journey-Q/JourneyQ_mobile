@@ -390,6 +390,7 @@ class TripRepository {
       'isGroupFormed': backendData['isGroupFormed'],
       'createdAt': backendData['createdAt'],
       'updatedAt': backendData['updatedAt'],
+      'coverImageUrl': backendData['coverImageUrl'],
     };
   }
 
@@ -431,6 +432,48 @@ class TripRepository {
       }
     } catch (e) {
       return dateString;
+    }
+  }
+
+  // Upload trip cover image
+  static Future<Map<String, dynamic>> uploadTripCoverImage(int tripId, dynamic imageFile) async {
+    try {
+      print('📤 Uploading cover image for trip: $tripId');
+
+      // Upload image to Cloudinary
+      String? coverImageUrl;
+
+      if (imageFile != null) {
+        coverImageUrl = await ApiService.uploadImage(
+          imageFile: imageFile,
+          subfolderName: 'journeyq/trip_covers',
+          customFileName: 'trip_${tripId}_cover_${DateTime.now().millisecondsSinceEpoch}',
+        );
+      }
+
+      if (coverImageUrl == null || coverImageUrl.isEmpty) {
+        throw Exception('Failed to upload image to Cloudinary');
+      }
+
+      print('✅ Image uploaded to Cloudinary: $coverImageUrl');
+
+      // Update trip cover image in backend
+      final response = await ApiService.put(
+        '/trips/$tripId/cover-image',
+        data: {'coverImageUrl': coverImageUrl},
+      );
+
+      print('Backend response: ${response.data}');
+
+      if (response.data != null && response.data['success'] == true) {
+        print('✅ Trip cover image updated successfully');
+        return response.data['data'] ?? {};
+      } else {
+        throw Exception(response.data?['message'] ?? 'Failed to update cover image');
+      }
+    } catch (e) {
+      print('❌ Error uploading trip cover image: $e');
+      rethrow;
     }
   }
 }
