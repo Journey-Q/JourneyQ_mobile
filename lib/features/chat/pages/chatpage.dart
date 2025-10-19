@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:journeyq/data/repositories/chat_repository/chat_repository.dart';
 import 'package:journeyq/data/repositories/chat_repository/models/chat_models.dart';
+import 'package:journeyq/core/services/notification_service.dart';
 import 'dart:async';
 
 /// Instagram-style Individual Chat Page
@@ -227,16 +228,34 @@ class _IndividualChatPageState extends State<IndividualChatPage> with WidgetsBin
         if (mounted) {
           final previousMessageCount = _messages.length;
           print('📊 UI State: Previous count: $previousMessageCount, New count: ${messages.length}');
-          
+
+          // Check for new messages from other user to show notification
+          if (previousMessageCount > 0 && messages.length > previousMessageCount) {
+            // Get the new messages
+            final newMessages = messages.skip(previousMessageCount).toList();
+
+            // Show notification only for messages from the other user
+            for (final newMessage in newMessages) {
+              if (newMessage.senderId != widget.currentUserId) {
+                print('🔔 New message from other user, showing notification');
+                NotificationService.showNotification(
+                  title: _getDisplayName(),
+                  body: newMessage.content,
+                  payload: 'chat_${widget.chatId}',
+                );
+              }
+            }
+          }
+
           setState(() {
             _messages = List<ChatMessage>.from(messages);
           });
-          
+
           // Auto-scroll to bottom when new message arrives or on initial load
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (_messages.isNotEmpty && (previousMessageCount == 0 || messages.length > previousMessageCount)) {
               _scrollToBottom();
-              
+
               // Mark new messages as read
               _markNewMessagesAsRead();
             }
