@@ -43,81 +43,121 @@ class CreateTourBookingDTO {
   }
 }
 
-// Tour Booking Response
+// Tour Booking Response - matches backend TourBookingResponseDTO
 class TourBookingResponse {
-  final String bookingId;
-  final String status;
-  final String message;
-  final DateTime bookedDate;
-  final int? id;
-  final int? tourId;
-  final int? userId;
-  final String? customerName;
-  final String? customerEmail;
-  final int? numberOfPeople;
-  final double? totalAmount;
-  final double? pricePerPerson;
+  final int id;
+  final int tourId;
+  final int serviceProviderId;
+  final int userId;
+
+  // Customer Information
+  final String customerName;
+  final String customerEmail;
+  final String customerPhone;
+
+  // Booking Details
+  final DateTime tourDate;
+  final int numberOfPeople;
+  final double pricePerPerson;
+  final double totalAmount;
+
+  // Booking Status
+  final String status; // PENDING, APPROVED, REJECTED, CANCELLED, COMPLETED
+  final String? specialRequests;
+  final String? cancellationReason;
+  final String? rejectionReason;
+
+  // Timestamps
+  final DateTime createdAt;
+  final DateTime? approvedAt;
+  final DateTime? rejectedAt;
+  final DateTime? cancelledAt;
+  final DateTime? completedAt;
 
   TourBookingResponse({
-    required this.bookingId,
+    required this.id,
+    required this.tourId,
+    required this.serviceProviderId,
+    required this.userId,
+    required this.customerName,
+    required this.customerEmail,
+    required this.customerPhone,
+    required this.tourDate,
+    required this.numberOfPeople,
+    required this.pricePerPerson,
+    required this.totalAmount,
     required this.status,
-    required this.message,
-    required this.bookedDate,
-    this.id,
-    this.tourId,
-    this.userId,
-    this.customerName,
-    this.customerEmail,
-    this.numberOfPeople,
-    this.totalAmount,
-    this.pricePerPerson,
+    this.specialRequests,
+    this.cancellationReason,
+    this.rejectionReason,
+    required this.createdAt,
+    this.approvedAt,
+    this.rejectedAt,
+    this.cancelledAt,
+    this.completedAt,
   });
+
+  // Convenience getters
+  String get bookingId => 'TB-$id';
+
+  String get statusDisplay {
+    switch (status.toUpperCase()) {
+      case 'PENDING':
+        return 'Pending Approval';
+      case 'APPROVED':
+        return 'Approved';
+      case 'REJECTED':
+        return 'Rejected';
+      case 'CANCELLED':
+        return 'Cancelled';
+      case 'COMPLETED':
+        return 'Completed';
+      default:
+        return status;
+    }
+  }
+
+  String get message {
+    switch (status.toUpperCase()) {
+      case 'PENDING':
+        return 'Your tour booking is pending approval';
+      case 'APPROVED':
+        return 'Tour booking approved for $customerName';
+      case 'REJECTED':
+        return 'Tour booking was rejected${rejectionReason != null ? ": $rejectionReason" : ""}';
+      case 'CANCELLED':
+        return 'Tour booking was cancelled${cancellationReason != null ? ": $cancellationReason" : ""}';
+      case 'COMPLETED':
+        return 'Tour booking completed';
+      default:
+        return 'Tour booking created successfully';
+    }
+  }
 
   factory TourBookingResponse.fromJson(Map<String, dynamic> json) {
     debugPrint('📦 Parsing TourBookingResponse from JSON: $json');
 
-    final id = json['id'] as int?;
-    final bookingId = id != null ? 'TB-$id' : 'TB-${DateTime.now().millisecondsSinceEpoch}';
-    final status = (json['status'] ?? 'CONFIRMED').toString();
-    final customerName = json['customerName']?.toString();
-    final message = customerName != null
-        ? 'Tour booking confirmed for $customerName'
-        : 'Tour booking created successfully';
-
-    DateTime bookedDate;
-    final createdAt = json['createdAt'] ?? json['confirmedAt'];
-    if (createdAt != null && createdAt is String) {
-      try {
-        bookedDate = DateTime.parse(createdAt);
-      } catch (e) {
-        debugPrint('⚠️ Error parsing date: $e');
-        bookedDate = DateTime.now();
-      }
-    } else {
-      bookedDate = DateTime.now();
-    }
-
-    final tourId = json['tourId'] as int?;
-    final userId = json['userId'] as int?;
-    final numberOfPeople = json['numberOfPeople'] as int?;
-    final pricePerPerson = (json['pricePerPerson'] as num?)?.toDouble();
-    final totalAmount = (json['totalAmount'] as num?)?.toDouble();
-
-    debugPrint('✅ Parsed TourBookingResponse: bookingId=$bookingId, totalAmount=$totalAmount');
-
     return TourBookingResponse(
-      bookingId: bookingId,
-      status: status,
-      message: message,
-      bookedDate: bookedDate,
-      id: id,
-      tourId: tourId,
-      userId: userId,
-      customerName: customerName,
-      customerEmail: json['customerEmail']?.toString(),
-      numberOfPeople: numberOfPeople,
-      pricePerPerson: pricePerPerson,
-      totalAmount: totalAmount,
+      id: json['id'] as int,
+      tourId: json['tourId'] as int,
+      serviceProviderId: json['serviceProviderId'] as int,
+      userId: json['userId'] as int,
+      customerName: json['customerName'] as String,
+      customerEmail: json['customerEmail'] as String,
+      customerPhone: json['customerPhone'] as String,
+      tourDate: DateTime.parse(json['tourDate'] as String),
+      numberOfPeople: json['numberOfPeople'] as int,
+      pricePerPerson: (json['pricePerPerson'] as num).toDouble(),
+      totalAmount: (json['totalAmount'] as num).toDouble(),
+      status: json['status']?.toString() ?? 'PENDING',
+      specialRequests: json['specialRequests']?.toString(),
+      cancellationReason: json['cancellationReason']?.toString(),
+      rejectionReason: json['rejectionReason']?.toString(),
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      approvedAt: json['approvedAt'] != null ? DateTime.parse(json['approvedAt'] as String) : null,
+      rejectedAt: json['rejectedAt'] != null ? DateTime.parse(json['rejectedAt'] as String) : null,
+      cancelledAt: json['cancelledAt'] != null ? DateTime.parse(json['cancelledAt'] as String) : null,
+      completedAt: json['completedAt'] != null ? DateTime.parse(json['completedAt'] as String) : null,
     );
   }
 }
