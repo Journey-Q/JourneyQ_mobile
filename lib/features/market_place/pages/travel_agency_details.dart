@@ -199,10 +199,6 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
     }
   }
 
-  void _contactAgency() {
-    _showContactBottomSheet();
-  }
-
   void _bookNow() {
     if (widget.agencyId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -213,220 +209,6 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
 
     // Navigate to booking page
     context.push('/marketplace/travel_agencies/booking/${widget.agencyId}');
-  }
-
-  void _showContactBottomSheet() {
-    if (agencyData == null) return;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) =>
-          Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Handle bar
-                  Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Agency info row
-                  Row(
-                    children: [
-                      // Agency image
-                      Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: _buildAgencyImage(agencyData!, size: 60),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-
-                      // Agency details
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              agencyData!.name,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            Row(
-                              children: [
-                                const Icon(
-                                    Icons.star, color: Colors.orange, size: 16),
-                                const SizedBox(width: 4),
-                                Text(
-                                  reviewStats?.averageRating.toStringAsFixed(1) ?? '0.0',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  agencyData!.experience,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.green.shade50,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                'Verified Agency',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.green.shade700,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Contact buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            // Add phone call functionality here
-                          },
-                          icon: const Icon(Icons.phone, size: 18),
-                          label: const Text('Call Now'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            // Add chat functionality here
-                          },
-                          icon: const Icon(Icons.chat_bubble_outline, size: 18),
-                          label: const Text('Start Chat'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0088cc),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Contact info
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.phone, size: 16,
-                                color: Color(0xFF0088cc)),
-                            const SizedBox(width: 8),
-                            Text(
-                              agencyData!.phone ?? '+94 11 000 0000',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const Spacer(),
-                            const Icon(Icons.content_copy, size: 16,
-                                color: Colors.grey),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            const Icon(Icons.location_on, size: 16,
-                                color: Color(0xFF0088cc)),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                agencyData!.location ?? 'Colombo, Sri Lanka',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-                ],
-              ),
-            ),
-          ),
-    );
-  }
-
-  void _viewReviews() {
-    if (_totalReviews > 0) {
-      context.push('/marketplace/travel_agencies/reviews/${widget.agencyId}');
-    }
   }
 
   Widget _buildVehicleCard(Map<String, dynamic> vehicle, int index) {
@@ -796,13 +578,11 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
   }
 
   Widget _buildAgencyImage(AgencyProfile agency, {double size = double.infinity}) {
+    // Enhanced image URL validation and loading
     if (agency.imageUrl != null && agency.imageUrl!.isNotEmpty) {
       String imageUrl = agency.imageUrl!;
 
-      // Convert relative URL to absolute if needed
-      if (!imageUrl.startsWith('http')) {
-        imageUrl = 'http://10.0.2.2:8080$imageUrl';
-      }
+      print('🖼️ Loading agency image for details: $imageUrl');
 
       return Image.network(
         imageUrl,
@@ -828,12 +608,14 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
           );
         },
         errorBuilder: (context, error, stackTrace) {
-          print('Image load error for ${agency.name}: $error');
+          print('❌ Image load error for ${agency.name}: $error');
+          print('❌ Image URL: $imageUrl');
           return _buildPlaceholderImage(agency, size: size);
         },
       );
     }
 
+    print('🖼️ No image URL for agency details: ${agency.name}');
     return _buildPlaceholderImage(agency, size: size);
   }
 
@@ -1229,6 +1011,12 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
     );
   }
 
+  void _viewReviews() {
+    if (_totalReviews > 0) {
+      context.push('/marketplace/travel_agencies/reviews/${widget.agencyId}');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -1363,6 +1151,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Agency Header Info
+                  // In the agency header info section, remove the duplicate email line:
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -1426,26 +1215,18 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                         const SizedBox(height: 16),
                         Text(
                           agencyData!.location ?? 'Colombo, Sri Lanka',
-                          style: const TextStyle(fontSize: 14, color: Colors
-                              .grey),
+                          style: const TextStyle(fontSize: 14, color: Colors.grey),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           agencyData!.phone ?? '+94 11 000 0000',
-                          style: const TextStyle(fontSize: 14, color: Colors
-                              .grey),
+                          style: const TextStyle(fontSize: 14, color: Colors.grey),
                         ),
                         const SizedBox(height: 8),
+                        // Email is now shown in the experience field, so we don't need to show it twice
                         Text(
-                          agencyData!.email ?? 'info@agency.lk',
-                          style: const TextStyle(fontSize: 14, color: Colors
-                              .grey),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          agencyData!.experience,
-                          style: const TextStyle(fontSize: 14, color: Colors
-                              .grey),
+                          agencyData!.experience, // This shows the email
+                          style: const TextStyle(fontSize: 14, color: Colors.grey),
                         ),
                       ],
                     ),
@@ -1515,24 +1296,19 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Vehicle Types & Pricing',
+                            'Available Vehicles',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Column(
-                            children: vehicles
-                                .asMap()
-                                .entries
-                                .map((entry) {
-                              int index = entry.key;
-                              Map<String, dynamic> vehicle = entry.value;
-                              return _buildVehicleCard(vehicle, index);
-                            }).toList(),
-                          ),
+                          const SizedBox(height: 16),
+                          ...vehicles.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final vehicle = entry.value as Map<String, dynamic>;
+                            return _buildVehicleCard(vehicle, index);
+                          }),
                         ],
                       ),
                     ),
@@ -1559,26 +1335,21 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Our Professional Drivers',
+                            'Our Drivers',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 16),
                           Column(
-                            children: drivers
-                                .asMap()
-                                .entries
-                                .map((entry) {
-                              int index = entry.key;
-                              Map<String, dynamic> driver = entry.value;
+                            children: drivers.asMap().entries.map((entry) {
+                              final index = entry.key;
+                              final driver = entry.value as Map<String, dynamic>;
                               return Padding(
                                 padding: EdgeInsets.only(
-                                  bottom: index == drivers.length - 1
-                                      ? 0
-                                      : 12,
+                                  bottom: index == drivers.length - 1 ? 0 : 16,
                                 ),
                                 child: _buildDriverCard(driver, index),
                               );
@@ -1590,19 +1361,33 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                     const SizedBox(height: 20),
                   ],
 
-                  // Customer Reviews Section (WITHOUT white container)
-                  _buildRecentReviewsPreview(),
+                  // Reviews Section
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: _buildRecentReviewsPreview(),
+                  ),
 
-                  const SizedBox(height: 80), // Space for bottom button
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
           ),
         ],
       ),
-
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
@@ -1614,68 +1399,22 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
             ),
           ],
         ),
-        child: SafeArea(
-          child: Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: _contactAgency,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF0088cc),
-                    side: const BorderSide(color: Color(0xFF0088cc)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    elevation: 0,
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.contact_phone, size: 20),
-                      SizedBox(width: 8),
-                      Text(
-                        'Contact',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: _bookNow,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0088cc),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    elevation: 2,
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.calendar_today, size: 20),
-                      SizedBox(width: 8),
-                      Text(
-                        'Book Now',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+        child: ElevatedButton(
+          onPressed: _bookNow,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF0088cc),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: const Text(
+            'Book Now',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ),

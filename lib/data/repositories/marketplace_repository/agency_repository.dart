@@ -56,6 +56,10 @@ class AgencyRepository {
         }
 
         print('🎯 Agency data keys: ${agencyData.keys.toList()}');
+        print('📊 Agency data values:');
+        agencyData.forEach((key, value) {
+          print('   $key: $value (${value.runtimeType})');
+        });
 
         return AgencyProfile.fromJson(agencyData);
       } else {
@@ -80,8 +84,7 @@ class AgencyRepository {
       final response = await MarketplaceService.get('$_agencyProfilesBasePath/all');
 
       print('✅ Get All Agencies Response Status: ${response.statusCode}');
-      print('📦 Raw Response: ${response.data}');
-      print('🔍 Response Type: ${response.data.runtimeType}');
+      print('📦 Raw Response Type: ${response.data.runtimeType}');
 
       List<dynamic> agencyData = [];
 
@@ -424,7 +427,7 @@ class AgencyRepository {
   }
 }
 
-/// Agency Profile Model - Updated to match database structure
+/// Agency Profile Model - UPDATED to show established year directly
 class AgencyProfile {
   final String id;
   final String name;
@@ -458,6 +461,10 @@ class AgencyProfile {
     print('─────────────────────────────────────');
     print('🔄 Parsing agency JSON');
     print('🔍 JSON keys: ${json.keys.toList()}');
+    print('📊 JSON values:');
+    json.forEach((key, value) {
+      print('   $key: $value (${value.runtimeType})');
+    });
 
     // Extract ID - try multiple possible field names
     String? extractedId;
@@ -490,37 +497,74 @@ class AgencyProfile {
 
     // Extract name - prioritize agency_name from database
     String name = _extractField(json, [
-      'agency_name', 'name', 'agencyName', 'title', 'company_name', 'providerName',
+      'agency_name', 'agentcy_name', 'name', 'agencyName', 'title', 'company_name', 'providerName',
       'companyName', 'businessName', 'serviceProviderName'
     ]) ?? 'Unknown Agency';
 
-    // Extract experience
-    String experience = _extractField(json, [
-      'experience', 'years_experience', 'experience_years', 'yearsExperience',
-      'rating', 'yearsInBusiness', 'yearsInService', 'established_year'
-    ]) ?? '0 years';
+    // DEBUG: Print all fields to see what's available
+    print('🔍 DEBUG - All available fields:');
+    json.forEach((key, value) {
+      if (key.toString().toLowerCase().contains('estab') ||
+          key.toString().toLowerCase().contains('year') ||
+          key.toString().toLowerCase().contains('since')) {
+        print('   🎯 POTENTIAL ESTABLISHED YEAR FIELD: "$key": $value');
+      }
+    });
 
-    // Extract address
+    // Extract ESTABLISHED YEAR - More comprehensive field extraction
+    String? establishedYear = _extractField(json, [
+      'established_year', 'establishedYear', 'year_established', 'established',
+      'founding_year', 'yearFounded', 'since_year', 'year', 'establish_year',
+      'est_year', 'start_year', 'operation_year', 'since'
+    ]);
+
+    // If no established year found, try to find any numeric field that could be a year
+    if (establishedYear == null) {
+      for (var key in json.keys) {
+        var value = json[key];
+        if (value != null) {
+          String stringValue = value.toString();
+          // Check if this looks like a year (4-digit number between 1900-2024)
+          if (_looksLikeYear(stringValue)) {
+            establishedYear = stringValue;
+            print('✅ Found potential year in field "$key": $establishedYear');
+            break;
+          }
+        }
+      }
+    }
+
+    // Use established year directly, or fallback
+    String experience;
+    if (establishedYear != null && establishedYear.isNotEmpty) {
+      experience = 'Est. $establishedYear';
+      print('✅ Using established year: $establishedYear');
+    } else {
+      experience = 'Established';
+      print('⚠️ No established year found, using fallback');
+    }
+
+    // Extract ADDRESS - Based on database schema
     String? address = _extractField(json, [
       'address', 'location', 'full_address', 'complete_address', 'physical_address'
     ]);
 
-    // Extract location
-    String? location = _extractField(json, [
-      'location', 'city', 'district', 'area', 'serviceArea', 'operating_area',
-      'operatingArea', 'service_area', 'city_name'
-    ]);
-
-    // Extract phone
+    // Extract PHONE NUMBER - Based on database schema
     String? phone = _extractField(json, [
       'phone', 'phone_number', 'contact_number', 'telephone', 'contactPhone',
       'mobile', 'mobile_number', 'contact', 'phone_no'
     ]);
 
-    // Extract email
+    // Extract EMAIL - Based on database schema
     String? email = _extractField(json, [
       'email', 'contact_email', 'email_address', 'contactEmail',
       'business_email', 'company_email', 'email_id'
+    ]);
+
+    // Extract location (city/area)
+    String? location = _extractField(json, [
+      'location', 'city', 'district', 'area', 'serviceArea', 'operating_area',
+      'operatingArea', 'service_area', 'city_name'
     ]);
 
     // Extract description
@@ -529,33 +573,14 @@ class AgencyProfile {
       'about_us', 'aboutUs', 'business_description', 'profile_description'
     ]);
 
-    // Extract established year
-    String? establishedYear = _extractField(json, [
-      'established_year', 'year_established', 'establishedYear', 'founding_year',
-      'yearFounded', 'since_year'
-    ]);
-
     // Extract fleet size
     String? fleetSize = _extractField(json, [
       'fleet_size', 'fleetSize', 'vehicle_count', 'total_vehicles',
       'number_of_vehicles', 'vehicles_count'
     ]);
 
-    // Extract image URL
-    String? imageUrl;
-    List<String> imageKeys = [
-      'profile_photo', 'agency_photo', 'agency_image', 'imageUrl', 'profileImageUrl',
-      'image', 'photo', 'image_url', 'photoUrl', 'profile_picture', 'picture',
-      'logo', 'profilePicture', 'profileImage', 'companyLogo', 'profile_pic'
-    ];
-
-    for (var key in imageKeys) {
-      if (json.containsKey(key) && json[key] != null && json[key].toString().isNotEmpty) {
-        imageUrl = json[key].toString();
-        print('🖼️ Found image URL in key "$key": $imageUrl');
-        break;
-      }
-    }
+    // Extract image URL with enhanced handling
+    String? imageUrl = _extractImageUrl(json);
 
     // Extract active status
     bool isActive = true;
@@ -579,14 +604,17 @@ class AgencyProfile {
       }
     }
 
-    print('📊 Extracted Agency Data:');
+    print('📊 FINAL Extracted Agency Data:');
     print('  ID: $id');
     print('  Name: $name');
+    print('  Established Year: ${establishedYear ?? "Not available"}');
     print('  Experience: $experience');
     print('  Address: ${address ?? "Not available"}');
-    print('  Location: ${location ?? "Not available"}');
     print('  Phone: ${phone ?? "Not available"}');
     print('  Email: ${email ?? "Not available"}');
+    print('  Location: ${location ?? "Not available"}');
+    print('  Description: ${description ?? "Not available"}');
+    print('  Fleet Size: ${fleetSize ?? "Not available"}');
     print('  Image: ${imageUrl ?? "Not available"}');
     print('  Active: $isActive');
     print('─────────────────────────────────────');
@@ -597,14 +625,84 @@ class AgencyProfile {
       experience: experience,
       location: location,
       address: address,
-      imageUrl: imageUrl,
-      isActive: isActive,
       phone: phone,
       email: email,
-      description: description,
       establishedYear: establishedYear,
+      imageUrl: imageUrl,
+      isActive: isActive,
+      description: description,
       fleetSize: fleetSize,
     );
+  }
+
+  /// Check if a string looks like a year (4 digits between 1900-2024)
+  static bool _looksLikeYear(String value) {
+    if (value.length != 4) return false;
+
+    try {
+      int year = int.parse(value);
+      return year >= 1900 && year <= DateTime.now().year;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Enhanced image URL extraction with better validation
+  static String? _extractImageUrl(Map<String, dynamic> json) {
+    List<String> imageKeys = [
+      'profile_photo', 'agency_photo', 'agency_image', 'imageUrl', 'profileImageUrl',
+      'image', 'photo', 'image_url', 'photoUrl', 'profile_picture', 'picture',
+      'logo', 'profilePicture', 'profileImage', 'companyLogo', 'profile_pic',
+      'hotelPhoto', 'hotel_photo' // Sometimes agencies might use hotel fields
+    ];
+
+    for (var key in imageKeys) {
+      if (json.containsKey(key) && json[key] != null && json[key].toString().isNotEmpty) {
+        String imageUrl = json[key].toString();
+
+        // Validate the image URL
+        if (_isValidImageUrl(imageUrl)) {
+          print('🖼️ Found valid image URL in key "$key": $imageUrl');
+
+          // Convert relative URL to absolute if needed
+          if (!imageUrl.startsWith('http')) {
+            imageUrl = 'http://10.0.2.2:8080$imageUrl';
+            print('🔄 Converted to absolute URL: $imageUrl');
+          }
+
+          return imageUrl;
+        } else {
+          print('⚠️ Invalid image URL in key "$key": $imageUrl');
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /// Validate image URL
+  static bool _isValidImageUrl(String url) {
+    if (url.isEmpty ||
+        url == 'null' ||
+        url == '<null>' ||
+        url == 'undefined' ||
+        url.trim().isEmpty) {
+      return false;
+    }
+
+    // Check for common image file extensions
+    final validExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp'];
+    final hasValidExtension = validExtensions.any((ext) => url.toLowerCase().contains(ext));
+
+    // Also accept URLs that might be from cloud storage or APIs
+    final hasImageIndicator = url.contains('image') ||
+        url.contains('photo') ||
+        url.contains('cloudinary') ||
+        url.contains('storage.googleapis.com') ||
+        url.contains('aws') ||
+        url.contains('azure');
+
+    return hasValidExtension || hasImageIndicator;
   }
 
   /// Helper method to extract field from JSON with multiple possible keys
@@ -621,10 +719,7 @@ class AgencyProfile {
 
   /// Get formatted experience text
   String get formattedExperience {
-    if (experience.contains('years') || experience.contains('year')) {
-      return experience;
-    }
-    return '$experience years';
+    return experience;
   }
 
   /// Get formatted established info
@@ -632,7 +727,7 @@ class AgencyProfile {
     if (establishedYear != null) {
       return 'Est. $establishedYear';
     }
-    return 'Experienced Agency';
+    return 'Established';
   }
 
   /// Get formatted fleet info
@@ -662,6 +757,6 @@ class AgencyProfile {
 
   @override
   String toString() {
-    return 'AgencyProfile(id: $id, name: $name, experience: $experience, address: $address, phone: $phone, email: $email)';
+    return 'AgencyProfile(id: $id, name: $name, experience: $experience, establishedYear: $establishedYear, address: $address, phone: $phone, email: $email)';
   }
 }

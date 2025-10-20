@@ -356,9 +356,14 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
   }
 
   Widget _buildAgencyImage(AgencyProfile agency) {
+    // Enhanced image URL validation and loading
     if (agency.imageUrl != null && agency.imageUrl!.isNotEmpty) {
+      String imageUrl = agency.imageUrl!;
+
+      print('🖼️ Loading agency image for list: $imageUrl');
+
       return Image.network(
-        agency.imageUrl!,
+        imageUrl,
         width: double.infinity,
         height: 160,
         fit: BoxFit.cover,
@@ -381,12 +386,14 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
           );
         },
         errorBuilder: (context, error, stackTrace) {
-          print('Image load error for ${agency.name}: $error');
+          print('❌ Image load error for ${agency.name}: $error');
+          print('❌ Image URL: $imageUrl');
           return _buildPlaceholderImage(agency);
         },
       );
     }
 
+    print('🖼️ No image URL for agency in list: ${agency.name}');
     return _buildPlaceholderImage(agency);
   }
 
@@ -498,7 +505,6 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
   Widget build(BuildContext context) {
     // Count variables - replace with your actual state variables
     int orderCount = 3; // Number of pending orders
-    int chatCount = 7; // Number of unread messages
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -525,20 +531,10 @@ class _ViewAllTravelAgenciesPageState extends State<ViewAllTravelAgenciesPage> {
         actions: [
           // Booking Orders Icon with Badge
           _buildIconWithBadge(
-              icon: LucideIcons.clipboardList,
-              count: orderCount,
-              onTap: () => context.push('/booking_history')
+            icon: LucideIcons.clipboardList,
+            count: orderCount,
+            onTap: () => context.push('/booking_history'),
           ),
-
-          const SizedBox(width: 10),
-
-          // Chat Icon with Badge
-          _buildIconWithBadge(
-            icon: LucideIcons.messageCircle,
-            count: chatCount,
-            onTap: () => context.push('/market_chat'),
-          ),
-
           const SizedBox(width: 16),
         ],
       ),

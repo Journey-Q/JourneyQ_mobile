@@ -1,5 +1,6 @@
 // File: lib/features/marketplace/pages/hotel_details.dart
 
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:journeyq/data/repositories/marketplace_repository/hotel_repository.dart';
@@ -39,9 +40,24 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
       final hotel = await HotelRepository.getHotelProfileById(widget.hotelId);
       print('✅ Hotel profile loaded: ${hotel.name}');
 
-      // Load rooms for this hotel
+      // Load rooms for this hotel with detailed debugging
+      print('🛏️ Fetching rooms for hotel ID: ${widget.hotelId}');
       final hotelRooms = await RoomRepository.getRoomsByServiceProvider(widget.hotelId);
+
       print('✅ Rooms loaded: ${hotelRooms.length} rooms');
+
+      // Debug each room
+      for (var room in hotelRooms) {
+        print('🛏️ Room Details:');
+        print('   - ID: ${room.id}');
+        print('   - Number: ${room.roomNumber}');
+        print('   - Type: ${room.roomType}');
+        print('   - Display Type: ${room.displayRoomType}');
+        print('   - Price: ${room.price}');
+        print('   - Status: ${room.status}');
+        print('   - Image URL: ${room.imageUrl}');
+        print('   - Capacity: ${room.capacity}');
+      }
 
       if (mounted) {
         setState(() {
@@ -244,33 +260,9 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
     );
   }
 
-  // Helper method to get formatted room name
+  // FIXED: Use displayRoomType from Room model instead of custom logic
   String _getFormattedRoomName(Room room) {
-    String roomType = room.roomType;
-
-    // Handle empty or default room types
-    if (roomType.isEmpty || roomType == 'Unknown' || roomType == 'Standard') {
-      // Try to determine room type from amenities or other features
-      if (room.amenities.any((amenity) => amenity.toLowerCase().contains('queen') || amenity.toLowerCase().contains('king'))) {
-        return 'Deluxe Room';
-      } else if (room.amenities.any((amenity) => amenity.toLowerCase().contains('suite'))) {
-        return 'Suite';
-      } else if (room.price > 10000) {
-        return 'Premium Room';
-      } else if (room.price > 7000) {
-        return 'Standard Room';
-      } else {
-        return 'Budget Room';
-      }
-    }
-
-    // Capitalize first letter of each word
-    roomType = roomType.split(' ').map((word) {
-      if (word.isEmpty) return '';
-      return word[0].toUpperCase() + word.substring(1).toLowerCase();
-    }).join(' ');
-
-    return roomType;
+    return room.displayRoomType;
   }
 
   // Helper method to get room number display
@@ -281,7 +273,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
     return 'Room Details';
   }
 
-  // FIXED: Enhanced room card with proper status handling
+  // FIXED: Enhanced room card with proper status handling and LKR currency
   Widget _buildRoomCard(Room room) {
     bool isBookable = room.status == RoomStatus.AVAILABLE;
 
@@ -530,7 +522,7 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            room.formattedPrice,
+                            room.formattedPrice, // This now uses LKR format
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -582,12 +574,46 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
     );
   }
 
+  // UPDATED: Improved image loading with better validation and error handling
   Widget _buildRoomImage(Room room) {
     bool isBookable = room.status == RoomStatus.AVAILABLE;
 
-    if (room.imageUrl != null && room.imageUrl!.isNotEmpty) {
+    // Enhanced image URL validation
+    String? imageUrl = room.imageUrl;
+
+    // Debug the image URL
+    print('🖼️ Room Image Debug for ${room.displayRoomType}:');
+    print('   - Raw imageUrl: $imageUrl');
+    print('   - Room ID: ${room.id}');
+    print('   - Is bookable: $isBookable');
+
+    // Enhanced image URL validation
+    bool isValidImageUrl = imageUrl != null &&
+        imageUrl.isNotEmpty &&
+        imageUrl != 'null' &&
+        imageUrl != '<null>' &&
+        imageUrl != 'undefined' &&
+        (imageUrl.startsWith('http://') ||
+            imageUrl.startsWith('https://') ||
+            imageUrl.startsWith('www.') ||
+            imageUrl.contains('.jpg') ||
+            imageUrl.contains('.jpeg') ||
+            imageUrl.contains('.png') ||
+            imageUrl.contains('.webp') ||
+            imageUrl.contains('.gif') ||
+            imageUrl.contains('cloudinary') ||
+            imageUrl.contains('storage.googleapis.com'));
+
+    if (isValidImageUrl) {
+      // Add https if it starts with www
+      if (imageUrl.startsWith('www.')) {
+        imageUrl = 'https://$imageUrl';
+      }
+
+      print('✅ Loading room image from URL: $imageUrl');
+
       return Image.network(
-        room.imageUrl!,
+        imageUrl,
         width: double.infinity,
         height: 180,
         fit: BoxFit.cover,
@@ -610,11 +636,50 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           );
         },
         errorBuilder: (context, error, stackTrace) {
+          print('❌ Error loading room image: $error');
+          print('❌ Image URL that failed: $imageUrl');
+          print('❌ Stack trace: $stackTrace');
           return _buildRoomPlaceholder(room);
         },
       );
+    } else {
+      print('⚠️ No valid image URL for room: ${room.displayRoomType}');
+      print('⚠️ Image URL value: ${room.imageUrl}');
+      print('⚠️ Room data: ${room.toJson()}');
     }
+
     return _buildRoomPlaceholder(room);
+  }
+
+  // Temporary method to test image loading - remove after testing
+  Widget _buildTestImage() {
+    // Test with some sample hotel room images
+    final testImageUrls = [
+      'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=400',
+      'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400',
+      'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=400',
+    ];
+
+    final random = Random();
+    final testUrl = testImageUrls[random.nextInt(testImageUrls.length)];
+
+    print('🧪 Testing with sample image URL: $testUrl');
+
+    return Image.network(
+      testUrl,
+      width: double.infinity,
+      height: 180,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        print('❌ Even test image failed: $error');
+        return Container(
+          color: Colors.red,
+          child: Center(
+            child: Text('Image load failed', style: TextStyle(color: Colors.white)),
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildRoomPlaceholder(Room room) {
@@ -680,10 +745,32 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
     );
   }
 
+  // UPDATED: Improved hotel image loading
   Widget _buildHotelImage() {
-    if (hotelData?.imageUrl != null && hotelData!.imageUrl!.isNotEmpty) {
+    // Enhanced hotel image URL handling
+    if (hotelData?.imageUrl != null &&
+        hotelData!.imageUrl!.isNotEmpty &&
+        hotelData!.imageUrl! != 'null' &&
+        hotelData!.imageUrl! != '<null>' &&
+        hotelData!.imageUrl! != 'undefined' &&
+        (hotelData!.imageUrl!.startsWith('http://') ||
+            hotelData!.imageUrl!.startsWith('https://') ||
+            hotelData!.imageUrl!.startsWith('www.') ||
+            hotelData!.imageUrl!.contains('.jpg') ||
+            hotelData!.imageUrl!.contains('.jpeg') ||
+            hotelData!.imageUrl!.contains('.png'))) {
+
+      String imageUrl = hotelData!.imageUrl!;
+
+      // Add https if it starts with www
+      if (imageUrl.startsWith('www.')) {
+        imageUrl = 'https://$imageUrl';
+      }
+
+      print('🏨 Loading hotel image from URL: $imageUrl');
+
       return Image.network(
-        hotelData!.imageUrl!,
+        imageUrl,
         fit: BoxFit.cover,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
@@ -702,9 +789,14 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           );
         },
         errorBuilder: (context, error, stackTrace) {
+          print('❌ Error loading hotel image: $error');
+          print('❌ Hotel image URL: ${hotelData!.imageUrl}');
           return _buildHotelPlaceholder();
         },
       );
+    } else {
+      print('⚠️ No valid hotel image URL');
+      print('⚠️ Hotel image URL value: ${hotelData?.imageUrl}');
     }
     return _buildHotelPlaceholder();
   }
