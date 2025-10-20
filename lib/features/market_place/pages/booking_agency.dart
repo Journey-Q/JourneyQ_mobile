@@ -340,7 +340,7 @@ class _BookingAgencyPageState extends State<BookingAgencyPage> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    context.go('/marketplace/travel_agencies');
+                    context.go('/marketplace');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0088cc),

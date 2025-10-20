@@ -494,7 +494,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    context.go('/marketplace/tour_packages');
+                    context.go('/marketplace');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0088cc),
