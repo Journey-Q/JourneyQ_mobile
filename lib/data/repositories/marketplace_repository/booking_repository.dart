@@ -79,105 +79,121 @@ class CreateRoomBookingDTO {
   }
 }
 
+// Room Booking Response - matches backend RoomBookingResponseDTO
 class BookingResponse {
-  final String bookingId;
-  final String status;
-  final String message;
-  final DateTime bookedDate;
-  final int? id;
-  final int? roomId;
-  final int? userId;
-  final String? customerName;
-  final String? customerEmail;
-  final int? numberOfGuests;
-  final int? numberOfNights;
-  final double? pricePerNight;
-  final double? totalAmount;
-  final String? maskedCardNumber;
+  final int id;
+  final int roomId;
+  final int serviceProviderId;
+  final int userId;
+
+  // Customer Information
+  final String customerName;
+  final String customerEmail;
+  final String customerPhone;
+
+  // Booking Details
+  final DateTime checkInDate;
+  final DateTime checkOutDate;
+  final int numberOfGuests;
+  final int numberOfNights;
+  final double pricePerNight;
+  final double totalAmount;
+
+  // Card Details (masked for security)
+  final String cardHolderName;
+  final String maskedCardNumber; // Only last 4 digits shown
+  final String expiryDate;
+
+  // Booking Status
+  final String status; // CONFIRMED, CANCELLED, etc.
+  final String? specialRequests;
+  final String? cancellationReason;
+
+  // Timestamps
+  final DateTime createdAt;
+  final DateTime? confirmedAt;
+  final DateTime? cancelledAt;
 
   BookingResponse({
-    required this.bookingId,
+    required this.id,
+    required this.roomId,
+    required this.serviceProviderId,
+    required this.userId,
+    required this.customerName,
+    required this.customerEmail,
+    required this.customerPhone,
+    required this.checkInDate,
+    required this.checkOutDate,
+    required this.numberOfGuests,
+    required this.numberOfNights,
+    required this.pricePerNight,
+    required this.totalAmount,
+    required this.cardHolderName,
+    required this.maskedCardNumber,
+    required this.expiryDate,
     required this.status,
-    required this.message,
-    required this.bookedDate,
-    this.id,
-    this.roomId,
-    this.userId,
-    this.customerName,
-    this.customerEmail,
-    this.numberOfGuests,
-    this.numberOfNights,
-    this.pricePerNight,
-    this.totalAmount,
-    this.maskedCardNumber,
+    this.specialRequests,
+    this.cancellationReason,
+    required this.createdAt,
+    this.confirmedAt,
+    this.cancelledAt,
   });
+
+  // Convenience getters
+  String get bookingId => 'BK-$id';
+
+  String get statusDisplay {
+    switch (status.toUpperCase()) {
+      case 'CONFIRMED':
+        return 'Confirmed';
+      case 'CANCELLED':
+        return 'Cancelled';
+      case 'PENDING':
+        return 'Pending';
+      default:
+        return status;
+    }
+  }
+
+  String get message {
+    switch (status.toUpperCase()) {
+      case 'CONFIRMED':
+        return 'Room booking confirmed for $customerName';
+      case 'CANCELLED':
+        return 'Booking was cancelled${cancellationReason != null ? ": $cancellationReason" : ""}';
+      case 'PENDING':
+        return 'Booking is pending confirmation';
+      default:
+        return 'Room booking created successfully';
+    }
+  }
 
   factory BookingResponse.fromJson(Map<String, dynamic> json) {
     debugPrint('📦 Parsing BookingResponse from JSON: $json');
 
-    // Backend returns 'id' as the booking ID
-    final id = json['id'] as int?;
-    final bookingId = id != null ? 'BK-$id' : 'BK-${DateTime.now().millisecondsSinceEpoch}';
-
-    // Parse status (always string in response)
-    final status = (json['status'] ?? 'CONFIRMED').toString();
-
-    // Parse message (use customerName or default message)
-    final customerName = json['customerName']?.toString();
-    final message = customerName != null
-        ? 'Booking confirmed for $customerName'
-        : 'Booking created successfully';
-
-    // Parse bookedDate from createdAt or confirmedAt
-    DateTime bookedDate;
-    final createdAt = json['createdAt'] ?? json['confirmedAt'];
-    if (createdAt != null && createdAt is String) {
-      try {
-        bookedDate = DateTime.parse(createdAt);
-      } catch (e) {
-        debugPrint('⚠️ Error parsing date: $e');
-        bookedDate = DateTime.now();
-      }
-    } else {
-      bookedDate = DateTime.now();
-    }
-
-    // Parse numeric fields safely
-    final roomId = json['roomId'] as int?;
-    final userId = json['userId'] as int?;
-    final numberOfGuests = json['numberOfGuests'] as int?;
-    final numberOfNights = json['numberOfNights'] as int?;
-
-    // Parse double fields safely
-    final pricePerNight = (json['pricePerNight'] as num?)?.toDouble();
-    final totalAmount = (json['totalAmount'] as num?)?.toDouble();
-
-    // Parse string fields
-    final email = json['customerEmail']?.toString();
-    final maskedCard = json['maskedCardNumber']?.toString();
-
-    debugPrint('✅ Parsed BookingResponse:');
-    debugPrint('   id: $id');
-    debugPrint('   bookingId: $bookingId');
-    debugPrint('   status: $status');
-    debugPrint('   totalAmount: $totalAmount');
-    debugPrint('   bookedDate: $bookedDate');
-
     return BookingResponse(
-      bookingId: bookingId,
-      status: status,
-      message: message,
-      bookedDate: bookedDate,
-      id: id,
-      roomId: roomId,
-      userId: userId,
-      customerName: customerName,
-      customerEmail: email,
-      numberOfGuests: numberOfGuests,
-      numberOfNights: numberOfNights,
-      pricePerNight: pricePerNight,
-      totalAmount: totalAmount,
-      maskedCardNumber: maskedCard,
+      id: json['id'] as int,
+      roomId: json['roomId'] as int,
+      serviceProviderId: json['serviceProviderId'] as int,
+      userId: json['userId'] as int,
+      customerName: json['customerName'] as String,
+      customerEmail: json['customerEmail'] as String,
+      customerPhone: json['customerPhone'] as String,
+      checkInDate: DateTime.parse(json['checkInDate'] as String),
+      checkOutDate: DateTime.parse(json['checkOutDate'] as String),
+      numberOfGuests: json['numberOfGuests'] as int,
+      numberOfNights: json['numberOfNights'] as int,
+      pricePerNight: (json['pricePerNight'] as num).toDouble(),
+      totalAmount: (json['totalAmount'] as num).toDouble(),
+      cardHolderName: json['cardHolderName'] as String,
+      maskedCardNumber: json['maskedCardNumber'] as String,
+      expiryDate: json['expiryDate'] as String,
+      status: json['status']?.toString() ?? 'CONFIRMED',
+      specialRequests: json['specialRequests']?.toString(),
+      cancellationReason: json['cancellationReason']?.toString(),
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      confirmedAt: json['confirmedAt'] != null ? DateTime.parse(json['confirmedAt'] as String) : null,
+      cancelledAt: json['cancelledAt'] != null ? DateTime.parse(json['cancelledAt'] as String) : null,
     );
   }
 }
