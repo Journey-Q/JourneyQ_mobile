@@ -303,7 +303,8 @@ class Room {
   final int capacity;
   final RoomStatus status;
   final List<String> amenities;
-  final String? imageUrl;
+  final String? imageUrl; // Keep for backward compatibility
+  final List<String> images; // NEW: Array of image URLs
   final int? size; // in square meters
   final int? bedrooms;
   final int? bathrooms;
@@ -319,10 +320,14 @@ class Room {
     required this.status,
     this.amenities = const [],
     this.imageUrl,
+    this.images = const [], // NEW: Default to empty list
     this.size,
     this.bedrooms,
     this.bathrooms,
   });
+
+  // Helper to get first image for listing pages
+  String? get firstImage => images.isNotEmpty ? images.first : imageUrl;
 
   // FIXED: Use the actual roomType from database for display
   String get displayRoomType {
@@ -411,12 +416,27 @@ class Room {
       amenities = [json['amenities']];
     }
 
-    // Extract image URL
+    // Extract image URL (for backward compatibility)
     String? imageUrl;
     if (json['image'] != null && json['image'].toString().isNotEmpty && json['image'] != 'null') {
       imageUrl = json['image'].toString();
     } else if (json['imageUrl'] != null && json['imageUrl'].toString().isNotEmpty && json['imageUrl'] != 'null') {
       imageUrl = json['imageUrl'].toString();
+    }
+
+    // NEW: Extract images array
+    List<String> images = [];
+    if (json['images'] != null && json['images'] is List) {
+      images = (json['images'] as List)
+          .where((img) => img != null && img.toString().isNotEmpty && img != 'null')
+          .map((img) => img.toString())
+          .toList();
+      debugPrint('✓ Found ${images.length} images in array');
+    }
+
+    // If images array is empty but we have a single imageUrl, add it to images
+    if (images.isEmpty && imageUrl != null && imageUrl.isNotEmpty) {
+      images = [imageUrl];
     }
 
     // Extract size (area from database)
@@ -436,7 +456,8 @@ class Room {
     debugPrint('  Price: $price');
     debugPrint('  Capacity: $capacity');
     debugPrint('  Status: $status');
-    debugPrint('  Image URL: ${imageUrl ?? "null"}');
+    debugPrint('  Images: ${images.length} images found');
+    debugPrint('  Image URL (legacy): ${imageUrl ?? "null"}');
 
     return Room(
       id: id,
@@ -449,6 +470,7 @@ class Room {
       status: status,
       amenities: amenities,
       imageUrl: imageUrl,
+      images: images, // NEW: Add images array
       size: size,
       bedrooms: bedrooms,
       bathrooms: bathrooms,
