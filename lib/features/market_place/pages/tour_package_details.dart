@@ -49,6 +49,8 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
         isLoading = false;
       });
 
+      print('✅ Loaded package with ${package.photos.length} photos');
+
     } catch (e) {
       print('❌ Error loading tour package details: $e');
       setState(() {
@@ -60,21 +62,10 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
 
   void _bookPackage() {
     if (packageData != null) {
-      // Option 1: Using GoRouter with extra data
       context.push(
         '/marketplace/book_package/${widget.packageId}',
         extra: packageData,
       );
-
-      // Option 2: Using direct navigation (uncomment if you prefer this approach)
-      // Navigator.of(context).push(
-      //   MaterialPageRoute(
-      //     builder: (context) => BookPackagePage(
-      //       packageId: widget.packageId,
-      //       tourPackage: packageData,
-      //     ),
-      //   ),
-      // );
     }
   }
 
@@ -125,43 +116,43 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
 
   Widget _buildItineraryItem(Map<String, dynamic> item) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue.shade300, width: 2),
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.schedule,
-                    size: 20,
-                    color: Colors.blue.shade700,
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.blue.shade300, width: 2),
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.schedule,
+                  size: 20,
+                  color: Colors.blue.shade700,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item['time']?.toString() ?? '',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.blue.shade600,
+                    fontWeight: FontWeight.w600,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    item['time']?.toString() ?? '',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.blue.shade600,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 16),
-          Expanded(
+        ),
+        const SizedBox(width: 16),
+        Expanded(
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -169,37 +160,39 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item['title']?.toString() ?? item['activity']?.toString() ?? 'Activity',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  if (item['description'] != null && item['description'].toString().isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      item['description'].toString(),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ],
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+              Text(
+              item['title']?.toString() ?? item['activity']?.toString() ?? 'Activity',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
               ),
             ),
-          ),
-        ],
-      ),
+            if (item['description'] != null && item['description'].toString().isNotEmpty) ...[
+    const SizedBox(height: 6),
+    Text(
+    item['description'].toString(),
+    style: const TextStyle(
+    fontSize: 14,
+    color: Colors.grey,
+      // Continuation of tour_package_details.dart
+
+      height: 1.4,
+    ),
+    ),
+            ],
+                  ],
+              ),
+            ),
+        ),
+          ],
+        ),
     );
   }
 
-  Widget _buildPastTourPhoto(String imageUrl, String caption) {
+  Widget _buildTourPhoto(String imageUrl, int index) {
     return Container(
       margin: const EdgeInsets.only(right: 16),
       child: ClipRRect(
@@ -228,10 +221,11 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
               );
             },
             errorBuilder: (context, error, stackTrace) {
-              return _buildPhotoPlaceholder(caption);
+              print('❌ Error loading image: $imageUrl');
+              return _buildPhotoPlaceholder('Photo ${index + 1}');
             },
           )
-              : _buildPhotoPlaceholder(caption),
+              : _buildPhotoPlaceholder('Photo ${index + 1}'),
         ),
       ),
     );
@@ -385,13 +379,11 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
 
     final package = packageData!;
 
-    // Calculate discount percentage if applicable
     double? discountPercentage;
     if (package.originalPrice != null && package.finalPrice != null && package.originalPrice! > 0) {
       discountPercentage = ((package.originalPrice! - package.finalPrice!) / package.originalPrice! * 100);
     }
 
-    // Get effective price for display
     double effectivePrice = package.finalPrice ?? package.originalPrice ?? package.pricePerPerson ?? 0.0;
     String priceText = effectivePrice > 0 ? 'LKR ${effectivePrice.toStringAsFixed(2)}' : 'Contact for Price';
 
@@ -399,7 +391,6 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
       backgroundColor: Colors.grey[50],
       body: CustomScrollView(
         slivers: [
-          // App Bar with Package Image
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
@@ -425,14 +416,12 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
             ),
           ),
 
-          // Content
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Package Header
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -477,7 +466,6 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                           ),
                         const SizedBox(height: 16),
 
-                        // Rating
                         if (package.rating != null)
                           Row(
                             children: [
@@ -494,7 +482,6 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                           ),
                         const SizedBox(height: 16),
 
-                        // Quick Info
                         Row(
                           children: [
                             if (package.duration != null) ...[
@@ -535,7 +522,6 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Price
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -589,7 +575,6 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
 
                   const SizedBox(height: 20),
 
-                  // Description
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -630,7 +615,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
 
                   const SizedBox(height: 20),
 
-                  // Past Tour Photos Section
+                  // Tour Photos Section - Updated to display past_tour_images
                   if (package.photos.isNotEmpty)
                     Container(
                       padding: const EdgeInsets.all(20),
@@ -649,13 +634,33 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Tour Photos',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Tour Photos',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '${package.photos.length} photos',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.blue.shade700,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 16),
                           SizedBox(
@@ -669,9 +674,9 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                               },
                               itemCount: package.photos.length,
                               itemBuilder: (context, index) {
-                                return _buildPastTourPhoto(
+                                return _buildTourPhoto(
                                   package.photos[index],
-                                  package.name,
+                                  index,
                                 );
                               },
                             ),
@@ -700,7 +705,6 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
 
                   if (package.photos.isNotEmpty) const SizedBox(height: 20),
 
-                  // Highlights
                   if (package.highlights.isNotEmpty)
                     Container(
                       padding: const EdgeInsets.all(20),
@@ -739,7 +743,6 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
 
                   if (package.highlights.isNotEmpty) const SizedBox(height: 20),
 
-                  // What's Included
                   if (package.includedItems.isNotEmpty)
                     Container(
                       padding: const EdgeInsets.all(20),
@@ -778,7 +781,6 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
 
                   if (package.includedItems.isNotEmpty) const SizedBox(height: 20),
 
-                  // Itinerary
                   if (package.itinerary.isNotEmpty)
                     Container(
                       padding: const EdgeInsets.all(20),
@@ -815,7 +817,6 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
 
                   if (package.itinerary.isNotEmpty) const SizedBox(height: 20),
 
-                  // Important Notes
                   if (package.importantNotes.isNotEmpty)
                     Container(
                       padding: const EdgeInsets.all(20),
@@ -872,7 +873,6 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
         ],
       ),
 
-      // Fixed Book Now Button
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,

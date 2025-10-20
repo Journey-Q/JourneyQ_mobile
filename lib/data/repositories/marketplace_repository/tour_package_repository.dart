@@ -4,7 +4,6 @@ import 'package:journeyq/core/services/marketplace_service.dart';
 import 'package:journeyq/core/errors/exception.dart';
 
 class TourPackageRepository {
-  // Tour Package API endpoints
   static const String _toursBasePath = '/service/tours';
 
   /// Get tour package by ID - This returns all details in one call
@@ -323,8 +322,6 @@ class TourPackage {
   final String status;
   final String serviceProviderId;
   final bool isActive;
-
-  // Additional data fields that come from the main API response
   final List<String> highlights;
   final List<String> includedItems;
   final List<String> importantNotes;
@@ -360,42 +357,11 @@ class TourPackage {
     print('Parsing tour package JSON: $json');
     print('All JSON keys: ${json.keys.toList()}');
 
-    // Extract ID
-    String id = _extractField(json, [
-      'id',
-      'tourId',
-      'tour_id',
-      '_id',
-    ]) ?? 'unknown_id';
+    String id = _extractField(json, ['id', 'tourId', 'tour_id', '_id']) ?? 'unknown_id';
+    String name = _extractField(json, ['name', 'tourName', 'title', 'packageName']) ?? 'Unknown Tour Package';
+    String aboutTour = _extractField(json, ['about_tour', 'aboutTour', 'description', 'details', 'overview', 'info']) ?? 'No description available';
+    String location = _extractField(json, ['location', 'destination', 'city', 'area', 'region']) ?? '';
 
-    // Extract name
-    String name = _extractField(json, [
-      'name',
-      'tourName',
-      'title',
-      'packageName'
-    ]) ?? 'Unknown Tour Package';
-
-    // Extract about tour
-    String aboutTour = _extractField(json, [
-      'about_tour',
-      'aboutTour',
-      'description',
-      'details',
-      'overview',
-      'info'
-    ]) ?? 'No description available';
-
-    // Extract location
-    String location = _extractField(json, [
-      'location',
-      'destination',
-      'city',
-      'area',
-      'region'
-    ]) ?? '';
-
-    // Extract prices
     double? originalPrice;
     if (json['original_price'] != null) {
       originalPrice = double.tryParse(json['original_price'].toString());
@@ -417,37 +383,19 @@ class TourPackage {
       pricePerPerson = double.tryParse(json['pricePerPerson'].toString());
     }
 
-    // Extract discount
     int? discount;
     if (json['discount'] != null) {
       discount = int.tryParse(json['discount'].toString());
     }
 
-    // Extract duration
-    String? duration = _extractField(json, [
-      'duration',
-      'tour_duration',
-      'trip_duration'
-    ]);
+    String? duration = _extractField(json, ['duration', 'tour_duration', 'trip_duration']);
+    String? imageUrl = _extractField(json, ['image', 'image_url', 'imageUrl', 'photo', 'photoUrl', 'packageImage', 'tour_image']);
 
-    // Extract image URL
-    String? imageUrl = _extractField(json, [
-      'image',
-      'image_url',
-      'imageUrl',
-      'photo',
-      'photoUrl',
-      'packageImage',
-      'tour_image'
-    ]);
-
-    // Extract rating
     double? rating;
     if (json['rating'] != null) {
       rating = double.tryParse(json['rating'].toString());
     }
 
-    // Extract people limits
     int? minPeople;
     if (json['min_people'] != null) {
       minPeople = int.tryParse(json['min_people'].toString());
@@ -462,61 +410,23 @@ class TourPackage {
       maxPeople = int.tryParse(json['maxPeople'].toString());
     }
 
-    // Extract service provider ID
-    String serviceProviderId = _extractField(json, [
-      'service_provider_id',
-      'serviceProviderId',
-      'provider_id'
-    ]) ?? 'unknown_provider';
-
-    // Extract status
-    String status = _extractField(json, [
-      'status',
-      'tour_status'
-    ])?.toUpperCase() ?? 'ACTIVE';
-
-    // Determine active status
+    String serviceProviderId = _extractField(json, ['service_provider_id', 'serviceProviderId', 'provider_id']) ?? 'unknown_provider';
+    String status = _extractField(json, ['status', 'tour_status'])?.toUpperCase() ?? 'ACTIVE';
     bool isActive = status == 'ACTIVE' || status == 'AVAILABLE';
 
-    // Extract highlights from JSON if available
-    List<String> highlights = _extractListFromJson(json, [
-      'highlights',
-      'tour_highlights',
-      'key_features'
-    ]);
-
-    // Extract included items from JSON if available
-    List<String> includedItems = _extractListFromJson(json, [
-      'included_items',
-      'includedItems',
-      'whats_included',
-      'includes'
-    ]);
-
-    // Extract important notes from JSON if available
-    List<String> importantNotes = _extractListFromJson(json, [
-      'important_notes',
-      'importantNotes',
-      'notes',
-      'additional_info'
-    ]);
-
-    // Extract itinerary from JSON if available
+    List<String> highlights = _extractListFromJson(json, ['highlights', 'tour_highlights', 'key_features']);
+    List<String> includedItems = _extractListFromJson(json, ['included_items', 'includedItems', 'whats_included', 'includes']);
+    List<String> importantNotes = _extractListFromJson(json, ['important_notes', 'importantNotes', 'notes', 'additional_info']);
     List<Map<String, dynamic>> itinerary = _extractItineraryFromJson(json);
 
-    // Extract photos from JSON if available
+    // Extract photos from past_tour_images table
     List<String> photos = _extractPhotosFromJson(json, imageUrl);
 
     print('✅ Extracted Tour Package:');
     print('  ID: $id');
     print('  Name: $name');
     print('  Location: ${location.isEmpty ? "Not specified" : location}');
-    print('  Highlights: ${highlights.length} items');
-    print('  Included Items: ${includedItems.length} items');
-    print('  Important Notes: ${importantNotes.length} items');
-    print('  Itinerary: ${itinerary.length} items');
     print('  Photos: ${photos.length} items');
-    print('  Status: $status');
     print('─────────────────────────────────────');
 
     return TourPackage(
@@ -544,7 +454,6 @@ class TourPackage {
     );
   }
 
-  /// Helper method to extract field from JSON with multiple possible keys
   static String? _extractField(Map<String, dynamic> json, List<String> possibleKeys) {
     for (var key in possibleKeys) {
       if (json.containsKey(key) && json[key] != null) {
@@ -559,7 +468,6 @@ class TourPackage {
     return null;
   }
 
-  /// Helper method to extract list of strings from JSON
   static List<String> _extractListFromJson(Map<String, dynamic> json, List<String> possibleKeys) {
     for (var key in possibleKeys) {
       if (json.containsKey(key) && json[key] != null) {
@@ -567,7 +475,6 @@ class TourPackage {
         if (value is List) {
           return value.whereType<String>().where((item) => item.isNotEmpty).toList();
         } else if (value is String) {
-          // If it's a comma-separated string, split it
           return value.split(',').map((e) => e.trim()).where((item) => item.isNotEmpty).toList();
         }
       }
@@ -575,7 +482,6 @@ class TourPackage {
     return [];
   }
 
-  /// Helper method to extract itinerary from JSON
   static List<Map<String, dynamic>> _extractItineraryFromJson(Map<String, dynamic> json) {
     for (var key in ['itinerary', 'tour_itinerary', 'schedule']) {
       if (json.containsKey(key) && json[key] != null) {
@@ -588,16 +494,39 @@ class TourPackage {
     return [];
   }
 
-  /// Helper method to extract photos from JSON
   static List<String> _extractPhotosFromJson(Map<String, dynamic> json, String? mainImageUrl) {
     List<String> photos = [];
 
-    // Check for photos array
+    // Check for pastTourImages array (from backend join)
+    for (var key in ['pastTourImages', 'past_tour_images', 'tourImages']) {
+      if (json.containsKey(key) && json[key] != null) {
+        final value = json[key];
+        if (value is List) {
+          for (var item in value) {
+            if (item is Map<String, dynamic>) {
+              // Extract image_url from the past_tour_images object
+              String? imgUrl = item['image_url']?.toString() ?? item['imageUrl']?.toString();
+              if (imgUrl != null && imgUrl.isNotEmpty && !photos.contains(imgUrl)) {
+                photos.add(imgUrl);
+              }
+            } else if (item is String && item.isNotEmpty && !photos.contains(item)) {
+              photos.add(item);
+            }
+          }
+        }
+      }
+    }
+
+    // Also check for other photo arrays
     for (var key in ['photos', 'tour_photos', 'images', 'gallery']) {
       if (json.containsKey(key) && json[key] != null) {
         final value = json[key];
         if (value is List) {
-          photos.addAll(value.whereType<String>().where((item) => item.isNotEmpty));
+          for (var item in value) {
+            if (item is String && item.isNotEmpty && !photos.contains(item)) {
+              photos.add(item);
+            }
+          }
         }
       }
     }
@@ -607,6 +536,7 @@ class TourPackage {
       photos.insert(0, mainImageUrl);
     }
 
+    print('📸 Extracted ${photos.length} photos from JSON');
     return photos;
   }
 
@@ -686,7 +616,7 @@ class TourPackage {
 
   @override
   String toString() {
-    return 'TourPackage(id: $id, name: $name, location: $location, finalPrice: $finalPrice, originalPrice: $originalPrice, status: $status, isActive: $isActive)';
+    return 'TourPackage(id: $id, name: $name, location: $location, finalPrice: $finalPrice, photos: ${photos.length})';
   }
 
   @override

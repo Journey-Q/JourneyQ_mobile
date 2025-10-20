@@ -26,7 +26,7 @@ class AgencyRepository {
         response = await MarketplaceService.get('$_agencyProfilesBasePath/$longAgencyId');
         print('✅ Successfully fetched from agency-profiles endpoint');
       } catch (e) {
-        print('⚠ Agency-profiles endpoint failed, trying providers endpoint: $e');
+        print('⚠️ Agency-profiles endpoint failed, trying providers endpoint: $e');
         response = await MarketplaceService.get('$_providersBasePath/$longAgencyId');
         print('✅ Successfully fetched from providers endpoint');
       }
@@ -115,7 +115,7 @@ class AgencyRepository {
             }
           }
         } else {
-          print('⚠ Unexpected response format: ${response.data.runtimeType}');
+          print('⚠️ Unexpected response format: ${response.data.runtimeType}');
         }
       } else {
         print('❌ API returned error status: ${response.statusCode}');
@@ -123,7 +123,7 @@ class AgencyRepository {
       }
 
       if (agencyData.isEmpty) {
-        print('⚠ No agency data found in response');
+        print('⚠️ No agency data found in response');
         return [];
       }
 
@@ -135,11 +135,11 @@ class AgencyRepository {
             final agency = AgencyProfile.fromJson(agencyData[i] as Map<String, dynamic>);
             agencies.add(agency);
           } else {
-            print('⚠ Item $i is not a Map: ${agencyData[i].runtimeType}');
+            print('⚠️ Item $i is not a Map: ${agencyData[i].runtimeType}');
           }
         } catch (e) {
           print('❌ Error parsing agency at index $i: $e');
-          print('⚠ Problematic data: ${agencyData[i]}');
+          print('⚠️ Problematic data: ${agencyData[i]}');
         }
       }
 
@@ -164,7 +164,7 @@ class AgencyRepository {
       print('📊 Total agencies fetched: ${allAgencies.length}');
 
       if (allAgencies.isEmpty) {
-        print('⚠ No agencies found, returning empty list');
+        print('⚠️ No agencies found, returning empty list');
         return [];
       }
 
@@ -230,7 +230,7 @@ class AgencyRepository {
 
       final serviceProviderId = int.tryParse(agencyId);
       if (serviceProviderId == null) {
-        print('⚠ Invalid agency ID for vehicles: $agencyId');
+        print('⚠️ Invalid agency ID for vehicles: $agencyId');
         return [];
       }
 
@@ -257,7 +257,7 @@ class AgencyRepository {
         }
 
         if (vehicles.isEmpty) {
-          print('⚠ No vehicles found for agency $agencyId');
+          print('⚠️ No vehicles found for agency $agencyId');
           // Return sample data for demonstration
           vehicles = _getSampleVehicles();
         }
@@ -265,7 +265,7 @@ class AgencyRepository {
         print('✅ Total vehicles loaded: ${vehicles.length}');
         return vehicles;
       } else {
-        print('⚠ Failed to load vehicles: ${response.statusCode}');
+        print('⚠️ Failed to load vehicles: ${response.statusCode}');
         // Return sample data for demonstration
         return _getSampleVehicles();
       }
@@ -283,7 +283,7 @@ class AgencyRepository {
 
       final serviceProviderId = int.tryParse(agencyId);
       if (serviceProviderId == null) {
-        print('⚠ Invalid agency ID for drivers: $agencyId');
+        print('⚠️ Invalid agency ID for drivers: $agencyId');
         return [];
       }
 
@@ -310,7 +310,7 @@ class AgencyRepository {
         }
 
         if (drivers.isEmpty) {
-          print('⚠ No drivers found for agency $agencyId');
+          print('⚠️ No drivers found for agency $agencyId');
           // Return sample data for demonstration
           drivers = _getSampleDrivers();
         }
@@ -318,7 +318,7 @@ class AgencyRepository {
         print('✅ Total drivers loaded: ${drivers.length}');
         return drivers;
       } else {
-        print('⚠ Failed to load drivers: ${response.statusCode}');
+        print('⚠️ Failed to load drivers: ${response.statusCode}');
         // Return sample data for demonstration
         return _getSampleDrivers();
       }
@@ -427,7 +427,7 @@ class AgencyRepository {
   }
 }
 
-/// Agency Profile Model - UPDATED to show established year directly
+/// Agency Profile Model - FIXED to properly display established year
 class AgencyProfile {
   final String id;
   final String name;
@@ -459,7 +459,7 @@ class AgencyProfile {
 
   factory AgencyProfile.fromJson(Map<String, dynamic> json) {
     print('─────────────────────────────────────');
-    print('🔄 Parsing agency JSON');
+    print('📄 Parsing agency JSON');
     print('🔍 JSON keys: ${json.keys.toList()}');
     print('📊 JSON values:');
     json.forEach((key, value) {
@@ -534,10 +534,10 @@ class AgencyProfile {
       }
     }
 
-    // Use established year directly, or fallback
+    // FIXED: Store the year directly in experience field for display
     String experience;
     if (establishedYear != null && establishedYear.isNotEmpty) {
-      experience = 'Est. $establishedYear';
+      experience = 'Est. $establishedYear'; // Format: "Est. 2018"
       print('✅ Using established year: $establishedYear');
     } else {
       experience = 'Established';
@@ -717,8 +717,11 @@ class AgencyProfile {
     return null;
   }
 
-  /// Get formatted experience text
+  /// Get formatted experience text (shows just the year)
   String get formattedExperience {
+    if (establishedYear != null && establishedYear!.isNotEmpty) {
+      return 'Est. $establishedYear';
+    }
     return experience;
   }
 
