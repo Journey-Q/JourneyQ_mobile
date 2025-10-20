@@ -120,6 +120,7 @@ class RoomRepository {
   }
 
   /// Get rooms by service provider ID (hotel ID)
+  /// Get rooms by service provider ID (hotel ID)
   static Future<List<Room>> getRoomsByServiceProvider(String serviceProviderId) async {
     try {
       debugPrint('Fetching rooms for service provider: $serviceProviderId');
@@ -206,7 +207,6 @@ class RoomRepository {
         debugPrint('  - Type: ${rooms[0].roomType}');
         debugPrint('  - Price: ${rooms[0].price}');
         debugPrint('  - Status: ${rooms[0].status}');
-        debugPrint('  - Image URL: ${rooms[0].imageUrl}');
       }
 
       return rooms;
@@ -352,11 +352,7 @@ class Room {
   }
 
   factory Room.fromJson(Map<String, dynamic> json) {
-    debugPrint('─────────────────────────────────────');
     debugPrint('Parsing room JSON: $json');
-
-    // Call debug method first to check image data
-    _debugImageData(json);
 
     // Extract ID - handle both string and numeric IDs
     String id = _extractField(json, ['id', 'roomId', '_id']) ?? 'unknown_id';
@@ -415,8 +411,13 @@ class Room {
       amenities = [json['amenities']];
     }
 
-    // EXTRACT IMAGE URL - IMPROVED VERSION
-    String? imageUrl = _extractImageUrl(json);
+    // Extract image URL
+    String? imageUrl;
+    if (json['image'] != null && json['image'].toString().isNotEmpty && json['image'] != 'null') {
+      imageUrl = json['image'].toString();
+    } else if (json['imageUrl'] != null && json['imageUrl'].toString().isNotEmpty && json['imageUrl'] != 'null') {
+      imageUrl = json['imageUrl'].toString();
+    }
 
     // Extract size (area from database)
     int? size = json['size'] ?? json['room_size'] ?? json['area'];
@@ -436,7 +437,6 @@ class Room {
     debugPrint('  Capacity: $capacity');
     debugPrint('  Status: $status');
     debugPrint('  Image URL: ${imageUrl ?? "null"}');
-    debugPrint('─────────────────────────────────────');
 
     return Room(
       id: id,
@@ -453,112 +453,6 @@ class Room {
       bedrooms: bedrooms,
       bathrooms: bathrooms,
     );
-  }
-
-  /// IMPROVED: Extract image URL with better validation
-  static String? _extractImageUrl(Map<String, dynamic> json) {
-    // Try all possible image field names from database
-    final possibleImageFields = [
-      'image', 'imageUrl', 'image_url', 'room_image', 'photo',
-      'image_path', 'img', 'picture', 'url', 'imageURL'
-    ];
-
-    for (var field in possibleImageFields) {
-      if (json.containsKey(field) &&
-          json[field] != null &&
-          json[field].toString().trim().isNotEmpty) {
-
-        String potentialUrl = json[field].toString().trim();
-
-        // Skip obviously invalid values
-        if (potentialUrl.toLowerCase() == 'null' ||
-            potentialUrl.toLowerCase() == '<null>' ||
-            potentialUrl.toLowerCase() == 'undefined' ||
-            potentialUrl.isEmpty) {
-          continue;
-        }
-
-        // Enhanced URL validation
-        bool isValidUrl = _isValidImageUrl(potentialUrl);
-
-        if (isValidUrl) {
-          debugPrint('✅ Found valid image URL in "$field" field: $potentialUrl');
-
-          // Ensure proper URL format
-          if (potentialUrl.startsWith('www.')) {
-            potentialUrl = 'https://$potentialUrl';
-          }
-
-          return potentialUrl;
-        } else {
-          debugPrint('⚠ Found image data in "$field" but not a valid URL: $potentialUrl');
-        }
-      }
-    }
-
-    debugPrint('❌ No valid image URL found in room data. Checked fields: $possibleImageFields');
-    return null;
-  }
-
-  /// Check if a string is a valid image URL
-  static bool _isValidImageUrl(String url) {
-    if (url.isEmpty) return false;
-
-    // Check for common URL patterns
-    bool hasUrlPattern = url.startsWith('http://') ||
-        url.startsWith('https://') ||
-        url.startsWith('www.') ||
-        url.contains('.com') ||
-        url.contains('.net') ||
-        url.contains('.org') ||
-        url.contains('.io') ||
-        url.contains('.cloudinary') ||
-        url.contains('storage.googleapis.com');
-
-    // Check for common image file extensions
-    bool hasImageExtension = url.toLowerCase().contains('.jpg') ||
-        url.toLowerCase().contains('.jpeg') ||
-        url.toLowerCase().contains('.png') ||
-        url.toLowerCase().contains('.webp') ||
-        url.toLowerCase().contains('.gif') ||
-        url.toLowerCase().contains('.bmp') ||
-        url.toLowerCase().contains('.svg');
-
-    // Check if it looks like a base64 image (data:image)
-    bool isBase64 = url.startsWith('data:image/');
-
-    return hasUrlPattern || hasImageExtension || isBase64;
-  }
-
-  /// Debug method to check what image data exists in the database response
-  static void _debugImageData(Map<String, dynamic> json) {
-    debugPrint('🔍 DEBUGGING IMAGE DATA IN ROOM RESPONSE:');
-    debugPrint('Full JSON keys: ${json.keys.toList()}');
-
-    // Check all potential image-related fields
-    final imageFields = ['image', 'imageUrl', 'image_url', 'room_image', 'photo', 'img', 'picture'];
-
-    for (var field in imageFields) {
-      if (json.containsKey(field)) {
-        final value = json[field];
-        debugPrint('$field: $value (type: ${value.runtimeType})');
-
-        if (value != null && value.toString().isNotEmpty && value.toString() != 'null') {
-          debugPrint('✅ Found potential image data in $field');
-        }
-      }
-    }
-
-    // Also check all fields for any URL-like values
-    debugPrint('🔍 Checking all fields for URL patterns:');
-    for (var key in json.keys) {
-      final value = json[key];
-      if (value != null && value is String) {
-        if (value.contains('http') || value.contains('.jpg') || value.contains('.png') || value.contains('image')) {
-          debugPrint('⚠️ Found URL-like value in $key: $value');
-        }
-      }
-    }
   }
 
   static RoomStatus _parseRoomStatus(dynamic status) {
@@ -695,7 +589,7 @@ class Room {
 
   @override
   String toString() {
-    return 'Room(id: $id, number: $roomNumber, type: $roomType, displayType: $displayRoomType, price: $price, status: $status, imageUrl: $imageUrl)';
+    return 'Room(id: $id, number: $roomNumber, type: $roomType, displayType: $displayRoomType, price: $price, status: $status)';
   }
 }
 

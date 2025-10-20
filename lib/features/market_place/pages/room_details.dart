@@ -742,14 +742,6 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Room only - Meal plans available during booking',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-            ),
-          ),
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
