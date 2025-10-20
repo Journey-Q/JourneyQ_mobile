@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:journeyq/data/repositories/subscription_repository.dart';
+import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 
 class PaymentPage extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -10,50 +13,219 @@ class PaymentPage extends StatefulWidget {
 }
 
 class _PaymentPageState extends State<PaymentPage> {
-  int selectedPlanIndex = 1; // Default to monthly plan
+  List<SubscriptionPlan> subscriptionPlans = [];
+  int? selectedPlanIndex;
   bool isProcessing = false;
-  bool hasMonthlyOfferApplied = false;
+  bool isLoading = true;
+  bool hasError = false;
+  bool showCardForm = false;
 
-  final List<Map<String, dynamic>> subscriptionPlans = [
-    {
-      'title': 'Monthly',
-      'price': 'Rs 2 500',
-      'originalPrice': 'Rs 2 500',
-      'discountedPrice': 'Rs 2 000',
-      'duration': '/month',
-      'features': [
-        'AI trip planning tools',
-        'Public Trip Invite ',
-        'Ad-free experience',
-      ],
-      'popular': true,
-      'points': 150,
-      'pointValue': 20, // 20% value per point
-    },
-    {
-      'title': 'Annual',
-      'price': 'Rs 25 000',
-      'duration': '/year',
-      'features': [
-        'AI trip planning tools',
-        'Public Trip Invite ',
-        'Ad-free experience',
-      ],
-      'popular': false,
-      'savings': 'GET 13% OFF',
-    },
-  ];
+  // Premium status
+  bool isPremiumUser = false;
+  PremiumStatusResponse? premiumStatus;
 
-  final List<Map<String, dynamic>> paymentMethods = [
-    {
-      'type': 'card',
-      'title': 'Credit/Debit Card',
-      'subtitle': 'Visa, Mastercard, American Express',
-      'icon': Icons.credit_card,
-    },
-  ];
+  // Card form controllers
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _cardHolderNameController = TextEditingController();
+  final TextEditingController _cardNumberController = TextEditingController();
+  final TextEditingController _expiryMonthController = TextEditingController();
+  final TextEditingController _expiryYearController = TextEditingController();
+  final TextEditingController _cvvController = TextEditingController();
+  final TextEditingController _billingAddressController = TextEditingController();
 
-  int selectedPaymentMethod = 0;
+  @override
+  void initState() {
+    super.initState();
+    _checkPremiumStatusAndLoadPlans();
+  }
+
+  @override
+  void dispose() {
+    _cardHolderNameController.dispose();
+    _cardNumberController.dispose();
+    _expiryMonthController.dispose();
+    _expiryYearController.dispose();
+    _cvvController.dispose();
+    _billingAddressController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkPremiumStatusAndLoadPlans() async {
+    setState(() {
+      isLoading = true;
+      hasError = false;
+    });
+
+    try {
+      // Get user ID from AuthProvider
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final userId = authProvider.user?.userId;
+
+      if (userId == null) {
+        throw Exception('User not logged in');
+      }
+
+      debugPrint('💎 Starting premium status check for user: $userId');
+
+      // Check premium status (continue even if this fails)
+      PremiumStatusResponse? status;
+      try {
+        status = await SubscriptionRepository.getPremiumStatus(userId);
+
+        debugPrint('💎 Premium Status Check SUCCESS:');
+        debugPrint('   User ID: $userId');
+        debugPrint('   Is Premium: ${status.isPremium}');
+        debugPrint('   Status: ${status.subscriptionStatus}');
+        debugPrint('   End Date: ${status.subscriptionEndDate}');
+      } catch (premiumError) {
+        debugPrint('❌ Failed to check premium status: $premiumError');
+        debugPrint('   Continuing with plans loading...');
+        // Continue without premium status
+      }
+
+      // Load subscription plans
+      final plans = await SubscriptionRepository.getAllSubscriptionPlans();
+
+      if (mounted) {
+        setState(() {
+          if (status != null) {
+            premiumStatus = status;
+            isPremiumUser = status.isPremium;
+            debugPrint('✅ Set isPremiumUser = ${status.isPremium}');
+          } else {
+            isPremiumUser = false;
+            debugPrint('⚠️ No premium status, defaulting to false');
+          }
+
+          subscriptionPlans = plans;
+          isLoading = false;
+
+          // Select monthly plan by default if available and user is not premium
+          if (plans.isNotEmpty && !isPremiumUser) {
+            selectedPlanIndex = plans.indexWhere((p) => p.interval == 'monthly');
+            if (selectedPlanIndex == -1) selectedPlanIndex = 0;
+          }
+        });
+
+        debugPrint('💎 UI State Updated:');
+        debugPrint('   isPremiumUser: $isPremiumUser');
+        debugPrint('   premiumStatus != null: ${premiumStatus != null}');
+        debugPrint('   selectedPlanIndex: $selectedPlanIndex');
+      }
+    } catch (e) {
+      debugPrint('❌ Error loading data: $e');
+      debugPrint('   Error stack trace: ${StackTrace.current}');
+      if (mounted) {
+        setState(() {
+          hasError = true;
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadSubscriptionPlans() async {
+    try {
+      setState(() {
+        isLoading = true;
+        hasError = false;
+      });
+
+      final plans = await SubscriptionRepository.getAllSubscriptionPlans();
+
+      setState(() {
+        subscriptionPlans = plans;
+        isLoading = false;
+        // Select monthly plan by default if available
+        if (plans.isNotEmpty) {
+          selectedPlanIndex = plans.indexWhere((p) => p.interval == 'monthly');
+          if (selectedPlanIndex == -1) selectedPlanIndex = 0;
+        }
+      });
+    } catch (e) {
+      debugPrint('❌ Error loading subscription plans: $e');
+      setState(() {
+        hasError = true;
+        isLoading = false;
+      });
+    }
+  }
+
+  void _processPayment() {
+    if (!showCardForm) {
+      setState(() {
+        showCardForm = true;
+      });
+      return;
+    }
+
+    // Validate card form
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // Process payment (for now just show success)
+    _submitPayment();
+  }
+
+  Future<void> _submitPayment() async {
+    if (selectedPlanIndex == null) return;
+
+    setState(() => isProcessing = true);
+
+    try {
+      // Get user ID from AuthProvider
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final userId = authProvider.user?.userId;
+
+      if (userId == null) {
+        throw Exception('User not logged in. Please log in to continue.');
+      }
+
+      final selectedPlan = subscriptionPlans[selectedPlanIndex!];
+
+      // Calculate duration months based on interval
+      final durationMonths = SubscriptionRepository.getDurationMonths(selectedPlan.interval);
+
+      // Create subscription request
+      final subscriptionRequest = SubscriptionRequest(
+        userId: userId,
+        subscriptionPackageId: selectedPlan.id.toString(),
+        durationMonths: durationMonths,
+        subscriptionType: selectedPlan.type.toUpperCase(),
+      );
+
+      // Submit to backend
+      await SubscriptionRepository.createSubscription(subscriptionRequest);
+
+      debugPrint('✅ Subscription created successfully');
+
+      if (mounted) {
+        setState(() => isProcessing = false);
+
+        // Navigate to home page using go_router
+        context.go('/home');
+      }
+    } catch (e) {
+      debugPrint('❌ Subscription error: $e');
+
+      if (mounted) {
+        setState(() => isProcessing = false);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Subscription failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,212 +247,216 @@ class _PaymentPageState extends State<PaymentPage> {
                 ],
               ),
             ),
-            
+
             // Main content
             Expanded(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      
-                      // Diamond icon
-                      Container(
-                        width: 60,
-                        height: 60,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF0088cc),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.diamond,
-                          color: Colors.white,
-                          size: 30,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 32),
-                      
-                      // Title
-                      const Text(
-                        'Get Premium',
-                        style: TextStyle(
-                          color: Color(0xFF1F2937),
-                          fontSize: 28,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 24),
-                      
-                      // Description
-                      const Text(
-                        'Unlock premium features and enhance your travel planning experience with advanced AI tools and exclusive benefits.',
-                        style: TextStyle(
-                          color: Color(0xFF6B7280),
-                          fontSize: 16,
-                          height: 1.5,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      
-                      const SizedBox(height: 40),
-                      
-                      // Features
-                      ...subscriptionPlans[0]['features'].map<Widget>(
-                        (feature) => Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 24,
-                                height: 24,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF10B981),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.check,
-                                  color: Colors.white,
-                                  size: 16,
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : hasError
+                      ? _buildErrorState()
+                      : subscriptionPlans.isEmpty
+                          ? _buildEmptyState()
+                          : SingleChildScrollView(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 32),
+                                child: Column(
+                                  children: [
+                                    const SizedBox(height: 20),
+
+                                    // Diamond icon
+                                    Container(
+                                      width: 60,
+                                      height: 60,
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFF0088cc),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.diamond,
+                                        color: Colors.white,
+                                        size: 30,
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 32),
+
+                                    // Title
+                                    const Text(
+                                      'Get Premium',
+                                      style: TextStyle(
+                                        color: Color(0xFF1F2937),
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 24),
+
+                                    // Description
+                                    const Text(
+                                      'Unlock premium features and enhance your travel planning experience with advanced AI tools and exclusive benefits.',
+                                      style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 16,
+                                        height: 1.5,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+
+                                    const SizedBox(height: 40),
+
+                                    // Features from selected plan
+                                    if (selectedPlanIndex != null)
+                                      ...subscriptionPlans[selectedPlanIndex!].features.map<Widget>(
+                                        (feature) => Padding(
+                                          padding: const EdgeInsets.only(bottom: 16),
+                                          child: Row(
+                                            children: [
+                                              Container(
+                                                width: 24,
+                                                height: 24,
+                                                decoration: const BoxDecoration(
+                                                  color: Color(0xFF10B981),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: const Icon(
+                                                  Icons.check,
+                                                  color: Colors.white,
+                                                  size: 16,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 16),
+                                              Expanded(
+                                                child: Text(
+                                                  feature,
+                                                  style: const TextStyle(
+                                                    color: Color(0xFF374151),
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+
+                                    const SizedBox(height: 40),
+
+                                    // Choose a plan title
+                                    const Text(
+                                      'Choose a plan',
+                                      style: TextStyle(
+                                        color: Color(0xFF1F2937),
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 32),
+
+                                    // Plan options
+                                    _buildPlanOptions(),
+
+                                    const SizedBox(height: 40),
+
+                                    // Debug info (remove after testing)
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text('DEBUG INFO:', style: TextStyle(fontWeight: FontWeight.bold)),
+                                          Text('isPremiumUser: $isPremiumUser'),
+                                          Text('premiumStatus: ${premiumStatus?.isPremium}'),
+                                          Text('subscriptionStatus: ${premiumStatus?.subscriptionStatus}'),
+                                          Text('endDate: ${premiumStatus?.subscriptionEndDate}'),
+                                        ],
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 20),
+
+                                    // Card details form (show when Subscribe is clicked and user is not premium)
+                                    if (showCardForm && !isPremiumUser) ...[
+                                      _buildCardDetailsForm(),
+                                      const SizedBox(height: 32),
+                                    ],
+
+                                    // Subscribe button or Subscribed status
+                                    SizedBox(
+                                      width: double.infinity,
+                                      height: 50,
+                                      child: ElevatedButton(
+                                        onPressed: isPremiumUser || isProcessing || selectedPlanIndex == null ? null : _processPayment,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: isPremiumUser ? const Color(0xFF10B981) : const Color(0xFF0088cc),
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(25),
+                                          ),
+                                          elevation: 0,
+                                          disabledBackgroundColor: isPremiumUser ? const Color(0xFF10B981) : null,
+                                          disabledForegroundColor: isPremiumUser ? Colors.white : null,
+                                        ),
+                                        child: isProcessing
+                                            ? const SizedBox(
+                                                width: 20,
+                                                height: 20,
+                                                child: CircularProgressIndicator(
+                                                  color: Colors.white,
+                                                  strokeWidth: 2,
+                                                ),
+                                              )
+                                            : isPremiumUser
+                                                ? Row(
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    children: [
+                                                      const Icon(Icons.check_circle, size: 20),
+                                                      const SizedBox(width: 8),
+                                                      Text(
+                                                        premiumStatus?.subscriptionEndDate != null
+                                                            ? 'Subscribed until ${_formatDate(premiumStatus!.subscriptionEndDate!)}'
+                                                            : 'Subscribed',
+                                                        style: const TextStyle(
+                                                          fontSize: 16,
+                                                          fontWeight: FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  )
+                                                : Text(
+                                                    selectedPlanIndex != null
+                                                        ? 'Subscribe ${subscriptionPlans[selectedPlanIndex!].formattedFinalPrice}${subscriptionPlans[selectedPlanIndex!].durationText}'
+                                                        : 'Select a plan',
+                                                    style: const TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                  ),
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 24),
+
+                                    // Terms
+                                    const Text(
+                                      'By subscribing, you agree to our Terms of Service and Privacy Policy',
+                                      style: TextStyle(
+                                        color: Color(0xFF9CA3AF),
+                                        fontSize: 12,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+
+                                    const SizedBox(height: 32),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(width: 16),
-                              Text(
-                                feature,
-                                style: const TextStyle(
-                                  color: Color(0xFF374151),
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 40),
-                      
-                      // Choose a plan title
-                      const Text(
-                        'Choose a plan',
-                        style: TextStyle(
-                          color: Color(0xFF1F2937),
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 32),
-                      
-                      // Plan options
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildPlanOption(
-                              title: 'Monthly Plan',
-                              price: hasMonthlyOfferApplied ? 'Rs 2 000' : 'Rs 2 500',
-                              isSelected: selectedPlanIndex == 0,
-                              onTap: () {
-                                setState(() => selectedPlanIndex = 0);
-                                if (!hasMonthlyOfferApplied) {
-                                  _showMonthlyOfferPopup();
-                                }
-                              },
-                              badge: hasMonthlyOfferApplied ? 'SPECIAL OFFER' : null,
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _buildPlanOption(
-                              title: 'Annual Plan',
-                              price: 'Rs 25 000',
-                              isSelected: selectedPlanIndex == 1,
-                              onTap: () => setState(() => selectedPlanIndex = 1),
-                              badge: 'GET 20% OFF',
-                            ),
-                          ),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: 40),
-                      
-                      // Payment method (simplified for this design)
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF9FAFB),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFE5E7EB)),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.credit_card, color: Color(0xFF6B7280), size: 20),
-                            SizedBox(width: 12),
-                            Text(
-                              'Credit/Debit Card',
-                              style: TextStyle(
-                                color: Color(0xFF374151),
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 32),
-                      
-                      // Subscribe button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: isProcessing ? null : _processPayment,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0088cc),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(25),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: isProcessing
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Text(
-                                  'Subscribe ${selectedPlanIndex == 0 ? (hasMonthlyOfferApplied ? 'Rs 2 000/month' : 'Rs 2 500/month') : 'Rs 25 000/year'}',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 24),
-                      
-                      // Terms
-                      const Text(
-                        'By subscribing, you agree to our Terms of Service and Privacy Policy',
-                        style: TextStyle(
-                          color: Color(0xFF9CA3AF),
-                          fontSize: 12,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      
-                      const SizedBox(height: 32),
-                    ],
-                  ),
-                ),
-              ),
             ),
           ],
         ),
@@ -288,28 +464,72 @@ class _PaymentPageState extends State<PaymentPage> {
     );
   }
 
+  Widget _buildPlanOptions() {
+    if (subscriptionPlans.length == 1) {
+      // Single plan
+      return _buildPlanOption(
+        plan: subscriptionPlans[0],
+        index: 0,
+      );
+    } else if (subscriptionPlans.length == 2) {
+      // Two plans side by side
+      return Row(
+        children: [
+          Expanded(
+            child: _buildPlanOption(
+              plan: subscriptionPlans[0],
+              index: 0,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildPlanOption(
+              plan: subscriptionPlans[1],
+              index: 1,
+            ),
+          ),
+        ],
+      );
+    } else {
+      // More than 2 plans - vertical list
+      return Column(
+        children: subscriptionPlans.asMap().entries.map((entry) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: _buildPlanOption(
+              plan: entry.value,
+              index: entry.key,
+            ),
+          );
+        }).toList(),
+      );
+    }
+  }
+
   Widget _buildPlanOption({
-    required String title,
-    required String price,
-    required bool isSelected,
-    required VoidCallback onTap,
-    String? badge,
+    required SubscriptionPlan plan,
+    required int index,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0088cc).withOpacity(0.05) : const Color(0xFFF9FAFB),
-          borderRadius: BorderRadius.circular(12),
-          border: isSelected 
-              ? Border.all(color: const Color(0xFF0088cc), width: 2)
-              : Border.all(color: const Color(0xFFE5E7EB), width: 1),
-        ),
-        child: Column(
+    final isSelected = selectedPlanIndex == index;
+    final hasDiscount = plan.hasDiscount && plan.discountPercentage != null;
+
+    return Opacity(
+      opacity: isPremiumUser ? 0.5 : 1.0,
+      child: GestureDetector(
+        onTap: isPremiumUser ? null : () => setState(() => selectedPlanIndex = index),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFF0088cc).withOpacity(0.05) : const Color(0xFFF9FAFB),
+            borderRadius: BorderRadius.circular(12),
+            border: isSelected
+                ? Border.all(color: const Color(0xFF0088cc), width: 2)
+                : Border.all(color: const Color(0xFFE5E7EB), width: 1),
+          ),
+          child: Column(
           children: [
             Text(
-              title,
+              plan.name,
               style: const TextStyle(
                 color: Color(0xFF374151),
                 fontSize: 16,
@@ -317,15 +537,26 @@ class _PaymentPageState extends State<PaymentPage> {
               ),
             ),
             const SizedBox(height: 8),
+            if (hasDiscount) ...[
+              Text(
+                plan.formattedPrice,
+                style: const TextStyle(
+                  color: Color(0xFF9CA3AF),
+                  fontSize: 16,
+                  decoration: TextDecoration.lineThrough,
+                ),
+              ),
+              const SizedBox(height: 4),
+            ],
             Text(
-              price,
+              plan.formattedFinalPrice,
               style: const TextStyle(
                 color: Color(0xFF1F2937),
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
               ),
             ),
-            if (badge != null) ...[
+            if (hasDiscount) ...[
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -334,7 +565,7 @@ class _PaymentPageState extends State<PaymentPage> {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  badge,
+                  'GET ${plan.discountPercentage}% OFF',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 10,
@@ -346,337 +577,224 @@ class _PaymentPageState extends State<PaymentPage> {
           ],
         ),
       ),
+      ),
     );
   }
 
-  void _showMonthlyOfferPopup() {
-    final monthlyPlan = subscriptionPlans[0];
-    final points = monthlyPlan['points'];
-    final pointValue = monthlyPlan['pointValue'];
-    final totalDiscount = (points * pointValue / 100 * 9.99).toStringAsFixed(2);
-    final finalPrice = monthlyPlan['discountedPrice'];
-        
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          margin: const EdgeInsets.all(20),
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF0088cc), width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+  Widget _buildCardDetailsForm() {
+    return Form(
+      key: _formKey,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF9FAFB),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Payment Details',
+              style: TextStyle(
+                color: Color(0xFF1F2937),
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
               ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Celebration icon
-              Container(
-                width: 60,
-                height: 60,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF59E0B),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.celebration,
-                  color: Colors.white,
-                  size: 30,
-                ),
+            ),
+            const SizedBox(height: 20),
+
+            // Card Holder Name
+            TextFormField(
+              controller: _cardHolderNameController,
+              decoration: const InputDecoration(
+                labelText: 'Card Holder Name',
+                hintText: 'John Doe',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.person_outline),
               ),
-              const SizedBox(height: 20),
-                        
-              const Text(
-                'Special Monthly Offer!',
-                style: TextStyle(
-                  color: Color(0xFF1F2937),
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter card holder name';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // Card Number
+            TextFormField(
+              controller: _cardNumberController,
+              decoration: const InputDecoration(
+                labelText: 'Card Number',
+                hintText: '1234 5678 9012 3456',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.credit_card),
               ),
-              const SizedBox(height: 12),
-                        
-              const Text(
-                'You\'ve earned points that can be used as discount!',
-                style: TextStyle(
-                  color: Color(0xFF6B7280),
-                  fontSize: 14,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-                        
-              // Points breakdown
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF9FAFB),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE5E7EB)),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Points Earned:',
-                          style: TextStyle(
-                            color: Color(0xFF6B7280),
-                            fontSize: 14,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            const Icon(Icons.stars, color: Color(0xFFF59E0B), size: 16),
-                            const SizedBox(width: 4),
-                            Text(
-                              '$points points',
-                              style: const TextStyle(
-                                color: Color(0xFF0088cc),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+              keyboardType: TextInputType.number,
+              maxLength: 16,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter card number';
+                }
+                if (value.length < 16) {
+                  return 'Card number must be 16 digits';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // Expiry and CVV
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _expiryMonthController,
+                    decoration: const InputDecoration(
+                      labelText: 'Month',
+                      hintText: 'MM',
+                      border: OutlineInputBorder(),
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Point Value:',
-                          style: TextStyle(
-                            color: Color(0xFF6B7280),
-                            fontSize: 14,
-                          ),
-                        ),
-                        Text(
-                          '$pointValue% each',
-                          style: const TextStyle(
-                            color: Color(0xFF374151),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      margin: const EdgeInsets.symmetric(vertical: 12),
-                      height: 1,
-                      color: const Color(0xFFE5E7EB),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Original Price:',
-                          style: TextStyle(
-                            color: Color(0xFF9CA3AF),
-                            fontSize: 12,
-                          ),
-                        ),
-                        Text(
-                          monthlyPlan['originalPrice'],
-                          style: const TextStyle(
-                            color: Color(0xFF9CA3AF),
-                            fontSize: 12,
-                            decoration: TextDecoration.lineThrough,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Discount:',
-                          style: TextStyle(
-                            color: Color(0xFF10B981),
-                            fontSize: 12,
-                          ),
-                        ),
-                        Text(
-                          '-\$$totalDiscount',
-                          style: const TextStyle(
-                            color: Color(0xFF10B981),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Final Price:',
-                          style: TextStyle(
-                            color: Color(0xFF1F2937),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          '$finalPrice/month',
-                          style: const TextStyle(
-                            color: Color(0xFF0088cc),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-                        
-              // Action buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        setState(() {
-                          selectedPlanIndex = 1;
-                        });
-                      },
-                      style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFF9CA3AF),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      child: const Text('Skip Offer'),
-                    ),
+                    keyboardType: TextInputType.number,
+                    maxLength: 2,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Required';
+                      }
+                      final month = int.tryParse(value);
+                      if (month == null || month < 1 || month > 12) {
+                        return 'Invalid';
+                      }
+                      return null;
+                    },
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          hasMonthlyOfferApplied = true;
-                        });
-                        Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0088cc),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: const Text('Apply Offer'),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextFormField(
+                    controller: _expiryYearController,
+                    decoration: const InputDecoration(
+                      labelText: 'Year',
+                      hintText: 'YYYY',
+                      border: OutlineInputBorder(),
                     ),
+                    keyboardType: TextInputType.number,
+                    maxLength: 4,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Required';
+                      }
+                      final year = int.tryParse(value);
+                      if (year == null || year < DateTime.now().year) {
+                        return 'Invalid';
+                      }
+                      return null;
+                    },
                   ),
-                ],
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextFormField(
+                    controller: _cvvController,
+                    decoration: const InputDecoration(
+                      labelText: 'CVV',
+                      hintText: '123',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                    maxLength: 3,
+                    obscureText: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Required';
+                      }
+                      if (value.length < 3) {
+                        return 'Invalid';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Billing Address
+            TextFormField(
+              controller: _billingAddressController,
+              decoration: const InputDecoration(
+                labelText: 'Billing Address',
+                hintText: '123 Main St, City',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.location_on_outlined),
               ),
-            ],
-          ),
+              maxLines: 2,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter billing address';
+                }
+                return null;
+              },
+            ),
+          ],
         ),
       ),
     );
   }
 
-  void _processPayment() async {
-    setState(() => isProcessing = true);
-    await Future.delayed(const Duration(seconds: 2));
-    setState(() => isProcessing = false);
-    if (mounted) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            margin: const EdgeInsets.all(20),
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF0088cc), width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF10B981),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.check,
-                    color: Colors.white,
-                    size: 30,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Welcome to Premium!',
-                  style: TextStyle(
-                    color: Color(0xFF1F2937),
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Your ${subscriptionPlans[selectedPlanIndex]['title'].toLowerCase()} subscription is now active.',
-                  style: const TextStyle(
-                    color: Color(0xFF6B7280),
-                    fontSize: 14,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0088cc),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text('Continue'),
-                  ),
-                ),
-              ],
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.error_outline,
+            size: 64,
+            color: Color(0xFF9CA3AF),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Failed to load subscription plans',
+            style: TextStyle(
+              color: Color(0xFF6B7280),
+              fontSize: 16,
             ),
           ),
-        ),
-      );
-    }
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: _loadSubscriptionPlans,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0088cc),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.inbox_outlined,
+            size: 64,
+            color: Color(0xFF9CA3AF),
+          ),
+          SizedBox(height: 16),
+          Text(
+            'No subscription plans available',
+            style: TextStyle(
+              color: Color(0xFF6B7280),
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

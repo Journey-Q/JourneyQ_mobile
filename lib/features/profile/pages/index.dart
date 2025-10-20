@@ -6,6 +6,7 @@ import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:journeyq/data/repositories/profile_repository/profile_repository.dart';
 import 'package:journeyq/data/repositories/follow_repository/follow_repository.dart';
 import 'package:journeyq/data/repositories/post_repository/post_repository.dart';
+import 'package:journeyq/data/repositories/subscription_repository.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -62,6 +63,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ProfileRepository.getProfile(_userId!),
           _loadUserStats(),
           _loadUserPosts(),
+          _checkPremiumStatus(),
         ],
         eagerError: false, // Don't stop on first error
       );
@@ -69,16 +71,19 @@ class _ProfilePageState extends State<ProfilePage> {
       final profileData = results[0] as Map<String, dynamic>?;
       final statsData = results[1] as Map<String, dynamic>?;
       final postsData = results[2] as List<Map<String, dynamic>>?;
+      final isPremium = results[3] as bool? ?? false;
 
       print("Profile data loaded: $profileData");
       print("Stats data loaded: $statsData");
       print("Posts data loaded: ${postsData?.length ?? 0} posts");
+      print("Premium status loaded: $isPremium");
 
       if (mounted) {
         setState(() {
           _profileData = profileData;
           _statsData = statsData;
           _userPosts = postsData ?? [];
+          isSubscribed = isPremium;
           _isLoading = false;
           _isLoadingStats = false;
           _isLoadingPosts = false;
@@ -100,6 +105,30 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         );
       }
+    }
+  }
+
+  // Check premium status from backend
+  Future<bool> _checkPremiumStatus() async {
+    try {
+      if (_userId == null) {
+        print("❌ Cannot check premium status: userId is null");
+        return false;
+      }
+
+      print("🔄 Checking premium status for userId: $_userId");
+
+      final status = await SubscriptionRepository.getPremiumStatus(int.parse(_userId!));
+
+      print("✅ Premium status checked:");
+      print("   Is Premium: ${status.isPremium}");
+      print("   Status: ${status.subscriptionStatus}");
+      print("   End Date: ${status.subscriptionEndDate}");
+
+      return status.isPremium;
+    } catch (e) {
+      print("❌ Error checking premium status: $e");
+      return false;
     }
   }
 
@@ -449,7 +478,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 child: ElevatedButton.icon(
-                  onPressed: _handleSubscribe,
+                  onPressed: isSubscribed ? null : _handleSubscribe,
                   icon: Icon(
                     isSubscribed ? Icons.star : Icons.star_outline,
                     size: 13,
@@ -471,6 +500,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       fontWeight: FontWeight.w600,
                     ),
                     minimumSize: const Size(0, 28),
+                    disabledBackgroundColor: Colors.transparent,
+                    disabledForegroundColor: Colors.white,
                   ),
                 ),
               ),

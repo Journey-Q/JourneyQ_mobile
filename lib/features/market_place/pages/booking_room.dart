@@ -397,8 +397,8 @@ class _BookingRoomPageState extends State<BookingRoomPage> {
           _isLoading = false;
         });
 
-        // Show confirmation popup with actual booking reference
-        _showBookingConfirmationDialog(bookingReference: response.bookingId);
+        // Show confirmation popup with actual booking response
+        _showBookingConfirmationDialog(response: response);
       }
     } catch (e) {
       print('❌ Error creating booking: $e');
@@ -551,7 +551,11 @@ class _BookingRoomPageState extends State<BookingRoomPage> {
     );
   }
 
-  void _showBookingConfirmationDialog({String? bookingReference}) {
+  void _showBookingConfirmationDialog({required BookingResponse response}) {
+    // Format dates for display
+    final checkInFormatted = '${response.checkInDate.day}/${response.checkInDate.month}/${response.checkInDate.year}';
+    final checkOutFormatted = '${response.checkOutDate.day}/${response.checkOutDate.month}/${response.checkOutDate.year}';
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -598,9 +602,9 @@ class _BookingRoomPageState extends State<BookingRoomPage> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Your room has been successfully booked.',
-                style: TextStyle(
+              Text(
+                response.message,
+                style: const TextStyle(
                   fontSize: 14,
                   color: Colors.grey,
                 ),
@@ -632,7 +636,7 @@ class _BookingRoomPageState extends State<BookingRoomPage> {
                       ],
                     ),
                     Text(
-                      bookingReference ?? '#BK${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+                      response.bookingId,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -640,12 +644,16 @@ class _BookingRoomPageState extends State<BookingRoomPage> {
                       ),
                     ),
                     const SizedBox(height: 12),
+                    _buildBookingDetailRow('Status', response.statusDisplay),
                     _buildBookingDetailRow('Hotel', hotelData['name'] ?? 'Unknown Hotel'),
                     _buildBookingDetailRow('Room', roomData['displayRoomType'] ?? roomData['roomType'] ?? 'Standard Room'),
-                    _buildBookingDetailRow('Dates', '${_checkInDate?.day}/${_checkInDate?.month}/${_checkInDate?.year} - ${_checkOutDate?.day}/${_checkOutDate?.month}/${_checkOutDate?.year}'),
-                    _buildBookingDetailRow('Guests', '$_guests'),
+                    _buildBookingDetailRow('Check-in', checkInFormatted),
+                    _buildBookingDetailRow('Check-out', checkOutFormatted),
+                    _buildBookingDetailRow('Nights', '${response.numberOfNights}'),
+                    _buildBookingDetailRow('Guests', '${response.numberOfGuests}'),
+                    _buildBookingDetailRow('Card', response.maskedCardNumber),
                     const Divider(),
-                    _buildBookingDetailRow('Total', 'LKR ${_calculateTotalAmount().toStringAsFixed(2)}', isTotal: true),
+                    _buildBookingDetailRow('Total', 'LKR ${response.totalAmount.toStringAsFixed(2)}', isTotal: true),
                   ],
                 ),
               ),
@@ -655,7 +663,7 @@ class _BookingRoomPageState extends State<BookingRoomPage> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    context.push('/marketplace');
+                    context.go('/marketplace');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0088cc),
