@@ -2,6 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
+import 'package:journeyq/data/repositories/marketplace_repository/booking_repository.dart';
 
 class BookingRoomPage extends StatefulWidget {
   final Map<String, dynamic>? hotel;
@@ -23,7 +26,8 @@ class _BookingRoomPageState extends State<BookingRoomPage> {
   // Payment controllers
   final _cardHolderNameController = TextEditingController();
   final _cardNumberController = TextEditingController();
-  final _expiryDateController = TextEditingController();
+  final _expiryMonthController = TextEditingController();
+  final _expiryYearController = TextEditingController();
   final _cvvController = TextEditingController();
   final _billingAddressController = TextEditingController();
 
@@ -43,9 +47,9 @@ class _BookingRoomPageState extends State<BookingRoomPage> {
     hotelData = widget.hotel ?? _getDefaultHotelData();
     roomData = widget.room ?? _getDefaultRoomData();
 
-    // Set default dates (today and tomorrow)
-    _checkInDate = DateTime.now();
-    _checkOutDate = DateTime.now().add(const Duration(days: 1));
+    // Set default dates (tomorrow and day after - backend requires future dates)
+    _checkInDate = DateTime.now().add(const Duration(days: 1));
+    _checkOutDate = DateTime.now().add(const Duration(days: 2));
     _calculateNights();
 
     // Debug: Print received data
@@ -61,7 +65,8 @@ class _BookingRoomPageState extends State<BookingRoomPage> {
     _specialRequestsController.dispose();
     _cardHolderNameController.dispose();
     _cardNumberController.dispose();
-    _expiryDateController.dispose();
+    _expiryMonthController.dispose();
+    _expiryYearController.dispose();
     _cvvController.dispose();
     _billingAddressController.dispose();
     super.dispose();
@@ -126,10 +131,15 @@ class _BookingRoomPageState extends State<BookingRoomPage> {
   }
 
   Future<void> _selectDate(BuildContext context, bool isCheckIn) async {
+    // Backend requires future dates, so minimum is tomorrow
+    final tomorrow = DateTime.now().add(const Duration(days: 1));
+
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: isCheckIn ? _checkInDate ?? DateTime.now() : _checkOutDate ?? DateTime.now().add(const Duration(days: 1)),
-      firstDate: DateTime.now(),
+      initialDate: isCheckIn
+          ? (_checkInDate ?? tomorrow)
+          : (_checkOutDate ?? tomorrow.add(const Duration(days: 1))),
+      firstDate: tomorrow, // Must be in the future (backend @Future validation)
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (context, child) {
         return Theme(
@@ -292,7 +302,8 @@ class _BookingRoomPageState extends State<BookingRoomPage> {
     if (_showPaymentSection) {
       if (_cardHolderNameController.text.isEmpty ||
           _cardNumberController.text.isEmpty ||
-          _expiryDateController.text.isEmpty ||
+          _expiryMonthController.text.isEmpty ||
+          _expiryYearController.text.isEmpty ||
           _cvvController.text.isEmpty ||
           _billingAddressController.text.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -303,24 +314,244 @@ class _BookingRoomPageState extends State<BookingRoomPage> {
         );
         return;
       }
+    } else {
+      // Payment details are required
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please add payment details to complete the booking'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
     }
 
     setState(() {
       _isLoading = true;
     });
 
-    // Simulate API call to save booking and payment data
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Get user ID from AuthProvider
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final userId = authProvider.user?.userId;
 
-    setState(() {
-      _isLoading = false;
-    });
+      if (userId == null) {
+        throw Exception('User not authenticated. Please log in to continue.');
+      }
 
-    // Show confirmation popup
-    _showBookingConfirmationDialog();
+      // Get room ID from roomData and ensure it's an integer
+      final roomIdRaw = roomData['id'] ?? roomData['roomId'];
+      if (roomIdRaw == null) {
+        throw Exception('Room ID not found');
+      }
+
+      // Parse roomId ensuring it's an integer (backend expects Long)
+      int roomId;
+      if (roomIdRaw is int) {
+        roomId = roomIdRaw;
+      } else if (roomIdRaw is String) {
+        roomId = int.parse(roomIdRaw);
+      } else {
+        roomId = int.parse(roomIdRaw.toString());
+      }
+
+      print('🔢 Type Check - roomId: $roomId (${roomId.runtimeType}), userId: $userId (${userId.runtimeType})');
+
+      // Create card details DTO (combine month/year to MM/YYYY format)
+      final expiryMonth = _expiryMonthController.text.trim().padLeft(2, '0');
+      final expiryYear = _expiryYearController.text.trim();
+      final expiryDate = '$expiryMonth/$expiryYear';
+
+      final cardDetails = CardDetailsDTO(
+        cardHolderName: _cardHolderNameController.text.trim(),
+        cardNumber: _cardNumberController.text.trim(),
+        expiryDate: expiryDate,
+        cvv: _cvvController.text.trim(),
+        billingAddress: _billingAddressController.text.trim(),
+      );
+
+      // Create booking data with userId from AuthProvider
+      final bookingData = BookingRepository.createBookingData(
+        roomId: roomId,
+        userId: userId,
+        customerName: _nameController.text.trim(),
+        customerEmail: _emailController.text.trim(),
+        customerPhone: _phoneController.text.trim(),
+        checkInDate: _checkInDate!,
+        checkOutDate: _checkOutDate!,
+        numberOfGuests: _guests,
+        specialRequests: _specialRequestsController.text.trim().isEmpty
+            ? 'None'
+            : _specialRequestsController.text.trim(),
+        cardDetails: cardDetails,
+      );
+
+      print('🏨 Submitting booking for room ID: $roomId, user ID: $userId');
+
+      // Call API to create booking
+      final response = await BookingRepository.createRoomBooking(bookingData);
+
+      print('✅ Booking created successfully: ${response.bookingId}');
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        // Show confirmation popup with actual booking reference
+        _showBookingConfirmationDialog(bookingReference: response.bookingId);
+      }
+    } catch (e) {
+      print('❌ Error creating booking: $e');
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        // Parse error message to check for 409 status code
+        String errorMessage;
+        String errorTitle = 'Booking Failed';
+
+        final errorString = e.toString();
+
+        // Check for 409 Conflict error (room already booked)
+        if (errorString.contains('409') || errorString.contains('Conflict')) {
+          errorTitle = 'Room Not Available';
+          errorMessage = 'This room is already booked for the selected dates. Please select different dates or choose another room.';
+        } else if (errorString.contains('400') || errorString.contains('Bad Request')) {
+          errorTitle = 'Invalid Booking Details';
+          errorMessage = 'Please check your booking details and try again.';
+        } else if (errorString.contains('401') || errorString.contains('Unauthorized')) {
+          errorTitle = 'Authentication Required';
+          errorMessage = 'Please log in again to continue.';
+        } else if (errorString.contains('500') || errorString.contains('Server')) {
+          errorTitle = 'Server Error';
+          errorMessage = 'Something went wrong on our end. Please try again later.';
+        } else {
+          errorMessage = 'Failed to create booking. Please try again.';
+        }
+
+        // Show detailed error dialog instead of snackbar
+        _showErrorDialog(errorTitle, errorMessage);
+      }
+    }
   }
 
-  void _showBookingConfirmationDialog() {
+  void _showErrorDialog(String title, String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        contentPadding: EdgeInsets.zero,
+        content: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.red.shade50,
+                Colors.white,
+              ],
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.error_outline,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade300,
+                        foregroundColor: Colors.black87,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Close',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        // Optionally navigate back to room selection
+                        if (title.contains('Not Available')) {
+                          Navigator.of(context).pop(); // Go back to room details
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0088cc),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        title.contains('Not Available') ? 'Choose Another' : 'Try Again',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showBookingConfirmationDialog({String? bookingReference}) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -401,7 +632,7 @@ class _BookingRoomPageState extends State<BookingRoomPage> {
                       ],
                     ),
                     Text(
-                      '#BK${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+                      bookingReference ?? '#BK${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -424,7 +655,7 @@ class _BookingRoomPageState extends State<BookingRoomPage> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    context.push('/marketplace/hotels');
+                    context.push('/marketplace');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0088cc),
@@ -615,22 +846,50 @@ class _BookingRoomPageState extends State<BookingRoomPage> {
           Row(
             children: [
               Expanded(
+                flex: 2,
                 child: _buildTextField(
-                  controller: _expiryDateController,
-                  label: 'Expiry Date (MM/YY)',
+                  controller: _expiryMonthController,
+                  label: 'Month (MM)',
                   icon: Icons.calendar_today,
-                  keyboardType: TextInputType.datetime,
+                  keyboardType: TextInputType.number,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter expiry date';
+                      return 'Required';
+                    }
+                    final month = int.tryParse(value);
+                    if (month == null || month < 1 || month > 12) {
+                      return 'Invalid month';
                     }
                     return null;
                   },
                   isPaymentField: true,
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
+                flex: 2,
+                child: _buildTextField(
+                  controller: _expiryYearController,
+                  label: 'Year (YYYY)',
+                  icon: Icons.event,
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Required';
+                    }
+                    final year = int.tryParse(value);
+                    final currentYear = DateTime.now().year;
+                    if (year == null || year < currentYear || year > currentYear + 20) {
+                      return 'Invalid year';
+                    }
+                    return null;
+                  },
+                  isPaymentField: true,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
                 child: _buildTextField(
                   controller: _cvvController,
                   label: 'CVV',
@@ -638,10 +897,10 @@ class _BookingRoomPageState extends State<BookingRoomPage> {
                   keyboardType: TextInputType.number,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter CVV';
+                      return 'Required';
                     }
-                    if (value.length < 3) {
-                      return 'Please enter a valid CVV';
+                    if (value.length < 3 || value.length > 4) {
+                      return 'Invalid CVV';
                     }
                     return null;
                   },

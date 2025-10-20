@@ -18,10 +18,15 @@ class MarketplaceService {
         baseUrl: 'https://serviceprovidersservice-production-8f10.up.railway.app',
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
+        contentType: 'application/json',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
       ),
     );
 
-    
+
   }
 
   // GET request
@@ -68,17 +73,53 @@ class MarketplaceService {
         Options? options,
       }) async {
     try {
-      return await _dio.post(
+      print('🌐 MarketplaceService POST Request:');
+      print('   URL: ${_dio.options.baseUrl}$path');
+      print('   Headers: ${_dio.options.headers}');
+      print('   Query Params: $queryParameters');
+      print('   Request Body: $data');
+      print('   Request Body Type: ${data.runtimeType}');
+
+      // Ensure we're sending JSON with proper content type
+      final requestOptions = options ?? Options(
+        contentType: 'application/json',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+
+      final response = await _dio.post(
         path,
         data: data,
         queryParameters: queryParameters,
-        options: options,
+        options: requestOptions,
       );
+
+      print('✅ Response Status: ${response.statusCode}');
+      print('✅ Response Data: ${response.data}');
+      return response;
     } on DioException catch (e) {
+      print('❌ DioException Details:');
+      print('   Status Code: ${e.response?.statusCode}');
+      print('   Response Data: ${e.response?.data}');
+      print('   Request URL: ${e.requestOptions.uri}');
+      print('   Request Headers: ${e.requestOptions.headers}');
+      print('   Request Body: ${e.requestOptions.data}');
+      print('   Error Type: ${e.type}');
+      print('   Error Message: ${e.message}');
+
       if (e.error is AppException) {
         throw e.error as AppException;
       }
-      throw ServerException('Unexpected error occurred');
+
+      // Throw detailed error message from backend
+      if (e.response?.data != null) {
+        final errorMessage = e.response!.data.toString();
+        throw ServerException('Server error (${e.response?.statusCode}): $errorMessage');
+      }
+
+      throw ServerException('Unexpected error occurred: ${e.message}');
     }
   }
 

@@ -56,21 +56,25 @@ class _RoomDetailsPageState extends State<RoomDetailsPage> {
       final room = await RoomRepository.getRoomById(widget.roomId);
       print('✅ Room details loaded: ${room.roomNumber} - ${room.roomType}');
 
-      // Initialize room images
+      // Initialize room images from the images array
       final images = <String>[];
-      if (room.imageUrl != null && room.imageUrl!.isNotEmpty) {
-        images.add(room.imageUrl!);
-        print('✅ Room image URL: ${room.imageUrl}');
-      } else {
-        print('ℹ️ No room image URL available');
-      }
 
-      // Add placeholder images for gallery (you can remove these if you have actual images)
-      images.addAll([
-        'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=500',
-        'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=500',
-        'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=500',
-      ]);
+      // Use the images array from the room data (from API)
+      if (room.images.isNotEmpty) {
+        images.addAll(room.images);
+        print('✅ Found ${room.images.length} room images from API');
+        for (var i = 0; i < room.images.length; i++) {
+          print('   Image ${i + 1}: ${room.images[i]}');
+        }
+      } else if (room.imageUrl != null && room.imageUrl!.isNotEmpty) {
+        // Fallback to single imageUrl if images array is empty
+        images.add(room.imageUrl!);
+        print('✅ Using single imageUrl: ${room.imageUrl}');
+      } else {
+        print('ℹ️ No room images available, using placeholder');
+        // Only use placeholder if no images at all
+        images.add('https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=800');
+      }
 
       if (mounted) {
         setState(() {

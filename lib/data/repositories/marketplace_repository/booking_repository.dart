@@ -1,8 +1,8 @@
-// File: lib/features/marketplace/repositories/booking_repository.dart
+// File: lib/data/repositories/marketplace_repository/booking_repository.dart
 
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import 'package:journeyq/core/services/marketplace_service.dart';
 
 // Models - Updated to exactly match Java DTO
 class CardDetailsDTO {
@@ -37,10 +37,10 @@ class CreateRoomBookingDTO {
   final String customerName;
   final String customerEmail;
   final String customerPhone;
-  final String specialRequests;
   final DateTime checkInDate;
   final DateTime checkOutDate;
   final int numberOfGuests;
+  final String specialRequests;
   final CardDetailsDTO cardDetails;
 
   CreateRoomBookingDTO({
@@ -49,26 +49,33 @@ class CreateRoomBookingDTO {
     required this.customerName,
     required this.customerEmail,
     required this.customerPhone,
-    required this.specialRequests,
     required this.checkInDate,
     required this.checkOutDate,
     required this.numberOfGuests,
+    required this.specialRequests,
     required this.cardDetails,
   });
 
   Map<String, dynamic> toJson() {
-    return {
-      'roomId': roomId,
-      'userId': userId,
-      'customerName': customerName,
-      'customerEmail': customerEmail,
-      'customerPhone': customerPhone,
-      'specialRequests': specialRequests,
-      'checkInDate': checkInDate.toIso8601String().split('T')[0],
-      'checkOutDate': checkOutDate.toIso8601String().split('T')[0],
-      'numberOfGuests': numberOfGuests,
-      'cardDetails': cardDetails.toJson(),
+    // Ensure all types match backend expectations exactly
+    final json = {
+      'roomId': roomId,  // Long (number)
+      'userId': userId,  // Long (number)
+      'customerName': customerName,  // String
+      'customerEmail': customerEmail,  // String
+      'customerPhone': customerPhone,  // String
+      'checkInDate': checkInDate.toIso8601String().split('T')[0],  // LocalDate (YYYY-MM-DD string)
+      'checkOutDate': checkOutDate.toIso8601String().split('T')[0],  // LocalDate (YYYY-MM-DD string)
+      'numberOfGuests': numberOfGuests,  // Integer (number)
+      'specialRequests': specialRequests,  // String
+      'cardDetails': cardDetails.toJson(),  // CardDetailsDTO (object)
     };
+
+    debugPrint('📋 Final JSON to send: $json');
+    debugPrint('   roomId type: ${json['roomId'].runtimeType}');
+    debugPrint('   userId type: ${json['userId'].runtimeType}');
+
+    return json;
   }
 }
 
@@ -77,20 +84,100 @@ class BookingResponse {
   final String status;
   final String message;
   final DateTime bookedDate;
+  final int? id;
+  final int? roomId;
+  final int? userId;
+  final String? customerName;
+  final String? customerEmail;
+  final int? numberOfGuests;
+  final int? numberOfNights;
+  final double? pricePerNight;
+  final double? totalAmount;
+  final String? maskedCardNumber;
 
   BookingResponse({
     required this.bookingId,
     required this.status,
     required this.message,
     required this.bookedDate,
+    this.id,
+    this.roomId,
+    this.userId,
+    this.customerName,
+    this.customerEmail,
+    this.numberOfGuests,
+    this.numberOfNights,
+    this.pricePerNight,
+    this.totalAmount,
+    this.maskedCardNumber,
   });
 
   factory BookingResponse.fromJson(Map<String, dynamic> json) {
+    debugPrint('📦 Parsing BookingResponse from JSON: $json');
+
+    // Backend returns 'id' as the booking ID
+    final id = json['id'] as int?;
+    final bookingId = id != null ? 'BK-$id' : 'BK-${DateTime.now().millisecondsSinceEpoch}';
+
+    // Parse status (always string in response)
+    final status = (json['status'] ?? 'CONFIRMED').toString();
+
+    // Parse message (use customerName or default message)
+    final customerName = json['customerName']?.toString();
+    final message = customerName != null
+        ? 'Booking confirmed for $customerName'
+        : 'Booking created successfully';
+
+    // Parse bookedDate from createdAt or confirmedAt
+    DateTime bookedDate;
+    final createdAt = json['createdAt'] ?? json['confirmedAt'];
+    if (createdAt != null && createdAt is String) {
+      try {
+        bookedDate = DateTime.parse(createdAt);
+      } catch (e) {
+        debugPrint('⚠️ Error parsing date: $e');
+        bookedDate = DateTime.now();
+      }
+    } else {
+      bookedDate = DateTime.now();
+    }
+
+    // Parse numeric fields safely
+    final roomId = json['roomId'] as int?;
+    final userId = json['userId'] as int?;
+    final numberOfGuests = json['numberOfGuests'] as int?;
+    final numberOfNights = json['numberOfNights'] as int?;
+
+    // Parse double fields safely
+    final pricePerNight = (json['pricePerNight'] as num?)?.toDouble();
+    final totalAmount = (json['totalAmount'] as num?)?.toDouble();
+
+    // Parse string fields
+    final email = json['customerEmail']?.toString();
+    final maskedCard = json['maskedCardNumber']?.toString();
+
+    debugPrint('✅ Parsed BookingResponse:');
+    debugPrint('   id: $id');
+    debugPrint('   bookingId: $bookingId');
+    debugPrint('   status: $status');
+    debugPrint('   totalAmount: $totalAmount');
+    debugPrint('   bookedDate: $bookedDate');
+
     return BookingResponse(
-      bookingId: json['bookingId'] ?? json['id'] ?? 'BK-${DateTime.now().millisecondsSinceEpoch}',
-      status: json['status'] ?? 'CONFIRMED',
-      message: json['message'] ?? 'Booking created successfully',
-      bookedDate: DateTime.parse(json['bookedDate'] ?? DateTime.now().toIso8601String()),
+      bookingId: bookingId,
+      status: status,
+      message: message,
+      bookedDate: bookedDate,
+      id: id,
+      roomId: roomId,
+      userId: userId,
+      customerName: customerName,
+      customerEmail: email,
+      numberOfGuests: numberOfGuests,
+      numberOfNights: numberOfNights,
+      pricePerNight: pricePerNight,
+      totalAmount: totalAmount,
+      maskedCardNumber: maskedCard,
     );
   }
 }
@@ -251,153 +338,47 @@ class ReviewRequest {
   }
 }
 
-// Repository
+// Repository - Uses MarketplaceService for API calls
 class BookingRepository {
-  static const String _baseUrl = 'https://your-deployed-backend.com/api'; // Replace with your deployed backend URL
-
-  final http.Client client;
-  final String? authToken;
-
-  BookingRepository({http.Client? client, this.authToken})
-      : client = client ?? http.Client();
-
-  // Headers for authenticated requests
-  Map<String, String> get _headers {
-    final headers = {
-      'Content-Type': 'application/json',
-    };
-    if (authToken != null) {
-      headers['Authorization'] = 'Bearer $authToken';
-    }
-    return headers;
-  }
-
-  // Create a new room booking - Updated to exactly match Java DTO
-  Future<BookingResponse> createRoomBooking(CreateRoomBookingDTO bookingData) async {
+  // Create a new room booking - Endpoint: /service/room-bookings/create
+  static Future<BookingResponse> createRoomBooking(CreateRoomBookingDTO bookingData) async {
     try {
-      print('Sending booking request: ${jsonEncode(bookingData.toJson())}');
+      debugPrint('🏨 Creating room booking...');
+      debugPrint('📋 Booking data: ${jsonEncode(bookingData.toJson())}');
 
-      final response = await client.post(
-        Uri.parse('$_baseUrl/bookings/room'),
-        headers: _headers,
-        body: jsonEncode(bookingData.toJson()),
+      final response = await MarketplaceService.post(
+        '/service/room-bookings/create',
+        data: bookingData.toJson(),
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+      debugPrint('✅ Booking response status: ${response.statusCode}');
+      debugPrint('📦 Booking response data: ${response.data}');
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
+        final responseData = response.data is Map<String, dynamic>
+            ? response.data as Map<String, dynamic>
+            : jsonDecode(response.data.toString());
         return BookingResponse.fromJson(responseData);
       } else {
-        throw Exception('Failed to create booking: ${response.statusCode} - ${response.body}');
+        throw Exception('Failed to create booking: ${response.statusCode} - ${response.data}');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Booking creation error: $e');
-      }
+      debugPrint('❌ Booking creation error: $e');
       rethrow;
-    }
-  }
-
-  // Get booking history for a user
-  Future<List<BookingHistory>> getBookingHistory({String? userId}) async {
-    try {
-      final endpoint = userId != null
-          ? '$_baseUrl/bookings/history?userId=$userId'
-          : '$_baseUrl/bookings/history';
-
-      final response = await client.get(
-        Uri.parse(endpoint),
-        headers: _headers,
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> responseData = jsonDecode(response.body);
-        return responseData.map((json) => BookingHistory.fromJson(json)).toList();
-      } else {
-        throw Exception('Failed to fetch booking history: ${response.statusCode}');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Booking history fetch error: $e');
-      }
-      rethrow;
-    }
-  }
-
-  // Get booking by ID
-  Future<BookingHistory> getBookingById(String bookingId) async {
-    try {
-      final response = await client.get(
-        Uri.parse('$_baseUrl/bookings/$bookingId'),
-        headers: _headers,
-      );
-
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        return BookingHistory.fromJson(responseData);
-      } else {
-        throw Exception('Failed to fetch booking: ${response.statusCode}');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Booking fetch error: $e');
-      }
-      throw Exception('Failed to fetch booking: $e');
-    }
-  }
-
-  // Cancel a booking
-  Future<void> cancelBooking(String bookingId) async {
-    try {
-      final response = await client.put(
-        Uri.parse('$_baseUrl/bookings/$bookingId/cancel'),
-        headers: _headers,
-      );
-
-      if (response.statusCode != 200 && response.statusCode != 204) {
-        throw Exception('Failed to cancel booking: ${response.statusCode}');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Booking cancellation error: $e');
-      }
-      throw Exception('Failed to cancel booking: $e');
-    }
-  }
-
-  // Submit a review for a completed booking
-  Future<void> submitReview(ReviewRequest reviewRequest) async {
-    try {
-      final response = await client.post(
-        Uri.parse('$_baseUrl/bookings/review'),
-        headers: _headers,
-        body: jsonEncode(reviewRequest.toJson()),
-      );
-
-      if (response.statusCode != 201 && response.statusCode != 200) {
-        throw Exception('Failed to submit review: ${response.statusCode}');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Review submission error: $e');
-      }
-      throw Exception('Failed to submit review: $e');
     }
   }
 
   // Helper method to create booking from form data - Updated to match Java DTO exactly
-  CreateRoomBookingDTO createBookingData({
+  static CreateRoomBookingDTO createBookingData({
     required int roomId,
     required int userId,
     required String customerName,
     required String customerEmail,
     required String customerPhone,
-    required String specialRequests,
     required DateTime checkInDate,
     required DateTime checkOutDate,
     required int numberOfGuests,
+    required String specialRequests,
     required CardDetailsDTO cardDetails,
   }) {
     return CreateRoomBookingDTO(
@@ -406,103 +387,11 @@ class BookingRepository {
       customerName: customerName,
       customerEmail: customerEmail,
       customerPhone: customerPhone,
-      specialRequests: specialRequests,
       checkInDate: checkInDate,
       checkOutDate: checkOutDate,
       numberOfGuests: numberOfGuests,
+      specialRequests: specialRequests,
       cardDetails: cardDetails,
     );
-  }
-
-  void dispose() {
-    client.close();
-  }
-}
-
-// Provider for state management
-class BookingProvider with ChangeNotifier {
-  final BookingRepository _repository;
-  List<BookingHistory> _bookings = [];
-  bool _isLoading = false;
-  String? _error;
-
-  BookingProvider(this._repository);
-
-  List<BookingHistory> get bookings => _bookings;
-  bool get isLoading => _isLoading;
-  String? get error => _error;
-
-  // Create booking and refresh history
-  Future<BookingResponse> createBooking(CreateRoomBookingDTO bookingData) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      final response = await _repository.createRoomBooking(bookingData);
-
-      // Refresh booking history after successful booking
-      await _loadBookingHistory();
-
-      _isLoading = false;
-      notifyListeners();
-      return response;
-    } catch (e) {
-      _isLoading = false;
-      _error = e.toString();
-      notifyListeners();
-      rethrow;
-    }
-  }
-
-  // Load booking history
-  Future<void> _loadBookingHistory() async {
-    try {
-      _bookings = await _repository.getBookingHistory();
-      _error = null;
-    } catch (e) {
-      _error = e.toString();
-      if (kDebugMode) {
-        print('Error loading booking history: $e');
-      }
-    }
-    notifyListeners();
-  }
-
-  // Initialize and load booking history
-  Future<void> initialize() async {
-    _isLoading = true;
-    notifyListeners();
-
-    await _loadBookingHistory();
-
-    _isLoading = false;
-    notifyListeners();
-  }
-
-  // Cancel booking
-  Future<void> cancelBooking(String bookingId) async {
-    try {
-      await _repository.cancelBooking(bookingId);
-      // Refresh the list after cancellation
-      await _loadBookingHistory();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-      rethrow;
-    }
-  }
-
-  // Submit review
-  Future<void> submitReview(ReviewRequest reviewRequest) async {
-    try {
-      await _repository.submitReview(reviewRequest);
-      // Refresh to update review status
-      await _loadBookingHistory();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-      rethrow;
-    }
   }
 }

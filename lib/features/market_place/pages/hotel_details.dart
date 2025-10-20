@@ -578,12 +578,13 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
   Widget _buildRoomImage(Room room) {
     bool isBookable = room.status == RoomStatus.AVAILABLE;
 
-    // Enhanced image URL validation
-    String? imageUrl = room.imageUrl;
+    // Use firstImage getter which prioritizes images array, fallback to imageUrl
+    String? imageUrl = room.firstImage;
 
     // Debug the image URL
     print('🖼️ Room Image Debug for ${room.displayRoomType}:');
-    print('   - Raw imageUrl: $imageUrl');
+    print('   - Images array count: ${room.images.length}');
+    print('   - First image (used): $imageUrl');
     print('   - Room ID: ${room.id}');
     print('   - Is bookable: $isBookable');
 
