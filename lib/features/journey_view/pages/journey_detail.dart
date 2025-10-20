@@ -1319,35 +1319,34 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   Future<void> _loadBucketListStatus() async {
     try {
       final bucketListData = await BucketListRepository.getBucketList();
-      
-      if (bucketListData['posts'] != null && bucketListData['posts'] is List) {
-        final posts = bucketListData['posts'] as List;
-        final isInBucketList = posts.any((post) {
-          if (post is Map) {
-            return post['id']?.toString() == postId;
-          }
-          return false;
-        });
-        
-        setState(() {
-          _isInBucketList = isInBucketList;
-        });
-      }
+
+      final isInBucketList = bucketListData.bucketListItems.any((item) {
+        return item.journeyId == postId;
+      });
+
+      setState(() {
+        _isInBucketList = isInBucketList;
+      });
     } catch (e) {
       print('Error loading bucket list status: $e');
     }
   }
 
   Future<void> _handleSave() async {
+    // Store previous state for rollback on error
+    final previousState = _isInBucketList;
+
     try {
       if (_isInBucketList) {
-        // Remove from bucket list
-        await BucketListRepository.removeFromBucketList(postId);
+        // Optimistically update UI
         setState(() {
           _isInBucketList = false;
           _isBookmarked = false;
         });
-        
+
+        // Remove from bucket list
+        await BucketListRepository.removeFromBucketList(postId);
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -1357,13 +1356,15 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
           );
         }
       } else {
-        // Add to bucket list
-        await BucketListRepository.addToBucketList(postId);
+        // Optimistically update UI
         setState(() {
           _isInBucketList = true;
           _isBookmarked = true;
         });
-        
+
+        // Add to bucket list
+        await BucketListRepository.addToBucketList(postId);
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -1373,8 +1374,19 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
           );
         }
       }
+
+      // Reload status from server to ensure consistency
+      // (Backend returns empty bucketListItems array after add/remove)
+      await _loadBucketListStatus();
     } catch (e) {
       print('Error updating bucket list: $e');
+
+      // Rollback optimistic update on error
+      setState(() {
+        _isInBucketList = previousState;
+        _isBookmarked = previousState;
+      });
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

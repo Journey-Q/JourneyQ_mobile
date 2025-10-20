@@ -15,7 +15,7 @@ class ApiService {
 
     _dio = Dio(
       BaseOptions(
-        baseUrl: 'https://socialmediaservice-production-2b10.up.railway.app',
+        baseUrl: 'http://10.0.2.2:8081',
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
       ),

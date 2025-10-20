@@ -11,7 +11,7 @@ class BucketListPage extends StatefulWidget {
 }
 
 class _BucketListPageState extends State<BucketListPage> {
-  List<Map<String, dynamic>> bucketListItems = [];
+  List<BucketListItem> bucketListItems = [];
   bool _isLoading = true;
   bool _hasError = false;
   String _errorMessage = '';
@@ -28,43 +28,18 @@ class _BucketListPageState extends State<BucketListPage> {
         _isLoading = true;
         _hasError = false;
       });
-      
+
       final bucketListData = await BucketListRepository.getBucketList();
-      
-      if (bucketListData['bucketListItems'] != null && bucketListData['bucketListItems'] is List) {
-        final bucketItems = bucketListData['bucketListItems'] as List;
-        final List<Map<String, dynamic>> items = [];
-        
-        for (var item in bucketItems) {
-          if (item is Map) {
-            final itemData = Map<String, dynamic>.from(item);
-            items.add({
-              'id': itemData['journeyId']?.toString() ?? '',
-              'destination': itemData['destination']?.toString() ?? 'Unknown Location',
-              'image': itemData['image']?.toString() ?? 'assets/images/default_journey.jpg',
-              'isCompleted': itemData['completed'] == true,
-              'visitedDate': itemData['visitedDate']?.toString(),
-              'description': itemData['description']?.toString() ?? '',
-              'journeyId': itemData['journeyId']?.toString() ?? '',
-            });
-          }
-        }
-        
-        setState(() {
-          bucketListItems = items;
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          bucketListItems = [];
-          _isLoading = false;
-        });
-      }
+
+      setState(() {
+        bucketListItems = bucketListData.bucketListItems;
+        _isLoading = false;
+      });
     } catch (e) {
       print('Error loading bucket list: $e');
       setState(() {
         _hasError = true;
-        _errorMessage = 'Failed to load bucket list';
+        _errorMessage = 'Failed to load bucket list: $e';
         _isLoading = false;
       });
     }
@@ -165,9 +140,9 @@ class _BucketListPageState extends State<BucketListPage> {
       );
     }
     
-    final completedItems = bucketListItems.where((item) => item['isCompleted']).length;
+    final completedItems = bucketListItems.where((item) => item.isCompleted).length;
     final totalItems = bucketListItems.length;
-    
+
     // Prevent division by zero
     final double progressValue = totalItems > 0 ? completedItems / totalItems : 0.0;
     final int progressPercentage = totalItems > 0 ? ((completedItems / totalItems) * 100).toInt() : 0;
@@ -302,7 +277,7 @@ class _BucketListPageState extends State<BucketListPage> {
     );
   }
 
-  Widget _buildBucketListItem(Map<String, dynamic> item, int index) {
+  Widget _buildBucketListItem(BucketListItem item, int index) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -331,9 +306,9 @@ class _BucketListPageState extends State<BucketListPage> {
                 ),
                 child: ClipRRect(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                  child: item['image'].toString().startsWith('http')
+                  child: item.image.startsWith('http')
                       ? CachedNetworkImage(
-                          imageUrl: item['image'],
+                          imageUrl: item.image,
                           fit: BoxFit.cover,
                           placeholder: (context, url) => Container(
                             color: Colors.grey[200],
@@ -354,7 +329,7 @@ class _BucketListPageState extends State<BucketListPage> {
                           ),
                         )
                       : Image.asset(
-                          item['image'],
+                          item.image,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) => Container(
                             color: Colors.grey[200],
@@ -367,7 +342,7 @@ class _BucketListPageState extends State<BucketListPage> {
                         ),
                 ),
               ),
-              if (item['isCompleted'])
+              if (item.isCompleted)
                 Positioned(
                   top: 12,
                   right: 12,
@@ -399,8 +374,8 @@ class _BucketListPageState extends State<BucketListPage> {
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      item['isCompleted'] ? Icons.check_circle : Icons.radio_button_unchecked,
-                      color: item['isCompleted'] ? Colors.green : Colors.white,
+                      item.isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
+                      color: item.isCompleted ? Colors.green : Colors.white,
                       size: 20,
                     ),
                   ),
@@ -419,7 +394,7 @@ class _BucketListPageState extends State<BucketListPage> {
                   children: [
                     Expanded(
                       child: Text(
-                        item['destination'],
+                        item.destination,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -431,20 +406,20 @@ class _BucketListPageState extends State<BucketListPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  item['description'],
+                  item.description,
                   style: const TextStyle(
                     fontSize: 14,
                     color: Colors.grey,
                   ),
                 ),
-                if (item['isCompleted'] && item['visitedDate'] != null) ...[
+                if (item.isCompleted && item.visitedDate != null) ...[
                   const SizedBox(height: 8),
                   Row(
                     children: [
                       const Icon(Icons.calendar_today, size: 16, color: Colors.green),
                       const SizedBox(width: 4),
                       Text(
-                        'Visited: ${item['visitedDate']}',
+                        'Visited: ${item.visitedDate}',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.green,
@@ -481,35 +456,30 @@ class _BucketListPageState extends State<BucketListPage> {
     );
   }
 
-  Future<void> _toggleCompleted(Map<String, dynamic> item, int index) async {
+  Future<void> _toggleCompleted(BucketListItem item, int index) async {
     try {
-      final postId = item['id']?.toString();
-      if (postId == null || postId.isEmpty) return;
-      
-      final newVisitedStatus = !item['isCompleted'];
-      
-      // Optimistic UI update
-      setState(() {
-        bucketListItems[index]['isCompleted'] = newVisitedStatus;
-        if (newVisitedStatus) {
-          bucketListItems[index]['visitedDate'] = DateTime.now().toString().split(' ')[0];
-        } else {
-          bucketListItems[index]['visitedDate'] = null;
-        }
-      });
-      
+      final postId = item.journeyId;
+      if (postId.isEmpty) return;
+
+      final newVisitedStatus = !item.isCompleted;
+
       // Update backend
       await BucketListRepository.updateVisitedStatus(postId, newVisitedStatus);
+
+      // Reload to get updated data
+      await _loadBucketList();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(newVisitedStatus ? 'Marked as visited!' : 'Marked as not visited'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } catch (e) {
       print('Error updating visited status: $e');
-      // Revert optimistic update on error
-      setState(() {
-        bucketListItems[index]['isCompleted'] = !bucketListItems[index]['isCompleted'];
-        if (!bucketListItems[index]['isCompleted']) {
-          bucketListItems[index]['visitedDate'] = null;
-        }
-      });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -521,13 +491,13 @@ class _BucketListPageState extends State<BucketListPage> {
     }
   }
 
-  void _viewJourney(Map<String, dynamic> item) {
-    final postId = item['id']?.toString();
-    if (postId != null && postId.isNotEmpty) {
+  void _viewJourney(BucketListItem item) {
+    final postId = item.journeyId;
+    if (postId.isNotEmpty) {
       context.push('/journey/$postId');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Journey details not available for ${item['destination']}')),
+        SnackBar(content: Text('Journey details not available for ${item.destination}')),
       );
     }
   }
