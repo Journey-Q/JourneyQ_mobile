@@ -19,10 +19,26 @@ class TripRepository {
     }
 
     _isCreatingTrip = true;
-    
+
     try {
       final requestData = _convertFormDataToBackendFormat(formData);
-      print('Sending to backend: $requestData');
+
+      print('═══════════════════════════════════════════════════');
+      print('🚀 Sending trip creation request to backend');
+      print('═══════════════════════════════════════════════════');
+      print('📋 Full request data:');
+      print(jsonEncode(requestData));
+      print('');
+      print('📅 dayByDayItinerary details:');
+      final itinerary = requestData['dayByDayItinerary'];
+      if (itinerary is List) {
+        print('   Total days: ${itinerary.length}');
+        for (var i = 0; i < itinerary.length; i++) {
+          final day = itinerary[i];
+          print('   Day ${i + 1}: $day');
+        }
+      }
+      print('═══════════════════════════════════════════════════');
 
       // CRITICAL FIX: Validate data before sending
       _validateRequestData(requestData);
@@ -32,7 +48,7 @@ class TripRepository {
         data: requestData,
       );
 
-      print('Backend response: ${response.data}');
+      print('✅ Backend response received: ${response.data}');
 
       if (response.data != null && response.data['success'] == true) {
         final tripData = response.data['data'] ?? {};
@@ -337,34 +353,60 @@ class TripRepository {
 
   // CRITICAL FIX: Clean itinerary data
   static List<Map<String, dynamic>> _cleanItineraryData(dynamic itineraryData) {
+    print('🔍 _cleanItineraryData input: $itineraryData');
+    print('🔍 Input type: ${itineraryData.runtimeType}');
+
     if (itineraryData == null || itineraryData is! List) {
+      print('⚠️ Itinerary data is null or not a list');
       return [];
     }
 
-    return (itineraryData as List).where((day) => day != null).map((day) {
+    final cleanedData = (itineraryData as List).where((day) => day != null).map((day) {
       if (day is Map<String, dynamic>) {
-        return {
+        final cleanedDay = {
           'day': day['day'] ?? 1,
           'places': _cleanStringList(day['places']),
           'accommodations': _cleanStringList(day['accommodations']),
           'restaurants': _cleanStringList(day['restaurants']),
           'notes': day['notes']?.toString().trim() ?? '',
         };
+
+        print('📅 Day ${cleanedDay['day']}:');
+        print('   Places: ${cleanedDay['places']}');
+        print('   Accommodations: ${cleanedDay['accommodations']}');
+        print('   Restaurants: ${cleanedDay['restaurants']}');
+        print('   Notes: ${cleanedDay['notes']}');
+
+        return cleanedDay;
       }
       return <String, dynamic>{};
     }).where((day) => day.isNotEmpty).toList();
+
+    print('✅ Total days cleaned: ${cleanedData.length}');
+    return cleanedData;
   }
 
   // CRITICAL FIX: Clean string lists
   static List<String> _cleanStringList(dynamic value) {
-    if (value == null) return [];
+    print('   🧹 Cleaning list - Input: $value (${value.runtimeType})');
+
+    if (value == null) {
+      print('   ⚠️ Value is null, returning empty list');
+      return [];
+    }
+
     if (value is List) {
-      return value
+      final cleaned = value
           .where((item) => item != null)
           .map((item) => item.toString().trim())
           .where((str) => str.isNotEmpty)
           .toList();
+
+      print('   ✅ Cleaned list: $cleaned (length: ${cleaned.length})');
+      return cleaned;
     }
+
+    print('   ⚠️ Value is not a list, returning empty list');
     return [];
   }
 

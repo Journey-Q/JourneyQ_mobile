@@ -274,6 +274,32 @@ class _FollowersFollowingPageState extends State<FollowersFollowingPage>
     return isCurrentUser == true;
   }
 
+  // Helper method to get followers count from userData stats
+  int _getFollowersCount() {
+    // Try to get count from userData stats first
+    final followers = widget.userData['followers'];
+    if (followers != null) {
+      if (followers is int) return followers;
+      if (followers is String) return int.tryParse(followers) ?? 0;
+    }
+
+    // Fallback to loaded list length
+    return _followers.length;
+  }
+
+  // Helper method to get following count from userData stats
+  int _getFollowingCount() {
+    // Try to get count from userData stats first
+    final following = widget.userData['following'];
+    if (following != null) {
+      if (following is int) return following;
+      if (following is String) return int.tryParse(following) ?? 0;
+    }
+
+    // Fallback to loaded list length
+    return _following.length;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -335,7 +361,7 @@ class _FollowersFollowingPageState extends State<FollowersFollowingPage>
                     children: [
                       const Icon(Icons.people, size: 18),
                       const SizedBox(width: 6),
-                      Text('${_followers.length} Followers'),
+                      Text('${_getFollowersCount()} Followers'),
                     ],
                   ),
                 ),
@@ -345,7 +371,7 @@ class _FollowersFollowingPageState extends State<FollowersFollowingPage>
                     children: [
                       const Icon(Icons.person_add, size: 18),
                       const SizedBox(width: 6),
-                      Text('${_following.length} Following'),
+                      Text('${_getFollowingCount()} Following'),
                     ],
                   ),
                 ),
@@ -696,19 +722,17 @@ class _FollowersFollowingPageState extends State<FollowersFollowingPage>
               child: CircleAvatar(
                 radius: 28,
                 backgroundColor: Colors.grey[200],
-                backgroundImage: user.profileImageUrl != null
+                backgroundImage: user.profileImageUrl != null && user.profileImageUrl!.isNotEmpty
                     ? NetworkImage(user.profileImageUrl!)
                     : null,
-                child: user.profileImageUrl == null
-                    ? Text(
-                        user.displayName.isNotEmpty
-                            ? user.displayName[0].toUpperCase()
-                            : 'U',
-                        style: const TextStyle(
-                          color: Color(0xFF636E72),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
+                onBackgroundImageError: (user.profileImageUrl != null && user.profileImageUrl!.isNotEmpty)
+                    ? (_, __) {}
+                    : null,
+                child: (user.profileImageUrl == null || user.profileImageUrl!.isEmpty)
+                    ? Icon(
+                        Icons.person,
+                        color: Colors.grey[600],
+                        size: 32,
                       )
                     : null,
               ),

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:journeyq/data/repositories/marketplace_repository/tour_package_repository.dart';
+import 'package:journeyq/data/repositories/marketplace_repository/past_tour_images_repository.dart';
 
 class TourPackageDetailsPage extends StatefulWidget {
   final String packageId;
@@ -16,10 +17,12 @@ class TourPackageDetailsPage extends StatefulWidget {
 
 class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
   TourPackage? packageData;
+  List<PastTourImageResponse> pastTourImages = [];
   late PageController _pageController;
   int _currentPhotoIndex = 0;
   bool isLoading = true;
   bool hasError = false;
+  bool isLoadingImages = false;
 
   @override
   void initState() {
@@ -49,11 +52,48 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
         isLoading = false;
       });
 
+      // Load past tour images after package data is loaded
+      _loadPastTourImages();
+
     } catch (e) {
       print('❌ Error loading tour package details: $e');
       setState(() {
         hasError = true;
         isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadPastTourImages() async {
+    try {
+      setState(() {
+        isLoadingImages = true;
+      });
+
+      // Parse tour ID from package ID
+      final tourId = int.tryParse(widget.packageId);
+      if (tourId == null) {
+        print('⚠️ Invalid tour ID: ${widget.packageId}');
+        setState(() {
+          isLoadingImages = false;
+        });
+        return;
+      }
+
+      print('📸 Loading past tour images for tour ID: $tourId');
+      final images = await PastTourImagesRepository.getPastTourImages(tourId);
+
+      setState(() {
+        pastTourImages = images;
+        isLoadingImages = false;
+      });
+
+      print('✅ Loaded ${images.length} past tour images');
+    } catch (e) {
+      print('❌ Error loading past tour images: $e');
+      setState(() {
+        isLoadingImages = false;
+        // Don't set error state, just continue without images
       });
     }
   }
@@ -631,7 +671,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                   const SizedBox(height: 20),
 
                   // Past Tour Photos Section
-                  if (package.photos.isNotEmpty)
+                  if (pastTourImages.isNotEmpty)
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -650,7 +690,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Tour Photos',
+                            'Past Tour Photos',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -667,10 +707,11 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                                   _currentPhotoIndex = index;
                                 });
                               },
-                              itemCount: package.photos.length,
+                              itemCount: pastTourImages.length,
                               itemBuilder: (context, index) {
+                                final image = pastTourImages[index];
                                 return _buildPastTourPhoto(
-                                  package.photos[index],
+                                  image.imageUrl,
                                   package.name,
                                 );
                               },
@@ -680,7 +721,7 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: List.generate(
-                              package.photos.length,
+                              pastTourImages.length,
                                   (index) => Container(
                                 width: 8,
                                 height: 8,
@@ -698,7 +739,39 @@ class _TourPackageDetailsPageState extends State<TourPackageDetailsPage> {
                       ),
                     ),
 
-                  if (package.photos.isNotEmpty) const SizedBox(height: 20),
+                  if (pastTourImages.isNotEmpty) const SizedBox(height: 20),
+
+                  // Loading indicator for images
+                  if (isLoadingImages && pastTourImages.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Column(
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 12),
+                            Text(
+                              'Loading past tour photos...',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                  if (isLoadingImages && pastTourImages.isEmpty) const SizedBox(height: 20),
 
                   // Highlights
                   if (package.highlights.isNotEmpty)

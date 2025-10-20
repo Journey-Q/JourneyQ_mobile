@@ -3,7 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:journeyq/data/repositories/marketplace_repository/tour_package_repository.dart';
+import 'package:journeyq/data/repositories/marketplace_repository/tour_booking_repository.dart';
+import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 
 class BookPackagePage extends StatefulWidget {
   final String packageId;
@@ -29,8 +32,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
 
   // Booking Details
   DateTime? _selectedDate;
-  int _adults = 1;
-  int _children = 0;
+  int _numberOfPeople = 1;
 
   // Personal Information
   final TextEditingController _nameController = TextEditingController();
@@ -107,7 +109,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
         package!.originalPrice ??
         package!.pricePerPerson ?? 0.0;
 
-    return effectivePrice * (_adults + _children * 0.7); // Children 30% discount
+    return effectivePrice * _numberOfPeople;
   }
 
   String get _formattedPrice {
@@ -176,7 +178,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
                   ),
                   const SizedBox(height: 20),
                   const Text(
-                    'Select Number of Travelers',
+                    'Select Number of People',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -184,7 +186,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
                   ),
                   const SizedBox(height: 30),
 
-                  // Adults
+                  // Number of People
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -192,14 +194,14 @@ class _BookPackagePageState extends State<BookPackagePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Adults',
+                            'Number of People',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           Text(
-                            'Age 12 and above',
+                            'Maximum 50 people',
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey,
@@ -210,15 +212,15 @@ class _BookPackagePageState extends State<BookPackagePage> {
                       Row(
                         children: [
                           IconButton(
-                            onPressed: _adults > 1 ? () {
+                            onPressed: _numberOfPeople > 1 ? () {
                               modalSetState(() {
-                                _adults--;
+                                _numberOfPeople--;
                               });
                               setState(() {});
                             } : null,
                             icon: Icon(
                               Icons.remove_circle,
-                              color: _adults > 1 ? const Color(0xFF0088cc) : Colors.grey,
+                              color: _numberOfPeople > 1 ? const Color(0xFF0088cc) : Colors.grey,
                               size: 30,
                             ),
                           ),
@@ -230,7 +232,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              '$_adults',
+                              '$_numberOfPeople',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -240,89 +242,15 @@ class _BookPackagePageState extends State<BookPackagePage> {
                           ),
                           const SizedBox(width: 16),
                           IconButton(
-                            onPressed: _adults < 10 ? () {
+                            onPressed: _numberOfPeople < 50 ? () {
                               modalSetState(() {
-                                _adults++;
+                                _numberOfPeople++;
                               });
                               setState(() {});
                             } : null,
                             icon: Icon(
                               Icons.add_circle,
-                              color: _adults < 10 ? const Color(0xFF0088cc) : Colors.grey,
-                              size: 30,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Children
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Children',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            'Age 2-11 (30% discount)',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          IconButton(
-                            onPressed: _children > 0 ? () {
-                              modalSetState(() {
-                                _children--;
-                              });
-                              setState(() {});
-                            } : null,
-                            icon: Icon(
-                              Icons.remove_circle,
-                              color: _children > 0 ? const Color(0xFF0088cc) : Colors.grey,
-                              size: 30,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: const Color(0xFF0088cc)),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '$_children',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF0088cc),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          IconButton(
-                            onPressed: _children < 10 ? () {
-                              modalSetState(() {
-                                _children++;
-                              });
-                              setState(() {});
-                            } : null,
-                            icon: Icon(
-                              Icons.add_circle,
-                              color: _children < 10 ? const Color(0xFF0088cc) : Colors.grey,
+                              color: _numberOfPeople < 50 ? const Color(0xFF0088cc) : Colors.grey,
                               size: 30,
                             ),
                           ),
@@ -376,22 +304,78 @@ class _BookPackagePageState extends State<BookPackagePage> {
       return;
     }
 
+    if (package == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Package information not available'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isSubmitting = true;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Get user ID from auth provider
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final userId = authProvider.user?.userId;
 
-    setState(() {
-      _isSubmitting = false;
-    });
+      if (userId == null) {
+        throw Exception('User not logged in');
+      }
 
-    // Show success dialog
-    _showBookingSuccessDialog();
+      // Get tour ID from package
+      final tourId = int.tryParse(package!.id);
+      if (tourId == null) {
+        throw Exception('Invalid tour package ID');
+      }
+
+      // Create booking DTO
+      final bookingData = TourBookingRepository.createBookingData(
+        tourId: tourId,
+        userId: userId,
+        customerName: _nameController.text.trim(),
+        customerEmail: _emailController.text.trim(),
+        customerPhone: _phoneController.text.trim(),
+        tourDate: _selectedDate!,
+        numberOfPeople: _numberOfPeople,
+        specialRequests: _specialRequirementsController.text.trim(),
+      );
+
+      // Submit booking to API
+      final response = await TourBookingRepository.createTourBooking(bookingData);
+
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+
+        // Show success dialog with response
+        _showBookingSuccessDialog(response);
+      }
+    } catch (e) {
+      print('❌ Booking error: $e');
+
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Booking failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
-  void _showBookingSuccessDialog() {
+  void _showBookingSuccessDialog(TourBookingResponse response) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -439,7 +423,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Your booking request for ${package?.name ?? 'the tour package'} has been sent to the tour agency. They will contact you within 24 hours to confirm your booking.',
+                response.message,
                 style: const TextStyle(
                   fontSize: 14,
                   color: Colors.grey,
@@ -472,7 +456,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
                       ],
                     ),
                     Text(
-                      '#PKG${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+                      response.bookingId,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -480,11 +464,12 @@ class _BookPackagePageState extends State<BookPackagePage> {
                       ),
                     ),
                     const SizedBox(height: 12),
+                    _buildBookingDetailRow('Status', response.statusDisplay),
                     _buildBookingDetailRow('Package', package?.name ?? 'Tour Package'),
-                    _buildBookingDetailRow('Date', DateFormat('MMM dd, yyyy').format(_selectedDate!)),
-                    _buildBookingDetailRow('Travelers', '${_adults + _children}'),
+                    _buildBookingDetailRow('Date', DateFormat('MMM dd, yyyy').format(response.tourDate)),
+                    _buildBookingDetailRow('People', '${response.numberOfPeople}'),
                     const Divider(),
-                    _buildBookingDetailRow('Total', 'LKR ${NumberFormat('#,###').format(_totalPrice)}', isTotal: true),
+                    _buildBookingDetailRow('Total', 'LKR ${NumberFormat('#,###').format(response.totalAmount)}', isTotal: true),
                   ],
                 ),
               ),
@@ -494,7 +479,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    context.go('/marketplace/tour_packages');
+                    context.go('/marketplace');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0088cc),
@@ -892,7 +877,7 @@ class _BookPackagePageState extends State<BookPackagePage> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              '${_adults + _children} travelers',
+                              '$_numberOfPeople people',
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -1001,20 +986,18 @@ class _BookPackagePageState extends State<BookPackagePage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Adults ($_adults × $_formattedPrice)'),
-                        Text('LKR ${NumberFormat('#,###').format((package!.finalPrice ?? package!.originalPrice ?? package!.pricePerPerson ?? 0.0) * _adults)}'),
+                        Text('Price per person'),
+                        Text(_formattedPrice),
                       ],
                     ),
-                    if (_children > 0) ...[
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Children ($_children × 70%)'),
-                          Text('LKR ${NumberFormat('#,###').format((package!.finalPrice ?? package!.originalPrice ?? package!.pricePerPerson ?? 0.0) * _children * 0.7)}'),
-                        ],
-                      ),
-                    ],
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Number of people'),
+                        Text('$_numberOfPeople'),
+                      ],
+                    ),
                     const SizedBox(height: 12),
                     Container(
                       height: 1,

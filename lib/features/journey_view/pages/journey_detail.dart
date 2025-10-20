@@ -485,15 +485,20 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
                     children: [
                       CircleAvatar(
                         radius: 20,
-                        backgroundImage:
-                            journeyData!['authorImage'].startsWith('assets/')
-                            ? AssetImage(journeyData!['authorImage'])
-                                  as ImageProvider
-                            : NetworkImage(journeyData!['authorImage']),
-                        onBackgroundImageError: (_, __) {},
                         backgroundColor: Colors.grey[300],
-                        child: journeyData!['authorImage'].isEmpty
-                            ? Icon(Icons.person, color: Colors.grey[600])
+                        backgroundImage: (journeyData!['authorImage'] != null &&
+                                         journeyData!['authorImage'].toString().isNotEmpty &&
+                                         !journeyData!['authorImage'].toString().startsWith('assets/'))
+                            ? NetworkImage(journeyData!['authorImage'].toString())
+                            : null,
+                        onBackgroundImageError: (journeyData!['authorImage'] != null &&
+                                                 journeyData!['authorImage'].toString().isNotEmpty)
+                            ? (_, __) {}
+                            : null,
+                        child: (journeyData!['authorImage'] == null ||
+                                journeyData!['authorImage'].toString().isEmpty ||
+                                journeyData!['authorImage'].toString().startsWith('assets/'))
+                            ? Icon(Icons.person, color: Colors.grey[600], size: 24)
                             : null,
                       ),
                       const SizedBox(width: 12),
@@ -1080,6 +1085,12 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
 
   Widget _buildBudgetBreakdown() {
     final breakdown = journeyData!['budgetBreakdown'] as Map<String, dynamic>;
+
+    // Hide the section if budget breakdown is empty
+    if (breakdown.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -1308,35 +1319,34 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
   Future<void> _loadBucketListStatus() async {
     try {
       final bucketListData = await BucketListRepository.getBucketList();
-      
-      if (bucketListData['posts'] != null && bucketListData['posts'] is List) {
-        final posts = bucketListData['posts'] as List;
-        final isInBucketList = posts.any((post) {
-          if (post is Map) {
-            return post['id']?.toString() == postId;
-          }
-          return false;
-        });
-        
-        setState(() {
-          _isInBucketList = isInBucketList;
-        });
-      }
+
+      final isInBucketList = bucketListData.bucketListItems.any((item) {
+        return item.journeyId == postId;
+      });
+
+      setState(() {
+        _isInBucketList = isInBucketList;
+      });
     } catch (e) {
       print('Error loading bucket list status: $e');
     }
   }
 
   Future<void> _handleSave() async {
+    // Store previous state for rollback on error
+    final previousState = _isInBucketList;
+
     try {
       if (_isInBucketList) {
-        // Remove from bucket list
-        await BucketListRepository.removeFromBucketList(postId);
+        // Optimistically update UI
         setState(() {
           _isInBucketList = false;
           _isBookmarked = false;
         });
-        
+
+        // Remove from bucket list
+        await BucketListRepository.removeFromBucketList(postId);
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -1346,13 +1356,15 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
           );
         }
       } else {
-        // Add to bucket list
-        await BucketListRepository.addToBucketList(postId);
+        // Optimistically update UI
         setState(() {
           _isInBucketList = true;
           _isBookmarked = true;
         });
-        
+
+        // Add to bucket list
+        await BucketListRepository.addToBucketList(postId);
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -1362,8 +1374,19 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
           );
         }
       }
+
+      // Reload status from server to ensure consistency
+      // (Backend returns empty bucketListItems array after add/remove)
+      await _loadBucketListStatus();
     } catch (e) {
       print('Error updating bucket list: $e');
+
+      // Rollback optimistic update on error
+      setState(() {
+        _isInBucketList = previousState;
+        _isBookmarked = previousState;
+      });
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -1641,12 +1664,16 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
             children: [
               CircleAvatar(
                 radius: isReply ? 14 : 16,
+                backgroundColor: Colors.grey[300],
                 backgroundImage:
                     comment['userImage'] != null &&
                         comment['userImage'].toString().isNotEmpty
                     ? NetworkImage(comment['userImage'].toString())
                     : null,
-                backgroundColor: Colors.grey[300],
+                onBackgroundImageError: (comment['userImage'] != null &&
+                                         comment['userImage'].toString().isNotEmpty)
+                    ? (_, __) {}
+                    : null,
                 child:
                     comment['userImage'] == null || comment['userImage'].toString().isEmpty
                     ? Icon(

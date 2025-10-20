@@ -212,11 +212,39 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
   }
 
   Widget _buildVehicleCard(Map<String, dynamic> vehicle, int index) {
-    // Extract vehicle data with fallbacks
-    final vehicleType = vehicle['vehicleType'] ?? vehicle['type'] ?? 'Vehicle';
-    final seats = vehicle['capacity'] ?? vehicle['seats'] ?? 4;
-    final acPrice = vehicle['acPricePerKm'] ?? vehicle['pricePerKm'] ?? 50.0;
-    final nonAcPrice = vehicle['nonAcPricePerKm'] ?? 40.0;
+    // Extract vehicle data with proper field mapping from backend
+    print('🚗 Vehicle data: $vehicle');
+
+    // Vehicle name and type
+    final vehicleName = vehicle['name'] ?? vehicle['vehicleType'] ?? vehicle['type'] ?? 'Vehicle';
+    final vehicleType = vehicle['type'] ?? vehicle['vehicleType'] ?? 'CAR';
+    final brand = vehicle['brand'] ?? '';
+    final model = vehicle['model'] ?? '';
+
+    // Display name: prefer full name, or combine brand + model
+    String displayName = vehicleName.toString();
+    if (displayName == 'Vehicle' && brand.isNotEmpty) {
+      displayName = brand + (model.isNotEmpty ? ' $model' : '');
+    }
+
+    // Seats
+    final seats = vehicle['numberOfSeats'] ?? vehicle['capacity'] ?? vehicle['seats'] ?? 4;
+
+    // Pricing - backend uses pricePerKmWithAC and pricePerKmWithoutAC
+    final acPrice = vehicle['pricePerKmWithAC'] ?? vehicle['acPricePerKm'] ?? vehicle['pricePerKm'] ?? 50.0;
+    final nonAcPrice = vehicle['pricePerKmWithoutAC'] ?? vehicle['nonAcPricePerKm'] ?? 40.0;
+
+    // Image URL
+    final imageUrl = vehicle['image'] ?? vehicle['imageUrl'];
+
+    // Status
+    final status = vehicle['status'] ?? 'AVAILABLE';
+    final isAvailable = status.toString().toUpperCase() == 'AVAILABLE';
+
+    // Year, fuel type, transmission
+    final year = vehicle['year'];
+    final fuelType = vehicle['fuelType'];
+    final transmission = vehicle['transmission'];
 
     // Extract features
     List<String> features = [];
@@ -230,6 +258,8 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
       features = ['GPS Navigation', 'Comfortable Seats', 'Safety Features'];
     }
 
+    print('✅ Parsed vehicle: $displayName, $seats seats, AC: LKR $acPrice/km, Status: $status');
+
     return Padding(
       padding: EdgeInsets.only(
         bottom: index == vehicles.length - 1 ? 0 : 16,
@@ -237,7 +267,7 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Vehicle Type and Seats
+          // Vehicle Name and Status Badge
           Row(
             children: [
               Icon(
@@ -246,37 +276,75 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
                 size: 24,
               ),
               const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    vehicleType.toString(),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.people,
-                        size: 16,
-                        color: Colors.grey.shade600,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '$seats seats',
-                        style: TextStyle(
-                          fontSize: 14,
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.people,
+                          size: 16,
                           color: Colors.grey.shade600,
-                          fontWeight: FontWeight.w500,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 4),
+                        Text(
+                          '$seats seats',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        if (year != null) ...[
+                          const SizedBox(width: 12),
+                          Icon(
+                            Icons.calendar_today,
+                            size: 14,
+                            color: Colors.grey.shade600,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            year.toString(),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade600,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              // Status Badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isAvailable ? Colors.green.shade100 : Colors.orange.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isAvailable ? Colors.green.shade300 : Colors.orange.shade300,
                   ),
-                ],
+                ),
+                child: Text(
+                  status.toString(),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: isAvailable ? Colors.green.shade700 : Colors.orange.shade700,
+                  ),
+                ),
               ),
             ],
           ),
@@ -375,6 +443,49 @@ class _TravelAgencyDetailsPageState extends State<TravelAgencyDetailsPage> {
             ],
           ),
           const SizedBox(height: 12),
+
+          // Vehicle Specs (Fuel & Transmission)
+          if (fuelType != null || transmission != null)
+            Row(
+              children: [
+                if (fuelType != null) ...[
+                  Icon(
+                    Icons.local_gas_station,
+                    size: 14,
+                    color: Colors.grey.shade600,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    fuelType.toString(),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+                if (fuelType != null && transmission != null)
+                  const SizedBox(width: 16),
+                if (transmission != null) ...[
+                  Icon(
+                    Icons.settings,
+                    size: 14,
+                    color: Colors.grey.shade600,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    transmission.toString(),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          if (fuelType != null || transmission != null)
+            const SizedBox(height: 12),
 
           // Features Section
           const Text(

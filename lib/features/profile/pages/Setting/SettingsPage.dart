@@ -190,16 +190,7 @@ class _SettingsPageState extends State<SettingsPage> {
               
               const SizedBox(height: 12),
               
-              // Points Explanation
-              _buildSettingCard(
-                icon: Icons.stars,
-                iconColor: const Color(0xFF10B981),
-                title: 'Points System',
-                subtitle: 'Learn how points are earned',
-                onTap: () => context.push('/profile/settings/points-explanation'),
-              ),
               
-              const SizedBox(height: 32),
               
               // Logout Section
               Container(

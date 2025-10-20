@@ -511,8 +511,13 @@ class AgencyProfile {
       }
     });
 
-    // Extract ESTABLISHED YEAR - More comprehensive field extraction
-    String? establishedYear = _extractField(json, [
+    // Extract ESTABLISHED YEAR - Check agencyInfo object first, then fallback
+    String? establishedYear;
+    if (json['agencyInfo'] != null && json['agencyInfo'] is Map) {
+      final agencyInfo = json['agencyInfo'] as Map<String, dynamic>;
+      establishedYear = _extractField(agencyInfo, ['establishedYear', 'established_year', 'year']);
+    }
+    establishedYear ??= _extractField(json, [
       'established_year', 'establishedYear', 'year_established', 'established',
       'founding_year', 'yearFounded', 'since_year', 'year', 'establish_year',
       'est_year', 'start_year', 'operation_year', 'since'
@@ -544,21 +549,36 @@ class AgencyProfile {
       print('⚠️ No established year found, using fallback');
     }
 
-    // Extract ADDRESS - Based on database schema
-    String? address = _extractField(json, [
-      'address', 'location', 'full_address', 'complete_address', 'physical_address'
-    ]);
-
-    // Extract PHONE NUMBER - Based on database schema
-    String? phone = _extractField(json, [
+    // Extract PHONE NUMBER - Check contactInfo object first, then fallback
+    String? phone;
+    if (json['contactInfo'] != null && json['contactInfo'] is Map) {
+      final contactInfo = json['contactInfo'] as Map<String, dynamic>;
+      phone = _extractField(contactInfo, ['phone', 'phone_number', 'contact_number', 'telephone']);
+    }
+    phone ??= _extractField(json, [
       'phone', 'phone_number', 'contact_number', 'telephone', 'contactPhone',
       'mobile', 'mobile_number', 'contact', 'phone_no'
     ]);
 
-    // Extract EMAIL - Based on database schema
-    String? email = _extractField(json, [
+    // Extract EMAIL - Check contactInfo object first, then fallback
+    String? email;
+    if (json['contactInfo'] != null && json['contactInfo'] is Map) {
+      final contactInfo = json['contactInfo'] as Map<String, dynamic>;
+      email = _extractField(contactInfo, ['email', 'contact_email', 'email_address']);
+    }
+    email ??= _extractField(json, [
       'email', 'contact_email', 'email_address', 'contactEmail',
       'business_email', 'company_email', 'email_id'
+    ]);
+
+    // Extract ADDRESS - Check contactInfo object first, then fallback
+    String? address;
+    if (json['contactInfo'] != null && json['contactInfo'] is Map) {
+      final contactInfo = json['contactInfo'] as Map<String, dynamic>;
+      address = _extractField(contactInfo, ['address', 'location', 'full_address']);
+    }
+    address ??= _extractField(json, [
+      'address', 'location', 'full_address', 'complete_address', 'physical_address'
     ]);
 
     // Extract location (city/area)
@@ -573,8 +593,13 @@ class AgencyProfile {
       'about_us', 'aboutUs', 'business_description', 'profile_description'
     ]);
 
-    // Extract fleet size
-    String? fleetSize = _extractField(json, [
+    // Extract fleet size - Check agencyInfo object first, then fallback
+    String? fleetSize;
+    if (json['agencyInfo'] != null && json['agencyInfo'] is Map) {
+      final agencyInfo = json['agencyInfo'] as Map<String, dynamic>;
+      fleetSize = _extractField(agencyInfo, ['fleetSize', 'fleet_size', 'vehicleCount']);
+    }
+    fleetSize ??= _extractField(json, [
       'fleet_size', 'fleetSize', 'vehicle_count', 'total_vehicles',
       'number_of_vehicles', 'vehicles_count'
     ]);
@@ -650,6 +675,7 @@ class AgencyProfile {
   /// Enhanced image URL extraction with better validation
   static String? _extractImageUrl(Map<String, dynamic> json) {
     List<String> imageKeys = [
+      'profilePhoto', // ✅ ADDED: Backend uses this field
       'profile_photo', 'agency_photo', 'agency_image', 'imageUrl', 'profileImageUrl',
       'image', 'photo', 'image_url', 'photoUrl', 'profile_picture', 'picture',
       'logo', 'profilePicture', 'profileImage', 'companyLogo', 'profile_pic',

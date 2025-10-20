@@ -106,12 +106,20 @@ class _ProfilePageState extends State<ProfilePage> {
   // New method to load user stats from database
   Future<Map<String, dynamic>?> _loadUserStats() async {
     try {
+      if (_userId == null) {
+        print("❌ Cannot load stats: userId is null");
+        return null;
+      }
+
       print("🔄 Loading user stats from database for userId: $_userId");
 
-      // Use ProfileRepository to get stats directly from database
-      final statsResponse = await ProfileRepository.getMyStats();
+      // Use ProfileRepository.getUserStats() with userId - same as user_profile_page
+      final statsResponse = await ProfileRepository.getUserStats(_userId!);
 
       print("✅ Stats loaded successfully: ${statsResponse.toString()}");
+      print("   Followers: ${statsResponse.followersCount}");
+      print("   Following: ${statsResponse.followingCount}");
+      print("   Posts: ${statsResponse.postsCount}");
 
       return {
         'followersCount': statsResponse.followersCount,
@@ -127,8 +135,8 @@ class _ProfilePageState extends State<ProfilePage> {
           print("🔄 Creating user stats for userId: $_userId");
           await FollowRepository.createUserStats(_userId!);
 
-          // Try again after creating
-          final statsResponse = await ProfileRepository.getMyStats();
+          // Try again after creating - use getUserStats with userId
+          final statsResponse = await ProfileRepository.getUserStats(_userId!);
           print("✅ Stats created and loaded: ${statsResponse.toString()}");
 
           return {

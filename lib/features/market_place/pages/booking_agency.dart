@@ -2,7 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:journeyq/data/repositories/marketplace_repository/agency_repository.dart';
+import 'package:journeyq/data/repositories/marketplace_repository/vehicle_booking_repository.dart';
+import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 import 'package:journeyq/core/services/marketplace_service.dart';
 
 class BookingAgencyPage extends StatefulWidget {
@@ -22,14 +25,14 @@ class _BookingAgencyPageState extends State<BookingAgencyPage> {
   final TextEditingController _pickupLocationController = TextEditingController();
   final TextEditingController _destinationController = TextEditingController();
   final TextEditingController _pickupDateController = TextEditingController();
-  final TextEditingController _pickupTimeController = TextEditingController();
   final TextEditingController _returnDateController = TextEditingController();
-  final TextEditingController _returnTimeController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _estimatedKmController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
-  String _selectedVehicle = '';
+  int? _selectedVehicleId; // Changed to use vehicle ID instead of vehicle type
   bool _isAcSelected = true;
   bool _isRoundTrip = false;
   bool _isSubmitting = false;
@@ -49,11 +52,11 @@ class _BookingAgencyPageState extends State<BookingAgencyPage> {
     _pickupLocationController.dispose();
     _destinationController.dispose();
     _pickupDateController.dispose();
-    _pickupTimeController.dispose();
     _returnDateController.dispose();
-    _returnTimeController.dispose();
     _nameController.dispose();
+    _emailController.dispose();
     _phoneController.dispose();
+    _estimatedKmController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -76,7 +79,7 @@ class _BookingAgencyPageState extends State<BookingAgencyPage> {
         agency = agencyData;
         if (vehicles.isNotEmpty) {
           final firstVehicle = vehicles[0];
-          _selectedVehicle = firstVehicle['vehicleType'] ?? firstVehicle['type'] ?? 'Vehicle';
+          _selectedVehicleId = firstVehicle['id'] as int?;
         }
         isLoading = false;
       });
@@ -152,31 +155,6 @@ class _BookingAgencyPageState extends State<BookingAgencyPage> {
     }
   }
 
-  Future<void> _selectTime(TextEditingController controller) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF0088cc),
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Colors.black,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null) {
-      setState(() {
-        controller.text = picked.format(context);
-      });
-    }
-  }
-
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -217,16 +195,13 @@ class _BookingAgencyPageState extends State<BookingAgencyPage> {
   }
 
   int _calculateEstimatedPrice() {
-    if (_selectedVehicle.isEmpty || vehicles.isEmpty) return 0;
+    if (_selectedVehicleId == null || vehicles.isEmpty) return 0;
 
-    // Find the selected vehicle
+    // Find the selected vehicle by ID
     Map<String, dynamic>? selectedVehicleData;
     try {
       selectedVehicleData = vehicles.firstWhere(
-            (vehicle) {
-          final vehicleType = vehicle['vehicleType'] ?? vehicle['type'] ?? '';
-          return vehicleType == _selectedVehicle;
-        },
+        (vehicle) => vehicle['id'] == _selectedVehicleId,
       ) as Map<String, dynamic>?;
     } catch (e) {
       // If vehicle not found, use the first vehicle as fallback
@@ -258,21 +233,97 @@ class _BookingAgencyPageState extends State<BookingAgencyPage> {
       return;
     }
 
+    // Validate that a vehicle is selected
+    if (_selectedVehicleId == null || vehicles.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a vehicle'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isSubmitting = true;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final vehicleId = _selectedVehicleId!;
 
-    setState(() {
-      _isSubmitting = false;
-    });
+      // Get user ID from auth provider
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final userId = authProvider.user?.userId;
 
-    _showBookingConfirmation();
+      if (userId == null) {
+        throw Exception('User not logged in');
+      }
+
+      // Parse dates from DD/MM/YYYY format
+      final startDate = _parseDateFromFormat(_pickupDateController.text);
+      final endDate = _parseDateFromFormat(_returnDateController.text);
+
+      // Get estimated kilometers (default to 50 if empty)
+      final estimatedKm = int.tryParse(_estimatedKmController.text) ?? 50;
+
+      // Create booking DTO
+      final bookingData = VehicleBookingRepository.createBookingData(
+        vehicleId: vehicleId,
+        userId: userId,
+        customerName: _nameController.text.trim(),
+        customerEmail: _emailController.text.trim(),
+        customerPhone: _phoneController.text.trim(),
+        startDate: startDate,
+        endDate: endDate,
+        pickupLocation: _pickupLocationController.text.trim(),
+        dropoffLocation: _destinationController.text.trim(),
+        estimatedKilometers: estimatedKm,
+        withAC: _isAcSelected,
+        specialRequests: _notesController.text.trim(),
+      );
+
+      // Submit booking to API
+      final response = await VehicleBookingRepository.createVehicleBooking(bookingData);
+
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+
+        _showBookingConfirmation(response);
+      }
+    } catch (e) {
+      print('❌ Booking error: $e');
+
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Booking failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
-  void _showBookingConfirmation() {
+  DateTime _parseDateFromFormat(String dateStr) {
+    // Parse DD/MM/YYYY format
+    final parts = dateStr.split('/');
+    if (parts.length == 3) {
+      final day = int.parse(parts[0]);
+      final month = int.parse(parts[1]);
+      final year = int.parse(parts[2]);
+      return DateTime(year, month, day);
+    }
+    return DateTime.now();
+  }
+
+  void _showBookingConfirmation(VehicleBookingResponse response) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -307,7 +358,7 @@ class _BookingAgencyPageState extends State<BookingAgencyPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Your booking with ${agency!.name} has been confirmed.',
+                response.message,
                 style: const TextStyle(fontSize: 14, color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
@@ -328,8 +379,62 @@ class _BookingAgencyPageState extends State<BookingAgencyPage> {
                       ],
                     ),
                     Text(
-                      '#BK${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
+                      response.bookingId,
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0088cc)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Status',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(response.status),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            response.statusDisplay,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Estimated Total',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                        ),
+                        Text(
+                          'Rs. ${response.estimatedTotalAmount.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0088cc),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -340,7 +445,7 @@ class _BookingAgencyPageState extends State<BookingAgencyPage> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    context.go('/marketplace/travel_agencies');
+                    context.go('/marketplace');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0088cc),
@@ -570,13 +675,13 @@ class _BookingAgencyPageState extends State<BookingAgencyPage> {
                   Expanded(
                     child: _buildTextField(
                       controller: _pickupDateController,
-                      label: 'Pickup Date',
+                      label: 'Start Date',
                       icon: Icons.calendar_today,
                       readOnly: true,
                       onTap: () => _selectDate(_pickupDateController),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please select pickup date';
+                          return 'Please select start date';
                         }
                         return null;
                       },
@@ -585,60 +690,32 @@ class _BookingAgencyPageState extends State<BookingAgencyPage> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildTextField(
-                      controller: _pickupTimeController,
-                      label: 'Pickup Time',
-                      icon: Icons.access_time,
+                      controller: _returnDateController,
+                      label: 'End Date',
+                      icon: Icons.calendar_today,
                       readOnly: true,
-                      onTap: () => _selectTime(_pickupTimeController),
+                      onTap: () => _selectDate(_returnDateController),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please select pickup time';
+                          return 'Please select end date';
                         }
+
+                        // Validate that end date is after or equal to start date
+                        if (_pickupDateController.text.isNotEmpty) {
+                          final startDate = _parseDateFromFormat(_pickupDateController.text);
+                          final endDate = _parseDateFromFormat(value);
+
+                          if (endDate.isBefore(startDate)) {
+                            return 'End date must be after start date';
+                          }
+                        }
+
                         return null;
                       },
                     ),
                   ),
                 ],
               ),
-
-              if (_isRoundTrip) ...[
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTextField(
-                        controller: _returnDateController,
-                        label: 'Return Date',
-                        icon: Icons.calendar_today,
-                        readOnly: true,
-                        onTap: () => _selectDate(_returnDateController),
-                        validator: (value) {
-                          if (_isRoundTrip && (value == null || value.isEmpty)) {
-                            return 'Please select return date';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildTextField(
-                        controller: _returnTimeController,
-                        label: 'Return Time',
-                        icon: Icons.access_time,
-                        readOnly: true,
-                        onTap: () => _selectTime(_returnTimeController),
-                        validator: (value) {
-                          if (_isRoundTrip && (value == null || value.isEmpty)) {
-                            return 'Please select return time';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
 
               const SizedBox(height: 24),
 
@@ -657,16 +734,24 @@ class _BookingAgencyPageState extends State<BookingAgencyPage> {
                     border: Border.all(color: Colors.grey.shade300),
                   ),
                   child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedVehicle.isEmpty ? null : _selectedVehicle,
+                    child: DropdownButton<int>(
+                      value: _selectedVehicleId,
+                      hint: const Row(
+                        children: [
+                          Icon(Icons.directions_car, color: Colors.grey, size: 20),
+                          SizedBox(width: 12),
+                          Text('Select a vehicle', style: TextStyle(color: Colors.grey)),
+                        ],
+                      ),
                       isExpanded: true,
                       icon: const Icon(Icons.keyboard_arrow_down),
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      items: vehicles.map<DropdownMenuItem<String>>((vehicle) {
+                      items: vehicles.map<DropdownMenuItem<int>>((vehicle) {
+                        final vehicleId = vehicle['id'] as int;
                         final vehicleType = vehicle['vehicleType'] ?? vehicle['type'] ?? 'Vehicle';
                         final seats = vehicle['capacity'] ?? vehicle['seats'] ?? 4;
-                        return DropdownMenuItem<String>(
-                          value: vehicleType,
+                        return DropdownMenuItem<int>(
+                          value: vehicleId,
                           child: Row(
                             children: [
                               Icon(
@@ -698,10 +783,10 @@ class _BookingAgencyPageState extends State<BookingAgencyPage> {
                           ),
                         );
                       }).toList(),
-                      onChanged: (String? newValue) {
+                      onChanged: (int? newValue) {
                         if (newValue != null) {
                           setState(() {
-                            _selectedVehicle = newValue;
+                            _selectedVehicleId = newValue;
                           });
                         }
                       },
@@ -817,6 +902,22 @@ class _BookingAgencyPageState extends State<BookingAgencyPage> {
               ),
               const SizedBox(height: 16),
               _buildTextField(
+                controller: _emailController,
+                label: 'Email Address',
+                icon: Icons.email,
+                keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email';
+                  }
+                  if (!value.contains('@')) {
+                    return 'Please enter a valid email';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              _buildTextField(
                 controller: _phoneController,
                 label: 'Phone Number',
                 icon: Icons.phone,
@@ -833,8 +934,28 @@ class _BookingAgencyPageState extends State<BookingAgencyPage> {
               ),
               const SizedBox(height: 16),
               _buildTextField(
+                controller: _estimatedKmController,
+                label: 'Estimated Kilometers',
+                icon: Icons.speed,
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter estimated kilometers';
+                  }
+                  final km = int.tryParse(value);
+                  if (km == null || km < 1) {
+                    return 'Please enter a valid distance';
+                  }
+                  if (km > 10000) {
+                    return 'Distance cannot exceed 10000 km';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              _buildTextField(
                 controller: _notesController,
-                label: 'Additional Notes (Optional)',
+                label: 'Special Requests (Optional)',
                 icon: Icons.note,
                 maxLines: 3,
               ),
@@ -958,6 +1079,23 @@ class _BookingAgencyPageState extends State<BookingAgencyPage> {
         return Icons.directions_bus;
       default:
         return Icons.directions_car;
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toUpperCase()) {
+      case 'PENDING':
+        return Colors.orange;
+      case 'APPROVED':
+        return Colors.green;
+      case 'REJECTED':
+        return Colors.red;
+      case 'CANCELLED':
+        return Colors.grey;
+      case 'COMPLETED':
+        return Colors.blue;
+      default:
+        return Colors.grey;
     }
   }
 }
