@@ -696,19 +696,17 @@ class _FollowersFollowingPageState extends State<FollowersFollowingPage>
               child: CircleAvatar(
                 radius: 28,
                 backgroundColor: Colors.grey[200],
-                backgroundImage: user.profileImageUrl != null
+                backgroundImage: user.profileImageUrl != null && user.profileImageUrl!.isNotEmpty
                     ? NetworkImage(user.profileImageUrl!)
                     : null,
-                child: user.profileImageUrl == null
-                    ? Text(
-                        user.displayName.isNotEmpty
-                            ? user.displayName[0].toUpperCase()
-                            : 'U',
-                        style: const TextStyle(
-                          color: Color(0xFF636E72),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
+                onBackgroundImageError: (user.profileImageUrl != null && user.profileImageUrl!.isNotEmpty)
+                    ? (_, __) {}
+                    : null,
+                child: (user.profileImageUrl == null || user.profileImageUrl!.isEmpty)
+                    ? Icon(
+                        Icons.person,
+                        color: Colors.grey[600],
+                        size: 32,
                       )
                     : null,
               ),

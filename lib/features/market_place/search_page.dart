@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
+import 'package:journeyq/data/repositories/search_repositories/search_repo.dart';
 
 class Market_SearchPage extends StatefulWidget {
   const Market_SearchPage({Key? key}) : super(key: key);
@@ -12,11 +13,12 @@ class Market_SearchPage extends StatefulWidget {
 class _SearchPageState extends State<Market_SearchPage> with TickerProviderStateMixin {
   final TextEditingController searchController = TextEditingController();
   String selectedLocation = 'All Locations';
-  List<Map<String, dynamic>> searchResults = [];
-  List<Map<String, dynamic>> allResults = [];
+  List<ServiceProvider> searchResults = [];
+  List<ServiceProvider> allResults = [];
   bool isSearching = false;
   bool hasSearched = false;
-  
+  bool isLoadingData = true;
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -41,165 +43,16 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
     'Bentota'
   ];
 
-  // Updated dummy search results data with IDs
-  final List<Map<String, dynamic>> dummyResults = [
-    // Hotels
-    {
-      'id': 'hotel_001',
-      'name': 'Shangri-La Hotel Colombo',
-      'location': 'Colombo',
-      'serviceType': 'Hotel',
-      'profileImage': 'assets/images/shangri_la.jpg',
-      'rating': 4.8,
-      'icon': Icons.hotel,
-      'color': primaryColor,
-    },
-    {
-      'id': 'hotel_002',
-      'name': 'Galle Face Hotel',
-      'location': 'Colombo',
-      'serviceType': 'Hotel',
-      'profileImage': 'assets/images/galle_face.jpg',
-      'rating': 4.5,
-      'icon': Icons.hotel,
-      'color': primaryColor,
-    },
-    {
-      'id': 'hotel_003',
-      'name': 'Cinnamon Grand Colombo',
-      'location': 'Colombo',
-      'serviceType': 'Hotel',
-      'profileImage': 'assets/images/cinnamon_grand.jpg',
-      'rating': 4.7,
-      'icon': Icons.hotel,
-      'color': primaryColor,
-    },
-    {
-      'id': 'hotel_004',
-      'name': 'Earl\'s Regency',
-      'location': 'Kandy',
-      'serviceType': 'Hotel',
-      'profileImage': 'assets/images/earls_regency.jpg',
-      'rating': 4.6,
-      'icon': Icons.hotel,
-      'color': primaryColor,
-    },
-    {
-      'id': 'hotel_005',
-      'name': 'Jetwing Lighthouse',
-      'location': 'Galle',
-      'serviceType': 'Hotel',
-      'profileImage': 'assets/images/jetwing_lighthouse.jpg',
-      'rating': 4.9,
-      'icon': Icons.hotel,
-      'color': primaryColor,
-    },
-    {
-      'id': 'hotel_006',
-      'name': 'Grand Hotel Nuwara Eliya',
-      'location': 'Nuwara Eliya',
-      'serviceType': 'Hotel',
-      'profileImage': 'assets/images/grand_hotel.jpg',
-      'rating': 4.4,
-      'icon': Icons.hotel,
-      'color': primaryColor,
-    },
-    {
-      'id': 'hotel_007',
-      'name': 'Ella Rock House',
-      'location': 'Ella',
-      'serviceType': 'Hotel',
-      'profileImage': 'assets/images/ella_rock.jpg',
-      'rating': 4.8,
-      'icon': Icons.hotel,
-      'color': primaryColor,
-    },
-    
-    // Travel Agencies
-    {
-      'id': 'agency_001',
-      'name': 'Ceylon Roots',
-      'location': 'Colombo',
-      'serviceType': 'Travel Agency',
-      'profileImage': 'assets/images/ceylon_roots.jpg',
-      'rating': 4.9,
-      'icon': Icons.directions_car,
-      'color': primaryColor,
-    },
-    {
-      'id': 'agency_002',
-      'name': 'Jetwing Travels',
-      'location': 'Colombo',
-      'serviceType': 'Travel Agency',
-      'profileImage': 'assets/images/jetwing.jpg',
-      'rating': 4.8,
-      'icon': Icons.directions_car,
-      'color': primaryColor,
-    },
-    {
-      'id': 'agency_003',
-      'name': 'Aitken Spence',
-      'location': 'Colombo',
-      'serviceType': 'Travel Agency',
-      'profileImage': 'assets/images/aitken_spence.jpg',
-      'rating': 4.7,
-      'icon': Icons.directions_car,
-      'color': primaryColor,
-    },
-    {
-      'id': 'agency_004',
-      'name': 'Walkers Tours',
-      'location': 'Kandy',
-      'serviceType': 'Travel Agency',
-      'profileImage': 'assets/images/walkers.jpg',
-      'rating': 4.6,
-      'icon': Icons.directions_car,
-      'color': primaryColor,
-    },
-    {
-      'id': 'agency_005',
-      'name': 'Red Dot Tours',
-      'location': 'Galle',
-      'serviceType': 'Travel Agency',
-      'profileImage': 'assets/images/red_dot.jpeg',
-      'rating': 4.5,
-      'icon': Icons.directions_car,
-      'color': primaryColor,
-    },
-    {
-      'id': 'agency_006',
-      'name': 'Nuwara Eliya Travel Co.',
-      'location': 'Nuwara Eliya',
-      'serviceType': 'Travel Agency',
-      'profileImage': 'assets/images/nuwara_travel.jpg',
-      'rating': 4.3,
-      'icon': Icons.directions_car,
-      'color': primaryColor,
-    },
-    {
-      'id': 'agency_007',
-      'name': 'Ella Adventure Tours',
-      'location': 'Ella',
-      'serviceType': 'Travel Agency',
-      'profileImage': 'assets/images/ella_adventure.jpg',
-      'rating': 4.7,
-      'icon': Icons.directions_car,
-      'color': primaryColor,
-    },
-  
-  ];
-
   @override
   void initState() {
     super.initState();
-    allResults = List.from(dummyResults);
-    searchResults = [];
-    
+    _loadServiceProviders();
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    
+
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -209,9 +62,42 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
     ));
   }
 
+  Future<void> _loadServiceProviders() async {
+    setState(() {
+      isLoadingData = true;
+    });
+
+    try {
+      print('🔍 Loading all service providers for marketplace search...');
+      final providers = await SearchRepository.getAllServiceProviders();
+
+      if (mounted) {
+        setState(() {
+          allResults = providers;
+          searchResults = [];
+          isLoadingData = false;
+        });
+        print('✅ Loaded ${providers.length} service providers');
+      }
+    } catch (e) {
+      print('❌ Error loading service providers: $e');
+      if (mounted) {
+        setState(() {
+          isLoadingData = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading data: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _performSearch() {
     String query = searchController.text.toLowerCase().trim();
-    
+
     if (query.isEmpty) {
       setState(() {
         searchResults = [];
@@ -228,22 +114,25 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
     });
 
     Future.delayed(const Duration(milliseconds: 300), () {
-      List<Map<String, dynamic>> filtered = allResults.where((result) {
-        bool matchesLocation = selectedLocation == 'All Locations' || 
-                              result['location'] == selectedLocation;
-        
-        bool matchesQuery = result['name'].toLowerCase().contains(query) ||
-                           result['serviceType'].toLowerCase().contains(query) ||
-                           result['location'].toLowerCase().contains(query);
-        
+      List<ServiceProvider> filtered = allResults.where((provider) {
+        // Filter by location (district in address)
+        bool matchesLocation = selectedLocation == 'All Locations' ||
+                              provider.address.toLowerCase().contains(selectedLocation.toLowerCase());
+
+        // Filter by search query
+        bool matchesQuery = provider.displayName.toLowerCase().contains(query) ||
+                           provider.serviceType.toLowerCase().contains(query) ||
+                           provider.address.toLowerCase().contains(query) ||
+                           (provider.description.toLowerCase().contains(query));
+
         return matchesLocation && matchesQuery;
       }).toList();
-      
+
       setState(() {
         searchResults = filtered;
         isSearching = false;
       });
-      
+
       _animationController.forward();
     });
   }
@@ -275,7 +164,7 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              
+
               // Header
               Container(
                 padding: const EdgeInsets.all(16),
@@ -323,7 +212,7 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
                   ],
                 ),
               ),
-              
+
               // Location list
               Expanded(
                 child: ListView.builder(
@@ -332,7 +221,7 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
                   itemBuilder: (context, index) {
                     String location = locations[index];
                     bool isSelected = selectedLocation == location;
-                    
+
                     return Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       decoration: BoxDecoration(
@@ -357,16 +246,16 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: isSelected 
+                                    color: isSelected
                                       ? primaryColor.withOpacity(0.15)
                                       : Colors.grey.shade100,
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Icon(
-                                    location == 'All Locations' 
-                                      ? LucideIcons.globe 
+                                    location == 'All Locations'
+                                      ? LucideIcons.globe
                                       : LucideIcons.mapPin,
-                                    color: isSelected 
+                                    color: isSelected
                                       ? primaryColor
                                       : Colors.grey.shade600,
                                     size: 18,
@@ -378,16 +267,16 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
                                     location,
                                     style: TextStyle(
                                       fontSize: 16,
-                                      fontWeight: isSelected 
-                                        ? FontWeight.w600 
+                                      fontWeight: isSelected
+                                        ? FontWeight.w600
                                         : FontWeight.w500,
-                                      color: isSelected 
-                                        ? primaryColor 
+                                      color: isSelected
+                                        ? primaryColor
                                         : Colors.black87,
                                     ),
                                   ),
                                 ),
-                                if (isSelected) 
+                                if (isSelected)
                                   Container(
                                     padding: const EdgeInsets.all(2),
                                     decoration: const BoxDecoration(
@@ -445,190 +334,204 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
           ),
         ),
       ),
-      body: Column(
-        children: [
-          // Search Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+      body: isLoadingData
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(color: primaryColor),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Loading service providers...',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            )
+          : Column(
               children: [
-                // Search Input
+                // Search Header
                 Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: TextField(
-                    controller: searchController,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Search hotels, agencies, guides...',
-                      hintStyle: TextStyle(
-                        color: Colors.grey.shade500,
-                        fontSize: 16,
-                      ),
-                      prefixIcon: Container(
-                        padding: const EdgeInsets.all(12),
-                        child: Icon(
-                          LucideIcons.search,
-                          color: primaryColor,
-                          size: 20,
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      // Search Input
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      ),
-                      suffixIcon: searchController.text.isNotEmpty
-                          ? Container(
-                              padding: const EdgeInsets.all(8),
-                              child: IconButton(
-                                onPressed: () {
-                                  searchController.clear();
-                                  _performSearch();
-                                },
-                                icon: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade200,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.close,
-                                    color: Colors.black54,
-                                    size: 16,
-                                  ),
-                                ),
-                              ),
-                            )
-                          : null,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 18,
-                      ),
-                    ),
-                    onChanged: (value) {
-                      setState(() {});
-                      _performSearch();
-                    },
-                  ),
-                ),
-                
-                const SizedBox(height: 12),
-                
-                // Location Filter Button
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: _showLocationBottomSheet,
-                      borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: selectedLocation != 'All Locations' 
-                                  ? primaryColor.withOpacity(0.15)
-                                  : Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                LucideIcons.mapPin,
-                                color: selectedLocation != 'All Locations' 
-                                  ? primaryColor
-                                  : Colors.grey.shade600,
-                                size: 18,
+                        child: TextField(
+                          controller: searchController,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Search hotels, agencies, guides...',
+                            hintStyle: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontSize: 16,
+                            ),
+                            prefixIcon: Container(
+                              padding: const EdgeInsets.all(12),
+                              child: const Icon(
+                                LucideIcons.search,
+                                color: primaryColor,
+                                size: 20,
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            suffixIcon: searchController.text.isNotEmpty
+                                ? Container(
+                                    padding: const EdgeInsets.all(8),
+                                    child: IconButton(
+                                      onPressed: () {
+                                        searchController.clear();
+                                        _performSearch();
+                                      },
+                                      icon: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade200,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.close,
+                                          color: Colors.black54,
+                                          size: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : null,
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 18,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {});
+                            _performSearch();
+                          },
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Location Filter Button
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: _showLocationBottomSheet,
+                            borderRadius: BorderRadius.circular(8),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Row(
                                 children: [
-                                  Text(
-                                    selectedLocation,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: selectedLocation != 'All Locations' 
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: selectedLocation != 'All Locations'
+                                        ? primaryColor.withOpacity(0.15)
+                                        : Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      LucideIcons.mapPin,
+                                      color: selectedLocation != 'All Locations'
                                         ? primaryColor
-                                        : Colors.black87,
+                                        : Colors.grey.shade600,
+                                      size: 18,
                                     ),
                                   ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'Tap to change location',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade500,
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          selectedLocation,
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: selectedLocation != 'All Locations'
+                                              ? primaryColor
+                                              : Colors.black87,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'Tap to change location',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade500,
+                                          ),
+                                        ),
+                                      ],
                                     ),
+                                  ),
+                                  const Icon(
+                                    Icons.keyboard_arrow_down,
+                                    color: Colors.black87,
                                   ),
                                 ],
                               ),
                             ),
-                            Icon(
-                              Icons.keyboard_arrow_down,
-                              color: Colors.black87,
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
+                ),
+
+                // Search Results
+                Expanded(
+                  child: isSearching
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: primaryColor.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const SizedBox(
+                                  width: 40,
+                                  height: 40,
+                                  child: CircularProgressIndicator(
+                                    color: primaryColor,
+                                    strokeWidth: 3,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              const Text(
+                                'Searching...',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : !hasSearched
+                          ? _buildSearchPrompt()
+                          : searchResults.isEmpty
+                              ? _buildNoResults()
+                              : _buildSearchResults(),
                 ),
               ],
             ),
-          ),
-          
-          // Search Results
-          Expanded(
-            child: isSearching
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: primaryColor.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const SizedBox(
-                            width: 40,
-                            height: 40,
-                            child: CircularProgressIndicator(
-                              color: primaryColor,
-                              strokeWidth: 3,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Searching...',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : !hasSearched
-                    ? _buildSearchPrompt()
-                    : searchResults.isEmpty
-                        ? _buildNoResults()
-                        : _buildSearchResults(),
-          ),
-        ],
-      ),
     );
   }
 
@@ -733,17 +636,26 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
     );
   }
 
-  Widget _buildSearchResultCard(Map<String, dynamic> result, int index) {
+  Widget _buildSearchResultCard(ServiceProvider provider, int index) {
+    final imageUrl = provider.profilePhoto ?? '';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => _handleResultTap(result),
+          onTap: () => _handleResultTap(provider),
           borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.all(12),
@@ -759,35 +671,27 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(
-                      result['profileImage'],
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            result['icon'],
-                            color: primaryColor,
-                            size: 28,
-                          ),
-                        );
-                      },
-                    ),
+                    child: imageUrl.isNotEmpty
+                        ? Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return _buildFallbackIcon(provider.serviceType);
+                            },
+                          )
+                        : _buildFallbackIcon(provider.serviceType),
                   ),
                 ),
-                
+
                 const SizedBox(width: 12),
-                
+
                 // Details
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        result['name'],
+                        provider.displayName,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -805,19 +709,23 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
                               color: primaryColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: Icon(
+                            child: const Icon(
                               LucideIcons.mapPin,
                               size: 14,
                               color: primaryColor,
                             ),
                           ),
                           const SizedBox(width: 6),
-                          Text(
-                            result['location'],
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey.shade600,
-                              fontWeight: FontWeight.w500,
+                          Expanded(
+                            child: Text(
+                              provider.location ?? provider.address,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -831,53 +739,53 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: primaryColor.withOpacity(0.1),
+                              color: _getServiceTypeColor(provider.serviceType),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              result['serviceType'],
+                              _getServiceTypeLabel(provider.serviceType),
                               style: const TextStyle(
                                 fontSize: 12,
-                                color: primaryColor,
+                                color: Colors.white,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
                           const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.amber.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.star,
-                                  color: Colors.amber,
-                                  size: 14,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  result['rating'].toString(),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black87,
-                                    fontSize: 13,
+                          if (provider.isActive)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.verified,
+                                    color: Colors.green,
+                                    size: 14,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Active',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.green,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ],
                   ),
                 ),
-                
               ],
             ),
           ),
@@ -886,19 +794,73 @@ class _SearchPageState extends State<Market_SearchPage> with TickerProviderState
     );
   }
 
-  // Updated to use ID-based routing instead of passing extra data
-  void _handleResultTap(Map<String, dynamic> result) {
-    String serviceType = result['serviceType'];
-    String id = result['id'];
-    
-    switch (serviceType) {
-      case 'Hotel':
+  Widget _buildFallbackIcon(String serviceType) {
+    IconData icon;
+    switch (serviceType.toUpperCase()) {
+      case 'HOTEL':
+        icon = Icons.hotel;
+        break;
+      case 'TOUR_GUIDE':
+        icon = Icons.tour;
+        break;
+      case 'TRAVEL_AGENT':
+        icon = Icons.directions_car;
+        break;
+      default:
+        icon = Icons.business;
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: primaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Icon(
+        icon,
+        color: primaryColor,
+        size: 28,
+      ),
+    );
+  }
+
+  String _getServiceTypeLabel(String serviceType) {
+    switch (serviceType.toUpperCase()) {
+      case 'HOTEL':
+        return 'Hotel';
+      case 'TOUR_GUIDE':
+        return 'Tour Guide';
+      case 'TRAVEL_AGENT':
+        return 'Travel Agency';
+      default:
+        return serviceType;
+    }
+  }
+
+  Color _getServiceTypeColor(String serviceType) {
+    switch (serviceType.toUpperCase()) {
+      case 'HOTEL':
+        return Colors.purple[600]!;
+      case 'TOUR_GUIDE':
+        return Colors.green[600]!;
+      case 'TRAVEL_AGENT':
+        return Colors.orange[600]!;
+      default:
+        return Colors.blue[600]!;
+    }
+  }
+
+  void _handleResultTap(ServiceProvider provider) {
+    String serviceType = provider.serviceType;
+    String id = provider.id.toString();
+
+    switch (serviceType.toUpperCase()) {
+      case 'HOTEL':
         context.push('/marketplace/hotels/details/$id');
         break;
-      case 'Travel Agency':
+      case 'TRAVEL_AGENT':
         context.push('/marketplace/travel_agencies/details/$id');
         break;
-      case 'Tour Guide':
+      case 'TOUR_GUIDE':
         context.push('/marketplace/tour_guides/details/$id');
         break;
       default:

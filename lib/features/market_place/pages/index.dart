@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:journeyq/features/market_place/pages/searchbar.dart';
 import 'package:journeyq/data/repositories/marketplace_repository/hotel_repository.dart';
 import 'package:journeyq/data/repositories/marketplace_repository/agency_repository.dart';
 import 'package:journeyq/data/repositories/marketplace_repository/tour_package_repository.dart';
+import 'package:journeyq/data/repositories/marketplace_repository/booking_history_repository.dart';
+import 'package:journeyq/data/providers/auth_providers/auth_provider.dart';
 
 class MarketplacePage extends StatefulWidget {
   const MarketplacePage({Key? key}) : super(key: key);
@@ -30,6 +33,10 @@ class _MarketplacePageState extends State<MarketplacePage> {
   List<TourPackage> popularTourPackages = [];
   bool isLoadingTourPackages = true;
   String errorMessageTourPackages = '';
+
+  // State for booking count
+  int bookingCount = 0;
+  bool isLoadingBookingCount = true;
 
   // Main services
   final List<Map<String, dynamic>> mainServices = [
@@ -85,7 +92,52 @@ class _MarketplacePageState extends State<MarketplacePage> {
       _loadPopularHotels(),
       _loadPopularAgencies(),
       _loadPopularTourPackages(),
+      _loadBookingCount(),
     ]);
+  }
+
+  Future<void> _loadBookingCount() async {
+    try {
+      setState(() {
+        isLoadingBookingCount = true;
+      });
+
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final userId = authProvider.user?.userId;
+
+      if (userId == null) {
+        print('📋 User not authenticated, booking count: 0');
+        if (mounted) {
+          setState(() {
+            bookingCount = 0;
+            isLoadingBookingCount = false;
+          });
+        }
+        return;
+      }
+
+      print('📋 Loading booking count for user: $userId');
+
+      final bookings = await BookingHistoryRepository.getUserBookingHistory(userId);
+
+      if (mounted) {
+        setState(() {
+          bookingCount = bookings.length;
+          isLoadingBookingCount = false;
+        });
+      }
+
+      print('📋 Booking count loaded: $bookingCount bookings');
+    } catch (e) {
+      print('❌ Error loading booking count: $e');
+
+      if (mounted) {
+        setState(() {
+          bookingCount = 0;
+          isLoadingBookingCount = false;
+        });
+      }
+    }
   }
 
   Future<void> _loadPopularHotels() async {
@@ -223,7 +275,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
         actions: [
           _buildIconWithBadge(
             icon: LucideIcons.clipboardList,
-            count: 3,
+            count: bookingCount,
             onTap: () => context.push('/booking_history'),
           ),
           const SizedBox(width: 16),

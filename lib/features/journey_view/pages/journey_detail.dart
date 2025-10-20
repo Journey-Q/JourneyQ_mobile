@@ -485,15 +485,20 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
                     children: [
                       CircleAvatar(
                         radius: 20,
-                        backgroundImage:
-                            journeyData!['authorImage'].startsWith('assets/')
-                            ? AssetImage(journeyData!['authorImage'])
-                                  as ImageProvider
-                            : NetworkImage(journeyData!['authorImage']),
-                        onBackgroundImageError: (_, __) {},
                         backgroundColor: Colors.grey[300],
-                        child: journeyData!['authorImage'].isEmpty
-                            ? Icon(Icons.person, color: Colors.grey[600])
+                        backgroundImage: (journeyData!['authorImage'] != null &&
+                                         journeyData!['authorImage'].toString().isNotEmpty &&
+                                         !journeyData!['authorImage'].toString().startsWith('assets/'))
+                            ? NetworkImage(journeyData!['authorImage'].toString())
+                            : null,
+                        onBackgroundImageError: (journeyData!['authorImage'] != null &&
+                                                 journeyData!['authorImage'].toString().isNotEmpty)
+                            ? (_, __) {}
+                            : null,
+                        child: (journeyData!['authorImage'] == null ||
+                                journeyData!['authorImage'].toString().isEmpty ||
+                                journeyData!['authorImage'].toString().startsWith('assets/'))
+                            ? Icon(Icons.person, color: Colors.grey[600], size: 24)
                             : null,
                       ),
                       const SizedBox(width: 12),
@@ -1647,12 +1652,16 @@ class _CommentsBottomSheetState extends State<_CommentsBottomSheet> {
             children: [
               CircleAvatar(
                 radius: isReply ? 14 : 16,
+                backgroundColor: Colors.grey[300],
                 backgroundImage:
                     comment['userImage'] != null &&
                         comment['userImage'].toString().isNotEmpty
                     ? NetworkImage(comment['userImage'].toString())
                     : null,
-                backgroundColor: Colors.grey[300],
+                onBackgroundImageError: (comment['userImage'] != null &&
+                                         comment['userImage'].toString().isNotEmpty)
+                    ? (_, __) {}
+                    : null,
                 child:
                     comment['userImage'] == null || comment['userImage'].toString().isEmpty
                     ? Icon(

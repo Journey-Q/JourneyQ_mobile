@@ -314,11 +314,15 @@ class _NotificationPageState extends State<NotificationPage> {
       children: [
         CircleAvatar(
           radius: 24,
+          backgroundColor: Colors.grey[300],
           backgroundImage: notification.senderProfileUrl != null &&
                   notification.senderProfileUrl!.isNotEmpty
               ? NetworkImage(notification.senderProfileUrl!)
               : null,
-          backgroundColor: Colors.grey[300],
+          onBackgroundImageError: (notification.senderProfileUrl != null &&
+                                   notification.senderProfileUrl!.isNotEmpty)
+              ? (_, __) {}
+              : null,
           child: notification.senderProfileUrl == null ||
                   notification.senderProfileUrl!.isEmpty
               ? Icon(

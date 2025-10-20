@@ -108,10 +108,12 @@ class _TravelPostWidgetState extends State<TravelPostWidget> {
               backgroundImage: widget.userImage.isNotEmpty
                   ? NetworkImage(widget.userImage)
                   : null,
-              onBackgroundImageError: (_, __) {},
+              onBackgroundImageError: widget.userImage.isNotEmpty
+                  ? (_, __) {}
+                  : null,
               backgroundColor: Colors.grey[300],
               child: widget.userImage.isEmpty
-                  ? Icon(Icons.person, color: Colors.grey[600])
+                  ? Icon(Icons.person, color: Colors.grey[600], size: 18)
                   : null,
             ),
           ),
