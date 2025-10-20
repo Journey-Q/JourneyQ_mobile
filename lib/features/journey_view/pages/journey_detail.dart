@@ -1080,6 +1080,12 @@ class _JourneyDetailsPageState extends State<JourneyDetailsPage> {
 
   Widget _buildBudgetBreakdown() {
     final breakdown = journeyData!['budgetBreakdown'] as Map<String, dynamic>;
+
+    // Hide the section if budget breakdown is empty
+    if (breakdown.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
